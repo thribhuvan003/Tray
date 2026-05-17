@@ -1,0 +1,25 @@
+name: ci
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm typecheck
+      - run: pnpm lint
+      - run: pnpm build
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: https://mepowrsrbjddaqfvzvtc.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1lcG93cnNyYmpkZGFxZnZ6dnRjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgyNTY1ODEsImV4cCI6MjA5MzgzMjU4MX0.LPRaRyB8oKGEk1hUlDwrdkRKa-vtfPSl_4ZAWaiYrAg
+          APP_URL: http://localhost:3000

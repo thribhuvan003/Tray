@@ -1,0 +1,217 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { CheckCircle2, ChefHat, Hand, KeyRound, ShoppingBag, UtensilsCrossed } from "lucide-react";
+import { cn, formatRupees, formatTimeIST, elapsedSeconds, fmtElapsed } from "@/lib/utils";
+
+type Status = "placed" | "preparing" | "ready" | "collected";
+type Order = {
+  id: string;
+  short_code: string;
+  status: Status | "pending_payment" | "rejected" | "expired";
+  total_paise: number;
+  placed_at: string;
+  ready_at: string | null;
+  collected_at: string | null;
+  customer_name: string | null;
+  order_type: "takeaway" | "dine_in";
+  table_label: string | null;
+};
+type Line = {
+  id: string;
+  order_id: string;
+  name_snapshot: string;
+  qty: number;
+  diet_snapshot: "veg" | "nonveg" | "egg";
+};
+
+const COL_CFG: Record<
+  Status,
+  { tone: string; badge: string; cta: { label: string; icon: typeof ChefHat } | null }
+> = {
+  placed: { tone: "border-amber-500", badge: "bg-amber-500", cta: { label: "Start →", icon: ChefHat } },
+  preparing: { tone: "border-ocean-500", badge: "bg-ocean-500", cta: { label: "Ready →", icon: CheckCircle2 } },
+  ready: { tone: "border-tomato-500", badge: "bg-tomato-500", cta: { label: "Verify OTP", icon: KeyRound } },
+  collected: { tone: "border-emerald-500", badge: "bg-emerald-500", cta: null },
+};
+
+export function OrderColumn({
+  title,
+  subtitle,
+  status,
+  orders,
+  linesByOrder,
+  onAction,
+}: {
+  title: string;
+  subtitle: string;
+  status: Status;
+  orders: Order[];
+  linesByOrder: Map<string, Line[]>;
+  onAction: (id: string, action: "start" | "ready" | "verify") => void;
+}) {
+  const cfg = COL_CFG[status];
+  return (
+    <section className="flex flex-col gap-2">
+      <header className="flex items-end justify-between">
+        <div>
+          <div className="font-display text-[20px] sm:text-[22px] font-medium leading-none tracking-tight">
+            {title}
+          </div>
+          <div className="text-[10px] font-mono uppercase tracking-[0.12em] text-tomato-900/55 dark:text-cream-200/55 mt-1">
+            {subtitle}
+          </div>
+        </div>
+        <span
+          className={cn(
+            "inline-flex items-center justify-center min-w-[28px] h-[22px] px-2 rounded-full text-white text-[12px] font-mono tabular",
+            cfg.badge
+          )}
+        >
+          {orders.length}
+        </span>
+      </header>
+      <div className="flex flex-col gap-2">
+        {orders.length === 0 ? (
+          <div className="border-2 border-dashed border-tomato-900/15 dark:border-cream-200/15 rounded-lg p-6 text-center text-[12px] text-tomato-900/45 dark:text-cream-200/45">
+            Nothing here right now.
+          </div>
+        ) : (
+          orders.map((o, idx) => (
+            <TicketCard
+              key={o.id}
+              order={o}
+              lines={linesByOrder.get(o.id) ?? []}
+              rotation={idx % 2 === 0 ? "-rotate-[0.4deg]" : "rotate-[0.3deg]"}
+              cfg={cfg}
+              onAction={(act) => onAction(o.id, act)}
+            />
+          ))
+        )}
+      </div>
+    </section>
+  );
+}
+
+function TicketCard({
+  order,
+  lines,
+  rotation,
+  cfg,
+  onAction,
+}: {
+  order: Order;
+  lines: Line[];
+  rotation: string;
+  cfg: (typeof COL_CFG)[Status];
+  onAction: (action: "start" | "ready" | "verify") => void;
+}) {
+  const [elapsed, setElapsed] = useState(elapsedSeconds(order.placed_at));
+  useEffect(() => {
+    const id = setInterval(() => setElapsed(elapsedSeconds(order.placed_at)), 1000);
+    return () => clearInterval(id);
+  }, [order.placed_at]);
+
+  const overtime = order.status !== "collected" && elapsed > 480;
+  const isCollected = order.status === "collected";
+
+  const handle = () => {
+    if (order.status === "placed") onAction("start");
+    else if (order.status === "preparing") onAction("ready");
+    else if (order.status === "ready") onAction("verify");
+  };
+
+  return (
+    <article
+      className={cn(
+        "relative bg-cream-50 dark:bg-graphite-800 border-2 border-tomato-900 dark:border-cream-200/30 p-3 shadow-[5px_5px_0_0_var(--color-tomato-900)] dark:shadow-[5px_5px_0_0_rgba(247,200,194,0.3)]",
+        rotation
+      )}
+    >
+      {isCollected && (
+        <div className="absolute -right-1 top-2 rotate-[-8deg] pointer-events-none select-none">
+          <span className="font-display font-bold text-[20px] tracking-wider text-emerald-600 border-2 border-emerald-600 px-2 py-0.5 rounded-sm bg-emerald-50/80 dark:bg-emerald-950/40">
+            COLLECTED
+          </span>
+        </div>
+      )}
+      <div className="flex items-start justify-between">
+        <div>
+          <div className="font-mono text-[16px] font-semibold tabular tracking-tight">
+            {order.short_code}
+          </div>
+          <div className="text-[10px] font-mono uppercase tracking-wider text-tomato-900/55 dark:text-cream-200/55 mt-0.5 flex items-center gap-1.5">
+            {order.order_type === "dine_in" ? (
+              <>
+                <UtensilsCrossed size={9} /> Table {order.table_label}
+              </>
+            ) : (
+              <>
+                <ShoppingBag size={9} /> Takeaway
+              </>
+            )}
+            <span>·</span>
+            <span>{formatTimeIST(order.placed_at)}</span>
+          </div>
+        </div>
+        <span
+          className={cn(
+            "font-mono tabular text-[14px] font-semibold tracking-tight",
+            overtime ? "text-tomato-500 animate-pulse" : "text-tomato-900 dark:text-cream-200"
+          )}
+        >
+          {fmtElapsed(elapsed)}
+        </span>
+      </div>
+
+      <ul className="mt-3 flex flex-col gap-1 text-[13px]">
+        {lines.map((l) => (
+          <li key={l.id} className="flex items-center gap-2">
+            <span
+              className={cn(
+                "inline-flex h-3 w-3 items-center justify-center border-2 rounded-sm shrink-0",
+                l.diet_snapshot === "veg"
+                  ? "border-emerald-500"
+                  : l.diet_snapshot === "egg"
+                  ? "border-amber-500"
+                  : "border-tomato-500"
+              )}
+            >
+              <span
+                className={cn(
+                  "h-1.5 w-1.5 rounded-full",
+                  l.diet_snapshot === "veg"
+                    ? "bg-emerald-500"
+                    : l.diet_snapshot === "egg"
+                    ? "bg-amber-500"
+                    : "bg-tomato-500"
+                )}
+              />
+            </span>
+            <span className="font-medium tabular shrink-0 w-6">{l.qty}×</span>
+            <span className="flex-1 truncate">{l.name_snapshot}</span>
+          </li>
+        ))}
+      </ul>
+
+      <div className="mt-3 pt-2 border-t border-tomato-900/20 dark:border-cream-200/20 flex items-center justify-between gap-2">
+        <div className="text-[11px] font-mono text-tomato-900/55 dark:text-cream-200/55">
+          {order.customer_name ?? "Customer"} · {formatRupees(order.total_paise)}
+        </div>
+        {cfg.cta && (
+          <button
+            onClick={handle}
+            className="inline-flex items-center gap-1.5 h-8 px-3 rounded-md bg-tomato-500 text-white text-[12px] font-semibold hover:bg-tomato-600 transition-colors"
+          >
+            <cfg.cta.icon size={12} /> {cfg.cta.label}
+          </button>
+        )}
+        {isCollected && order.collected_at && (
+          <span className="inline-flex items-center gap-1 text-[10px] font-mono text-emerald-600">
+            <Hand size={10} /> {formatTimeIST(order.collected_at)}
+          </span>
+        )}
+      </div>
+    </article>
+  );
+}

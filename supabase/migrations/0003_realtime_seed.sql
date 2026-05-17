@@ -1,0 +1,2 @@
+-- See applied migration: same body as 0003_realtime_seed applied via Supabase MCP.
+-- Tracked here for reproducibility and for `supabase db push` workflows.

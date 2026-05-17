@@ -1,0 +1,107 @@
+"use client";
+
+import { Minus, Plus } from "lucide-react";
+import type { MenuItem } from "@/lib/db/types";
+import { formatRupees, cn } from "@/lib/utils";
+import { useCart } from "@/lib/cart/store";
+
+export function MenuItemCard({ item }: { item: MenuItem }) {
+  const line = useCart((s) => s.lines.find((l) => l.menuItemId === item.id));
+  const add = useCart((s) => s.add);
+  const inc = useCart((s) => s.increment);
+  const dec = useCart((s) => s.decrement);
+  const oos = !item.in_stock || item.status !== "live";
+
+  const dietRing =
+    item.diet === "veg"
+      ? "border-emerald-500"
+      : item.diet === "egg"
+      ? "border-amber-500"
+      : "border-rose-500";
+  const dietFill =
+    item.diet === "veg" ? "bg-emerald-500" : item.diet === "egg" ? "bg-amber-500" : "bg-rose-500";
+
+  return (
+    <article
+      className={cn(
+        "group relative rounded-2xl border bg-[color:var(--color-paper)] overflow-hidden flex flex-col transition-all",
+        oos ? "opacity-60" : "border-[color:var(--color-line)] hover:border-ocean-500/40 hover:shadow-[0_8px_24px_-12px_rgba(10,22,40,0.12)]"
+      )}
+    >
+      <div className="relative aspect-[4/3] bg-gradient-to-br from-ocean-50 to-cream-100 dark:from-ocean-500/10 dark:to-graphite-700">
+        {item.image_url ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={item.image_url} alt={item.name} className="absolute inset-0 h-full w-full object-cover" />
+        ) : (
+          <div className="absolute inset-0 flex items-center justify-center font-display text-[44px] text-ocean-500/30 select-none">
+            {item.name.charAt(0)}
+          </div>
+        )}
+        <span
+          aria-label={item.diet}
+          className={cn(
+            "absolute top-2 left-2 inline-flex h-4 w-4 items-center justify-center border-2 rounded-sm bg-white",
+            dietRing
+          )}
+        >
+          <span className={cn("h-2 w-2 rounded-full", dietFill)} />
+        </span>
+        {oos && (
+          <span className="absolute top-2 right-2 text-[10px] font-mono uppercase tracking-wider bg-[color:var(--color-paper)]/90 text-[color:var(--color-ink)]/70 px-2 py-1 rounded-full">
+            Out of stock
+          </span>
+        )}
+      </div>
+      <div className="p-3.5 flex flex-col flex-1 gap-1.5">
+        <h3 className="text-[14.5px] font-medium leading-tight">{item.name}</h3>
+        {item.description && (
+          <p className="text-[12px] leading-[1.4] text-[color:var(--color-ink)]/55 line-clamp-2">
+            {item.description}
+          </p>
+        )}
+        <div className="mt-auto pt-2 flex items-center justify-between">
+          <div className="text-[15px] font-semibold tabular">{formatRupees(item.price_paise)}</div>
+          {line ? (
+            <div className="inline-flex items-center rounded-full bg-ocean-500 text-white">
+              <button
+                aria-label="Decrease"
+                onClick={() => dec(item.id)}
+                className="h-8 w-8 inline-flex items-center justify-center"
+              >
+                <Minus size={14} />
+              </button>
+              <span className="text-[13px] font-medium tabular w-5 text-center">{line.qty}</span>
+              <button
+                aria-label="Increase"
+                onClick={() => inc(item.id)}
+                className="h-8 w-8 inline-flex items-center justify-center"
+              >
+                <Plus size={14} />
+              </button>
+            </div>
+          ) : (
+            <button
+              disabled={oos}
+              onClick={() =>
+                add({
+                  menuItemId: item.id,
+                  name: item.name,
+                  pricePaise: item.price_paise,
+                  diet: item.diet,
+                })
+              }
+              className={cn(
+                "inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-[12.5px] font-medium transition-colors",
+                oos
+                  ? "bg-[color:var(--color-line)] text-[color:var(--color-ink)]/40 cursor-not-allowed"
+                  : "bg-ocean-500 text-white hover:bg-ocean-600"
+              )}
+            >
+              <Plus size={14} /> Add
+            </button>
+          )}
+        </div>
+      </div>
+    </article>
+  );
+}
