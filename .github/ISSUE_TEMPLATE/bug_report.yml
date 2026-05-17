@@ -1,0 +1,67 @@
+name: Bug report
+description: Something isn't working the way it should.
+title: "[bug] "
+labels: ["bug"]
+body:
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: A clear description of the bug. Screenshots / recordings help a lot.
+      placeholder: When I tap "Place order" on iOS Safari, the cart drawer reopens instead of routing to /pay/[id].
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Sign in as student@aditya
+        2. Add 2 items to cart
+        3. Tap "Place order"
+        4. ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behaviour
+    validations:
+      required: true
+
+  - type: dropdown
+    id: portal
+    attributes:
+      label: Portal
+      options:
+        - Student
+        - Kitchen
+        - Admin
+        - Public / auth
+        - API / webhook
+    validations:
+      required: true
+
+  - type: input
+    id: tenant
+    attributes:
+      label: Tenant slug
+      placeholder: aditya
+
+  - type: input
+    id: env
+    attributes:
+      label: Environment
+      description: Browser, OS, build (local / preview / prod)
+      placeholder: iOS Safari 17.4 · prod
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs / errors
+      description: Console output, server logs, Sentry link.
+      render: shell

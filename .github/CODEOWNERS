@@ -1,0 +1,9 @@
+# Default owner for everything.
+*                              @thribhuvan003
+
+# Sensitive paths — require explicit review.
+/.github/                      @thribhuvan003
+/supabase/migrations/          @thribhuvan003
+/src/lib/env.ts                @thribhuvan003
+/src/lib/supabase/             @thribhuvan003
+/src/app/api/webhooks/         @thribhuvan003

@@ -1,0 +1,38 @@
+name: Feature request
+description: Propose a new capability or enhancement.
+title: "[feat] "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What pain are we solving? Who feels it?
+      placeholder: Kitchen staff have no way to bulk-mark items "out of stock" during a rush.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposal
+      description: What you'd like to see. Sketches, links, or copy welcome.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+
+  - type: dropdown
+    id: portal
+    attributes:
+      label: Portal
+      options:
+        - Student
+        - Kitchen
+        - Admin
+        - Cross-cutting
+    validations:
+      required: true
