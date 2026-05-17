@@ -1,9 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Check, ChefHat, BellRing, HandPlatter, XCircle } from "lucide-react";
-import { formatRupees, formatTimeIST, cn } from "@/lib/utils";
+import { formatRupees } from "@/lib/utils";
 import { getBrowserClient } from "@/lib/supabase/browser";
 import { getMyOrderOtp } from "@/app/(student)/_actions";
 
@@ -26,12 +25,23 @@ type Line = {
   price_paise_snapshot: number;
 };
 
-const STEPS: { v: Status; label: string; icon: typeof Check; copy: string }[] = [
-  { v: "placed", label: "Placed", icon: Check, copy: "We've got it." },
-  { v: "preparing", label: "Preparing", icon: ChefHat, copy: "The kitchen is on it." },
-  { v: "ready", label: "Ready", icon: BellRing, copy: "Walk over — your code's below." },
-  { v: "collected", label: "Collected", icon: HandPlatter, copy: "Enjoy. ☕" },
+const STEPS: Array<{ status: Status; title: string; when: string; desc: string }> = [
+  { status: "placed", title: "Order placed", when: "0 min", desc: "Your tray is in the queue. Kitchen has been notified." },
+  { status: "placed", title: "Payment confirmed", when: "UPI", desc: "Receipt sent to your email." },
+  { status: "preparing", title: "Preparing your meal", when: "~6 min remaining", desc: "Chef is on it. Watch the live status update." },
+  { status: "ready", title: "Ready for pickup", when: "Estimated soon", desc: "You'll get a notification with your pickup code." },
+  { status: "collected", title: "Collected", when: "After OTP verification", desc: "Counter staff closes the order after handover." },
 ];
+
+const rank: Record<Status, number> = {
+  pending_payment: 0,
+  placed: 1,
+  preparing: 2,
+  ready: 3,
+  collected: 4,
+  rejected: 0,
+  expired: 0,
+};
 
 export function TrackPanel({ tenantName, order: initial, lines }: { tenantName: string; order: Order; lines: Line[] }) {
   const [order, setOrder] = useState(initial);
@@ -39,181 +49,119 @@ export function TrackPanel({ tenantName, order: initial, lines }: { tenantName: 
 
   useEffect(() => {
     const sb = getBrowserClient();
+    const refresh = async () => {
+      const { data } = await sb
+        .from("orders")
+        .select("id, short_code, status, total_paise, placed_at, ready_at, collected_at, customer_name")
+        .eq("id", initial.id)
+        .maybeSingle<Order>();
+      if (data) setOrder(data);
+    };
+
     const ch = sb
-      .channel(`order:${order.id}`)
-      .on(
-        "postgres_changes",
-        { event: "UPDATE", schema: "public", table: "orders", filter: `id=eq.${order.id}` },
-        (payload) => {
-          setOrder((prev) => ({ ...prev, ...(payload.new as Partial<Order>) }));
-        }
-      )
+      .channel(`order:${initial.id}`)
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "orders", filter: `id=eq.${initial.id}` }, (payload) => {
+        setOrder((prev) => ({ ...prev, ...(payload.new as Partial<Order>) }));
+      })
       .subscribe();
+
+    const onVisible = () => {
+      if (document.visibilityState === "visible") void refresh();
+    };
+    document.addEventListener("visibilitychange", onVisible);
     return () => {
       sb.removeChannel(ch);
+      document.removeEventListener("visibilitychange", onVisible);
     };
-  }, [order.id]);
+  }, [initial.id]);
 
   useEffect(() => {
-    if (order.status === "ready") {
-      getMyOrderOtp(order.id).then((r) => setOtp(r.otp));
-    }
-  }, [order.status, order.id]);
+    if (order.status === "ready") getMyOrderOtp(order.id).then((r) => setOtp(r.otp));
+  }, [order.id, order.status]);
+
+  const progress = useMemo(() => Math.min(100, rank[order.status] * 25), [order.status]);
+  const activeRank = rank[order.status];
 
   if (order.status === "rejected" || order.status === "expired") {
     return (
-      <div className="mx-auto max-w-2xl px-4 sm:px-6 pt-12 pb-20 text-center">
-        <XCircle size={56} className="mx-auto text-rose-500 mb-4" />
-        <h1 className="font-display text-[36px] font-medium tracking-tight">
-          {order.status === "expired" ? "Payment expired." : "Order rejected."}
-        </h1>
-        <p className="text-[14px] text-[color:var(--color-ink)]/65 mt-2">
-          {order.status === "expired"
-            ? "We didn't see the UPI payment in time. No money was charged."
-            : "The canteen couldn't accept this order. If you paid, a refund is on its way."}
-        </p>
-        <Link
-          href="/menu"
-          className="mt-6 inline-flex items-center gap-1.5 h-11 px-5 rounded-full bg-ocean-500 text-white text-[13px] font-medium hover:bg-ocean-600 transition-colors"
-        >
-          Try another order
-        </Link>
+      <div className="order-page" style={{ textAlign: "center" }}>
+        <span className="chip chip-err">{order.status}</span>
+        <h1 style={{ marginTop: 16 }}>{order.status === "expired" ? "Payment expired." : "Order rejected."}</h1>
+        <p className="lead">Start a new order from the live menu.</p>
+        <Link href="/menu" className="btn btn-primary btn-lg" style={{ marginTop: 24 }}>Back to menu</Link>
       </div>
     );
   }
 
-  const currentIdx = Math.max(0, STEPS.findIndex((s) => s.v === order.status));
-  const isReady = order.status === "ready";
-  const isCollected = order.status === "collected";
-
   return (
-    <div className="mx-auto max-w-3xl px-4 sm:px-6 pt-6 pb-12">
-      <Link
-        href="/orders"
-        className="inline-flex items-center gap-1.5 text-[13px] text-[color:var(--color-ink)]/60 hover:text-ocean-500 mb-4"
-      >
-        <ArrowLeft size={14} /> Orders
-      </Link>
-
-      <div className="mb-6 flex items-start justify-between flex-wrap gap-3">
+    <div className="order-page">
+      <div className="order-head">
         <div>
-          <div className="text-[11px] font-mono uppercase tracking-wider text-[color:var(--color-ink)]/55">
-            {tenantName} · {order.short_code}
-          </div>
-          <h1 className="font-display text-[clamp(28px,5vw,40px)] font-medium tracking-tight leading-tight">
-            {STEPS[currentIdx]?.label}.{" "}
-            <span className="italic text-ocean-500">{STEPS[currentIdx]?.copy}</span>
+          <span className="eyebrow">{tenantName} - Order {order.short_code}</span>
+          <h1>
+            Almost <span className="it">there.</span>
           </h1>
         </div>
-        <div className="text-[12px] font-mono tabular text-[color:var(--color-ink)]/55">
-          Placed {formatTimeIST(order.placed_at)}
+        <div className="meta">
+          <div>Placed - ETA soon</div>
+          <div style={{ marginTop: 6 }}>
+            <span className="chip chip-accent">{order.status}</span>
+          </div>
         </div>
       </div>
 
-      {isReady && otp && (
-        <div className="mb-6 rounded-3xl bg-ocean-500 text-white p-6 sm:p-8 relative overflow-hidden">
-          <div
-            aria-hidden
-            className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(255,255,255,0.18),transparent_60%)]"
-          />
-          <div className="relative">
-            <div className="text-[11px] font-mono uppercase tracking-wider text-white/75 mb-2">
-              Your pickup code · show at counter
+      <div className="timeline">
+        <div className="tl-rail"><div className="fill" style={{ height: `${progress}%` }} /></div>
+        <div className="tl-events">
+          {STEPS.map((step, idx) => {
+            const stepRank = idx <= 1 ? 1 : rank[step.status];
+            const state = activeRank > stepRank ? "done" : activeRank === stepRank ? "now" : "todo";
+            return (
+              <div className={`tl-event ${state}`} key={`${step.title}-${idx}`}>
+                <div className="node" />
+                <div>
+                  <h3>{step.title}</h3>
+                  <div className="when">{step.when}</div>
+                  <div className="desc">{step.desc}</div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {order.status === "ready" && otp && (
+        <div className="collect-card">
+          <span className="eyebrow" style={{ color: "var(--accent)" }}>Your pickup code</span>
+          <div className="otp-display">
+            {otp.split("").map((digit, idx) => <span className="d" key={`${digit}-${idx}`}>{digit}</span>)}
+          </div>
+          <p style={{ color: "var(--ink-2)", textAlign: "center", maxWidth: "32ch" }}>
+            Show this code at the counter to collect your order.
+          </p>
+        </div>
+      )}
+
+      <div className="surface" style={{ padding: 16 }}>
+        <div className="eyebrow">You ordered</div>
+        <div className="col gap-2" style={{ marginTop: 12 }}>
+          {lines.map((line) => (
+            <div className="row between" key={line.id}>
+              <span>{line.qty} x {line.name_snapshot}</span>
+              <span className="mono">{formatRupees(line.qty * line.price_paise_snapshot)}</span>
             </div>
-            <div className="font-display tabular font-medium leading-none text-[clamp(72px,14vw,128px)] tracking-[-0.045em]">
-              {otp.split("").join(" ")}
-            </div>
-            <p className="text-[13px] text-white/80 mt-3">
-              Valid for the next 15 minutes. Three attempts at the counter, then the order locks for staff review.
-            </p>
+          ))}
+          <div className="divider" />
+          <div className="row between">
+            <b>Total paid</b>
+            <b>{formatRupees(order.total_paise)}</b>
           </div>
         </div>
-      )}
-      {isReady && !otp && (
-        <div className="mb-6 rounded-3xl border border-amber-500/30 bg-amber-500/5 p-5 text-[13px] text-[color:var(--color-ink)]/70">
-          Your order is ready. Reload to fetch the pickup code.
-        </div>
-      )}
+      </div>
 
-      <ol className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-6">
-        {STEPS.map((s, i) => {
-          const done = i < currentIdx || isCollected;
-          const active = i === currentIdx && !isCollected;
-          const Icon = s.icon;
-          return (
-            <li
-              key={s.v}
-              className={cn(
-                "rounded-2xl border p-4 flex flex-col gap-1",
-                done
-                  ? "border-emerald-500/30 bg-emerald-500/5"
-                  : active
-                  ? "border-ocean-500 bg-ocean-50 dark:bg-ocean-500/10"
-                  : "border-[color:var(--color-line)]"
-              )}
-            >
-              <div
-                className={cn(
-                  "inline-flex h-7 w-7 items-center justify-center rounded-full",
-                  done
-                    ? "bg-emerald-500 text-white"
-                    : active
-                    ? "bg-ocean-500 text-white animate-pulse"
-                    : "bg-[color:var(--color-paper-dim)] text-[color:var(--color-ink)]/35"
-                )}
-              >
-                <Icon size={13} />
-              </div>
-              <div className="text-[11px] font-mono uppercase tracking-wider text-[color:var(--color-ink)]/55">
-                Step {i + 1}
-              </div>
-              <div className="text-[13.5px] font-medium">{s.label}</div>
-            </li>
-          );
-        })}
-      </ol>
-
-      <div className="rounded-2xl border border-[color:var(--color-line)] p-5">
-        <div className="text-[11px] font-mono uppercase tracking-wider text-[color:var(--color-ink)]/55 mb-3">
-          You ordered
-        </div>
-        <ul className="flex flex-col gap-2">
-          {lines.map((l) => (
-            <li key={l.id} className="flex items-center gap-3 text-[14px]">
-              <span
-                className={cn(
-                  "h-3.5 w-3.5 inline-flex items-center justify-center border-2 rounded-sm",
-                  l.diet_snapshot === "veg"
-                    ? "border-emerald-500"
-                    : l.diet_snapshot === "egg"
-                    ? "border-amber-500"
-                    : "border-rose-500"
-                )}
-              >
-                <span
-                  className={cn(
-                    "h-1.5 w-1.5 rounded-full",
-                    l.diet_snapshot === "veg"
-                      ? "bg-emerald-500"
-                      : l.diet_snapshot === "egg"
-                      ? "bg-amber-500"
-                      : "bg-rose-500"
-                  )}
-                />
-              </span>
-              <span className="flex-1 min-w-0 truncate">
-                {l.qty} × {l.name_snapshot}
-              </span>
-              <span className="tabular text-[color:var(--color-ink)]/70">
-                {formatRupees(l.qty * l.price_paise_snapshot)}
-              </span>
-            </li>
-          ))}
-        </ul>
-        <div className="mt-4 pt-4 border-t border-[color:var(--color-line)] flex justify-between items-baseline">
-          <span className="text-[12px] font-mono uppercase tracking-wider text-[color:var(--color-ink)]/55">Total paid</span>
-          <span className="font-display text-[20px] font-medium tabular">{formatRupees(order.total_paise)}</span>
-        </div>
+      <div style={{ marginTop: 48, paddingTop: 24, borderTop: "1px solid var(--line)", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
+        <div style={{ color: "var(--ink-3)", fontSize: 13 }}>Need help? Contact kitchen</div>
+        <Link className="btn btn-ghost btn-sm" href="/menu">Back to menu</Link>
       </div>
     </div>
   );

@@ -1,60 +1,48 @@
 "use client";
 
 import Link from "next/link";
-import { Clock, History, User } from "lucide-react";
-import { useEffect, useState } from "react";
+import { Search, ShoppingCart, User } from "lucide-react";
 import type { ResolvedTenant } from "@/lib/tenant";
+import { useCart, cartItemCount } from "@/lib/cart/store";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 
 export function StudentTopBar({ tenant }: { tenant: ResolvedTenant }) {
-  const [t, setT] = useState<string>("");
-  useEffect(() => {
-    const tick = () =>
-      setT(
-        new Intl.DateTimeFormat("en-IN", {
-          hour: "2-digit",
-          minute: "2-digit",
-          hour12: false,
-          timeZone: "Asia/Kolkata",
-        }).format(new Date())
-      );
-    tick();
-    const id = setInterval(tick, 30_000);
-    return () => clearInterval(id);
-  }, []);
+  const count = useCart((s) => cartItemCount(s.lines));
+
   return (
-    <header className="sticky top-0 z-40 bg-[color:var(--color-paper)]/85 backdrop-blur-xl border-b border-[color:var(--color-line)]">
-      <div className="mx-auto max-w-5xl px-4 sm:px-6 h-14 flex items-center justify-between gap-3">
-        <Link href="/" className="inline-flex items-center gap-2 font-display text-[17px] tracking-tight">
-          <span className="inline-flex h-6 w-6 items-center justify-center rounded-md bg-ocean-500 text-white font-mono text-[11px] font-bold">T</span>
-          <span className="font-medium">Tray<span className="italic text-ocean-500">.</span></span>
+    <header className="appbar">
+      <Link className="brand" href="/">
+        <span className="brand-mark">T</span>
+        <span className="hide-mobile">
+          Tray<span style={{ fontStyle: "italic", color: "var(--accent)" }}>.</span>
+        </span>
+      </Link>
+      <label className="search" aria-label="Search dishes">
+        <Search />
+        <input
+          className="input"
+          placeholder={`Search dishes at ${tenant.name}...`}
+          onFocus={() => window.dispatchEvent(new CustomEvent("tray:focus-search"))}
+          readOnly
+        />
+      </label>
+      <div className="right">
+        <ThemeToggle />
+        <button
+          className="btn-icon cart-btn"
+          aria-label="Cart"
+          onClick={() => window.dispatchEvent(new CustomEvent("tray:cart-open"))}
+        >
+          <ShoppingCart size={18} />
+          {count > 0 && (
+            <span className="cnt">
+              {count}
+            </span>
+          )}
+        </button>
+        <Link href="/login" className="avatar" aria-label="Account">
+          <User size={14} />
         </Link>
-        <div className="hidden sm:flex flex-col items-center text-center flex-1">
-          <div className="text-[11px] font-mono uppercase tracking-wider text-[color:var(--color-ink)]/55">
-            {tenant.college_name}
-          </div>
-          <div className="text-[11px] font-mono tabular text-[color:var(--color-ink)]/45 flex items-center gap-1.5">
-            <Clock size={10} />
-            Lunch · {t || "--:--"} IST
-          </div>
-        </div>
-        <div className="flex items-center gap-1.5">
-          <ThemeToggle />
-          <Link
-            href="/orders"
-            aria-label="My orders"
-            className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[color:var(--color-line)] hover:border-ocean-500 hover:text-ocean-500 transition-colors"
-          >
-            <History size={15} />
-          </Link>
-          <Link
-            href="/login"
-            aria-label="Account"
-            className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[color:var(--color-line)] hover:border-ocean-500 hover:text-ocean-500 transition-colors"
-          >
-            <User size={15} />
-          </Link>
-        </div>
       </div>
     </header>
   );

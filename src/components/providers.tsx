@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ThemeProvider } from "@/components/theme-provider";
+import { TrayMotion } from "@/components/tray-motion";
 
 export function Providers({
   children,
@@ -20,7 +21,10 @@ export function Providers({
   );
   return (
     <ThemeProvider>
-      <QueryClientProvider client={qc}>{children}</QueryClientProvider>
+      <QueryClientProvider client={qc}>
+        <TrayMotion />
+        {children}
+      </QueryClientProvider>
     </ThemeProvider>
   );
 }

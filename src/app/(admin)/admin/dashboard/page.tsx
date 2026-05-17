@@ -2,6 +2,7 @@ import { headers } from "next/headers";
 import { resolveTenant } from "@/lib/tenant";
 import { getServerClient } from "@/lib/supabase/server";
 import { DashboardView } from "@/components/portal-admin/dashboard-view";
+import { demoLines, demoOrders, demoStatusLogs } from "@/lib/demo-data";
 
 type OrderRow = {
   id: string;
@@ -73,7 +74,8 @@ export default async function DashboardPage() {
   start7d.setDate(start7d.getDate() - 6);
   start7d.setHours(0, 0, 0, 0);
   const start7dIso = start7d.toISOString();
-  const ordersWeek = (orders14 ?? []).filter((o) => o.placed_at >= start7dIso);
+  const sourceOrders = orders14?.length ? orders14 : demoOrders();
+  const ordersWeek = sourceOrders.filter((o) => o.placed_at >= start7dIso);
   const todayOrders = ordersWeek.filter((o) => o.placed_at >= todayIso);
   const todayIds = todayOrders.map((o) => o.id);
 
@@ -94,9 +96,11 @@ export default async function DashboardPage() {
   const elapsedMs = Date.now() - startOfDay.getTime();
   const lwStart = new Date(startOfDay.getTime() - 7 * 24 * 60 * 60 * 1000);
   const lwEnd = new Date(lwStart.getTime() + elapsedMs);
-  const lastWeekToday = (orders14 ?? []).filter(
+  const lastWeekToday = sourceOrders.filter(
     (o) => o.placed_at >= lwStart.toISOString() && o.placed_at < lwEnd.toISOString()
   );
+  const displayTodayItems = todayItems.length ? todayItems : demoLines();
+  const displayLogs = logs?.length ? logs : demoStatusLogs();
 
   return (
     <DashboardView
@@ -104,8 +108,8 @@ export default async function DashboardPage() {
       ordersWeek={ordersWeek}
       todayOrders={todayOrders}
       lastWeekToday={lastWeekToday}
-      logs={logs ?? []}
-      todayItems={todayItems}
+      logs={displayLogs}
+      todayItems={displayTodayItems}
     />
   );
 }

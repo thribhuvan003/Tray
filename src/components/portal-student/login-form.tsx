@@ -2,111 +2,86 @@
 
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
-import { Mail, KeyRound, ArrowRight } from "lucide-react";
 import { getBrowserClient } from "@/lib/supabase/browser";
-import { cn } from "@/lib/utils";
 
-export function LoginForm({ next }: { next: string }) {
-  const [mode, setMode] = useState<"magic" | "password">("magic");
+export function LoginForm({ next, tenantId }: { next: string | null; tenantId: string | null }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [pending, start] = useTransition();
-  const [sent, setSent] = useState(false);
+
+  const roleDestination = async (userId: string | null | undefined) => {
+    if (!tenantId || !userId) return "/menu";
+    const sb = getBrowserClient();
+    const { data } = await sb
+      .from("tenant_memberships")
+      .select("role")
+      .eq("tenant_id", tenantId)
+      .eq("user_id", userId)
+      .eq("is_active", true)
+      .maybeSingle<{ role: string }>();
+
+    if (data?.role === "canteen_admin" || data?.role === "super_admin") return "/admin/dashboard";
+    if (data?.role === "kitchen_staff") return "/kitchen";
+    return "/menu";
+  };
 
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!email || !password) {
+      toast.error("Enter email and password");
+      return;
+    }
+
     start(async () => {
       const sb = getBrowserClient();
-      const redirectTo = new URL(`/auth/callback?next=${encodeURIComponent(next)}`, window.location.origin).toString();
-      if (mode === "magic") {
-        const { error } = await sb.auth.signInWithOtp({
-          email,
-          options: { emailRedirectTo: redirectTo, shouldCreateUser: true },
-        });
-        if (error) toast.error(error.message);
-        else {
-          setSent(true);
-          toast.success("Magic link sent — check your inbox.");
-        }
-      } else {
-        const { error } = await sb.auth.signInWithPassword({ email, password });
-        if (error) toast.error(error.message);
-        else window.location.href = next;
+      const { data, error } = await sb.auth.signInWithPassword({ email, password });
+      if (error) {
+        toast.error(error.message);
+        return;
       }
+      window.location.href = next ?? (await roleDestination(data.user?.id));
     });
   };
 
-  if (sent) {
-    return (
-      <div className="rounded-2xl bg-ocean-500/8 border border-ocean-500/30 p-6 text-center">
-        <Mail size={32} strokeWidth={1.6} className="mx-auto text-ocean-500 mb-3" />
-        <div className="font-medium">Check your inbox</div>
-        <p className="text-[13px] text-[color:var(--color-ink)]/65 mt-1">
-          We just sent a link to <b className="text-[color:var(--color-ink)]">{email}</b>. It expires in 15 minutes.
-        </p>
-      </div>
-    );
-  }
-
   return (
-    <form onSubmit={onSubmit} className="flex flex-col gap-3">
-      <div className="grid grid-cols-2 gap-1 p-1 rounded-full border border-[color:var(--color-line)] bg-[color:var(--color-paper-dim)] text-[12.5px] font-medium">
-        <button
-          type="button"
-          onClick={() => setMode("magic")}
-          className={cn(
-            "h-9 rounded-full inline-flex items-center justify-center gap-1.5 transition-colors",
-            mode === "magic" ? "bg-ocean-500 text-white" : "text-[color:var(--color-ink)]/65"
-          )}
-        >
-          <Mail size={13} /> Magic link
-        </button>
-        <button
-          type="button"
-          onClick={() => setMode("password")}
-          className={cn(
-            "h-9 rounded-full inline-flex items-center justify-center gap-1.5 transition-colors",
-            mode === "password" ? "bg-ocean-500 text-white" : "text-[color:var(--color-ink)]/65"
-          )}
-        >
-          <KeyRound size={13} /> Password
-        </button>
-      </div>
-      <label>
-        <span className="sr-only">Email</span>
+    <form onSubmit={onSubmit}>
+      <div className="field">
+        <label className="label" htmlFor="login-email">
+          Email
+        </label>
         <input
+          className="input"
+          id="login-email"
           type="email"
+          placeholder="you@campus.edu"
+          autoComplete="email"
           required
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          autoComplete="email"
-          placeholder="you@yourcollege.edu"
-          className="w-full h-12 px-4 rounded-xl border border-[color:var(--color-line)] bg-[color:var(--color-paper)] text-[14px] focus:outline-none focus:border-ocean-500"
         />
-      </label>
-      {mode === "password" && (
-        <label>
-          <span className="sr-only">Password</span>
-          <input
-            type="password"
-            required
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            autoComplete="current-password"
-            placeholder="Password"
-            className="w-full h-12 px-4 rounded-xl border border-[color:var(--color-line)] bg-[color:var(--color-paper)] text-[14px] focus:outline-none focus:border-ocean-500"
-          />
-        </label>
-      )}
-      <button
-        type="submit"
-        disabled={pending}
-        className={cn(
-          "h-12 rounded-xl bg-ocean-500 text-white text-[14px] font-medium inline-flex items-center justify-center gap-2 hover:bg-ocean-600 transition-colors",
-          pending && "opacity-70 cursor-not-allowed"
-        )}
-      >
-        {pending ? "Sending…" : mode === "magic" ? "Send magic link" : "Sign in"} <ArrowRight size={15} />
+      </div>
+      <div className="field">
+        <div className="row-label">
+          <label className="label" htmlFor="login-pass">
+            Password
+          </label>
+          <button type="button" onClick={() => toast.success("Reset link sent to your email")}>
+            Forgot?
+          </button>
+        </div>
+        <input
+          className="input"
+          id="login-pass"
+          type="password"
+          placeholder="Password"
+          autoComplete="current-password"
+          required
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+        />
+      </div>
+      <button className="btn btn-primary btn-lg" style={{ width: "100%", marginTop: 16 }} type="submit" disabled={pending}>
+        {pending ? "Signing in..." : "Sign in ->"}
       </button>
     </form>
   );

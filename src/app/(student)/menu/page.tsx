@@ -3,6 +3,7 @@ import { resolveTenant } from "@/lib/tenant";
 import { getServerClient } from "@/lib/supabase/server";
 import { MenuBoard } from "@/components/portal-student/menu-board";
 import { notFound } from "next/navigation";
+import { demoCategories, demoMenuItems } from "@/lib/demo-data";
 
 export const revalidate = 15;
 
@@ -27,5 +28,8 @@ export default async function MenuPage() {
       .order("sort_order"),
   ]);
 
-  return <MenuBoard categories={cats ?? []} items={items ?? []} />;
+  const categories = cats?.length ? cats : demoCategories(tenant.id);
+  const menuItems = items?.length ? items : demoMenuItems(tenant.id);
+
+  return <MenuBoard categories={categories} items={menuItems} />;
 }

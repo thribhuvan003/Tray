@@ -2,6 +2,7 @@ import { headers } from "next/headers";
 import { resolveTenant } from "@/lib/tenant";
 import { getServerClient } from "@/lib/supabase/server";
 import { MenuTable } from "@/components/portal-admin/menu-table";
+import { demoCategories, demoMenuItems } from "@/lib/demo-data";
 
 type Row = {
   id: string;
@@ -37,15 +38,35 @@ export default async function AdminMenuPage() {
       .returns<{ id: string; name: string }[]>(),
   ]);
 
+  const displayItems = items?.length
+    ? items
+    : demoMenuItems(tenant.id).map((item) => ({
+        id: item.id,
+        name: item.name,
+        category_id: item.category_id,
+        diet: item.diet,
+        price_paise: item.price_paise,
+        status: item.status,
+        in_stock: item.in_stock,
+        stock_qty: item.stock_qty,
+        prep_target_seconds: item.prep_target_seconds,
+      }));
+  const displayCats = cats?.length ? cats : demoCategories(tenant.id).map((cat) => ({ id: cat.id, name: cat.name }));
+
   return (
-    <div>
-      <div className="mb-5">
-        <h1 className="font-display text-[26px] sm:text-[30px] font-semibold tracking-tight">Menu</h1>
-        <div className="text-[11px] font-mono uppercase tracking-[0.12em] text-graphite-400 mt-0.5">
-          {items?.length ?? 0} items · draft / live / archived workflow
+    <>
+      <div className="page-header">
+        <div>
+          <span className="eyebrow">Catalogue - {displayItems.length} dishes - {displayCats.length} categories</span>
+          <h1 className="page-title">Menu manager</h1>
+          <div className="page-sub">Toggle availability, edit pricing, manage prep times.</div>
+        </div>
+        <div className="row gap-2">
+          <button className="btn btn-ghost btn-sm">Import CSV</button>
+          <button className="btn btn-primary btn-sm">+ New dish</button>
         </div>
       </div>
-      <MenuTable items={items ?? []} categories={cats ?? []} />
-    </div>
+      <MenuTable items={displayItems} categories={displayCats} />
+    </>
   );
 }

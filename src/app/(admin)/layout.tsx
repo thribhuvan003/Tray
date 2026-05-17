@@ -12,11 +12,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const user = await requireRole(["canteen_admin", "super_admin"]);
   if (!user) redirect(`/login?next=/admin/dashboard`);
   return (
-    <div
-      data-portal="admin"
-      className="min-h-screen bg-graphite-900 text-graphite-200 relative overflow-x-hidden"
-    >
-      <div className="grid-paper fixed inset-0 z-0" />
+    <div className="page active" data-screen-label="09 Admin">
       <AdminShell tenantName={tenant.name} tenantSlug={tenant.slug} userEmail={user.email}>
         {children}
       </AdminShell>

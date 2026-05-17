@@ -1,35 +1,36 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { Search } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { MenuItem, MenuCategory } from "@/lib/db/types";
-import { DietFilterTabs, type DietFilter } from "./diet-filter";
 import { MenuItemCard } from "./menu-item-card";
-import { cn } from "@/lib/utils";
 
 type Props = { categories: MenuCategory[]; items: MenuItem[] };
+type DietFilter = "all" | "veg" | "nonveg";
 
 export function MenuBoard({ categories, items }: Props) {
-  const [filter, setFilter] = useState<DietFilter>("all");
+  const [activeCat, setActiveCat] = useState("all");
+  const [diet, setDiet] = useState<DietFilter>("all");
   const [q, setQ] = useState("");
+  const searchRef = useRef<HTMLInputElement | null>(null);
 
-  const counts = useMemo(() => {
-    const c: Record<DietFilter, number> = { all: 0, veg: 0, egg: 0, nonveg: 0 };
-    for (const it of items) {
-      c.all++;
-      c[it.diet]++;
-    }
-    return c;
-  }, [items]);
+  useEffect(() => {
+    const onFocus = () => searchRef.current?.focus();
+    window.addEventListener("tray:focus-search", onFocus);
+    return () => window.removeEventListener("tray:focus-search", onFocus);
+  }, []);
+
+  const liveItems = items.filter((item) => item.status === "live");
+  const categoryList = [{ id: "all", name: "All" }, ...categories.map((c) => ({ id: c.id, name: c.name }))];
 
   const filtered = useMemo(() => {
     const needle = q.trim().toLowerCase();
-    return items.filter((it) => {
-      if (filter !== "all" && it.diet !== filter) return false;
+    return liveItems.filter((it) => {
+      if (activeCat !== "all" && it.category_id !== activeCat) return false;
+      if (diet !== "all" && (diet === "veg" ? it.diet !== "veg" : it.diet === "veg")) return false;
       if (!needle) return true;
       return it.name.toLowerCase().includes(needle) || (it.description ?? "").toLowerCase().includes(needle);
     });
-  }, [items, filter, q]);
+  }, [activeCat, diet, liveItems, q]);
 
   const byCat = useMemo(() => {
     const m = new Map<string | null, MenuItem[]>();
@@ -42,57 +43,94 @@ export function MenuBoard({ categories, items }: Props) {
   }, [filtered]);
 
   return (
-    <div className="mx-auto max-w-5xl px-4 sm:px-6 pt-6 pb-10">
-      <div className="mb-6 sm:mb-8">
-        <h1 className="font-display text-[clamp(32px,5.5vw,52px)] leading-[1.04] tracking-[-0.035em] font-medium">
-          What&rsquo;s <span className="italic text-ocean-500">cooking.</span>
-        </h1>
-        <p className="text-[14px] text-[color:var(--color-ink)]/65 mt-1">
-          {counts.all} dishes · live menu · pickup in 4–11 min
-        </p>
+    <>
+      <div className="menu-hero container">
+        <div>
+          <span className="eyebrow">Today&apos;s menu</span>
+          <h1>
+            What&apos;s <span className="it">cooking.</span>
+          </h1>
+        </div>
+        <div className="meta">
+          <span>
+            <span className="pulse-dot" style={{ color: "var(--ok)", display: "inline-block", verticalAlign: "middle", marginRight: 6 }} />
+            Kitchen open - ~7 min wait
+          </span>
+          <span className="hide-mobile">-</span>
+          <span className="hide-mobile">{liveItems.length} dishes available</span>
+        </div>
       </div>
 
-      <div className="sticky top-14 z-30 -mx-4 px-4 sm:-mx-6 sm:px-6 py-3 bg-[color:var(--color-paper)]/85 backdrop-blur-xl border-b border-[color:var(--color-line)] flex flex-col gap-3">
-        <label className="relative">
-          <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[color:var(--color-ink)]/40" />
+      <div className="container" style={{ paddingTop: 16, paddingBottom: 12 }}>
+        <label className="search" style={{ display: "block", maxWidth: 620, position: "relative" }}>
           <input
+            ref={searchRef}
+            className="input"
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="Search dishes…"
-            className="w-full h-10 pl-10 pr-3 rounded-full border border-[color:var(--color-line)] bg-[color:var(--color-paper-dim)] text-[14px] focus:outline-none focus:border-ocean-500 focus:bg-[color:var(--color-paper)]"
+            placeholder="Search dishes, e.g. biryani, chai..."
           />
         </label>
-        <DietFilterTabs value={filter} onChange={setFilter} counts={counts} />
       </div>
 
-      {filtered.length === 0 ? (
-        <div className="py-16 text-center text-[color:var(--color-ink)]/55">
-          <div className="font-display italic text-[24px] text-ocean-500">Nothing found.</div>
-          <p className="text-[14px] mt-2">Try a different filter or come back at lunchtime.</p>
-        </div>
-      ) : (
-        <div className="mt-6 sm:mt-8 flex flex-col gap-8">
-          {categories.map((cat) => {
+      <div className="diet-bar container" id="diet-bar">
+        <button className={`diet-tab ${diet === "all" ? "is-active" : ""}`} onClick={() => setDiet("all")}>
+          <span className="veg-dot" />
+          <span className="veg-dot nv" />
+          All
+        </button>
+        <button className={`diet-tab ${diet === "veg" ? "is-active" : ""}`} onClick={() => setDiet("veg")}>
+          <span className="veg-dot" />
+          Vegetarian
+        </button>
+        <button className={`diet-tab ${diet === "nonveg" ? "is-active" : ""}`} onClick={() => setDiet("nonveg")}>
+          <span className="veg-dot nv" />
+          Non-vegetarian
+        </button>
+      </div>
+
+      <div className="catrail" id="catrail">
+        {categoryList.map((cat) => {
+          const count = cat.id === "all" ? liveItems.length : liveItems.filter((it) => it.category_id === cat.id).length;
+          return (
+            <button key={cat.id} className={`cat ${activeCat === cat.id ? "active" : ""}`} onClick={() => setActiveCat(cat.id)}>
+              <span>{cat.name}</span>
+              <span className="ct">{count}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      <div id="menu-host">
+        {filtered.length === 0 ? (
+          <div className="empty">
+            <div className="empty-icon">0</div>
+            <div>No dishes match.</div>
+          </div>
+        ) : activeCat === "all" ? (
+          categories.map((cat) => {
             const list = byCat.get(cat.id) ?? [];
-            if (list.length === 0) return null;
+            if (!list.length) return null;
             return (
-              <section key={cat.id}>
-                <div className="flex items-end justify-between mb-3">
-                  <h2 className="font-display text-[22px] sm:text-[26px] font-medium tracking-tight">{cat.name}</h2>
-                  <span className="text-[11px] font-mono uppercase tracking-wider text-[color:var(--color-ink)]/45">
-                    {list.length} item{list.length === 1 ? "" : "s"}
-                  </span>
-                </div>
-                <div className={cn("grid gap-3", "grid-cols-2 md:grid-cols-3 lg:grid-cols-4")}>
-                  {list.map((it) => (
-                    <MenuItemCard key={it.id} item={it} />
-                  ))}
+              <section className="menu-section" key={cat.id}>
+                <h2>
+                  {cat.name}
+                  <span className="ct">{String(list.length).padStart(2, "0")} items</span>
+                </h2>
+                <div className="menu-grid">
+                  {list.map((item) => <MenuItemCard key={item.id} item={item} />)}
                 </div>
               </section>
             );
-          })}
-        </div>
-      )}
-    </div>
+          })
+        ) : (
+          <section className="menu-section">
+            <div className="menu-grid">
+              {filtered.map((item) => <MenuItemCard key={item.id} item={item} />)}
+            </div>
+          </section>
+        )}
+      </div>
+    </>
   );
 }

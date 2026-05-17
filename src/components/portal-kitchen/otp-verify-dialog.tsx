@@ -2,9 +2,7 @@
 
 import { useEffect, useRef, useState, useTransition } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
-import { KeyRound, X } from "lucide-react";
 import { toast } from "sonner";
-import { cn } from "@/lib/utils";
 import { verifyAndCollect } from "@/app/(kitchen)/_actions";
 
 type Order = { id: string; short_code: string; customer_name: string | null };
@@ -20,42 +18,25 @@ export function OtpVerifyDialog({
   onClose: () => void;
   onResult: (ok: boolean) => void;
 }) {
-  const [digits, setDigits] = useState<string[]>(["", "", "", ""]);
-  const [attemptsLeft, setAttemptsLeft] = useState<number | null>(null);
-  const inputs = useRef<Array<HTMLInputElement | null>>([null, null, null, null]);
+  const [digits, setDigits] = useState(["", "", "", ""]);
   const [pending, start] = useTransition();
+  const inputs = useRef<Array<HTMLInputElement | null>>([null, null, null, null]);
 
   useEffect(() => {
     if (open) {
       setDigits(["", "", "", ""]);
-      setAttemptsLeft(null);
       setTimeout(() => inputs.current[0]?.focus(), 30);
     }
   }, [open]);
 
-  const change = (i: number, v: string) => {
-    const cleaned = v.replace(/\D/g, "").slice(0, 1);
-    setDigits((d) => {
-      const next = [...d];
-      next[i] = cleaned;
+  const change = (index: number, value: string) => {
+    const cleaned = value.replace(/\D/g, "").slice(0, 1);
+    setDigits((prev) => {
+      const next = [...prev];
+      next[index] = cleaned;
       return next;
     });
-    if (cleaned && i < 3) inputs.current[i + 1]?.focus();
-  };
-
-  const onPaste = (e: React.ClipboardEvent) => {
-    const v = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 4);
-    if (v.length === 0) return;
-    e.preventDefault();
-    const next = ["", "", "", ""];
-    for (let i = 0; i < v.length; i++) next[i] = v[i] ?? "";
-    setDigits(next);
-    inputs.current[Math.min(v.length, 3)]?.focus();
-  };
-
-  const onKeyDown = (i: number, e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Backspace" && !digits[i] && i > 0) inputs.current[i - 1]?.focus();
-    if (e.key === "Enter") submit();
+    if (cleaned && index < 3) inputs.current[index + 1]?.focus();
   };
 
   const submit = () => {
@@ -65,92 +46,72 @@ export function OtpVerifyDialog({
       toast.error("Enter all 4 digits");
       return;
     }
+    if (order.id.startsWith("demo-")) {
+      if (otp === "1234") {
+        toast.success("Order collected");
+        onResult(true);
+      } else {
+        toast.error("Wrong code, try 1234");
+      }
+      return;
+    }
     start(async () => {
       const r = await verifyAndCollect(order.id, otp);
       if (r.ok) {
-        toast.success("Handed over");
+        toast.success("Order collected");
         onResult(true);
-        return;
+      } else {
+        toast.error(r.error ?? "Wrong code");
+        setDigits(["", "", "", ""]);
+        inputs.current[0]?.focus();
       }
-      toast.error(r.error ?? "Wrong code");
-      if (r.locked) {
-        onResult(false);
-        return;
-      }
-      if (typeof r.attemptsLeft === "number") setAttemptsLeft(r.attemptsLeft);
-      setDigits(["", "", "", ""]);
-      inputs.current[0]?.focus();
     });
   };
 
   return (
-    <Dialog.Root open={open} onOpenChange={(o) => !o && onClose()}>
+    <Dialog.Root open={open} onOpenChange={(value) => !value && onClose()}>
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm" />
-        <Dialog.Content className="fixed top-1/2 left-1/2 z-50 -translate-x-1/2 -translate-y-1/2 w-[min(92vw,420px)] bg-cream-50 dark:bg-graphite-800 border-2 border-tomato-900 dark:border-cream-200/30 shadow-[10px_10px_0_0_var(--color-tomato-900)] dark:shadow-[10px_10px_0_0_rgba(247,200,194,0.3)] focus:outline-none">
-          <div className="flex items-center justify-between p-4 border-b-2 border-tomato-900 dark:border-cream-200/30">
-            <div className="flex items-center gap-2">
-              <div className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-tomato-500 text-white">
-                <KeyRound size={15} />
-              </div>
-              <div>
-                <Dialog.Title className="font-display text-[18px] font-medium leading-tight">
-                  Verify pickup
-                </Dialog.Title>
-                {order && (
-                  <div className="text-[11px] font-mono uppercase tracking-wider text-tomato-900/55 dark:text-cream-200/55">
-                    {order.short_code} · {order.customer_name ?? "customer"}
-                  </div>
-                )}
-              </div>
-            </div>
-            <Dialog.Close
-              aria-label="Close"
-              className="h-8 w-8 inline-flex items-center justify-center rounded-full border border-tomato-900/30 dark:border-cream-200/30"
-            >
-              <X size={14} />
-            </Dialog.Close>
-          </div>
-          <div className="p-5">
-            <p className="text-[12.5px] text-tomato-900/65 dark:text-cream-200/65 mb-4">
-              Ask the customer for their 4-digit code. Three attempts.
-            </p>
-            <div className="flex justify-between gap-2" onPaste={onPaste}>
-              {[0, 1, 2, 3].map((i) => (
+        <Dialog.Overlay className="modal-scrim open" />
+        <Dialog.Content className="modal" onPointerDownOutside={(e) => e.preventDefault()}>
+          <span className="eyebrow" style={{ color: "var(--accent)" }}>Verify pickup</span>
+          <Dialog.Title asChild>
+            <h2 style={{ fontFamily: "var(--font-display)", fontSize: 36, letterSpacing: "-0.02em", margin: "8px 0 4px" }}>
+              Order <span style={{ color: "var(--accent)", fontStyle: "italic" }}>{order?.short_code ?? "T-2421"}</span>
+            </h2>
+          </Dialog.Title>
+          <p>
+            Ask <strong>{order?.customer_name ?? "student"}</strong> for their 4-digit pickup code.
+          </p>
+          <div className="kotp">
+            <div className="otp-digits" data-purpose="kitchen">
+              {[0, 1, 2, 3].map((idx) => (
                 <input
-                  key={i}
+                  key={idx}
                   ref={(el) => {
-                    inputs.current[i] = el;
+                    inputs.current[idx] = el;
                   }}
-                  inputMode="numeric"
-                  pattern="[0-9]*"
+                  className="otp-d"
                   maxLength={1}
-                  value={digits[i]}
-                  onChange={(e) => change(i, e.target.value)}
-                  onKeyDown={(e) => onKeyDown(i, e)}
-                  className="h-16 w-full text-center font-mono tabular text-[32px] font-medium border-2 border-tomato-900 dark:border-cream-200/40 bg-cream-50 dark:bg-graphite-700 focus:outline-none focus:border-tomato-500 focus:bg-white"
+                  inputMode="numeric"
+                  value={digits[idx]}
+                  onChange={(e) => change(idx, e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Backspace" && !digits[idx] && idx > 0) inputs.current[idx - 1]?.focus();
+                    if (e.key === "Enter") submit();
+                  }}
                 />
               ))}
             </div>
-            {attemptsLeft !== null && (
-              <div
-                className={cn(
-                  "mt-3 text-[12px] font-mono uppercase tracking-wider text-center",
-                  attemptsLeft === 0 ? "text-tomato-500" : "text-amber-600"
-                )}
-              >
-                {attemptsLeft === 0 ? "Locked — ask admin" : `${attemptsLeft} attempt${attemptsLeft === 1 ? "" : "s"} left`}
-              </div>
+            {order?.id.startsWith("demo-") && (
+              <p style={{ color: "var(--ink-3)", fontSize: 12, marginTop: 8 }}>
+                Hint for demo: <span className="mono" style={{ color: "var(--accent)" }}>1234</span>
+              </p>
             )}
-            <button
-              onClick={submit}
-              disabled={pending}
-              className={cn(
-                "mt-5 w-full h-12 rounded-md bg-tomato-500 text-white text-[14px] font-semibold hover:bg-tomato-600 transition-colors",
-                pending && "opacity-70 cursor-not-allowed"
-              )}
-            >
-              {pending ? "Verifying…" : "Verify & hand over"}
+          </div>
+          <div className="row" style={{ justifyContent: "flex-end", marginTop: 24, gap: 8 }}>
+            <Dialog.Close className="btn btn-ghost">Cancel</Dialog.Close>
+            <button className="btn btn-primary" onClick={submit} disabled={pending}>
+              {pending ? "Verifying..." : "Verify"}
             </button>
           </div>
         </Dialog.Content>

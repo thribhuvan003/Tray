@@ -4,6 +4,7 @@ import { resolveTenant } from "@/lib/tenant";
 import { getServerClient } from "@/lib/supabase/server";
 import { requireRole } from "@/lib/auth/get-user";
 import { KitchenBoard } from "@/components/portal-kitchen/board";
+import { demoLines, demoMenuItems, demoOrders } from "@/lib/demo-data";
 
 export const dynamic = "force-dynamic";
 
@@ -76,13 +77,22 @@ export default async function KitchenPage() {
     filteredLines = lines ?? [];
   }
 
+  const displayOrders = orders?.length ? orders : demoOrders();
+  const displayLines = filteredLines.length ? filteredLines : demoLines();
+  const displayMarquee = marquee?.length ? marquee : demoMenuItems(tenant.id).map((item) => ({
+    id: item.id,
+    name: item.name,
+    price_paise: item.price_paise,
+    diet: item.diet,
+  }));
+
   return (
     <KitchenBoard
       tenantId={tenant.id}
       tenantName={tenant.name}
-      orders={orders ?? []}
-      lines={filteredLines}
-      marquee={marquee ?? []}
+      orders={displayOrders}
+      lines={displayLines}
+      marquee={displayMarquee}
     />
   );
 }

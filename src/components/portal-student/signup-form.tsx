@@ -2,9 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
-import { ArrowRight, Mail } from "lucide-react";
 import { getBrowserClient } from "@/lib/supabase/browser";
-import { cn } from "@/lib/utils";
 
 export function SignupForm({
   next,
@@ -16,6 +14,7 @@ export function SignupForm({
   allowedDomain: string | null;
 }) {
   const [name, setName] = useState("");
+  const [roll, setRoll] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [pending, start] = useTransition();
@@ -25,16 +24,18 @@ export function SignupForm({
     if (!allowedDomain) return null;
     const dom = email.split("@")[1]?.toLowerCase();
     if (!dom) return "Enter a valid email";
-    if (dom !== allowedDomain.toLowerCase()) {
-      return `Use your @${allowedDomain} email`;
-    }
+    if (dom !== allowedDomain.toLowerCase()) return `Use your @${allowedDomain} email`;
     return null;
   };
 
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const err = validate();
-    if (err) return toast.error(err);
+    if (err) {
+      toast.error(err);
+      return;
+    }
+
     start(async () => {
       const sb = getBrowserClient();
       const redirectTo = new URL(
@@ -44,7 +45,10 @@ export function SignupForm({
       const { error } = await sb.auth.signUp({
         email,
         password,
-        options: { emailRedirectTo: redirectTo, data: { display_name: name, tenant_slug: tenantSlug } },
+        options: {
+          emailRedirectTo: redirectTo,
+          data: { display_name: name, roll_no: roll, tenant_slug: tenantSlug },
+        },
       });
       if (error) toast.error(error.message);
       else {
@@ -56,55 +60,90 @@ export function SignupForm({
 
   if (sent) {
     return (
-      <div className="rounded-2xl bg-ocean-500/8 border border-ocean-500/30 p-6 text-center">
-        <Mail size={32} strokeWidth={1.6} className="mx-auto text-ocean-500 mb-3" />
-        <div className="font-medium">Confirm your email</div>
-        <p className="text-[13px] text-[color:var(--color-ink)]/65 mt-1">
-          We sent a link to <b className="text-[color:var(--color-ink)]">{email}</b>.
+      <div className="surface-elev" style={{ padding: 24, textAlign: "center" }}>
+        <div className="chip chip-accent" style={{ marginBottom: 12 }}>
+          Email sent
+        </div>
+        <h2>Confirm your email.</h2>
+        <p className="sub" style={{ marginTop: 8 }}>
+          We sent a link to <b>{email}</b>.
         </p>
       </div>
     );
   }
 
   return (
-    <form onSubmit={onSubmit} className="flex flex-col gap-3">
-      <input
-        type="text"
-        required
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-        autoComplete="name"
-        placeholder="Your name"
-        className="w-full h-12 px-4 rounded-xl border border-[color:var(--color-line)] bg-[color:var(--color-paper)] text-[14px] focus:outline-none focus:border-ocean-500"
-      />
-      <input
-        type="email"
-        required
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        autoComplete="email"
-        placeholder={allowedDomain ? `you@${allowedDomain}` : "you@yourcollege.edu"}
-        className="w-full h-12 px-4 rounded-xl border border-[color:var(--color-line)] bg-[color:var(--color-paper)] text-[14px] focus:outline-none focus:border-ocean-500"
-      />
-      <input
-        type="password"
-        required
-        minLength={8}
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        autoComplete="new-password"
-        placeholder="Password (8+ characters)"
-        className="w-full h-12 px-4 rounded-xl border border-[color:var(--color-line)] bg-[color:var(--color-paper)] text-[14px] focus:outline-none focus:border-ocean-500"
-      />
-      <button
-        type="submit"
-        disabled={pending}
-        className={cn(
-          "h-12 rounded-xl bg-ocean-500 text-white text-[14px] font-medium inline-flex items-center justify-center gap-2 hover:bg-ocean-600 transition-colors",
-          pending && "opacity-70 cursor-not-allowed"
-        )}
-      >
-        {pending ? "Creating…" : "Create account"} <ArrowRight size={15} />
+    <form onSubmit={onSubmit}>
+      <div className="auth-grid">
+        <div className="field">
+          <label className="label" htmlFor="su-name">
+            Full name
+          </label>
+          <input
+            className="input"
+            id="su-name"
+            type="text"
+            placeholder="Ananya R."
+            autoComplete="name"
+            required
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+          />
+        </div>
+        <div className="field">
+          <label className="label" htmlFor="su-roll">
+            Roll no.
+          </label>
+          <input
+            className="input"
+            id="su-roll"
+            type="text"
+            placeholder="22B81A0511"
+            value={roll}
+            onChange={(e) => setRoll(e.target.value)}
+          />
+        </div>
+      </div>
+      <div className="field">
+        <label className="label" htmlFor="su-email">
+          Email
+        </label>
+        <input
+          className="input"
+          id="su-email"
+          type="email"
+          placeholder={allowedDomain ? `you@${allowedDomain}` : "you@campus.edu"}
+          autoComplete="email"
+          required
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+        />
+      </div>
+      <div className="field">
+        <label className="label" htmlFor="su-pass">
+          Password
+        </label>
+        <input
+          className="input"
+          id="su-pass"
+          type="password"
+          placeholder="At least 8 characters"
+          autoComplete="new-password"
+          required
+          minLength={8}
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+        />
+        <div className="pwbar" id="pwbar">
+          <span className="seg" />
+          <span className="seg" />
+          <span className="seg" />
+          <span className="seg" />
+        </div>
+        <div className="helper">Use 8+ characters with a mix of letters, numbers, and symbols.</div>
+      </div>
+      <button className="btn btn-primary btn-lg" style={{ width: "100%", marginTop: 8 }} type="submit" disabled={pending}>
+        {pending ? "Creating..." : "Create account ->"}
       </button>
     </form>
   );

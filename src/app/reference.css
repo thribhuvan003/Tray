@@ -1,0 +1,134 @@
+@import "../styles/tray-reference/tokens.css";
+@import "../styles/tray-reference/shell.css";
+@import "../styles/tray-reference/landing.css";
+@import "../styles/tray-reference/auth.css";
+@import "../styles/tray-reference/student.css";
+@import "../styles/tray-reference/portal.css";
+
+.modal[data-state] {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  z-index: 401;
+  transform: translate(-50%, -50%);
+  animation: none;
+}
+
+.landing .hero .hero-bg::before {
+  background:
+    radial-gradient(900px 600px at var(--tray-mx, 80%) var(--tray-my, 0%), var(--accent-soft), transparent 60%),
+    radial-gradient(700px 500px at 0% 80%, color-mix(in oklab, var(--gold) 18%, transparent), transparent 60%);
+}
+
+.motion-ready .dish,
+.motion-ready .stat,
+.motion-ready .admin-card,
+.motion-ready .mm-tile {
+  animation: riseIn var(--d-base) var(--ease-out-quart) both;
+}
+
+.motion-ready .dish:nth-child(2n),
+.motion-ready .mm-tile:nth-child(2n) {
+  animation-delay: 60ms;
+}
+
+.motion-ready .dish:nth-child(3n),
+.motion-ready .mm-tile:nth-child(3n) {
+  animation-delay: 120ms;
+}
+
+.btn,
+.btn-icon,
+.add-btn,
+.cat,
+.diet-tab,
+.ktab,
+.sidebar-link,
+.switch {
+  overflow: hidden;
+  position: relative;
+}
+
+.motion-ripple {
+  position: absolute;
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--ink) 16%, transparent);
+  pointer-events: none;
+  transform: scale(0);
+  animation: trayRipple 680ms var(--ease-out-quart) forwards;
+}
+
+@keyframes trayRipple {
+  to {
+    opacity: 0;
+    transform: scale(1);
+  }
+}
+
+.cart-fly {
+  position: fixed;
+  z-index: 1000;
+  width: 34px;
+  height: 34px;
+  margin-left: -17px;
+  margin-top: -17px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--bg-1);
+  display: grid;
+  place-items: center;
+  font-family: var(--font-display);
+  font-size: 18px;
+  box-shadow: var(--shadow-3);
+  pointer-events: none;
+  opacity: 0;
+}
+
+.cart-fly.run {
+  animation: cartFly 720ms var(--ease-spring) forwards;
+}
+
+@keyframes cartFly {
+  0% {
+    opacity: 1;
+    transform: translate(0, 0) scale(1);
+  }
+  70% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--tx), var(--ty)) scale(0.18);
+  }
+}
+
+.tray-confetti {
+  position: fixed;
+  z-index: 1200;
+  width: 8px;
+  height: 12px;
+  border-radius: 2px;
+  background: var(--c);
+  pointer-events: none;
+  animation: trayBurst 1100ms var(--ease-out-quart) forwards;
+}
+
+@keyframes trayBurst {
+  0% {
+    opacity: 1;
+    transform: translate(0, 0) rotate(0deg) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--tx), var(--ty)) rotate(var(--rot)) scale(0.25);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .motion-ready .dish,
+  .motion-ready .stat,
+  .motion-ready .admin-card,
+  .motion-ready .mm-tile {
+    animation: none;
+  }
+}

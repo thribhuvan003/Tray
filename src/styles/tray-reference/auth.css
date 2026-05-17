@@ -1,0 +1,114 @@
+/* =========================================================
+   TRAY — AUTH (login / signup / forgot / OTP)
+   ========================================================= */
+
+.auth-page {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  background: var(--bg-1);
+}
+@media (max-width: 960px) { .auth-page { grid-template-columns: 1fr; } }
+
+/* Left: editorial */
+.auth-left {
+  position: relative;
+  padding: var(--s-8);
+  display: flex; flex-direction: column; justify-content: space-between;
+  background:
+    radial-gradient(600px 400px at 20% 80%, var(--accent-soft), transparent 60%),
+    var(--bg);
+  border-right: 1px solid var(--line);
+  overflow: hidden;
+}
+@media (max-width: 960px) { .auth-left { display: none; } }
+.auth-left .glyph {
+  position: absolute; bottom: -40px; right: -20px;
+  font-family: var(--font-display); font-style: italic;
+  font-size: 380px; color: var(--accent); opacity: 0.16; line-height: 1;
+}
+.auth-left .quote {
+  font-family: var(--font-display);
+  font-size: clamp(36px, 3.6vw, 56px); line-height: 1.04;
+  letter-spacing: -0.02em;
+  max-width: 16ch; position: relative; z-index: 1;
+  margin-top: auto;
+}
+.auth-left .quote .it { font-style: italic; color: var(--accent); }
+.auth-left .meta { color: var(--ink-3); font-size: var(--fs-sm); font-family: var(--font-mono); letter-spacing: 0.06em; position: relative; z-index: 1; margin-top: var(--s-6); }
+.auth-left .top { display: flex; justify-content: space-between; align-items: center; position: relative; z-index: 1; }
+
+/* Right: form */
+.auth-right { padding: var(--s-12) var(--s-8); display: flex; flex-direction: column; justify-content: center; }
+.auth-form { width: 100%; max-width: 420px; margin: 0 auto; }
+.auth-form .head { margin-bottom: var(--s-8); }
+.auth-form h1 { font-family: var(--font-display); font-size: clamp(36px, 4vw, 52px); line-height: 1.02; letter-spacing: -0.02em; }
+.auth-form h1 .it { font-style: italic; color: var(--accent); }
+.auth-form .sub { color: var(--ink-3); margin-top: var(--s-2); font-size: var(--fs-sm); }
+
+.auth-tabs {
+  display: inline-flex; align-items: center; gap: 0;
+  background: var(--bg-3); border: 1px solid var(--line);
+  border-radius: var(--r-pill); padding: 4px; margin-bottom: var(--s-6);
+}
+.auth-tab {
+  padding: 8px 18px; border-radius: var(--r-pill);
+  font-size: var(--fs-sm); color: var(--ink-3);
+  transition: all var(--d-fast) var(--ease-out-soft);
+}
+.auth-tab.active { background: var(--bg-1); color: var(--ink); box-shadow: var(--shadow-1); }
+
+.auth-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s-3); }
+@media (max-width: 480px) { .auth-grid { grid-template-columns: 1fr; } }
+
+.field { margin-bottom: var(--s-4); }
+.field .row-label { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.field .row-label a { color: var(--accent); font-size: var(--fs-xs); }
+.field .helper { color: var(--ink-4); font-size: var(--fs-xs); margin-top: 6px; }
+.field.error .input { border-color: var(--err); box-shadow: 0 0 0 4px rgba(233,115,115,0.12); }
+.field.error .helper { color: var(--err); }
+
+/* Password strength */
+.pwbar { display: flex; gap: 4px; margin-top: 8px; }
+.pwbar .seg { flex: 1; height: 3px; border-radius: 2px; background: var(--line); transition: background var(--d-fast); }
+.pwbar.s1 .seg:nth-child(-n+1) { background: var(--err); }
+.pwbar.s2 .seg:nth-child(-n+2) { background: var(--warn); }
+.pwbar.s3 .seg:nth-child(-n+3) { background: var(--gold); }
+.pwbar.s4 .seg { background: var(--ok); }
+
+/* OTP */
+.otp-wrap { display: flex; flex-direction: column; align-items: center; padding: var(--s-12) var(--s-6); gap: var(--s-6); max-width: 480px; margin: 0 auto; text-align: center; }
+.otp-wrap h1 { font-family: var(--font-display); font-size: clamp(34px, 4vw, 48px); line-height: 1.04; letter-spacing: -0.02em; }
+.otp-wrap h1 .it { font-style: italic; color: var(--accent); }
+.otp-wrap .sub { color: var(--ink-3); }
+.otp-digits { display: flex; gap: 10px; justify-content: center; }
+.otp-d {
+  width: 56px; height: 72px;
+  border-radius: var(--r-3);
+  background: var(--bg-2);
+  border: 1px solid var(--line-2);
+  font-family: var(--font-mono);
+  font-size: 30px;
+  color: var(--ink);
+  text-align: center;
+  outline: none;
+  transition: all var(--d-fast) var(--ease-out-soft);
+}
+.otp-d:focus { border-color: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); transform: translateY(-2px); }
+.otp-d.filled { border-color: var(--accent-line); background: var(--bg-3); }
+.otp-d.error { border-color: var(--err); animation: shake 360ms var(--ease-out-soft); }
+@keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
+
+.otp-timer { font-family: var(--font-mono); color: var(--ink-3); font-size: var(--fs-sm); }
+.otp-timer .v { color: var(--accent); }
+
+.success-check {
+  width: 96px; height: 96px; border-radius: 50%;
+  background: var(--accent); color: #1B0F05;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 48px;
+  animation: scaleIn 480ms var(--ease-spring) both;
+  box-shadow: 0 20px 60px -10px var(--accent-glow);
+}
+.success-check svg { animation: drawCheck 520ms var(--ease-out-quart) 200ms both; }
+@keyframes drawCheck { from { stroke-dashoffset: 100; } to { stroke-dashoffset: 0; } }

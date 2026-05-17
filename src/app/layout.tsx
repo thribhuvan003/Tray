@@ -5,6 +5,7 @@ import { Toaster } from "sonner";
 import { resolveTenant } from "@/lib/tenant";
 import { Providers } from "@/components/providers";
 import "./globals.css";
+import "./reference.css";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -46,7 +47,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Tray — Skip the line. Eat sooner.",
+  title: "Tray - campus food, served right.",
   description:
     "A canteen ordering system for college campuses. Order on your phone, pay by UPI, collect with a 4-digit code.",
   metadataBase: new URL(process.env.APP_URL ?? "http://localhost:3000"),
