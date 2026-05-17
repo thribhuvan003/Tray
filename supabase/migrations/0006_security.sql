@@ -1,0 +1,5 @@
+-- See applied migration 0006_security_pickup_secrets_short_code_seq via MCP.
+-- - Tighten orders insert RLS to require active tenant_memberships.
+-- - Add pickup_secrets (RLS denied to PostgREST; owner-read via SECURITY DEFINER fn).
+-- - Race-free next_order_short_code via per-tenant sequence.
+-- - resolve_tenant now returns upi_vpa.

@@ -41,3 +41,6 @@ export const featureFlags = {
   resendLive: Boolean(env.RESEND_API_KEY),
   upstashLive: Boolean(env.UPSTASH_REDIS_REST_URL && env.UPSTASH_REDIS_REST_TOKEN),
 };
+
+// Public flag — readable in client bundles so we can hide the simulator button.
+// Set NEXT_PUBLIC_RAZORPAY_LIVE=1 alongside the server-side keys.

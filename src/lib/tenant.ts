@@ -12,6 +12,7 @@ export type ResolvedTenant = {
   hero_tagline: string | null;
   logo_url: string | null;
   allowed_domain: string | null;
+  upi_vpa: string | null;
 };
 
 const RESERVED_SUBDOMAINS = new Set(["www", "app", "admin", "api", "auth", "static"]);
@@ -44,7 +45,16 @@ export const resolveTenant = cache(async (slug: string): Promise<ResolvedTenant 
   const client = _resolverClient();
   const { data, error } = await client.rpc("resolve_tenant", { p_slug: slug });
   if (error || !data || data.length === 0) return null;
-  const row = data[0];
+  const row = data[0] as unknown as {
+    id: string;
+    slug: string;
+    name: string;
+    college_name: string;
+    hero_tagline: string | null;
+    logo_url: string | null;
+    allowed_domain: string | null;
+    upi_vpa: string | null;
+  };
   if (!row) return null;
   return {
     id: row.id,
@@ -53,6 +63,7 @@ export const resolveTenant = cache(async (slug: string): Promise<ResolvedTenant 
     college_name: row.college_name,
     hero_tagline: row.hero_tagline,
     logo_url: row.logo_url,
-    allowed_domain: (row as unknown as { allowed_domain?: string | null }).allowed_domain ?? null,
+    allowed_domain: row.allowed_domain ?? null,
+    upi_vpa: row.upi_vpa ?? null,
   };
 });

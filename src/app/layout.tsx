@@ -55,19 +55,22 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const slug = h.get("x-tenant-slug") ?? "aditya";
   const tenant = await resolveTenant(slug);
 
+  // Blocking inline script: resolve theme synchronously before first paint so
+  // dark-mode users never see a white flash (FOUC). Mirrors the logic in
+  // ThemeProvider; that effect later re-applies idempotently.
+  const fouc = `(()=>{try{var t=localStorage.getItem('tray:theme')||'system';var d=t==='dark'||(t==='system'&&matchMedia('(prefers-color-scheme: dark)').matches);var r=document.documentElement;r.classList.toggle('dark',d);r.setAttribute('data-theme',d?'dark':'light');}catch(e){}})();`;
+
   return (
     <html
       lang="en"
       data-tenant-id={tenant?.id ?? ""}
       data-tenant-slug={tenant?.slug ?? ""}
       className={`${inter.variable} ${fraunces.variable} ${manrope.variable} ${jetbrains.variable}`}
-      style={
-        {
-          // Map Google-font variables to the design-system tokens used in globals.css
-          ["--font-inter" as string]: undefined,
-        } as React.CSSProperties
-      }
+      suppressHydrationWarning
     >
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: fouc }} />
+      </head>
       <body>
         <Providers tenantId={tenant?.id ?? null}>
           {children}

@@ -232,6 +232,30 @@ export type Database = {
         };
         Relationships: [];
       };
+      pickup_secrets: {
+        Row: {
+          order_id: string;
+          tenant_id: string;
+          otp_plain: string;
+          created_at: string;
+          expires_at: string;
+        };
+        Insert: {
+          order_id: string;
+          tenant_id: string;
+          otp_plain: string;
+          created_at?: string;
+          expires_at: string;
+        };
+        Update: {
+          order_id?: string;
+          tenant_id?: string;
+          otp_plain?: string;
+          created_at?: string;
+          expires_at?: string;
+        };
+        Relationships: [];
+      };
       payments: {
         Row: {
           amount_paise: number;
@@ -385,6 +409,7 @@ export type Database = {
       current_tenant_id: { Args: Record<string, never>; Returns: string };
       next_order_short_code: { Args: { p_tenant: string }; Returns: string };
       pre_request_set_tenant: { Args: Record<string, never>; Returns: undefined };
+      read_my_pickup_otp: { Args: { p_order: string }; Returns: string | null };
       resolve_tenant: {
         Args: { p_slug: string };
         Returns: {
@@ -396,6 +421,7 @@ export type Database = {
           logo_url: string | null;
           name: string;
           slug: string;
+          upi_vpa: string | null;
         }[];
       };
     };

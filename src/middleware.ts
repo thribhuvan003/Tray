@@ -13,8 +13,10 @@ export async function middleware(req: NextRequest) {
   const slug = (querySlug || hostSlug || DEFAULT_TENANT_SLUG).toLowerCase();
   res.headers.set("x-tenant-slug", slug);
 
-  // Pipe Supabase auth cookies forward — required by @supabase/ssr.
-  createServerClient(
+  // Pipe Supabase auth cookies forward AND refresh the session.
+  // The @supabase/ssr docs require this getUser() call in middleware so refreshed
+  // cookies are written back via setAll — without it, sessions silently expire.
+  const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
@@ -30,6 +32,7 @@ export async function middleware(req: NextRequest) {
       },
     }
   );
+  await supabase.auth.getUser();
 
   return res;
 }
