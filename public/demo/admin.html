@@ -1,0 +1,695 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=1440"/>
+<title>Tray — Admin · Aditya Engineering Canteen</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* =====================================================
+   TRAY · ADMIN DASHBOARD
+   Graphite + chartreuse · Space Grotesk + Geist Mono
+   Web-app style (spacious, clean) — NOT terminal-density
+   ===================================================== */
+:root{
+  --bg:#0b0e14;
+  --bg-2:#11151d;
+  --bg-3:#171c26;
+  --bg-4:#1f2531;
+  --bg-card:#0f131b;
+  --line:rgba(255,255,255,0.07);
+  --line-2:rgba(255,255,255,0.13);
+  --line-3:rgba(255,255,255,0.22);
+  --ink:#eef1f7;
+  --ink-2:#aab3c5;
+  --ink-3:#6d7689;
+  --ink-4:#444c5d;
+
+  --lime:#cdfa50;
+  --lime-2:#b4dc3a;
+  --lime-soft:rgba(205,250,80,0.12);
+  --amber:#ffb22a;
+  --amber-soft:rgba(255,178,42,0.14);
+  --rose:#ff6b6b;
+  --rose-soft:rgba(255,107,107,0.14);
+  --mint:#3fe6a3;
+  --mint-soft:rgba(63,230,163,0.14);
+  --sky:#5cb1ff;
+  --sky-soft:rgba(92,177,255,0.14);
+
+  --sans:'Space Grotesk',ui-sans-serif,system-ui,sans-serif;
+  --mono:'Geist Mono',ui-monospace,Menlo,monospace;
+}
+*,*::before,*::after{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);-webkit-font-smoothing:antialiased;font-size:14px;line-height:1.55;font-weight:400;letter-spacing:-0.005em}
+body{overflow-x:hidden;min-height:100vh}
+::selection{background:var(--lime);color:var(--bg)}
+a{color:inherit;text-decoration:none}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+
+/* type */
+.mono{font-family:var(--mono);font-feature-settings:"ss01"}
+.eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:0.16em;text-transform:uppercase;color:var(--ink-3);font-weight:500}
+
+/* =====================================================
+   SHELL
+   ===================================================== */
+.app{display:grid;grid-template-columns:248px 1fr;min-height:100vh}
+
+/* SIDEBAR */
+.sb{background:var(--bg-2);border-right:1px solid var(--line);padding:18px 14px;display:flex;flex-direction:column;gap:2px;position:sticky;top:0;height:100vh;overflow-y:auto}
+.sb-brand{display:flex;align-items:center;gap:9px;font-weight:600;font-size:18px;letter-spacing:-0.025em;padding:6px 10px 18px;border-bottom:1px solid var(--line);margin-bottom:14px;color:var(--ink)}
+.sb-brand .dot{font-style:italic;color:var(--lime);margin-left:-2px;font-weight:500}
+.sb-brand-mark{width:28px;height:28px;border-radius:7px;background:var(--lime);display:inline-flex;align-items:center;justify-content:center;color:var(--bg);font-weight:700;font-size:13px;font-family:var(--mono);box-shadow:0 0 20px rgba(205,250,80,0.32)}
+
+.sb-tenant{padding:10px 12px;background:var(--bg-3);border:1px solid var(--line);border-radius:8px;margin-bottom:14px;display:flex;align-items:center;gap:10px;cursor:pointer;transition:border-color .12s,background .12s}
+.sb-tenant:hover{border-color:var(--line-2);background:var(--bg-4)}
+.sb-tenant .av{width:28px;height:28px;border-radius:6px;background:linear-gradient(135deg,var(--amber),var(--lime));color:var(--bg);font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.sb-tenant .info{flex:1;min-width:0}
+.sb-tenant .info .n{font-size:13px;font-weight:600;color:var(--ink);line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sb-tenant .info .r{font-family:var(--mono);font-size:10px;color:var(--ink-3);letter-spacing:0.04em}
+.sb-tenant svg{opacity:.5}
+
+.sb-group{font-family:var(--mono);font-size:10px;letter-spacing:0.16em;text-transform:uppercase;color:var(--ink-3);padding:14px 10px 6px;font-weight:600}
+.sb-link{display:flex;align-items:center;gap:11px;padding:8px 11px;border-radius:7px;color:var(--ink-2);font-size:13.5px;font-weight:500;transition:background .12s,color .12s;cursor:pointer}
+.sb-link:hover{background:var(--bg-3);color:var(--ink)}
+.sb-link.active{background:var(--lime-soft);color:var(--lime);font-weight:600}
+.sb-link.active .ic{color:var(--lime);opacity:1}
+.sb-link .ic{width:15px;height:15px;flex-shrink:0;opacity:.65}
+.sb-link .kbd{margin-left:auto;font-family:var(--mono);font-size:10px;padding:1px 5px;background:var(--bg-3);border:1px solid var(--line-2);border-radius:4px;color:var(--ink-3);font-weight:500}
+.sb-link.active .kbd{background:rgba(205,250,80,0.06);border-color:rgba(205,250,80,0.18);color:var(--lime)}
+
+.sb-bottom{margin-top:auto;display:flex;flex-direction:column;gap:6px;padding-top:14px;border-top:1px solid var(--line)}
+.sb-portal-link{display:flex;align-items:center;justify-content:space-between;padding:7px 11px;border-radius:6px;font-family:var(--mono);font-size:11px;color:var(--ink-3);letter-spacing:0.04em;text-transform:uppercase;font-weight:500;transition:background .12s,color .12s}
+.sb-portal-link:hover{background:var(--bg-3);color:var(--ink)}
+.sb-user{display:flex;align-items:center;gap:10px;padding:8px 10px;background:var(--bg-3);border:1px solid var(--line);border-radius:8px;margin-top:6px}
+.sb-user .av{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--lime),var(--mint));color:var(--bg);font-weight:700;font-size:12px;display:flex;align-items:center;justify-content:center}
+.sb-user .info{display:flex;flex-direction:column;gap:1px;line-height:1.2;flex:1;min-width:0}
+.sb-user .info .n{font-size:12.5px;font-weight:600;color:var(--ink)}
+.sb-user .info .r{font-family:var(--mono);font-size:10px;color:var(--ink-3);letter-spacing:0.04em}
+
+/* MAIN */
+.main{padding:0 32px 64px;max-width:1380px;margin:0 auto;width:100%}
+
+/* TOP BAR */
+.topbar{display:flex;justify-content:space-between;align-items:center;padding:18px 0;border-bottom:1px solid var(--line);margin-bottom:24px;position:sticky;top:0;background:var(--bg);z-index:30;backdrop-filter:blur(8px)}
+.topbar-l{display:flex;flex-direction:column;gap:4px}
+.topbar h1{font-size:24px;font-weight:600;margin:0;letter-spacing:-0.025em}
+.topbar .crumb{font-family:var(--mono);font-size:11px;color:var(--ink-3);letter-spacing:0.06em;display:flex;align-items:center;gap:8px}
+.topbar .crumb .sep{color:var(--ink-4)}
+.topbar .crumb .live{color:var(--mint);display:inline-flex;align-items:center;gap:4px;text-transform:none;letter-spacing:0;font-family:var(--sans);font-size:11.5px;font-weight:600;margin-left:6px}
+.topbar .crumb .live .d{width:6px;height:6px;border-radius:50%;background:var(--mint);animation:pulse 2s infinite}
+@keyframes pulse{50%{opacity:.4}}
+
+.topbar-r{display:flex;gap:10px;align-items:center}
+
+/* Search bar */
+.search{display:flex;align-items:center;gap:8px;padding:7px 12px;background:var(--bg-3);border:1px solid var(--line);border-radius:7px;width:280px;font-family:var(--mono);font-size:12px;color:var(--ink-3);transition:border-color .12s}
+.search:hover,.search:focus-within{border-color:var(--line-2)}
+.search input{flex:1;border:0;background:transparent;outline:none;font:inherit;color:var(--ink)}
+.search input::placeholder{color:var(--ink-3)}
+.search .kbd{font-size:10px;padding:1px 5px;background:var(--bg-2);border:1px solid var(--line-2);border-radius:4px;color:var(--ink-3)}
+
+/* Buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:8px 13px;border-radius:7px;font-size:13px;font-weight:500;border:1px solid transparent;transition:transform .1s,background .15s,color .15s,border-color .15s;line-height:1;font-family:inherit}
+.btn-pri{background:var(--lime);color:var(--bg);border-color:var(--lime)}
+.btn-pri:hover{background:var(--lime-2);border-color:var(--lime-2);transform:translateY(-1px)}
+.btn-ghost{color:var(--ink);background:var(--bg-3);border-color:var(--line-2)}
+.btn-ghost:hover{background:var(--bg-4);border-color:var(--line-3)}
+
+.range-toggle{display:flex;background:var(--bg-3);border:1px solid var(--line);border-radius:7px;padding:2px;gap:1px}
+.range-toggle button{padding:6px 12px;border-radius:5px;font-family:var(--mono);font-size:11px;color:var(--ink-3);font-weight:500;letter-spacing:0.04em;transition:all .12s;font-family:inherit}
+.range-toggle button.active{background:var(--bg-4);color:var(--ink)}
+
+/* =====================================================
+   KPI GRID
+   ===================================================== */
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px}
+.kpi-card{padding:18px 20px;background:var(--bg-card);border:1px solid var(--line);border-radius:12px;display:flex;flex-direction:column;gap:14px;position:relative;overflow:hidden;transition:border-color .15s}
+.kpi-card:hover{border-color:var(--line-2)}
+.kpi-card .top{display:flex;justify-content:space-between;align-items:flex-start}
+.kpi-card .lbl{font-family:var(--mono);font-size:11px;color:var(--ink-3);letter-spacing:0.12em;text-transform:uppercase;font-weight:500}
+.kpi-card .delta{font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:0.02em;display:flex;align-items:center;gap:4px;padding:3px 8px;border-radius:5px}
+.kpi-card .delta.up{color:var(--mint);background:var(--mint-soft)}
+.kpi-card .delta.down{color:var(--rose);background:var(--rose-soft)}
+.kpi-card .val{font-size:38px;font-weight:500;letter-spacing:-0.03em;line-height:1;font-variant-numeric:tabular-nums;color:var(--ink)}
+.kpi-card .val .unit{font-size:16px;color:var(--ink-3);font-weight:500;margin-left:3px;font-family:var(--mono)}
+.kpi-card .spark{width:100%;height:36px}
+.kpi-card .spark path{fill:none;stroke:var(--lime);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:300;stroke-dashoffset:300;animation:drawIn 1.6s cubic-bezier(.2,.7,.3,1) forwards}
+.kpi-card .spark.amber path{stroke:var(--amber)}
+.kpi-card .spark.rose path{stroke:var(--rose)}
+.kpi-card .spark .area{fill:url(#sparkGrad);opacity:.4;stroke:none}
+@keyframes drawIn{to{stroke-dashoffset:0}}
+
+/* =====================================================
+   DASHBOARD GRID
+   ===================================================== */
+.dash-row{display:grid;gap:12px;margin-bottom:12px}
+.dash-row.r1{grid-template-columns:1.5fr 1fr}
+.dash-row.r2{grid-template-columns:1fr 1fr}
+.dash-row.r3{grid-template-columns:1fr}
+
+.panel{background:var(--bg-card);border:1px solid var(--line);border-radius:12px;padding:20px 22px;display:flex;flex-direction:column;gap:14px;min-height:280px}
+.panel-head{display:flex;justify-content:space-between;align-items:flex-start}
+.panel-head h3{margin:0;font-size:15px;font-weight:600;letter-spacing:-0.015em}
+.panel-head .sub{font-family:var(--mono);font-size:11px;color:var(--ink-3);letter-spacing:0.06em;margin-top:3px}
+.panel-head .actions{display:flex;gap:6px;align-items:center}
+.panel-tab{padding:4px 10px;font-family:var(--mono);font-size:11px;color:var(--ink-3);background:transparent;border:1px solid transparent;border-radius:5px;letter-spacing:0.04em;cursor:pointer;font-family:inherit}
+.panel-tab.active{color:var(--ink);background:var(--bg-3)}
+.panel-tab:hover{color:var(--ink)}
+
+/* Revenue chart */
+.rev-chart{flex:1;min-height:200px;position:relative}
+.rev-chart svg{width:100%;height:100%;overflow:visible}
+.rev-chart .grid line{stroke:var(--line);stroke-dasharray:2 5}
+.rev-chart .axis-label{fill:var(--ink-3);font-family:var(--mono);font-size:10px;letter-spacing:0.04em}
+.rev-chart .y-label{fill:var(--ink-4);font-family:var(--mono);font-size:9px}
+.rev-chart .area{fill:url(#revGrad);opacity:0.9}
+.rev-chart .line{fill:none;stroke:var(--lime);stroke-width:2;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:1200;stroke-dashoffset:1200;animation:drawIn 2.2s cubic-bezier(.2,.7,.3,1) .2s forwards}
+.rev-chart .dot{fill:var(--lime);opacity:0;animation:fadeDot .3s ease forwards}
+.rev-chart .dot.hl{fill:var(--bg);stroke:var(--lime);stroke-width:2.5;r:5}
+.rev-chart .label-hl{font-family:var(--sans);font-size:11px;fill:var(--lime);font-weight:600}
+.rev-chart .label-hl-sub{font-family:var(--mono);font-size:10px;fill:var(--ink-3)}
+@keyframes fadeDot{to{opacity:1}}
+
+/* Heatmap */
+.heat-shell{display:flex;flex-direction:column;gap:8px;flex:1}
+.heat{display:grid;grid-template-columns:auto repeat(12,1fr);gap:4px;font-family:var(--mono);font-size:10px;color:var(--ink-3);letter-spacing:0.04em}
+.heat .hr-label{font-family:var(--mono);font-size:10px;color:var(--ink-3);text-align:right;padding-right:6px;line-height:24px;text-transform:uppercase;letter-spacing:0.06em;font-weight:600}
+.heat .c{aspect-ratio:1;border-radius:3px;background:var(--bg-3);transition:transform .12s;opacity:0;animation:cellIn .45s cubic-bezier(.34,1.26,.64,1) forwards;cursor:pointer}
+@keyframes cellIn{from{opacity:0;transform:scale(.6)}to{opacity:1;transform:scale(1)}}
+.heat .c:hover{transform:scale(1.5);z-index:3;box-shadow:0 4px 16px rgba(205,250,80,.3);outline:1px solid var(--lime)}
+.heat .c.l1{background:rgba(205,250,80,0.15)}
+.heat .c.l2{background:rgba(205,250,80,0.36)}
+.heat .c.l3{background:rgba(205,250,80,0.6)}
+.heat .c.l4{background:var(--lime)}
+.heat-x{display:grid;grid-template-columns:auto repeat(12,1fr);gap:4px;font-family:var(--mono);font-size:10px;color:var(--ink-3);text-transform:uppercase;letter-spacing:0.06em;padding-top:4px;font-weight:600}
+.heat-x .pad{padding-right:6px}
+.heat-x span{text-align:center}
+.heat-legend{display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:10px;color:var(--ink-3);margin-top:4px;letter-spacing:0.04em;text-transform:uppercase;font-weight:600}
+.heat-legend .sw{width:12px;height:12px;border-radius:2px}
+
+/* Top items */
+.top-list{display:flex;flex-direction:column;gap:14px}
+.top-row{display:grid;grid-template-columns:auto 1fr auto;gap:14px;align-items:center}
+.top-row .rk{width:22px;font-family:var(--mono);font-size:11px;color:var(--ink-3);letter-spacing:0.04em;font-weight:600}
+.top-row .info{display:flex;flex-direction:column;gap:6px;min-width:0}
+.top-row .info .n{font-size:13.5px;font-weight:600;color:var(--ink);display:flex;align-items:center;gap:7px}
+.top-row .info .bar{height:6px;background:var(--bg-3);border-radius:3px;overflow:hidden;position:relative}
+.top-row .info .bar i{display:block;height:100%;background:linear-gradient(90deg,var(--lime),var(--lime-2));border-radius:3px;width:0;transition:width 1.2s cubic-bezier(.2,.7,.3,1) .3s}
+.top-row .v{font-family:var(--mono);font-size:12px;color:var(--ink);font-weight:600;text-align:right;min-width:48px}
+.top-row .v small{color:var(--ink-3);font-weight:400}
+.veg-dot{width:10px;height:10px;border:1.4px solid var(--mint);position:relative;display:inline-block;flex-shrink:0}
+.veg-dot::after{content:"";position:absolute;inset:1.5px;background:var(--mint);border-radius:50%}
+.veg-dot.nv{border-color:var(--rose)}
+.veg-dot.nv::after{background:var(--rose)}
+
+/* Activity feed */
+.feed{display:flex;flex-direction:column;gap:2px;font-size:13px;flex:1;overflow-y:auto;max-height:380px;padding-right:4px;scrollbar-width:thin;scrollbar-color:var(--line-2) transparent}
+.feed-item{display:grid;grid-template-columns:50px auto 1fr auto;gap:10px;align-items:center;padding:8px 8px;border-radius:6px;animation:feedIn .45s cubic-bezier(.34,1.26,.64,1) backwards;transition:background .12s}
+.feed-item:hover{background:var(--bg-3)}
+.feed-item.menu-add{background:linear-gradient(90deg,rgba(205,250,80,0.08),transparent);border-left:2px solid var(--lime);padding-left:8px}
+@keyframes feedIn{from{transform:translateY(-12px);opacity:0}to{transform:translateY(0);opacity:1}}
+.feed-item .t{font-family:var(--mono);font-size:10.5px;color:var(--ink-3);letter-spacing:0.02em;font-variant-numeric:tabular-nums}
+.feed-item .ic{width:24px;height:24px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:0.04em;flex-shrink:0}
+.feed-item .ic.order{background:var(--lime-soft);color:var(--lime)}
+.feed-item .ic.pay{background:var(--mint-soft);color:var(--mint)}
+.feed-item .ic.prep{background:var(--amber-soft);color:var(--amber)}
+.feed-item .ic.ready{background:var(--sky-soft);color:var(--sky)}
+.feed-item .ic.handover{background:var(--mint-soft);color:var(--mint)}
+.feed-item .ic.menu{background:var(--lime-soft);color:var(--lime)}
+.feed-item .ic.reject{background:var(--rose-soft);color:var(--rose)}
+.feed-item .msg{color:var(--ink-2);line-height:1.4;min-width:0}
+.feed-item .msg b{color:var(--ink);font-weight:600}
+.feed-item .amt{font-family:var(--mono);font-size:11.5px;color:var(--ink-3);text-align:right;font-weight:500;letter-spacing:0.02em;flex-shrink:0}
+
+/* Orders table */
+.table{width:100%;border-collapse:collapse;font-size:13px}
+.table th{font-family:var(--mono);font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:var(--ink-3);font-weight:600;text-align:left;padding:10px 14px;border-bottom:1px solid var(--line)}
+.table td{padding:12px 14px;border-bottom:1px solid var(--line);vertical-align:middle}
+.table tr:last-child td{border-bottom:none}
+.table tr:hover td{background:var(--bg-3)}
+.table .oid{font-family:var(--mono);font-weight:700;color:var(--ink)}
+.table .name{font-weight:500;color:var(--ink-2)}
+.table .items{color:var(--ink-3);font-size:12.5px;max-width:32ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.table .tot{font-family:var(--mono);font-weight:600;color:var(--ink);text-align:right;font-variant-numeric:tabular-nums}
+.table .time{font-family:var(--mono);font-size:11.5px;color:var(--ink-3);letter-spacing:0.02em}
+.status-pill{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:5px;font-family:var(--mono);font-size:10.5px;font-weight:600;letter-spacing:0.04em;text-transform:uppercase}
+.status-pill .d{width:6px;height:6px;border-radius:50%}
+.status-pill.preparing{background:var(--amber-soft);color:var(--amber)}
+.status-pill.preparing .d{background:var(--amber)}
+.status-pill.ready{background:var(--sky-soft);color:var(--sky)}
+.status-pill.ready .d{background:var(--sky)}
+.status-pill.collected{background:var(--mint-soft);color:var(--mint)}
+.status-pill.collected .d{background:var(--mint)}
+.status-pill.incoming{background:var(--lime-soft);color:var(--lime)}
+.status-pill.incoming .d{background:var(--lime)}
+
+.table-foot{padding:12px 14px;display:flex;justify-content:space-between;align-items:center;font-family:var(--mono);font-size:11px;color:var(--ink-3);letter-spacing:0.04em}
+
+/* Specials live ticker */
+.specials-strip{display:grid;grid-template-columns:1fr;gap:10px;margin-bottom:0}
+.spec-card{padding:14px 18px;background:linear-gradient(90deg,rgba(205,250,80,0.06),transparent 60%);border:1px solid rgba(205,250,80,0.18);border-radius:10px;display:flex;align-items:center;gap:14px}
+.spec-card .ic{width:36px;height:36px;border-radius:8px;background:var(--lime-soft);color:var(--lime);font-family:var(--mono);font-weight:700;font-size:14px;display:flex;align-items:center;justify-content:center}
+.spec-card .nm{flex:1;display:flex;flex-direction:column;gap:2px;min-width:0}
+.spec-card .nm .n{font-size:14px;font-weight:600;color:var(--ink);display:flex;align-items:center;gap:8px}
+.spec-card .nm .d{font-family:var(--mono);font-size:11px;color:var(--ink-3);letter-spacing:0.02em}
+.spec-card .pr{font-family:var(--mono);font-size:13px;color:var(--ink);font-weight:600}
+.spec-card .meta{font-family:var(--mono);font-size:10.5px;color:var(--lime);text-transform:uppercase;letter-spacing:0.08em;font-weight:600;padding:3px 9px;background:var(--lime-soft);border-radius:5px}
+
+/* Toast */
+.toast{position:fixed;bottom:24px;right:24px;background:var(--bg-3);border:1px solid var(--line-2);color:var(--ink);padding:10px 16px;border-radius:8px;font-size:13px;font-weight:500;display:flex;align-items:center;gap:10px;box-shadow:0 12px 32px rgba(0,0,0,.4);transform:translateY(20px);opacity:0;transition:all .35s cubic-bezier(.34,1.26,.64,1);z-index:50;pointer-events:none}
+.toast.show{transform:translateY(0);opacity:1}
+.toast .d{width:7px;height:7px;border-radius:50%;background:var(--lime)}
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- SIDEBAR -->
+  <aside class="sb">
+    <div class="sb-brand">
+      <span class="sb-brand-mark">T</span>Tray<span class="dot">.</span>
+    </div>
+
+    <div class="sb-tenant">
+      <div class="av">A</div>
+      <div class="info">
+        <div class="n">Aditya Eng. Canteen</div>
+        <div class="r">aditya · admin</div>
+      </div>
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 5l3 3 3-3"/></svg>
+    </div>
+
+    <div class="sb-group">Operations</div>
+    <div class="sb-link active">
+      <svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2" y="2" width="5.5" height="5.5" rx="1"/><rect x="8.5" y="2" width="5.5" height="5.5" rx="1"/><rect x="2" y="8.5" width="5.5" height="5.5" rx="1"/><rect x="8.5" y="8.5" width="5.5" height="5.5" rx="1"/></svg>
+      Overview<span class="kbd">G O</span>
+    </div>
+    <div class="sb-link" data-toast="Orders · coming soon">
+      <svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 4h12M2 8h12M2 12h8"/></svg>
+      Orders<span class="kbd">G R</span>
+    </div>
+    <div class="sb-link" data-toast="Menu manager · coming soon">
+      <svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2" y="3" width="12" height="4" rx="0.5"/><rect x="2" y="9" width="12" height="4" rx="0.5"/></svg>
+      Menu manager<span class="kbd">G M</span>
+    </div>
+    <div class="sb-link" data-toast="Students · coming soon">
+      <svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="8" cy="6" r="2.5"/><path d="M3 14 c1-3 4-4 5-4 c1 0 4 1 5 4"/></svg>
+      Students<span class="kbd">G S</span>
+    </div>
+    <div class="sb-link" data-toast="Insights · coming soon">
+      <svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 13L7 7L10 10L14 4"/></svg>
+      Insights<span class="kbd">G I</span>
+    </div>
+
+    <div class="sb-group">Settings</div>
+    <div class="sb-link" data-toast="Tenant settings · coming soon">
+      <svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="8" cy="8" r="2"/><path d="M8 1v3M8 12v3M15 8h-3M4 8H1M13.07 2.93l-2.12 2.12M5.05 10.95l-2.12 2.12M13.07 13.07l-2.12-2.12M5.05 5.05L2.93 2.93"/></svg>
+      Tenant
+    </div>
+    <div class="sb-link" data-toast="API keys · coming soon">
+      <svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2" y="6" width="12" height="8" rx="1"/><path d="M5 6V4a3 3 0 0 1 6 0v2"/></svg>
+      API keys
+    </div>
+    <div class="sb-link" data-toast="Audit log · coming soon">
+      <svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 3l10 10M13 3L3 13"/></svg>
+      Audit log
+    </div>
+
+    <div class="sb-bottom">
+      <div class="sb-group" style="padding-top:0">Other portals</div>
+      <a class="sb-portal-link" href="student.html">Student app <span>→</span></a>
+      <a class="sb-portal-link" href="kitchen.html">Kitchen view <span>→</span></a>
+      <a class="sb-portal-link" href="index.html">Marketing site <span>→</span></a>
+      <div class="sb-user">
+        <div class="av">A</div>
+        <div class="info"><div class="n">Aditya M.</div><div class="r">OWNER · ADMIN</div></div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <!-- TOP BAR -->
+    <div class="topbar">
+      <div class="topbar-l">
+        <div class="crumb">
+          <span>Operations</span>
+          <span class="sep">/</span>
+          <span style="color:var(--ink-2)">Overview</span>
+          <span class="live"><span class="d"></span>Live</span>
+        </div>
+        <h1>Today's overview</h1>
+      </div>
+      <div class="topbar-r">
+        <div class="search">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+          <input placeholder="Search orders, students, items…"/>
+          <span class="kbd">⌘K</span>
+        </div>
+        <div class="range-toggle" id="rangeToggle">
+          <button data-r="hour">Hour</button>
+          <button data-r="day" class="active">Day</button>
+          <button data-r="week">Week</button>
+          <button data-r="month">Month</button>
+        </div>
+        <button class="btn btn-ghost">Export</button>
+        <button class="btn btn-pri">Manage menu</button>
+      </div>
+    </div>
+
+    <!-- KPI GRID -->
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="top"><span class="lbl">Revenue today</span><span class="delta up">▲ 12.4%</span></div>
+        <div class="val">₹<span class="counter" data-to="38420">0</span></div>
+        <svg class="spark" viewBox="0 0 200 36" preserveAspectRatio="none">
+          <defs><linearGradient id="sparkGrad" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#cdfa50" stop-opacity=".35"/><stop offset="1" stop-color="#cdfa50" stop-opacity="0"/></linearGradient></defs>
+          <path d="M0 28 L20 24 L40 28 L60 18 L80 22 L100 14 L120 17 L140 8 L160 12 L180 5 L200 8"/>
+        </svg>
+      </div>
+      <div class="kpi-card">
+        <div class="top"><span class="lbl">Orders</span><span class="delta up">▲ 8.1%</span></div>
+        <div class="val"><span class="counter" data-to="248">0</span></div>
+        <svg class="spark" viewBox="0 0 200 36" preserveAspectRatio="none">
+          <path d="M0 24 L20 26 L40 20 L60 24 L80 16 L100 20 L120 12 L140 14 L160 8 L180 10 L200 6"/>
+        </svg>
+      </div>
+      <div class="kpi-card">
+        <div class="top"><span class="lbl">Avg ticket</span><span class="delta up">▲ ₹6</span></div>
+        <div class="val">₹<span class="counter" data-to="155">0</span></div>
+        <svg class="spark amber" viewBox="0 0 200 36" preserveAspectRatio="none">
+          <path d="M0 20 L20 22 L40 18 L60 16 L80 20 L100 15 L120 18 L140 12 L160 16 L180 11 L200 13"/>
+        </svg>
+      </div>
+      <div class="kpi-card">
+        <div class="top"><span class="lbl">Avg pickup</span><span class="delta down">▼ 0:18 slower</span></div>
+        <div class="val">7:<span class="counter" data-to="12">0</span></div>
+        <svg class="spark rose" viewBox="0 0 200 36" preserveAspectRatio="none">
+          <path d="M0 10 L20 14 L40 12 L60 16 L80 14 L100 20 L120 18 L140 24 L160 22 L180 28 L200 26"/>
+        </svg>
+      </div>
+    </div>
+
+    <!-- TODAY'S LIVE SPECIALS strip -->
+    <div id="specialsStrip"></div>
+
+    <!-- ROW 1: revenue + heatmap -->
+    <div class="dash-row r1">
+      <div class="panel">
+        <div class="panel-head">
+          <div><h3>Revenue this week</h3><div class="sub">DAILY TOTAL · ₹ THOUSANDS</div></div>
+          <div class="actions">
+            <button class="panel-tab active">Revenue</button>
+            <button class="panel-tab">Orders</button>
+            <button class="panel-tab">Avg ticket</button>
+          </div>
+        </div>
+        <div class="rev-chart">
+          <svg viewBox="0 0 700 220" preserveAspectRatio="none">
+            <defs>
+              <linearGradient id="revGrad" x1="0" x2="0" y1="0" y2="1">
+                <stop offset="0" stop-color="#cdfa50" stop-opacity="0.32"/>
+                <stop offset="1" stop-color="#cdfa50" stop-opacity="0"/>
+              </linearGradient>
+            </defs>
+            <g class="grid">
+              <line x1="0" y1="40" x2="700" y2="40"/>
+              <line x1="0" y1="100" x2="700" y2="100"/>
+              <line x1="0" y1="160" x2="700" y2="160"/>
+            </g>
+            <text class="y-label" x="700" y="44" text-anchor="end">40K</text>
+            <text class="y-label" x="700" y="104" text-anchor="end">25K</text>
+            <text class="y-label" x="700" y="164" text-anchor="end">10K</text>
+            <line x1="0" y1="80" x2="700" y2="80" stroke="#ffb22a" stroke-width="1.2" stroke-dasharray="4 5" opacity="0.5"/>
+            <text class="y-label" x="6" y="74" fill="#ffb22a">TARGET</text>
+            <path class="area" d="M0 160 L88 140 L175 148 L263 110 L350 118 L438 84 L525 96 L613 56 L700 42 L700 220 L0 220 Z"/>
+            <path class="line" d="M0 160 L88 140 L175 148 L263 110 L350 118 L438 84 L525 96 L613 56 L700 42"/>
+            <circle class="dot" cx="0"   cy="160" r="3.5" style="animation-delay:1.6s"/>
+            <circle class="dot" cx="88"  cy="140" r="3.5" style="animation-delay:1.7s"/>
+            <circle class="dot" cx="175" cy="148" r="3.5" style="animation-delay:1.8s"/>
+            <circle class="dot" cx="263" cy="110" r="3.5" style="animation-delay:1.9s"/>
+            <circle class="dot" cx="350" cy="118" r="3.5" style="animation-delay:2.0s"/>
+            <circle class="dot" cx="438" cy="84"  r="3.5" style="animation-delay:2.1s"/>
+            <circle class="dot" cx="525" cy="96"  r="3.5" style="animation-delay:2.2s"/>
+            <circle class="dot hl" cx="613" cy="56" r="5"  style="animation-delay:2.3s"/>
+            <circle class="dot" cx="700" cy="42"  r="3.5" style="animation-delay:2.4s"/>
+            <text class="axis-label" x="0"   y="208">MON</text>
+            <text class="axis-label" x="88"  y="208">TUE</text>
+            <text class="axis-label" x="175" y="208">WED</text>
+            <text class="axis-label" x="263" y="208">THU</text>
+            <text class="axis-label" x="350" y="208">FRI</text>
+            <text class="axis-label" x="438" y="208">SAT</text>
+            <text class="axis-label" x="525" y="208">SUN</text>
+            <text class="axis-label" x="613" y="208">MON</text>
+            <text class="axis-label" x="700" y="208" text-anchor="end">TUE</text>
+            <text class="label-hl" x="540" y="42">₹38.4K · today</text>
+            <text class="label-hl-sub" x="540" y="56">↑ 12.4% vs yest.</text>
+          </svg>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <div><h3>Peak-hour heatmap</h3><div class="sub">ORDERS / HOUR · LAST 7 DAYS</div></div>
+        </div>
+        <div class="heat-shell">
+          <div class="heat" id="heatGrid"></div>
+          <div class="heat-x"><span class="pad"></span><span>8</span><span>9</span><span>10</span><span>11</span><span>12</span><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span></div>
+          <div class="heat-legend"><span>LESS</span><span class="sw"></span><span class="sw l1"></span><span class="sw l2"></span><span class="sw l3"></span><span class="sw l4"></span><span>MORE</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ROW 2: top items + activity -->
+    <div class="dash-row r2">
+      <div class="panel">
+        <div class="panel-head">
+          <div><h3>Top items today</h3><div class="sub">BY UNITS SOLD</div></div>
+          <button class="panel-tab">View all</button>
+        </div>
+        <div class="top-list" id="topList">
+          <div class="top-row"><span class="rk">01</span><div class="info"><div class="n"><span class="veg-dot nv"></span>Chicken Biryani</div><div class="bar"><i data-w="92%"></i></div></div><div class="v">68 <small>orders</small></div></div>
+          <div class="top-row"><span class="rk">02</span><div class="info"><div class="n"><span class="veg-dot"></span>Masala Dosa</div><div class="bar"><i data-w="74%"></i></div></div><div class="v">54 <small>orders</small></div></div>
+          <div class="top-row"><span class="rk">03</span><div class="info"><div class="n"><span class="veg-dot"></span>Veg Thali</div><div class="bar"><i data-w="55%"></i></div></div><div class="v">41 <small>orders</small></div></div>
+          <div class="top-row"><span class="rk">04</span><div class="info"><div class="n"><span class="veg-dot"></span>Paneer Butter Masala</div><div class="bar"><i data-w="48%"></i></div></div><div class="v">35 <small>orders</small></div></div>
+          <div class="top-row"><span class="rk">05</span><div class="info"><div class="n"><span class="veg-dot"></span>Filter Coffee</div><div class="bar"><i data-w="38%"></i></div></div><div class="v">28 <small>orders</small></div></div>
+          <div class="top-row"><span class="rk">06</span><div class="info"><div class="n"><span class="veg-dot nv"></span>Mutton Curry</div><div class="bar"><i data-w="29%"></i></div></div><div class="v">22 <small>orders</small></div></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <div><h3>Live activity</h3><div class="sub">REAL-TIME EVENTS · ALL PORTALS</div></div>
+          <span class="status-pill" style="background:var(--mint-soft);color:var(--mint)"><span class="d" style="background:var(--mint)"></span>Live</span>
+        </div>
+        <div class="feed" id="feed"></div>
+      </div>
+    </div>
+
+    <!-- ROW 3: Orders table -->
+    <div class="dash-row r3">
+      <div class="panel" style="padding:0">
+        <div class="panel-head" style="padding:20px 22px 8px">
+          <div><h3>Recent orders</h3><div class="sub">LAST 50 · UPDATED LIVE</div></div>
+          <div class="actions">
+            <button class="panel-tab active">All</button>
+            <button class="panel-tab">Preparing</button>
+            <button class="panel-tab">Ready</button>
+            <button class="panel-tab">Collected</button>
+          </div>
+        </div>
+        <table class="table">
+          <thead>
+            <tr><th>Order</th><th>Student</th><th>Items</th><th style="text-align:right">Total</th><th>Status</th><th>Time</th></tr>
+          </thead>
+          <tbody id="ordersBody">
+            <tr><td class="oid">T-2425</td><td class="name">Ananya R.</td><td class="items">Chicken Biryani × 1, Filter Coffee × 1</td><td class="tot">₹210</td><td><span class="status-pill incoming"><span class="d"></span>Incoming</span></td><td class="time">11:42</td></tr>
+            <tr><td class="oid">T-2424</td><td class="name">Karthik V.</td><td class="items">Paneer Butter Masala × 1, Sweet Lassi × 1</td><td class="tot">₹210</td><td><span class="status-pill preparing"><span class="d"></span>Preparing</span></td><td class="time">11:41</td></tr>
+            <tr><td class="oid">T-2423</td><td class="name">Priya M.</td><td class="items">Veg Thali × 1, Masala Chai × 2</td><td class="tot">₹180</td><td><span class="status-pill preparing"><span class="d"></span>Preparing</span></td><td class="time">11:40</td></tr>
+            <tr><td class="oid">T-2422</td><td class="name">Rohit S.</td><td class="items">Mutton Curry × 1, Masala Dosa × 1</td><td class="tot">₹310</td><td><span class="status-pill ready"><span class="d"></span>Ready</span></td><td class="time">11:37</td></tr>
+            <tr><td class="oid">T-2421</td><td class="name">Devansh K.</td><td class="items">Idli + Sambar × 1, Filter Coffee × 1</td><td class="tot">₹90</td><td><span class="status-pill ready"><span class="d"></span>Ready</span></td><td class="time">11:35</td></tr>
+            <tr><td class="oid">T-2420</td><td class="name">Sneha P.</td><td class="items">Chicken Biryani × 1</td><td class="tot">₹180</td><td><span class="status-pill collected"><span class="d"></span>Collected</span></td><td class="time">11:32</td></tr>
+            <tr><td class="oid">T-2419</td><td class="name">Vikram T.</td><td class="items">Uttapam × 1, Filter Coffee × 2</td><td class="tot">₹140</td><td><span class="status-pill collected"><span class="d"></span>Collected</span></td><td class="time">11:30</td></tr>
+            <tr><td class="oid">T-2418</td><td class="name">Lakshmi N.</td><td class="items">Veg Cutlet × 2, Masala Chai × 1</td><td class="tot">₹140</td><td><span class="status-pill collected"><span class="d"></span>Collected</span></td><td class="time">11:28</td></tr>
+          </tbody>
+        </table>
+        <div class="table-foot">
+          <span>SHOWING 8 OF 248 ORDERS TODAY</span>
+          <span style="display:flex;gap:8px"><span style="color:var(--ink-2)">←</span>1 / 31<span style="color:var(--ink-2)">→</span></span>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"><span class="d"></span><span id="toastMsg">Updated.</span></div>
+
+<script>
+const $ = (q) => document.querySelector(q);
+const $$ = (q) => document.querySelectorAll(q);
+
+/* Counters */
+function animateCounter(el){
+  const to = +el.dataset.to;
+  const dur = 1400;
+  const t0 = performance.now();
+  const tick = (t) => {
+    const p = Math.min(1,(t-t0)/dur);
+    const e = 1 - Math.pow(1-p,3);
+    el.textContent = Math.round(to*e).toLocaleString();
+    if (p<1) requestAnimationFrame(tick);
+  };
+  requestAnimationFrame(tick);
+}
+$$('.counter').forEach(animateCounter);
+
+/* Top list bar animations */
+setTimeout(() => {
+  $$('.top-row .bar i').forEach(i => i.style.width = i.dataset.w);
+}, 300);
+
+/* Heatmap */
+const heat = $('#heatGrid');
+const days = ['MON','TUE','WED','THU','FRI','SAT','SUN'];
+const baseRow = [0,1,1,2,4,4,2,1,1,2,3,1];
+const dayMult = [0.85,1.0,1.15,1.0,1.3,0.55,0.25];
+days.forEach((d,r) => {
+  const lbl = document.createElement('span');
+  lbl.className = 'hr-label';
+  lbl.textContent = d;
+  heat.appendChild(lbl);
+  for (let c=0;c<12;c++){
+    const v = baseRow[c] * dayMult[r] + (Math.random()*0.7);
+    const cls = v < 0.6 ? '' : v < 1.5 ? 'l1' : v < 2.5 ? 'l2' : v < 3.5 ? 'l3' : 'l4';
+    const cell = document.createElement('div');
+    cell.className = 'c ' + cls;
+    cell.style.animationDelay = ((r*12 + c) * 0.012 + 0.3) + 's';
+    cell.title = `${d} · ${c+8}:00 · ${Math.round(v*8)} orders`;
+    heat.appendChild(cell);
+  }
+});
+/* Legend cells */
+$$('.heat-legend .sw').forEach((el,i) => {
+  if (i === 0) el.style.background = 'var(--bg-3)';
+  else if (i === 1) el.style.background = 'rgba(205,250,80,0.15)';
+  else if (i === 2) el.style.background = 'rgba(205,250,80,0.36)';
+  else if (i === 3) el.style.background = 'rgba(205,250,80,0.6)';
+  else if (i === 4) el.style.background = 'var(--lime)';
+});
+
+/* Specials live strip (synced from kitchen via localStorage) */
+function renderSpecials(){
+  const specs = JSON.parse(localStorage.getItem('tray_specials') || '[]');
+  const host = $('#specialsStrip');
+  host.innerHTML = '';
+  if (!specs.length) return;
+  const wrap = document.createElement('div');
+  wrap.className = 'panel';
+  wrap.style.padding = '16px 18px';
+  wrap.style.minHeight = '0';
+  wrap.style.marginBottom = '12px';
+  wrap.innerHTML = `<div class="panel-head" style="margin-bottom:10px"><div><h3>Today's specials · live from kitchen</h3><div class="sub">${specs.length} active · auto-syncs to all students</div></div><span class="status-pill incoming"><span class="d"></span>${specs.length} live</span></div>`;
+  const strip = document.createElement('div');
+  strip.className = 'specials-strip';
+  strip.innerHTML = specs.map(s => {
+    const minsAgo = Math.max(1, Math.round((Date.now()-s.addedAt)/60000));
+    return `
+    <div class="spec-card">
+      <div class="ic">${s.icon || s.name.split(' ').map(w=>w[0]).join('').slice(0,1).toUpperCase()}</div>
+      <div class="nm">
+        <div class="n"><span class="veg-dot ${s.diet==='nonveg'?'nv':''}"></span>${s.name}</div>
+        <div class="d">${s.desc} · prep ${s.prep} min</div>
+      </div>
+      <div class="pr">₹${s.price}</div>
+      <span class="meta">${minsAgo}m AGO · LIVE</span>
+    </div>`;
+  }).join('');
+  wrap.appendChild(strip);
+  host.appendChild(wrap);
+}
+renderSpecials();
+
+/* Live feed */
+const feed = $('#feed');
+const STUDENTS = ['Ananya R.','Karthik V.','Rohit S.','Priya M.','Devansh K.','Sneha P.','Vikram T.','Lakshmi N.','Anil K.','Tara P.'];
+const ITEMS = ['Chicken Biryani','Paneer B.M.','Masala Dosa','Veg Thali','Filter Coffee','Mutton Curry','Idli Sambar','Sweet Lassi'];
+const EVENTS = [
+  () => ({type:'order',  msg:`<b>T-${nextId()}</b> · new order from ${pick(STUDENTS)}`, amt:`+₹${pick([120,160,180,210,240])}`}),
+  () => ({type:'pay',    msg:`<b>T-${prevId()}</b> · UPI payment captured`,            amt:`+₹${pick([160,180,220,260])}`}),
+  () => ({type:'prep',   msg:`<b>T-${prevId(2)}</b> · status → preparing`,             amt:`lane ${pick(['01','02'])}`}),
+  () => ({type:'ready',  msg:`<b>T-${prevId(3)}</b> · status → ready · OTP issued`,    amt:`pickup ${pick(['8421','2916','5734','1027'])}`}),
+  () => ({type:'handover', msg:`<b>T-${prevId(5)}</b> · OTP verified · handed over`,   amt:`done`}),
+  () => ({type:'reject', msg:`<b>${pick(ITEMS)}</b> · low stock alert · 4 left`,       amt:'menu'}),
+];
+let orderCounter = 2425;
+function nextId(){ return ++orderCounter; }
+function prevId(n=1){ return orderCounter - n; }
+function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+function fmtT(d){ return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')+':'+String(d.getSeconds()).padStart(2,'0'); }
+
+const ICON_LABELS = {order:'NEW',pay:'PAY',prep:'PREP',ready:'READY',handover:'DONE',menu:'MENU',reject:'WARN'};
+
+function addFeed(forceType){
+  const ev = forceType
+    ? (forceType === 'menu' ? {type:'menu',msg:`Kitchen added a special · pushed live to all students`, amt:`menu.add`} : EVENTS[0]())
+    : EVENTS[Math.floor(Math.random()*EVENTS.length)]();
+  const row = document.createElement('div');
+  row.className = 'feed-item' + (ev.type === 'menu' ? ' menu-add' : '');
+  row.innerHTML = `<span class="t">${fmtT(new Date())}</span><span class="ic ${ev.type}">${ICON_LABELS[ev.type]||'·'}</span><span class="msg">${ev.msg}</span><span class="amt">${ev.amt}</span>`;
+  feed.prepend(row);
+  while (feed.children.length > 12) feed.removeChild(feed.lastChild);
+}
+for (let i=0;i<8;i++) addFeed();
+setInterval(addFeed, 3000);
+
+/* Cross-tab sync — when kitchen pushes a special, refresh the strip + feed */
+window.addEventListener('storage', (e) => {
+  if (e.key === 'tray_specials'){
+    renderSpecials();
+    addFeed('menu');
+    toast('Kitchen pushed a new special');
+  }
+});
+
+/* Range toggle */
+$$('#rangeToggle button').forEach(b => b.addEventListener('click', () => {
+  $$('#rangeToggle button').forEach(x => x.classList.remove('active'));
+  b.classList.add('active');
+  toast('Range: ' + b.textContent);
+}));
+
+/* Sidebar placeholder routes */
+$$('.sb-link[data-toast]').forEach(l => l.addEventListener('click', () => {
+  toast(l.dataset.toast);
+}));
+
+/* ⌘K */
+$$('.search input').forEach(i => i.addEventListener('keydown', e => {
+  if (e.key === 'Enter') toast('Searching for "' + e.target.value + '"…');
+}));
+window.addEventListener('keydown', e => {
+  if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k'){
+    e.preventDefault();
+    $('.search input').focus();
+  }
+});
+
+/* Toast */
+let toastTimer = null;
+function toast(msg){
+  $('#toastMsg').textContent = msg;
+  $('#toast').classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => $('#toast').classList.remove('show'), 2200);
+}
+</script>
+</body>
+</html>
