@@ -128,20 +128,11 @@ const SCOPED_CSS = `
 .tray-landing .tl-portal[data-c="kitchen"] .tl-portal-head h3 .tl-it { color: var(--tl-kitchen); }
 .tray-landing .tl-portal[data-c="admin"] .tl-portal-head h3 .tl-it { color: var(--tl-admin); }
 
-.tray-landing .tl-portal-frame { position: relative; height: 280px; overflow: hidden; background: var(--tl-bg-3); border-bottom: 1px solid var(--tl-line); display: flex; align-items: center; justify-content: center; }
-.tray-landing .tl-portal-frame::before { content: ""; position: absolute; inset: 0; background: radial-gradient(circle at 30% 20%, currentColor, transparent 55%); opacity: 0.18; }
-.tray-landing .tl-portal[data-c="student"] .tl-portal-frame { color: var(--tl-student); }
-.tray-landing .tl-portal[data-c="kitchen"] .tl-portal-frame { color: var(--tl-kitchen); }
-.tray-landing .tl-portal[data-c="admin"] .tl-portal-frame { color: var(--tl-admin); }
+.tray-landing .tl-portal-frame { position: relative; height: 280px; overflow: hidden; background: var(--tl-bg-3); border-bottom: 1px solid var(--tl-line); }
+@media (min-width: 720px) { .tray-landing .tl-portal-frame { height: 420px; } }
+.tray-landing .tl-portal-frame iframe { position: absolute; top: 0; left: 0; width: 200%; height: 200%; transform: scale(0.5); transform-origin: 0 0; border: 0; pointer-events: none; background: var(--tl-bg-3); }
+.tray-landing .tl-portal-frame .tl-portal-overlay { position: absolute; inset: 0; background: linear-gradient(180deg, transparent 60%, var(--tl-bg-2) 100%); pointer-events: none; z-index: 2; }
 .tray-landing .tl-portal-frame .tl-device-tag { position: absolute; top: 14px; left: 14px; font-family: var(--font-geist-mono), monospace; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--tl-ink-3); background: rgba(14, 10, 6, 0.7); padding: 4px 10px; border-radius: 5px; font-weight: 500; z-index: 3; backdrop-filter: blur(4px); }
-.tray-landing .tl-mock { position: relative; z-index: 2; width: 78%; background: rgba(14, 10, 6, 0.65); border: 1px solid currentColor; border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 8px; backdrop-filter: blur(8px); }
-.tray-landing .tl-mock-row { height: 8px; border-radius: 4px; background: currentColor; opacity: 0.35; }
-.tray-landing .tl-mock-row.tl-w-60 { width: 60%; }
-.tray-landing .tl-mock-row.tl-w-40 { width: 40%; }
-.tray-landing .tl-mock-row.tl-w-80 { width: 80%; }
-.tray-landing .tl-mock-row.tl-full { opacity: 0.55; }
-.tray-landing .tl-mock-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 4px; }
-.tray-landing .tl-mock-tile { aspect-ratio: 4 / 3; border-radius: 6px; background: currentColor; opacity: 0.18; }
 
 .tray-landing .tl-portal-body { padding: 20px 24px 24px; display: flex; flex-direction: column; gap: 14px; }
 .tray-landing .tl-portal-body p { color: var(--tl-ink-2); font-size: 14px; line-height: 1.55; margin: 0; }
@@ -245,39 +236,18 @@ function BrandMark() {
   );
 }
 
-function MockScreen({ kind }: { kind: "student" | "kitchen" | "admin" }) {
-  if (kind === "student") {
-    return (
-      <div className="tl-mock">
-        <div className="tl-mock-row tl-w-40 tl-full" />
-        <div className="tl-mock-row tl-w-60" />
-        <div className="tl-mock-grid">
-          <div className="tl-mock-tile" /><div className="tl-mock-tile" />
-          <div className="tl-mock-tile" /><div className="tl-mock-tile" />
-        </div>
-      </div>
-    );
-  }
-  if (kind === "kitchen") {
-    return (
-      <div className="tl-mock">
-        <div className="tl-mock-row tl-w-80 tl-full" />
-        <div className="tl-mock-row" />
-        <div className="tl-mock-row tl-w-60" />
-        <div className="tl-mock-row" />
-        <div className="tl-mock-row tl-w-80" />
-      </div>
-    );
-  }
+function PortalPreview({ src, title }: { src: string; title: string }) {
   return (
-    <div className="tl-mock">
-      <div className="tl-mock-row tl-w-40 tl-full" />
-      <div className="tl-mock-grid">
-        <div className="tl-mock-tile" /><div className="tl-mock-tile" />
-      </div>
-      <div className="tl-mock-row tl-w-80" />
-      <div className="tl-mock-row tl-w-60" />
-    </div>
+    <>
+      <iframe
+        src={src}
+        title={title}
+        loading="lazy"
+        sandbox="allow-scripts allow-same-origin"
+        scrolling="no"
+      />
+      <span className="tl-portal-overlay" />
+    </>
   );
 }
 
@@ -362,7 +332,7 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
             </div>
             <div className="tl-portal-frame">
               <span className="tl-device-tag">📱 Mobile · 480×</span>
-              <MockScreen kind="student" />
+              <PortalPreview src="/demo/student.html" title="Student app preview" />
             </div>
             <div className="tl-portal-body">
               <p>Browse the daily menu, pay through UPI, and receive a four-digit pickup code. Mobile-first, made for the phone in their hand.</p>
@@ -388,8 +358,8 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
               <span className="tl-portal-dot" />
             </div>
             <div className="tl-portal-frame">
-              <span className="tl-device-tag">🖥 Desktop / tablet</span>
-              <MockScreen kind="kitchen" />
+              <span className="tl-device-tag">🖥 Desktop / tablet · 1440×</span>
+              <PortalPreview src="/demo/kitchen.html" title="Kitchen view preview" />
             </div>
             <div className="tl-portal-body">
               <p>Live queue with preparation timers, status updates, and OTP verification on every handover. Add today's specials → push to every student instantly.</p>
@@ -416,7 +386,7 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
             </div>
             <div className="tl-portal-frame">
               <span className="tl-device-tag">🖥 Desktop · 1440×</span>
-              <MockScreen kind="admin" />
+              <PortalPreview src="/demo/admin.html" title="Admin console preview" />
             </div>
             <div className="tl-portal-body">
               <p>Daily revenue, peak hours, top items, full order history, and menu management — in one polished web console. Every event from every portal, live.</p>
