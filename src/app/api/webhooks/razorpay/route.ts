@@ -40,7 +40,10 @@ export async function POST(req: NextRequest) {
 
   const tenantSlug = payment.notes?.tenant;
   const tenantOrderId = payment.notes?.order;
-  if (!tenantSlug || !tenantOrderId) return NextResponse.json({ ok: true, skipped: true });
+  if (!tenantSlug || !tenantOrderId) {
+    console.warn("[razorpay] webhook payment missing notes", { event: body.event, payment_id: payment.id });
+    return NextResponse.json({ ok: true, skipped: true });
+  }
 
   const admin = getAdminClient();
   const eventId = `${body.event}:${payment.id ?? "x"}:${body.created_at ?? Date.now()}`;
@@ -69,7 +72,11 @@ export async function POST(req: NextRequest) {
     if (dupe) return NextResponse.json({ ok: false, error: dupe.message }, { status: 500 });
 
     if (orderRow.status === "pending_payment") {
-      await admin.from("orders").update({ status: "placed" }).eq("id", orderRow.id);
+      await admin
+        .from("orders")
+        .update({ status: "placed" })
+        .eq("id", orderRow.id)
+        .eq("tenant_id", orderRow.tenant_id);
       await admin.from("order_status_logs").insert({
         tenant_id: orderRow.tenant_id,
         order_id: orderRow.id,
@@ -82,7 +89,8 @@ export async function POST(req: NextRequest) {
     await admin
       .from("payments")
       .update({ status: "failed" })
-      .eq("razorpay_order_id", payment.order_id);
+      .eq("razorpay_order_id", payment.order_id)
+      .eq("tenant_id", orderRow.tenant_id);
   }
 
   return NextResponse.json({ ok: true });
