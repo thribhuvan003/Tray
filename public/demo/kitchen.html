@@ -230,6 +230,41 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
 .modal .hint{font-family:var(--mono);font-size:11px;color:var(--ink-3);letter-spacing:0.04em}
 .modal .hint .v{color:var(--tomato);font-weight:600}
 
+/* =====================================================
+   HISTORY + INSIGHTS VIEWS
+   ===================================================== */
+.view-pane{display:flex;flex-direction:column;gap:14px;animation:liveIn .3s ease both}
+.hist-table{width:100%;border-collapse:collapse;font-family:var(--sans)}
+.hist-table thead th{text-align:left;font-family:var(--mono);font-size:10.5px;letter-spacing:0.08em;text-transform:uppercase;color:var(--ink-3);padding:11px 16px;border-bottom:1px solid var(--line);font-weight:600;background:var(--cream-2)}
+.hist-table thead th.r,.hist-table td.r{text-align:right}
+.hist-table tbody td{padding:11px 16px;border-bottom:1px solid var(--line);color:var(--ink);font-size:13.5px;vertical-align:middle}
+.hist-table tbody tr:last-child td{border-bottom:0}
+.hist-table tbody tr{transition:background .12s}
+.hist-table tbody tr:hover{background:var(--cream-2)}
+.hist-table .hist-id{font-family:var(--mono);font-size:11.5px;background:var(--ink);color:var(--cream);padding:3px 8px;border-radius:5px;font-weight:600;letter-spacing:0.03em;display:inline-block}
+.hist-table .mono{font-family:var(--mono);font-size:12.5px;color:var(--ink-2);letter-spacing:0.02em}
+.hist-table .stat-pill{display:inline-flex;align-items:center;gap:5px;font-family:var(--mono);font-size:10.5px;font-weight:600;padding:3px 8px;border-radius:4px;text-transform:uppercase;letter-spacing:0.06em;background:rgba(94,112,40,0.12);color:var(--olive)}
+
+.ins-list{display:flex;flex-direction:column}
+.ins-row{display:grid;grid-template-columns:auto 1fr auto;gap:16px;align-items:center;padding:14px 18px;border-bottom:1px solid var(--line)}
+.ins-row:last-child{border-bottom:0}
+.ins-rk{font-family:var(--mono);font-size:14px;font-weight:700;color:var(--ink-3);letter-spacing:0.04em}
+.ins-info{min-width:0}
+.ins-n{font-size:14px;font-weight:600;color:var(--ink);margin-bottom:7px}
+.ins-bar{height:5px;background:var(--cream-3);border-radius:3px;overflow:hidden}
+.ins-bar i{display:block;height:100%;background:var(--ink);border-radius:3px;transition:width .6s cubic-bezier(.34,1.26,.64,1)}
+.ins-c{font-family:var(--mono);font-size:14px;color:var(--ink);font-weight:600;text-align:right}
+.ins-c small{display:block;font-family:var(--mono);font-size:10px;color:var(--ink-3);font-weight:500;text-transform:uppercase;letter-spacing:0.06em;margin-top:2px}
+
+@media print{
+  .sb,.toast,.modal-scrim,.page-head .r,.right-panel,.queue-foot{display:none!important}
+  .app{display:block!important}
+  .main{padding:0!important}
+  .queue-shell{display:block!important}
+  .queue-board{box-shadow:none!important;border:1px solid #000!important}
+  body{background:#fff!important}
+}
+
 </style>
 </head>
 <body>
@@ -712,14 +747,164 @@ window.addEventListener('storage', (e) => {
   }
 });
 
-// Sidebar nav (placeholder for non-queue routes)
+/* =====================================================
+   HISTORY + INSIGHTS VIEWS
+   ===================================================== */
+const mainEl = document.querySelector('.main');
+const queueShell = document.querySelector('.queue-shell');
+
+const historyView = document.createElement('div');
+historyView.id = 'historyView';
+historyView.className = 'view-pane';
+historyView.hidden = true;
+mainEl.appendChild(historyView);
+
+const insightsView = document.createElement('div');
+insightsView.id = 'insightsView';
+insightsView.className = 'view-pane';
+insightsView.hidden = true;
+mainEl.appendChild(insightsView);
+
+function buildHistory(){
+  const rows = [];
+  // current collected first
+  orders.filter(o=>o.status==='collected').forEach(o => {
+    rows.push({id:o.id, t:o.placedAt, items:o.items, total:o.total, stud:o.student, recent:true});
+  });
+  // simulated archive
+  const dishPool = DISH.concat(specials.map(s=>({name:s.name,diet:s.diet,tgt:s.prep})));
+  for (let i=0;i<28;i++){
+    const oid = `T-${counter - (i+12)}`;
+    const t = Date.now() - (i*9+18)*60000;
+    const it = dishPool[Math.floor(Math.random()*dishPool.length)];
+    const qty = 1 + Math.floor(Math.random()*2);
+    const total = (priceOf(it.name) || 150) * qty;
+    rows.push({id:oid, t, items:[{...it, q:qty}], total, stud:STUDENTS[(i*3+1)%STUDENTS.length], recent:false});
+  }
+  return rows;
+}
+
+function renderHistory(){
+  const rows = buildHistory();
+  const total = rows.reduce((a,r)=>a+r.total,0);
+  historyView.innerHTML = `
+    <div class="page-head">
+      <div class="l">
+        <span class="eyebrow">Last 24 hours · ${rows.length} completed</span>
+        <h1>Order <span class="it">history.</span></h1>
+        <div class="sub">
+          <span class="clk">₹${total.toLocaleString('en-IN')} total</span>
+          <span class="live"><span class="d"></span>Auto-refreshes as orders complete</span>
+        </div>
+      </div>
+      <div class="r">
+        <button class="btn btn-ghost btn-sm" onclick="toast('Exported · history.csv')">⇣ Export CSV</button>
+        <button class="btn btn-pri btn-sm" onclick="window.print()">🖶 Print</button>
+      </div>
+    </div>
+    <div class="queue-board" style="padding:0;overflow:hidden">
+      <table class="hist-table">
+        <thead><tr><th>Ticket</th><th>Time</th><th>Student</th><th>Item</th><th>Qty</th><th class="r">Total</th><th class="r">Status</th></tr></thead>
+        <tbody>${rows.map(r=>{
+          const it = r.items[0] || {name:'—',q:1};
+          const extra = r.items.length>1 ? ` <span class="mono">+${r.items.length-1}</span>` : '';
+          return `<tr>
+            <td><span class="hist-id">${r.id}</span></td>
+            <td class="mono">${fmtTime(r.t)}</td>
+            <td>${r.stud}</td>
+            <td>${it.name}${extra}</td>
+            <td class="mono">${it.q}×</td>
+            <td class="r mono">₹${r.total}</td>
+            <td class="r"><span class="stat-pill">✓ Done</span></td>
+          </tr>`;
+        }).join('')}
+        </tbody>
+      </table>
+    </div>`;
+}
+
+function renderInsights(){
+  const collectedToday = 38 + orders.filter(o=>o.status==='collected').length;
+  const liveRev = orders.filter(o=>o.status==='collected').reduce((a,o)=>a+o.total,0);
+  const revenue = collectedToday * 162 + liveRev;
+  const avgTicket = Math.round(revenue/Math.max(1,collectedToday));
+  const topItems = [
+    {n:'Chicken Biryani', d:'nonveg', c:18, p:92},
+    {n:'Masala Dosa',     d:'veg',    c:14, p:74},
+    {n:'Veg Thali',       d:'veg',    c:11, p:58},
+    {n:'Paneer Butter Masala', d:'veg', c:9, p:48},
+    {n:'Filter Coffee',   d:'veg',    c:7,  p:36},
+  ];
+  insightsView.innerHTML = `
+    <div class="page-head">
+      <div class="l">
+        <span class="eyebrow">Tuesday · lunch service</span>
+        <h1>Kitchen <span class="it">insights.</span></h1>
+        <div class="sub">
+          <span class="clk">${new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false})}</span>
+          <span class="live"><span class="d"></span>Updates as queue advances</span>
+        </div>
+      </div>
+    </div>
+    <div class="kpi-bar">
+      <div class="kpi"><div class="lbl">Orders served</div><div class="val">${collectedToday}</div><div class="delta up">↑ 12% vs yesterday</div></div>
+      <div class="kpi"><div class="lbl">Revenue today</div><div class="val"><span class="acc serif-it">₹${revenue.toLocaleString('en-IN')}</span></div><div class="delta">avg ₹${avgTicket} / ticket</div></div>
+      <div class="kpi"><div class="lbl">Avg prep time</div><div class="val">6:24</div><div class="delta">target 7:00 · on track</div></div>
+      <div class="kpi"><div class="lbl">Peak window</div><div class="val" style="font-size:22px">12:30–1:30</div><div class="delta">62% of day's orders</div></div>
+    </div>
+    <div class="queue-board" style="padding:0;overflow:hidden">
+      <div style="padding:18px 18px 8px;border-bottom:1px solid var(--line);display:flex;align-items:baseline;justify-content:space-between">
+        <h3 style="font-family:var(--display);font-size:22px;font-weight:500;color:var(--ink)">Top items <span class="it">today.</span></h3>
+        <span class="badge" style="font-family:var(--mono);font-size:10.5px;letter-spacing:0.06em;text-transform:uppercase;color:var(--ink-3)">By units sold</span>
+      </div>
+      <div class="ins-list">
+        ${topItems.map((it,i)=>`
+          <div class="ins-row">
+            <span class="ins-rk">${String(i+1).padStart(2,'0')}</span>
+            <div class="ins-info">
+              <div class="ins-n"><span class="veg-dot ${it.d==='nonveg'?'nv':''}" style="display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:7px;vertical-align:middle"></span>${it.n}</div>
+              <div class="ins-bar"><i style="width:${it.p}%"></i></div>
+            </div>
+            <span class="ins-c">${it.c}<small>orders</small></span>
+          </div>`).join('')}
+      </div>
+    </div>`;
+}
+
+function showView(name){
+  queueShell.hidden  = !(name === 'queue' || name === 'specials');
+  historyView.hidden = name !== 'history';
+  insightsView.hidden = name !== 'insights';
+  if (name === 'history')  renderHistory();
+  if (name === 'insights') renderInsights();
+  if (name === 'specials') document.querySelector('.right-panel')?.scrollIntoView({behavior:'smooth', block:'nearest'});
+}
+
+// Sidebar nav
 $$('.sb-link[data-nav]').forEach(l => l.addEventListener('click', () => {
   $$('.sb-link[data-nav]').forEach(x => x.classList.remove('active'));
   l.classList.add('active');
-  if (l.dataset.nav !== 'queue' && l.dataset.nav !== 'specials'){
-    toast('Coming soon · ' + l.textContent.trim());
-  }
+  showView(l.dataset.nav);
 }));
+
+// Bottom-group sidebar links (Counter, Print queue) — no data-nav
+$$('.sb-link:not([data-nav])').forEach(l => {
+  const label = l.textContent.trim();
+  if (label === 'Print queue'){
+    l.addEventListener('click', () => {
+      // Make sure queue is visible before printing
+      if (queueShell.hidden){
+        $$('.sb-link[data-nav]').forEach(x => x.classList.remove('active'));
+        document.querySelector('.sb-link[data-nav="queue"]').classList.add('active');
+        showView('queue');
+      }
+      toast('Opening print preview…');
+      setTimeout(() => window.print(), 300);
+    });
+  } else if (label === 'Counter'){
+    l.addEventListener('click', () => toast('Counter 01 · printer online'));
+  }
+});
 </script>
 </body>
 </html>

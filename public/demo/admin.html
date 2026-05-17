@@ -556,26 +556,45 @@ setTimeout(() => {
   $$('.top-row .bar i').forEach(i => i.style.width = i.dataset.w);
 }, 300);
 
-/* Heatmap */
+/* Heatmap (re-renders when range changes) */
 const heat = $('#heatGrid');
+const heatPanel = heat.closest('.panel');
+const heatTitle = heatPanel?.querySelector('.panel-head h3');
+const heatSub   = heatPanel?.querySelector('.panel-head .sub');
+const revPanel  = $('.dash-row.r1 .panel');
+const revSub    = revPanel?.querySelector('.panel-head .sub');
 const days = ['MON','TUE','WED','THU','FRI','SAT','SUN'];
-const baseRow = [0,1,1,2,4,4,2,1,1,2,3,1];
-const dayMult = [0.85,1.0,1.15,1.0,1.3,0.55,0.25];
-days.forEach((d,r) => {
-  const lbl = document.createElement('span');
-  lbl.className = 'hr-label';
-  lbl.textContent = d;
-  heat.appendChild(lbl);
-  for (let c=0;c<12;c++){
-    const v = baseRow[c] * dayMult[r] + (Math.random()*0.7);
-    const cls = v < 0.6 ? '' : v < 1.5 ? 'l1' : v < 2.5 ? 'l2' : v < 3.5 ? 'l3' : 'l4';
-    const cell = document.createElement('div');
-    cell.className = 'c ' + cls;
-    cell.style.animationDelay = ((r*12 + c) * 0.012 + 0.3) + 's';
-    cell.title = `${d} · ${c+8}:00 · ${Math.round(v*8)} orders`;
-    heat.appendChild(cell);
-  }
-});
+
+const RANGE_CFG = {
+  hour:  { base:[0,0,0,1,3,6,5,2,1,0,0,0], mult:[0.6,0.7,0.8,0.9,1.0,0.5,0.2], jit:0.35, mul:2.0, title:'Peak-hour heatmap', heatSub:'ORDERS / 5 MIN · LAST HOUR',       revSub:'HOURLY TOTAL · ₹ HUNDREDS' },
+  day:   { base:[0,1,1,2,4,4,2,1,1,2,3,1], mult:[0.85,1.0,1.15,1.0,1.3,0.55,0.25], jit:0.7, mul:8,  title:'Peak-hour heatmap', heatSub:'ORDERS / HOUR · LAST 7 DAYS',     revSub:'DAILY TOTAL · ₹ THOUSANDS' },
+  week:  { base:[1,2,2,3,4,4,3,2,2,3,3,2], mult:[1.0,1.05,1.1,1.0,1.2,0.7,0.4],     jit:0.5, mul:42, title:'Weekly heatmap',    heatSub:'AVG ORDERS / HOUR · LAST 4 WEEKS', revSub:'WEEKLY TOTAL · ₹ LAKHS' },
+  month: { base:[2,2,3,4,4,4,3,3,3,3,3,2], mult:[1.05,1.1,1.15,1.05,1.2,0.8,0.6],   jit:0.3, mul:180,title:'Monthly heatmap',   heatSub:'AVG ORDERS / HOUR · LAST 3 MONTHS',revSub:'MONTHLY TOTAL · ₹ LAKHS' },
+};
+
+function renderHeat(range){
+  const cfg = RANGE_CFG[range] || RANGE_CFG.day;
+  heat.innerHTML = '';
+  days.forEach((d,r) => {
+    const lbl = document.createElement('span');
+    lbl.className = 'hr-label';
+    lbl.textContent = d;
+    heat.appendChild(lbl);
+    for (let c=0;c<12;c++){
+      const v = cfg.base[c] * cfg.mult[r] + (Math.random()*cfg.jit);
+      const cls = v < 0.6 ? '' : v < 1.5 ? 'l1' : v < 2.5 ? 'l2' : v < 3.5 ? 'l3' : 'l4';
+      const cell = document.createElement('div');
+      cell.className = 'c ' + cls;
+      cell.style.animationDelay = ((r*12 + c) * 0.008 + 0.05) + 's';
+      cell.title = `${d} · ${c+8}:00 · ${Math.round(v*cfg.mul)} orders`;
+      heat.appendChild(cell);
+    }
+  });
+  if (heatTitle) heatTitle.textContent = cfg.title;
+  if (heatSub)   heatSub.textContent   = cfg.heatSub;
+  if (revSub)    revSub.textContent    = cfg.revSub;
+}
+renderHeat('day');
 /* Legend cells */
 $$('.heat-legend .sw').forEach((el,i) => {
   if (i === 0) el.style.background = 'var(--bg-3)';
@@ -659,10 +678,11 @@ window.addEventListener('storage', (e) => {
   }
 });
 
-/* Range toggle */
+/* Range toggle — redraws the heatmap with new data */
 $$('#rangeToggle button').forEach(b => b.addEventListener('click', () => {
   $$('#rangeToggle button').forEach(x => x.classList.remove('active'));
   b.classList.add('active');
+  renderHeat(b.dataset.r);
   toast('Range: ' + b.textContent);
 }));
 
