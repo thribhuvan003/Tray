@@ -296,10 +296,11 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
             <a href="#sync">How it syncs</a>
             <a href="#flow">How it works</a>
             <a href="#stack">Stack</a>
+            <a href="/demo/index.html">Live demo</a>
           </div>
           <div className="tl-nav-cta">
             <Link href="/login" className="tl-btn tl-btn-ghost">Sign in</Link>
-            <Link href="/menu" className="tl-btn tl-btn-pri">Open the menu →</Link>
+            <a href="/demo/index.html" className="tl-btn tl-btn-pri">Try the demo →</a>
           </div>
         </div>
       </nav>
@@ -326,7 +327,7 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
           </p>
           <div className="tl-hero-cta">
             <div className="tl-row">
-              <Link href="/menu" className="tl-btn tl-btn-pri tl-btn-lg">Open the student app →</Link>
+              <a href="/demo/index.html" className="tl-btn tl-btn-pri tl-btn-lg">Try the live demo →</a>
               <a href="#system" className="tl-btn tl-btn-ghost tl-btn-lg">See the system</a>
             </div>
             <div className="tl-note">DEMO IS LIVE · NO SIGN-UP · 90-SECOND TOUR</div>
@@ -371,10 +372,10 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
                 <span className="tl-feat-tag">Live tracking</span>
                 <span className="tl-feat-tag">Veg / non-veg</span>
               </div>
-              <Link href="/menu" className="tl-portal-open">
+              <a href="/demo/student.html" className="tl-portal-open">
                 <span>Open the student app</span>
                 <span className="tl-arrow">→</span>
-              </Link>
+              </a>
             </div>
           </article>
 
@@ -398,10 +399,10 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
                 <span className="tl-feat-tag">Add specials</span>
                 <span className="tl-feat-tag">OTP verify</span>
               </div>
-              <Link href="/kitchen" className="tl-portal-open">
+              <a href="/demo/kitchen.html" className="tl-portal-open">
                 <span>Open the kitchen view</span>
                 <span className="tl-arrow">→</span>
-              </Link>
+              </a>
             </div>
           </article>
 
@@ -425,10 +426,10 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
                 <span className="tl-feat-tag">Audit log</span>
                 <span className="tl-feat-tag">⌘K search</span>
               </div>
-              <Link href="/admin/dashboard" className="tl-portal-open">
+              <a href="/demo/admin.html" className="tl-portal-open">
                 <span>Open the admin console</span>
                 <span className="tl-arrow">→</span>
-              </Link>
+              </a>
             </div>
           </article>
         </div>
@@ -566,9 +567,9 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
           <h2>Skip the<br /><span className="tl-it">line.</span></h2>
           <p>Three portals. One platform. Built for college canteens that are tired of printed tokens.</p>
           <div className="tl-cta-row">
-            <Link href="/menu" className="tl-btn tl-btn-pri tl-btn-lg">Open the student app →</Link>
-            <Link href="/kitchen" className="tl-btn tl-btn-ghost tl-btn-lg">Kitchen view</Link>
-            <Link href="/admin/dashboard" className="tl-btn tl-btn-ghost tl-btn-lg">Admin dashboard</Link>
+            <a href="/demo/student.html" className="tl-btn tl-btn-pri tl-btn-lg">Open the student app →</a>
+            <a href="/demo/kitchen.html" className="tl-btn tl-btn-ghost tl-btn-lg">Kitchen view</a>
+            <a href="/demo/admin.html" className="tl-btn tl-btn-ghost tl-btn-lg">Admin dashboard</a>
           </div>
         </div>
       </section>
