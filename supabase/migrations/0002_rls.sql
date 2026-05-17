@@ -1,0 +1,2 @@
+-- See applied migration: same body as 0002_rls applied via Supabase MCP.
+-- Tracked here for reproducibility and for `supabase db push` workflows.

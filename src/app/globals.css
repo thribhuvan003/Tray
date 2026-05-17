@@ -1,0 +1,183 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ────────────────────────────────────────────────────────────────────
+   THEME TOKENS — Tailwind v4 @theme exposes CSS vars + utility classes.
+   Default theme = landing. Each portal swaps a subset via data-portal.
+   ──────────────────────────────────────────────────────────────────── */
+@theme {
+  /* Type */
+  --font-sans: var(--portal-font-sans, "Inter", ui-sans-serif, system-ui);
+  --font-display: var(--portal-font-display, "Fraunces", ui-serif, Georgia);
+  --font-serif: "Fraunces", ui-serif, Georgia;
+  --font-mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+
+  /* Student — ocean */
+  --color-ocean-50:  #eaf3fb;
+  --color-ocean-100: #cfe3f6;
+  --color-ocean-200: #9cc6ec;
+  --color-ocean-300: #5aa3df;
+  --color-ocean-500: #0066ff;
+  --color-ocean-600: #0052cc;
+  --color-ocean-700: #003f99;
+  --color-ocean-900: #0a1628;
+
+  /* Kitchen — newspaper / tomato */
+  --color-tomato-50:  #fbe9e7;
+  --color-tomato-100: #f7c8c2;
+  --color-tomato-400: #e85a4f;
+  --color-tomato-500: #d52821;
+  --color-tomato-600: #b51b15;
+  --color-tomato-900: #2a160a;
+  --color-cream-50:   #fdfbf6;
+  --color-cream-100:  #f9f3e3;
+  --color-cream-200:  #f4e6c1;
+  --color-cream-300:  #e8d49a;
+  --color-mustard-500:#c69214;
+  --color-olive-700:  #5a6b3a;
+
+  /* Admin — graphite / chartreuse */
+  --color-graphite-900: #0a0d12;
+  --color-graphite-800: #0f131a;
+  --color-graphite-700: #161b25;
+  --color-graphite-600: #1c2230;
+  --color-graphite-500: #3f4756;
+  --color-graphite-400: #646d80;
+  --color-graphite-300: #a3acbd;
+  --color-graphite-200: #e8ecf2;
+  --color-lime-DEFAULT: #d2fb50;
+  --color-lime-dim:     #b4dc3a;
+  --color-amber-DEFAULT:#ffae29;
+  --color-mint-DEFAULT: #3fe6a3;
+  --color-rose-DEFAULT: #ff6166;
+  --color-violet-DEFAULT:#a78bfa;
+
+  /* Universal */
+  --color-ink: #0a1628;
+  --color-paper: #ffffff;
+  --color-paper-dim: #f7f9fc;
+  --color-line: rgba(10, 22, 40, 0.08);
+  --color-line-strong: rgba(10, 22, 40, 0.16);
+
+  /* Motion */
+  --ease-snap: cubic-bezier(0.2, 0.7, 0.3, 1);
+
+  --animate-live-pulse: live-pulse 2s ease-out infinite;
+  --animate-shimmer: shimmer 2s linear infinite;
+  --animate-marquee: marquee 30s linear infinite;
+  --animate-draw-in: draw-in 1.6s var(--ease-snap) forwards;
+  --animate-slide-up: slide-up 0.6s var(--ease-snap) forwards;
+  --animate-fade-in: fade-in 0.4s var(--ease-snap) forwards;
+}
+
+@keyframes live-pulse {
+  0%   { box-shadow: 0 0 0 0 rgba(63,230,163,0.6); }
+  70%  { box-shadow: 0 0 0 8px rgba(63,230,163,0); }
+  100% { box-shadow: 0 0 0 0 rgba(63,230,163,0); }
+}
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+@keyframes marquee {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+@keyframes draw-in {
+  to { stroke-dashoffset: 0; }
+}
+@keyframes slide-up {
+  0%   { opacity: 0; transform: translateY(18px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+@keyframes fade-in {
+  0%   { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+/* ─── Portal overrides ─── */
+[data-portal="student"] {
+  --portal-font-sans:    var(--font-inter), ui-sans-serif, system-ui;
+  --portal-font-display: var(--font-fraunces), ui-serif, Georgia;
+}
+[data-portal="kitchen"] {
+  --portal-font-sans:    var(--font-manrope), ui-sans-serif, system-ui;
+  --portal-font-display: var(--font-fraunces), ui-serif, Georgia;
+}
+[data-portal="admin"] {
+  --portal-font-sans:    var(--font-inter), ui-sans-serif, system-ui;
+  --portal-font-display: var(--font-inter), ui-sans-serif, system-ui;
+}
+
+/* ─── Dark-mode token overrides ─── */
+html.dark {
+  --color-paper: #0a0d12;
+  --color-paper-dim: #0f131a;
+  --color-ink: #e8ecf2;
+  --color-line: rgba(255, 255, 255, 0.07);
+  --color-line-strong: rgba(255, 255, 255, 0.13);
+}
+/* Student dark: cream → midnight, ocean glows brighter */
+html.dark [data-portal="student"] {
+  --color-ocean-500: #4d8dff;
+}
+/* Kitchen dark: paper inversion */
+html.dark [data-portal="kitchen"] {
+  --color-cream-50: #1a0f08;
+  --color-cream-200: #2a160a;
+  --color-tomato-900: #f7c8c2;
+}
+/* Admin stays as designed — already a dark theme. */
+
+/* ─── Base resets ─── */
+@layer base {
+  html { color-scheme: light; }
+  html.dark { color-scheme: dark; }
+  html, body {
+    background: var(--color-paper);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    font-feature-settings: "ss01", "cv11";
+  }
+  ::selection { background: var(--color-ocean-500); color: white; }
+  :focus-visible { outline: 2px solid var(--color-ocean-500); outline-offset: 2px; border-radius: 4px; }
+
+  /* Reduced motion: turn off the showy animations. */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.001ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.001ms !important;
+    }
+  }
+}
+
+/* ─── Tabular numerics for money & timers ─── */
+.tabular { font-variant-numeric: tabular-nums; }
+
+/* ─── Mono helper that turns on stylistic sets cleanly ─── */
+.mono { font-family: var(--font-mono); font-feature-settings: "ss01","cv01","cv02"; }
+
+/* ─── Paper grain (used on kitchen portal) ─── */
+.paper-grain {
+  background-image: url("data:image/svg+xml;utf8,<svg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.16 0 0 0 0 0.09 0 0 0 0 0.04 0 0 0 0.06 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  background-size: 240px 240px;
+  opacity: 0.5;
+  mix-blend-mode: multiply;
+  pointer-events: none;
+}
+
+/* ─── Grid paper backdrop (admin) ─── */
+.grid-paper {
+  background-image:
+    linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask: radial-gradient(ellipse 80% 60% at 50% 30%, black 0%, transparent 80%);
+  pointer-events: none;
+}
+
+/* ─── No-fancy spinning rings, no scanlines, no cursor glow — per design call. ─── */
