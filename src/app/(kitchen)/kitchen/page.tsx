@@ -42,7 +42,7 @@ export default async function KitchenPage() {
   today.setHours(0, 0, 0, 0);
   const todayIso = today.toISOString();
 
-  const [{ data: orders }, { data: lines }, { data: marquee }] = await Promise.all([
+  const [{ data: orders }, { data: marquee }] = await Promise.all([
     supabase
       .from("orders")
       .select(
@@ -55,12 +55,6 @@ export default async function KitchenPage() {
       .limit(120)
       .returns<OrderRow[]>(),
     supabase
-      .from("order_items")
-      .select("id, order_id, name_snapshot, qty, diet_snapshot")
-      .eq("tenant_id", tenant.id)
-      .gte("id", "")
-      .returns<LineRow[]>(),
-    supabase
       .from("menu_items")
       .select("id, name, price_paise, diet")
       .eq("tenant_id", tenant.id)
@@ -71,8 +65,16 @@ export default async function KitchenPage() {
       .returns<MarqueeRow[]>(),
   ]);
 
-  const orderIds = new Set((orders ?? []).map((o) => o.id));
-  const filteredLines = (lines ?? []).filter((l) => orderIds.has(l.order_id));
+  const orderIds = (orders ?? []).map((o) => o.id);
+  let filteredLines: LineRow[] = [];
+  if (orderIds.length > 0) {
+    const { data: lines } = await supabase
+      .from("order_items")
+      .select("id, order_id, name_snapshot, qty, diet_snapshot")
+      .in("order_id", orderIds)
+      .returns<LineRow[]>();
+    filteredLines = lines ?? [];
+  }
 
   return (
     <KitchenBoard

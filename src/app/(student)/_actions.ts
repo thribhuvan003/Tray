@@ -139,6 +139,12 @@ export async function placeOrder(
 }
 
 export async function simulatePaymentCapture(orderId: string): Promise<{ ok: boolean; error?: string }> {
+  // Hard gate: never simulate captures once real Razorpay keys are present.
+  // This makes the dev shortcut a no-op the moment we wire live billing.
+  const { featureFlags } = await import("@/lib/env");
+  if (featureFlags.razorpayLive) {
+    return { ok: false, error: "Simulator disabled in live mode" };
+  }
   const h = await headers();
   const slug = h.get("x-tenant-slug") ?? "aditya";
   const tenant = await resolveTenant(slug);
@@ -184,19 +190,16 @@ export async function getMyOrderOtp(orderId: string): Promise<{ otp: string | nu
   const user = await getCurrentUser();
   if (!user) return { otp: null };
 
-  const admin = getAdminClient(tenant.id);
-  const { data } = await admin
-    .from("orders")
-    .select("notes, user_id, status")
-    .eq("id", orderId)
-    .eq("tenant_id", tenant.id)
-    .maybeSingle<{ notes: string | null; user_id: string | null; status: string }>();
-  if (!data || data.user_id !== user.id) return { otp: null };
-  if (data.status !== "ready") return { otp: null };
-  try {
-    const j = data.notes ? (JSON.parse(data.notes) as { _otp?: string }) : null;
-    return { otp: j?._otp ?? null };
-  } catch {
-    return { otp: null };
-  }
+  // SECURITY DEFINER function re-checks ownership + status + expiry; we cannot
+  // bypass it. This is the ONLY surface that returns plaintext OTP.
+  const supabase = await getServerClient(tenant.id);
+  // Cast the args param: the generated Database type doesn't always surface
+  // SECURITY DEFINER fn arg types correctly when regenerated incrementally.
+  const { data } = await (
+    supabase.rpc as unknown as (
+      fn: string,
+      args: Record<string, unknown>
+    ) => Promise<{ data: unknown }>
+  )("read_my_pickup_otp", { p_order: orderId });
+  return { otp: typeof data === "string" ? data : null };
 }

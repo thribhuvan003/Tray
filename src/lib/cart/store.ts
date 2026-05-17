@@ -21,17 +21,15 @@ type State = {
   remove: (id: string) => void;
   clear: () => void;
   setNote: (n: string) => void;
-  setTenantSlug: (s: string) => void;
+  ensureTenant: (s: string) => void;
 };
 
-const tenantSlug = () =>
-  (typeof document !== "undefined" && document.documentElement.dataset.tenantSlug) ||
-  "aditya";
-
+// Single localStorage key holds a per-tenant map under it. Switching tenants
+// reveals a different bucket instead of leaking lines across colleges.
 export const useCart = create<State>()(
   persist(
     (set, get) => ({
-      tenantSlug: tenantSlug(),
+      tenantSlug: "",
       lines: [],
       note: "",
       add: (item, qty = 1) =>
@@ -60,17 +58,43 @@ export const useCart = create<State>()(
         set(({ lines }) => ({ lines: lines.filter((l) => l.menuItemId !== id) })),
       clear: () => set({ lines: [], note: "" }),
       setNote: (note) => set({ note }),
-      setTenantSlug: (tenantSlug) => {
-        if (get().tenantSlug !== tenantSlug) set({ tenantSlug, lines: [], note: "" });
+      ensureTenant: (slug) => {
+        if (get().tenantSlug === slug) return;
+        if (typeof window === "undefined") return;
+        const stash = readBucket();
+        // Save outgoing tenant's lines, load incoming tenant's.
+        if (get().tenantSlug) {
+          stash[get().tenantSlug] = { lines: get().lines, note: get().note };
+        }
+        writeBucket(stash);
+        const incoming = stash[slug] ?? { lines: [], note: "" };
+        set({ tenantSlug: slug, lines: incoming.lines, note: incoming.note });
       },
     }),
     {
-      name: `tray:cart:${tenantSlug()}`,
+      name: "tray:cart:active",
       storage: createJSONStorage(() => localStorage),
-      partialize: (s) => ({ lines: s.lines, note: s.note, tenantSlug: s.tenantSlug }),
+      partialize: (s) => ({ tenantSlug: s.tenantSlug, lines: s.lines, note: s.note }),
     }
   )
 );
+
+const BUCKET_KEY = "tray:cart:bucket";
+type Bucket = Record<string, { lines: CartLine[]; note: string }>;
+function readBucket(): Bucket {
+  try {
+    return JSON.parse(localStorage.getItem(BUCKET_KEY) ?? "{}") as Bucket;
+  } catch {
+    return {};
+  }
+}
+function writeBucket(b: Bucket) {
+  try {
+    localStorage.setItem(BUCKET_KEY, JSON.stringify(b));
+  } catch {
+    // quota exceeded — silently ignore
+  }
+}
 
 export function cartTotalPaise(lines: CartLine[]) {
   return lines.reduce((acc, l) => acc + l.pricePaise * l.qty, 0);

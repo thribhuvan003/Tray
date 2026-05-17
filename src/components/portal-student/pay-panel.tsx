@@ -214,16 +214,20 @@ export function PayPanel({
             </div>
           </div>
 
-          <button
-            onClick={onSimulate}
-            disabled={pending}
-            className="inline-flex items-center justify-center gap-2 h-11 rounded-xl border border-dashed border-ocean-500/40 text-ocean-500 text-[13px] font-medium hover:bg-ocean-50 dark:hover:bg-ocean-500/10 transition-colors"
-          >
-            <Sparkles size={14} /> DEV · simulate paid
-          </button>
-          <p className="text-[11px] text-[color:var(--color-ink)]/45 text-center -mt-2">
-            Razorpay test-mode hasn&rsquo;t been wired yet — this stand-in flips the order to <b>placed</b>.
-          </p>
+          {!process.env.NEXT_PUBLIC_RAZORPAY_LIVE && (
+            <>
+              <button
+                onClick={onSimulate}
+                disabled={pending}
+                className="inline-flex items-center justify-center gap-2 h-11 rounded-xl border border-dashed border-ocean-500/40 text-ocean-500 text-[13px] font-medium hover:bg-ocean-50 dark:hover:bg-ocean-500/10 transition-colors"
+              >
+                <Sparkles size={14} /> DEV · simulate paid
+              </button>
+              <p className="text-[11px] text-[color:var(--color-ink)]/45 text-center -mt-2">
+                Razorpay test-mode hasn&rsquo;t been wired yet — this stand-in flips the order to <b>placed</b>.
+              </p>
+            </>
+          )}
         </div>
       </div>
     </div>

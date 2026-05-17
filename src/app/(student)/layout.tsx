@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { resolveTenant } from "@/lib/tenant";
 import { StudentTopBar } from "@/components/portal-student/top-bar";
 import { CartDrawer } from "@/components/portal-student/cart-drawer";
+import { CartTenantSync } from "@/components/portal-student/cart-tenant-sync";
 
 export default async function StudentLayout({ children }: { children: React.ReactNode }) {
   const h = await headers();
@@ -11,6 +12,7 @@ export default async function StudentLayout({ children }: { children: React.Reac
   if (!tenant) notFound();
   return (
     <div data-portal="student" className="min-h-screen bg-[color:var(--color-paper)] text-[color:var(--color-ink)] antialiased">
+      <CartTenantSync slug={tenant.slug} />
       <StudentTopBar tenant={tenant} />
       <main className="pb-32 sm:pb-20">{children}</main>
       <CartDrawer tenantUpi={tenant.name} />

@@ -60,34 +60,28 @@ export async function markReady(orderId: string): Promise<Outcome> {
   const admin = getAdminClient(ctx.tenant.id);
   const { data: cur } = await admin
     .from("orders")
-    .select("status, notes")
+    .select("status")
     .eq("id", orderId)
     .eq("tenant_id", ctx.tenant.id)
-    .maybeSingle<{ status: string; notes: string | null }>();
+    .maybeSingle<{ status: string }>();
   if (!cur) return { ok: false, error: "Order not found" };
   if (cur.status !== "preparing") return { ok: false, error: `Cannot mark ready from "${cur.status}"` };
 
   const otp = randomOtp();
   const hash = await bcrypt.hash(otp, 10);
 
-  let existingNote: Record<string, unknown> = {};
-  try {
-    if (cur.notes) {
-      const parsed = JSON.parse(cur.notes);
-      if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) existingNote = parsed as Record<string, unknown>;
-    } else {
-      existingNote = {};
-    }
-  } catch {
-    existingNote = cur.notes ? { user_note: cur.notes } : {};
-  }
-  existingNote._otp = otp;
-  const notesJson = JSON.stringify(existingNote);
-
+  // OTP plaintext lives in pickup_secrets (RLS denies all PostgREST access;
+  // only readable through read_my_pickup_otp SECURITY DEFINER for the owner).
+  // The customer's note in orders.notes is preserved untouched.
+  const expiresAt = new Date(Date.now() + 30 * 60 * 1000).toISOString();
   await admin
     .from("orders")
-    .update({ status: "ready", otp_hash: hash, ready_at: new Date().toISOString(), notes: notesJson })
+    .update({ status: "ready", otp_hash: hash, ready_at: new Date().toISOString() })
     .eq("id", orderId);
+  await admin.from("pickup_secrets").upsert(
+    { order_id: orderId, tenant_id: ctx.tenant.id, otp_plain: otp, expires_at: expiresAt },
+    { onConflict: "order_id" }
+  );
   await admin.from("order_status_logs").insert({
     tenant_id: ctx.tenant.id,
     order_id: orderId,
@@ -110,10 +104,10 @@ export async function verifyAndCollect(
   const admin = getAdminClient(ctx.tenant.id);
   const { data: cur } = await admin
     .from("orders")
-    .select("status, otp_hash, otp_attempts, notes")
+    .select("status, otp_hash, otp_attempts")
     .eq("id", orderId)
     .eq("tenant_id", ctx.tenant.id)
-    .maybeSingle<{ status: string; otp_hash: string | null; otp_attempts: number; notes: string | null }>();
+    .maybeSingle<{ status: string; otp_hash: string | null; otp_attempts: number }>();
   if (!cur || !cur.otp_hash) return { ok: false, error: "Order not ready for pickup" };
   if (cur.status !== "ready") return { ok: false, error: `Order is "${cur.status}"` };
   if (cur.otp_attempts >= 3) return { ok: false, error: "Locked — ask an admin to unlock", locked: true };
@@ -128,28 +122,12 @@ export async function verifyAndCollect(
     return { ok: false, error: "Wrong code", attemptsLeft: Math.max(0, left) };
   }
 
-  let cleanNotes: string | null = null;
-  try {
-    if (cur.notes) {
-      const parsed = JSON.parse(cur.notes);
-      if (parsed && typeof parsed === "object") {
-        delete (parsed as Record<string, unknown>)._otp;
-        const remaining = parsed as Record<string, unknown>;
-        cleanNotes = Object.keys(remaining).length === 0 ? null : JSON.stringify(remaining);
-      }
-    }
-  } catch {
-    cleanNotes = null;
-  }
-
   await admin
     .from("orders")
-    .update({
-      status: "collected",
-      collected_at: new Date().toISOString(),
-      notes: cleanNotes,
-    })
+    .update({ status: "collected", collected_at: new Date().toISOString() })
     .eq("id", orderId);
+  // Plaintext OTP cleared. ON DELETE CASCADE from orders also covers it.
+  await admin.from("pickup_secrets").delete().eq("order_id", orderId);
   await admin.from("order_status_logs").insert({
     tenant_id: ctx.tenant.id,
     order_id: orderId,

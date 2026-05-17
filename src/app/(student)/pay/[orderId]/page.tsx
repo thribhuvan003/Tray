@@ -49,7 +49,7 @@ export default async function PayPage({ params }: { params: Promise<{ orderId: s
   return (
     <PayPanel
       tenantName={tenant.name}
-      tenantUpi="aditya@upi"
+      tenantUpi={tenant.upi_vpa ?? "canteen@upi"}
       order={order}
       lines={lines ?? []}
     />
