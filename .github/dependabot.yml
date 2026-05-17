@@ -1,0 +1,35 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    groups:
+      radix:
+        patterns: ["@radix-ui/*"]
+      supabase:
+        patterns: ["@supabase/*"]
+      tanstack:
+        patterns: ["@tanstack/*"]
+      upstash:
+        patterns: ["@upstash/*"]
+      types:
+        patterns: ["@types/*"]
+        update-types: ["minor", "patch"]
+      eslint:
+        patterns: ["eslint*"]
+      tailwind:
+        patterns: ["tailwindcss", "@tailwindcss/*"]
+    commit-message:
+      prefix: chore
+      include: scope
+
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: monthly
+    commit-message:
+      prefix: chore
+      include: scope
