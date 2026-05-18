@@ -58,12 +58,15 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
   body::before{content:"";position:fixed;left:50%;top:-200px;width:1200px;height:1200px;border-radius:50%;background:radial-gradient(circle,rgba(0,102,255,0.14),transparent 60%);transform:translateX(-50%);pointer-events:none}
   .viewport{
     max-width:440px;min-height:auto;height:calc(100vh - 64px);
-    border-radius:36px;overflow:hidden;
+    border-radius:36px;overflow:clip;
     box-shadow:0 30px 80px rgba(8,33,58,.18),0 0 0 1px var(--line);
     position:relative;z-index:2;
   }
 }
 
+@media (prefers-reduced-motion: reduce){
+  *, *::before, *::after{ animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important; scroll-behavior:auto !important; }
+}
 .italic{font-family:var(--serif);font-style:italic;font-weight:400}
 .mono{font-family:var(--mono);font-feature-settings:"ss01"}
 .eyebrow{font-family:var(--mono);font-size:10.5px;letter-spacing:0.14em;text-transform:uppercase;color:var(--ink-3);font-weight:500}
@@ -447,7 +450,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
     <!-- =============== OTP / SUCCESS VIEW =============== -->
     <section class="view" id="view-otp">
       <div class="view-head">
-        <button class="back" onclick="showView('menu')" aria-label="Back">←</button>
+        <button class="back" onclick="showView('pay')" aria-label="Back">←</button>
         <div>
           <div class="eyebrow">Step 04 of 04 · Pickup</div>
           <h2 class="title">Almost <span class="it">there.</span></h2>
@@ -860,6 +863,28 @@ function toast(msg){
    ===================================================== */
 $('#body').addEventListener('scroll', () => {
   $('#appbar').classList.toggle('scrolled', $('#body').scrollTop > 12);
+});
+
+/* =====================================================
+   SEARCH BUTTON · PAY-APPS · OTP COPY
+   ===================================================== */
+const searchBtn = document.getElementById('searchBtn');
+if (searchBtn) searchBtn.addEventListener('click', () => {
+  const input = document.querySelector('#searchInput, .search input');
+  if (input) {
+    input.scrollIntoView({behavior:'smooth', block:'center'});
+    setTimeout(() => input.focus(), 320);
+  } else {
+    toast('Search · type to filter the menu');
+  }
+});
+
+document.querySelectorAll('.pay-apps .app').forEach(a => {
+  a.setAttribute('role','button');
+  a.setAttribute('tabindex','0');
+  const trigger = () => toast(`Opening ${a.dataset.app.toUpperCase()}…`);
+  a.addEventListener('click', trigger);
+  a.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); trigger(); } });
 });
 
 /* =====================================================
