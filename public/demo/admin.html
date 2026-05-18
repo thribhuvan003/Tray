@@ -158,9 +158,30 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
 .panel-head h3{margin:0;font-size:15px;font-weight:600;letter-spacing:-0.015em}
 .panel-head .sub{font-family:var(--mono);font-size:11px;color:var(--ink-3);letter-spacing:0.06em;margin-top:3px}
 .panel-head .actions{display:flex;gap:6px;align-items:center}
-.panel-tab{padding:4px 10px;font-family:var(--mono);font-size:11px;color:var(--ink-3);background:transparent;border:1px solid transparent;border-radius:5px;letter-spacing:0.04em;cursor:pointer;font-family:inherit}
+.panel-tab{padding:4px 10px;font-family:var(--mono);font-size:11px;color:var(--ink-2);background:transparent;border:1px solid transparent;border-radius:5px;letter-spacing:0.04em;cursor:pointer;font-family:inherit;transition:background .15s ease,color .15s ease,border-color .15s ease}
 .panel-tab.active{color:var(--ink);background:var(--bg-3)}
 .panel-tab:hover{color:var(--ink)}
+:focus-visible{outline:2px solid var(--lime);outline-offset:2px;border-radius:4px}
+
+/* Modal */
+.modal-mask{position:fixed;inset:0;background:rgba(8,11,18,.72);backdrop-filter:blur(6px);z-index:60;display:none;align-items:center;justify-content:center;animation:modalFade .18s ease}
+.modal-mask.show{display:flex}
+.modal-card{background:var(--bg-2);border:1px solid var(--line-2);border-radius:14px;padding:24px 26px;width:520px;max-width:92vw;animation:modalRise .25s cubic-bezier(.2,.7,.3,1)}
+.modal-card h3{margin:0 0 4px;font-size:16px;letter-spacing:-0.015em}
+.modal-card .sub{font-family:var(--mono);font-size:11px;color:var(--ink-3);letter-spacing:0.08em;margin-bottom:18px}
+.modal-card .modal-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-top:1px solid var(--line)}
+.modal-card .modal-row:first-of-type{border-top:none}
+.modal-card .modal-row .nm{font-size:13px;color:var(--ink)}
+.modal-card .modal-row .px{font-family:var(--mono);font-size:11px;color:var(--ink-3)}
+.modal-card .modal-row .toggle{font-family:var(--mono);font-size:10px;letter-spacing:0.08em;padding:3px 9px;border-radius:4px;border:1px solid var(--line-2);background:transparent;color:var(--ink-2);cursor:pointer}
+.modal-card .modal-row .toggle.on{background:var(--lime);color:var(--bg);border-color:var(--lime)}
+.modal-card .modal-foot{display:flex;justify-content:flex-end;gap:8px;margin-top:20px;padding-top:16px;border-top:1px solid var(--line)}
+@keyframes modalFade{from{opacity:0}to{opacity:1}}
+@keyframes modalRise{from{opacity:0;transform:translateY(12px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
+
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.01ms !important;scroll-behavior:auto !important}
+}
 
 /* Revenue chart */
 .rev-chart{flex:1;min-height:200px;position:relative}
@@ -360,8 +381,8 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
           <button data-r="week">Week</button>
           <button data-r="month">Month</button>
         </div>
-        <button class="btn btn-ghost">Export</button>
-        <button class="btn btn-pri">Manage menu</button>
+        <button class="btn btn-ghost" id="exportBtn">Export</button>
+        <button class="btn btn-pri" id="manageMenuBtn">Manage menu</button>
       </div>
     </div>
 
@@ -534,6 +555,24 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
 <!-- Toast -->
 <div class="toast" id="toast"><span class="d"></span><span id="toastMsg">Updated.</span></div>
 
+<!-- Menu manager modal -->
+<div class="modal-mask" id="menuModal" role="dialog" aria-modal="true" aria-labelledby="menuModalTitle">
+  <div class="modal-card">
+    <h3 id="menuModalTitle">Menu manager</h3>
+    <div class="sub">12 ACTIVE · 3 HIDDEN · LIVE SYNC</div>
+    <div class="modal-row"><span class="nm">Chicken Biryani</span><span class="px">₹180</span><button class="toggle on" data-on="1">LIVE</button></div>
+    <div class="modal-row"><span class="nm">Paneer Butter Masala</span><span class="px">₹160</span><button class="toggle on" data-on="1">LIVE</button></div>
+    <div class="modal-row"><span class="nm">Veg Thali</span><span class="px">₹120</span><button class="toggle on" data-on="1">LIVE</button></div>
+    <div class="modal-row"><span class="nm">Masala Dosa</span><span class="px">₹70</span><button class="toggle on" data-on="1">LIVE</button></div>
+    <div class="modal-row"><span class="nm">Filter Coffee</span><span class="px">₹30</span><button class="toggle on" data-on="1">LIVE</button></div>
+    <div class="modal-row"><span class="nm">Mutton Curry</span><span class="px">₹220</span><button class="toggle" data-on="0">HIDDEN</button></div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" id="menuModalClose">Close</button>
+      <button class="btn btn-pri" id="menuModalSave">Save changes</button>
+    </div>
+  </div>
+</div>
+
 <script>
 const $ = (q) => document.querySelector(q);
 const $$ = (q) => document.querySelectorAll(q);
@@ -680,13 +719,144 @@ window.addEventListener('storage', (e) => {
   }
 });
 
-/* Range toggle — redraws the heatmap with new data */
+/* Range toggle — redraws the heatmap + revenue chart */
+const REV_PATHS = {
+  hour:   { line: 'M0,170 L100,165 L200,150 L300,120 L400,80 L500,55 L600,40 L700,30',
+            fill: 'M0,170 L100,165 L200,150 L300,120 L400,80 L500,55 L600,40 L700,30 L700,220 L0,220 Z',
+            sub:  'LAST 12 HOURS · ₹ THOUSANDS' },
+  day:    { line: 'M0,140 L100,120 L200,135 L300,70 L400,90 L500,40 L600,50 L700,25',
+            fill: 'M0,140 L100,120 L200,135 L300,70 L400,90 L500,40 L600,50 L700,25 L700,220 L0,220 Z',
+            sub:  'DAILY TOTAL · ₹ THOUSANDS' },
+  week:   { line: 'M0,160 L100,110 L200,125 L300,75 L400,55 L500,90 L600,45 L700,35',
+            fill: 'M0,160 L100,110 L200,125 L300,75 L400,55 L500,90 L600,45 L700,35 L700,220 L0,220 Z',
+            sub:  'WEEKLY TOTAL · ₹ THOUSANDS' },
+  month:  { line: 'M0,180 L100,155 L200,100 L300,135 L400,60 L500,40 L600,80 L700,20',
+            fill: 'M0,180 L100,155 L200,100 L300,135 L400,60 L500,40 L600,80 L700,20 L700,220 L0,220 Z',
+            sub:  'MONTHLY TOTAL · ₹ THOUSANDS' }
+};
+function renderRev(range){
+  const cfg = REV_PATHS[range] || REV_PATHS.day;
+  const svg = document.querySelector('.rev-chart svg');
+  if (!svg) return;
+  const area = svg.querySelector('path.area');
+  const line = svg.querySelector('path.line');
+  if (area) area.setAttribute('d', cfg.fill);
+  if (line) line.setAttribute('d', cfg.line);
+  const sub = svg.closest('.panel').querySelector('.panel-head .sub');
+  if (sub) sub.textContent = cfg.sub;
+}
+
 $$('#rangeToggle button').forEach(b => b.addEventListener('click', () => {
   $$('#rangeToggle button').forEach(x => x.classList.remove('active'));
   b.classList.add('active');
   renderHeat(b.dataset.r);
+  renderRev(b.dataset.r);
   toast('Range: ' + b.textContent);
 }));
+
+/* Panel-tab active toggle (generic — works for every .panel-tab group) */
+$$('.panel-head .actions').forEach(group => {
+  const tabs = group.querySelectorAll('.panel-tab');
+  if (tabs.length < 2) return;
+  tabs.forEach(tab => tab.addEventListener('click', () => {
+    tabs.forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+  }));
+});
+
+/* Orders status filter (All / Preparing / Ready / Collected) */
+const ordersFilterGroup = document.querySelector('.dash-row.r3 .panel-head .actions');
+if (ordersFilterGroup){
+  ordersFilterGroup.querySelectorAll('.panel-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      const want = tab.textContent.trim().toLowerCase();
+      let shown = 0;
+      $$('#ordersBody tr').forEach(tr => {
+        const pill = tr.querySelector('.status-pill');
+        const match = want === 'all' || (pill && pill.classList.contains(want)) || (want === 'preparing' && pill && pill.classList.contains('incoming'));
+        tr.style.display = match ? '' : 'none';
+        if (match) shown++;
+      });
+      toast(`${shown} order${shown===1?'':'s'} · ${tab.textContent}`);
+    });
+  });
+}
+
+/* Revenue panel-tabs swap demo data labels */
+const revGroup = document.querySelector('.dash-row.r1 .panel-head .actions');
+if (revGroup){
+  const REV_MODE = {
+    revenue:    'DAILY TOTAL · ₹ THOUSANDS',
+    orders:     'ORDERS PER DAY · COUNT',
+    'avg ticket': 'AVG TICKET · ₹ PER ORDER'
+  };
+  revGroup.querySelectorAll('.panel-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      const sub = revGroup.closest('.panel').querySelector('.panel-head .sub');
+      const key = tab.textContent.trim().toLowerCase();
+      if (sub && REV_MODE[key]) sub.textContent = REV_MODE[key];
+    });
+  });
+}
+
+/* "View all" on top items panel */
+const topPanel = document.getElementById('topList');
+if (topPanel){
+  const viewAll = topPanel.closest('.panel').querySelector('.panel-tab');
+  if (viewAll) viewAll.addEventListener('click', () => toast('Full menu breakdown · coming in v1.1'));
+}
+
+/* Heatmap cell clicks (delegated, survives re-renders) */
+const heatEl = document.getElementById('heatGrid') || document.querySelector('.heat');
+if (heatEl){
+  heatEl.addEventListener('click', e => {
+    const cell = e.target.closest('.c, .heat-cell, [data-h]');
+    if (!cell) return;
+    const label = cell.title || cell.getAttribute('data-h') || 'Selected';
+    toast(label);
+  });
+}
+
+/* Export CSV */
+const exportBtn = document.getElementById('exportBtn');
+if (exportBtn){
+  exportBtn.addEventListener('click', () => {
+    const rows = [['Order','Student','Items','Total','Status','Time']];
+    $$('#ordersBody tr').forEach(tr => {
+      if (tr.style.display === 'none') return;
+      const cells = [...tr.querySelectorAll('td')].map(td => '"' + td.textContent.trim().replace(/"/g,'""') + '"');
+      rows.push(cells);
+    });
+    const csv = rows.map(r => r.join(',')).join('\n');
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv;charset=utf-8'}));
+    a.download = `tray-orders-${new Date().toISOString().slice(0,10)}.csv`;
+    document.body.appendChild(a); a.click(); a.remove();
+    toast(`Exported ${rows.length - 1} orders · CSV`);
+  });
+}
+
+/* Manage menu modal */
+const menuModal = document.getElementById('menuModal');
+const manageBtn = document.getElementById('manageMenuBtn');
+const menuClose = document.getElementById('menuModalClose');
+const menuSave = document.getElementById('menuModalSave');
+function openMenuModal(){ menuModal.classList.add('show'); document.body.style.overflow = 'hidden'; }
+function closeMenuModal(){ menuModal.classList.remove('show'); document.body.style.overflow = ''; }
+if (manageBtn) manageBtn.addEventListener('click', openMenuModal);
+if (menuClose) menuClose.addEventListener('click', closeMenuModal);
+if (menuSave) menuSave.addEventListener('click', () => { closeMenuModal(); toast('Menu changes pushed live'); });
+if (menuModal){
+  menuModal.addEventListener('click', e => { if (e.target === menuModal) closeMenuModal(); });
+  menuModal.querySelectorAll('.toggle').forEach(t => {
+    t.addEventListener('click', () => {
+      const on = t.classList.toggle('on');
+      t.textContent = on ? 'LIVE' : 'HIDDEN';
+      t.dataset.on = on ? '1' : '0';
+    });
+  });
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && menuModal.classList.contains('show')) closeMenuModal(); });
 
 /* Sidebar placeholder routes */
 $$('.sb-link[data-toast]').forEach(l => l.addEventListener('click', () => {
