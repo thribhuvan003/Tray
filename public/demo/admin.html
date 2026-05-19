@@ -4,6 +4,8 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=1440"/>
 <title>Tray — Admin · Aditya Engineering Canteen</title>
+<link rel="icon" href="/icon.svg" type="image/svg+xml"/>
+<link rel="apple-touch-icon" href="/apple-icon.svg"/>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -135,6 +137,24 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
 .kpi-card .delta.up{color:var(--mint);background:var(--mint-soft)}
 .kpi-card .delta.down{color:var(--rose);background:var(--rose-soft)}
 .kpi-card .val{font-size:38px;font-weight:500;letter-spacing:-0.03em;line-height:1;font-variant-numeric:tabular-nums;color:var(--ink)}
+.kpi-card .counter{display:inline-block}
+
+/* New-order row flash (lime fade) for live activity feed */
+@keyframes feedFlash{
+  0%   { background:rgba(205,250,80,0.18); }
+  100% { background:transparent; }
+}
+.feed-item.flash{animation:feedFlash .8s cubic-bezier(.2,.7,.3,1) both}
+
+/* Top-list bar stagger re-animation (triggered by range toggle) */
+.top-row .info .bar i.restagger{
+  animation:barRise .6s cubic-bezier(.2,.7,.3,1) both;
+  transform-origin:left center;
+}
+@keyframes barRise{
+  from{ transform:scaleX(0); }
+  to  { transform:scaleX(1); }
+}
 .kpi-card .val .unit{font-size:16px;color:var(--ink-3);font-weight:500;margin-left:3px;font-family:var(--mono)}
 .kpi-card .spark{width:100%;height:36px}
 .kpi-card .spark path{fill:none;stroke:var(--lime);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:300;stroke-dashoffset:300;animation:drawIn 1.6s cubic-bezier(.2,.7,.3,1) forwards}
@@ -156,9 +176,30 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
 .panel-head h3{margin:0;font-size:15px;font-weight:600;letter-spacing:-0.015em}
 .panel-head .sub{font-family:var(--mono);font-size:11px;color:var(--ink-3);letter-spacing:0.06em;margin-top:3px}
 .panel-head .actions{display:flex;gap:6px;align-items:center}
-.panel-tab{padding:4px 10px;font-family:var(--mono);font-size:11px;color:var(--ink-3);background:transparent;border:1px solid transparent;border-radius:5px;letter-spacing:0.04em;cursor:pointer;font-family:inherit}
+.panel-tab{padding:4px 10px;font-family:var(--mono);font-size:11px;color:var(--ink-2);background:transparent;border:1px solid transparent;border-radius:5px;letter-spacing:0.04em;cursor:pointer;font-family:inherit;transition:background .15s ease,color .15s ease,border-color .15s ease}
 .panel-tab.active{color:var(--ink);background:var(--bg-3)}
 .panel-tab:hover{color:var(--ink)}
+:focus-visible{outline:2px solid var(--lime);outline-offset:2px;border-radius:4px}
+
+/* Modal */
+.modal-mask{position:fixed;inset:0;background:rgba(8,11,18,.72);backdrop-filter:blur(6px);z-index:60;display:none;align-items:center;justify-content:center;animation:modalFade .18s ease}
+.modal-mask.show{display:flex}
+.modal-card{background:var(--bg-2);border:1px solid var(--line-2);border-radius:14px;padding:24px 26px;width:520px;max-width:92vw;animation:modalRise .25s cubic-bezier(.2,.7,.3,1)}
+.modal-card h3{margin:0 0 4px;font-size:16px;letter-spacing:-0.015em}
+.modal-card .sub{font-family:var(--mono);font-size:11px;color:var(--ink-3);letter-spacing:0.08em;margin-bottom:18px}
+.modal-card .modal-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-top:1px solid var(--line)}
+.modal-card .modal-row:first-of-type{border-top:none}
+.modal-card .modal-row .nm{font-size:13px;color:var(--ink)}
+.modal-card .modal-row .px{font-family:var(--mono);font-size:11px;color:var(--ink-3)}
+.modal-card .modal-row .toggle{font-family:var(--mono);font-size:10px;letter-spacing:0.08em;padding:3px 9px;border-radius:4px;border:1px solid var(--line-2);background:transparent;color:var(--ink-2);cursor:pointer}
+.modal-card .modal-row .toggle.on{background:var(--lime);color:var(--bg);border-color:var(--lime)}
+.modal-card .modal-foot{display:flex;justify-content:flex-end;gap:8px;margin-top:20px;padding-top:16px;border-top:1px solid var(--line)}
+@keyframes modalFade{from{opacity:0}to{opacity:1}}
+@keyframes modalRise{from{opacity:0;transform:translateY(12px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
+
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.01ms !important;scroll-behavior:auto !important}
+}
 
 /* Revenue chart */
 .rev-chart{flex:1;min-height:200px;position:relative}
@@ -178,8 +219,8 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
 .heat-shell{display:flex;flex-direction:column;gap:8px;flex:1}
 .heat{display:grid;grid-template-columns:auto repeat(12,1fr);gap:4px;font-family:var(--mono);font-size:10px;color:var(--ink-3);letter-spacing:0.04em}
 .heat .hr-label{font-family:var(--mono);font-size:10px;color:var(--ink-3);text-align:right;padding-right:6px;line-height:24px;text-transform:uppercase;letter-spacing:0.06em;font-weight:600}
-.heat .c{aspect-ratio:1;border-radius:3px;background:var(--bg-3);transition:transform .12s;opacity:0;animation:cellIn .45s cubic-bezier(.34,1.26,.64,1) forwards;cursor:pointer}
-@keyframes cellIn{from{opacity:0;transform:scale(.6)}to{opacity:1;transform:scale(1)}}
+.heat .c{aspect-ratio:1;border-radius:3px;background:var(--bg-3);transition:transform .12s;opacity:0;transform-origin:bottom;animation:cellIn .45s cubic-bezier(.34,1.26,.64,1) forwards;cursor:pointer}
+@keyframes cellIn{from{opacity:0;transform:scaleY(0)}to{opacity:1;transform:scaleY(1)}}
 .heat .c:hover{transform:scale(1.5);z-index:3;box-shadow:0 4px 16px rgba(205,250,80,.3);outline:1px solid var(--lime)}
 .heat .c.l1{background:rgba(205,250,80,0.15)}
 .heat .c.l2{background:rgba(205,250,80,0.36)}
@@ -358,8 +399,8 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
           <button data-r="week">Week</button>
           <button data-r="month">Month</button>
         </div>
-        <button class="btn btn-ghost">Export</button>
-        <button class="btn btn-pri">Manage menu</button>
+        <button class="btn btn-ghost" id="exportBtn">Export</button>
+        <button class="btn btn-pri" id="manageMenuBtn">Manage menu</button>
       </div>
     </div>
 
@@ -532,29 +573,69 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
 <!-- Toast -->
 <div class="toast" id="toast"><span class="d"></span><span id="toastMsg">Updated.</span></div>
 
+<!-- Menu manager modal -->
+<div class="modal-mask" id="menuModal" role="dialog" aria-modal="true" aria-labelledby="menuModalTitle">
+  <div class="modal-card">
+    <h3 id="menuModalTitle">Menu manager</h3>
+    <div class="sub">12 ACTIVE · 3 HIDDEN · LIVE SYNC</div>
+    <div class="modal-row"><span class="nm">Chicken Biryani</span><span class="px">₹180</span><button class="toggle on" data-on="1">LIVE</button></div>
+    <div class="modal-row"><span class="nm">Paneer Butter Masala</span><span class="px">₹160</span><button class="toggle on" data-on="1">LIVE</button></div>
+    <div class="modal-row"><span class="nm">Veg Thali</span><span class="px">₹120</span><button class="toggle on" data-on="1">LIVE</button></div>
+    <div class="modal-row"><span class="nm">Masala Dosa</span><span class="px">₹70</span><button class="toggle on" data-on="1">LIVE</button></div>
+    <div class="modal-row"><span class="nm">Filter Coffee</span><span class="px">₹30</span><button class="toggle on" data-on="1">LIVE</button></div>
+    <div class="modal-row"><span class="nm">Mutton Curry</span><span class="px">₹220</span><button class="toggle" data-on="0">HIDDEN</button></div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" id="menuModalClose">Close</button>
+      <button class="btn btn-pri" id="menuModalSave">Save changes</button>
+    </div>
+  </div>
+</div>
+
 <script>
 const $ = (q) => document.querySelector(q);
 const $$ = (q) => document.querySelectorAll(q);
 
-/* Counters */
+/* KPI Counters · count-up on first IntersectionObserver entry */
+const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
 function animateCounter(el){
+  if (el.dataset.animated === '1') return;
+  el.dataset.animated = '1';
   const to = +el.dataset.to;
-  const dur = 1400;
+  if (prefersReducedMotion){ el.textContent = to.toLocaleString(); return; }
+  const dur = 800;                 // 800ms per spec
   const t0 = performance.now();
+  const easeOutExpo = (p) => p === 1 ? 1 : 1 - Math.pow(2, -10 * p);
   const tick = (t) => {
     const p = Math.min(1,(t-t0)/dur);
-    const e = 1 - Math.pow(1-p,3);
-    el.textContent = Math.round(to*e).toLocaleString();
+    el.textContent = Math.round(to * easeOutExpo(p)).toLocaleString();
     if (p<1) requestAnimationFrame(tick);
   };
   requestAnimationFrame(tick);
 }
-$$('.counter').forEach(animateCounter);
 
-/* Top list bar animations */
-setTimeout(() => {
-  $$('.top-row .bar i').forEach(i => i.style.width = i.dataset.w);
-}, 300);
+const counterObserver = new IntersectionObserver((entries) => {
+  entries.forEach(en => {
+    if (en.isIntersecting){
+      animateCounter(en.target);
+      counterObserver.unobserve(en.target);
+    }
+  });
+}, { threshold: 0.4 });
+$$('.counter').forEach(el => counterObserver.observe(el));
+
+/* Top list bar animations · staggered re-animation */
+function staggerTopBars(){
+  $$('.top-row .info .bar i').forEach((bar, idx) => {
+    bar.classList.remove('restagger');
+    bar.style.width = bar.dataset.w;
+    bar.style.animationDelay = (idx * 40) + 'ms';
+    // force reflow so the animation re-triggers next frame
+    void bar.offsetWidth;
+    bar.classList.add('restagger');
+  });
+}
+setTimeout(staggerTopBars, 300);
 
 /* Heatmap (re-renders when range changes) */
 const heat = $('#heatGrid');
@@ -585,7 +666,8 @@ function renderHeat(range){
       const cls = v < 0.6 ? '' : v < 1.5 ? 'l1' : v < 2.5 ? 'l2' : v < 3.5 ? 'l3' : 'l4';
       const cell = document.createElement('div');
       cell.className = 'c ' + cls;
-      cell.style.animationDelay = ((r*12 + c) * 0.008 + 0.05) + 's';
+      // Stagger 40ms per column (bars rise together row-wise · transform-origin:bottom)
+      cell.style.animationDelay = (c * 40 + r * 8) + 'ms';
       cell.title = `${d} · ${c+8}:00 · ${Math.round(v*cfg.mul)} orders`;
       heat.appendChild(cell);
     }
@@ -662,11 +744,16 @@ function addFeed(forceType){
     : EVENTS[Math.floor(Math.random()*EVENTS.length)]();
   const row = document.createElement('div');
   row.className = 'feed-item' + (ev.type === 'menu' ? ' menu-add' : '');
+  // Flash lime → transparent over 800ms for genuinely new prepended rows (only after initial fill)
+  if (ev.type === 'order' && feed.dataset.initDone === '1' && !prefersReducedMotion){
+    row.classList.add('flash');
+  }
   row.innerHTML = `<span class="t">${fmtT(new Date())}</span><span class="ic ${ev.type}">${ICON_LABELS[ev.type]||'·'}</span><span class="msg">${ev.msg}</span><span class="amt">${ev.amt}</span>`;
   feed.prepend(row);
   while (feed.children.length > 12) feed.removeChild(feed.lastChild);
 }
 for (let i=0;i<8;i++) addFeed();
+feed.dataset.initDone = '1';
 setInterval(addFeed, 3000);
 
 /* Cross-tab sync — when kitchen pushes a special, refresh the strip + feed */
@@ -678,13 +765,145 @@ window.addEventListener('storage', (e) => {
   }
 });
 
-/* Range toggle — redraws the heatmap with new data */
+/* Range toggle — redraws the heatmap + revenue chart */
+const REV_PATHS = {
+  hour:   { line: 'M0,170 L100,165 L200,150 L300,120 L400,80 L500,55 L600,40 L700,30',
+            fill: 'M0,170 L100,165 L200,150 L300,120 L400,80 L500,55 L600,40 L700,30 L700,220 L0,220 Z',
+            sub:  'LAST 12 HOURS · ₹ THOUSANDS' },
+  day:    { line: 'M0,140 L100,120 L200,135 L300,70 L400,90 L500,40 L600,50 L700,25',
+            fill: 'M0,140 L100,120 L200,135 L300,70 L400,90 L500,40 L600,50 L700,25 L700,220 L0,220 Z',
+            sub:  'DAILY TOTAL · ₹ THOUSANDS' },
+  week:   { line: 'M0,160 L100,110 L200,125 L300,75 L400,55 L500,90 L600,45 L700,35',
+            fill: 'M0,160 L100,110 L200,125 L300,75 L400,55 L500,90 L600,45 L700,35 L700,220 L0,220 Z',
+            sub:  'WEEKLY TOTAL · ₹ THOUSANDS' },
+  month:  { line: 'M0,180 L100,155 L200,100 L300,135 L400,60 L500,40 L600,80 L700,20',
+            fill: 'M0,180 L100,155 L200,100 L300,135 L400,60 L500,40 L600,80 L700,20 L700,220 L0,220 Z',
+            sub:  'MONTHLY TOTAL · ₹ THOUSANDS' }
+};
+function renderRev(range){
+  const cfg = REV_PATHS[range] || REV_PATHS.day;
+  const svg = document.querySelector('.rev-chart svg');
+  if (!svg) return;
+  const area = svg.querySelector('path.area');
+  const line = svg.querySelector('path.line');
+  if (area) area.setAttribute('d', cfg.fill);
+  if (line) line.setAttribute('d', cfg.line);
+  const sub = svg.closest('.panel').querySelector('.panel-head .sub');
+  if (sub) sub.textContent = cfg.sub;
+}
+
 $$('#rangeToggle button').forEach(b => b.addEventListener('click', () => {
   $$('#rangeToggle button').forEach(x => x.classList.remove('active'));
   b.classList.add('active');
   renderHeat(b.dataset.r);
+  renderRev(b.dataset.r);
+  staggerTopBars();
   toast('Range: ' + b.textContent);
 }));
+
+/* Panel-tab active toggle (generic — works for every .panel-tab group) */
+$$('.panel-head .actions').forEach(group => {
+  const tabs = group.querySelectorAll('.panel-tab');
+  if (tabs.length < 2) return;
+  tabs.forEach(tab => tab.addEventListener('click', () => {
+    tabs.forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+  }));
+});
+
+/* Orders status filter (All / Preparing / Ready / Collected) */
+const ordersFilterGroup = document.querySelector('.dash-row.r3 .panel-head .actions');
+if (ordersFilterGroup){
+  ordersFilterGroup.querySelectorAll('.panel-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      const want = tab.textContent.trim().toLowerCase();
+      let shown = 0;
+      $$('#ordersBody tr').forEach(tr => {
+        const pill = tr.querySelector('.status-pill');
+        const match = want === 'all' || (pill && pill.classList.contains(want)) || (want === 'preparing' && pill && pill.classList.contains('incoming'));
+        tr.style.display = match ? '' : 'none';
+        if (match) shown++;
+      });
+      toast(`${shown} order${shown===1?'':'s'} · ${tab.textContent}`);
+    });
+  });
+}
+
+/* Revenue panel-tabs swap demo data labels */
+const revGroup = document.querySelector('.dash-row.r1 .panel-head .actions');
+if (revGroup){
+  const REV_MODE = {
+    revenue:    'DAILY TOTAL · ₹ THOUSANDS',
+    orders:     'ORDERS PER DAY · COUNT',
+    'avg ticket': 'AVG TICKET · ₹ PER ORDER'
+  };
+  revGroup.querySelectorAll('.panel-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      const sub = revGroup.closest('.panel').querySelector('.panel-head .sub');
+      const key = tab.textContent.trim().toLowerCase();
+      if (sub && REV_MODE[key]) sub.textContent = REV_MODE[key];
+    });
+  });
+}
+
+/* "View all" on top items panel */
+const topPanel = document.getElementById('topList');
+if (topPanel){
+  const viewAll = topPanel.closest('.panel').querySelector('.panel-tab');
+  if (viewAll) viewAll.addEventListener('click', () => toast('Full menu breakdown · coming in v1.1'));
+}
+
+/* Heatmap cell clicks (delegated, survives re-renders) */
+const heatEl = document.getElementById('heatGrid') || document.querySelector('.heat');
+if (heatEl){
+  heatEl.addEventListener('click', e => {
+    const cell = e.target.closest('.c, .heat-cell, [data-h]');
+    if (!cell) return;
+    const label = cell.title || cell.getAttribute('data-h') || 'Selected';
+    toast(label);
+  });
+}
+
+/* Export CSV */
+const exportBtn = document.getElementById('exportBtn');
+if (exportBtn){
+  exportBtn.addEventListener('click', () => {
+    const rows = [['Order','Student','Items','Total','Status','Time']];
+    $$('#ordersBody tr').forEach(tr => {
+      if (tr.style.display === 'none') return;
+      const cells = [...tr.querySelectorAll('td')].map(td => '"' + td.textContent.trim().replace(/"/g,'""') + '"');
+      rows.push(cells);
+    });
+    const csv = rows.map(r => r.join(',')).join('\n');
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv;charset=utf-8'}));
+    a.download = `tray-orders-${new Date().toISOString().slice(0,10)}.csv`;
+    document.body.appendChild(a); a.click(); a.remove();
+    toast(`Exported ${rows.length - 1} orders · CSV`);
+  });
+}
+
+/* Manage menu modal */
+const menuModal = document.getElementById('menuModal');
+const manageBtn = document.getElementById('manageMenuBtn');
+const menuClose = document.getElementById('menuModalClose');
+const menuSave = document.getElementById('menuModalSave');
+function openMenuModal(){ menuModal.classList.add('show'); document.body.style.overflow = 'hidden'; }
+function closeMenuModal(){ menuModal.classList.remove('show'); document.body.style.overflow = ''; }
+if (manageBtn) manageBtn.addEventListener('click', openMenuModal);
+if (menuClose) menuClose.addEventListener('click', closeMenuModal);
+if (menuSave) menuSave.addEventListener('click', () => { closeMenuModal(); toast('Menu changes pushed live'); });
+if (menuModal){
+  menuModal.addEventListener('click', e => { if (e.target === menuModal) closeMenuModal(); });
+  menuModal.querySelectorAll('.toggle').forEach(t => {
+    t.addEventListener('click', () => {
+      const on = t.classList.toggle('on');
+      t.textContent = on ? 'LIVE' : 'HIDDEN';
+      t.dataset.on = on ? '1' : '0';
+    });
+  });
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && menuModal.classList.contains('show')) closeMenuModal(); });
 
 /* Sidebar placeholder routes */
 $$('.sb-link[data-toast]').forEach(l => l.addEventListener('click', () => {
