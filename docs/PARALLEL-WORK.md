@@ -96,6 +96,12 @@ Read AGENTS.md, docs/DEMO-SPEC.md, docs/PARALLEL-WORK.md. One file owner per lan
 - **Index** (`index.html`): Sync copy mentions shared `tray_canteen` across portals.
 - **Verify:** `npm run demo:verify`
 
+### 2026-05-20 — Demo data not showing (fix)
+
+- **Root cause:** `demo-canteens.js` had `avgPickupSec: 05` (invalid strict-mode octal) → entire script failed → no menu/orders anywhere. Student also looped on `storage` because `loadCanteenData` always called `setSelectedCanteenId`.
+- **Fix:** `avgPickupSec: 5`; `setSelectedCanteenId` no-ops when unchanged; expanded menus (10 dishes/canteen) + preset kitchen tickets; `package.json` `dev` pinned to **port 3000**.
+- **Open demos:** `npm run dev` → http://localhost:3000/demo/student.html (switch Aditya vs North Block). E2E: `DEMO_BASE=http://localhost:3000/demo node scripts/demo-verify.mjs --e2e`.
+
 ### 2026-05-20 — Landing GSAP motion fix (resume)
 
 - **Root cause:** Hero FOUC guard used .tray-landing:not(.tl-motion-ready) { opacity: 0 }. 	l-motion-ready only appeared after GSAP hero onComplete or a timer inside gsap.context() — if GSAP failed or Strict Mode interrupted setup, hero stayed invisible.

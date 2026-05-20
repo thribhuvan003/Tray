@@ -1326,6 +1326,14 @@
 (function () {
   "use strict";
 
+  if (!window.TRAY_DEMO) {
+    var g = document.getElementById("menuGrid");
+    if (g) {
+      g.innerHTML =
+        '<p style="color:#ff7b6b;text-align:center;padding:48px 20px">Demo menu failed to load. Open <a href="http://localhost:3000/demo/student.html" style="color:#FFD87A">localhost:3000/demo/student.html</a> (run <strong>npm run dev</strong>) and hard-refresh Ctrl+Shift+R.</p>';
+    }
+    return;
+  }
   var TD = window.TRAY_DEMO;
   TD.migrateLegacySpecials();
   var KITCHEN_INBOX_KEY = TD.INBOX_KEY;
@@ -1379,7 +1387,13 @@
     var payUpi = $("#payUpi");
     if (payUpi) payUpi.textContent = c.upi;
     var hint = $("#canteenHint");
-    if (hint) hint.textContent = c.block + " — menu, UPI, and kitchen queue are separate per canteen.";
+    if (hint) {
+      hint.textContent =
+        c.block +
+        " · " +
+        MENU.length +
+        " dishes on menu (switch canteen to see a different list).";
+    }
     document.title = "Tray Student · " + c.name;
     if (currentView === "menu") {
       $("#topbarContext").textContent = c.short + " · " + serviceModeLabel();
@@ -1448,7 +1462,9 @@
             c.name +
             "<small>" +
             c.block +
-            "</small></button>"
+            " · " +
+            (TD.getCanteen(c.id).menu.length || 0) +
+            " dishes</small></button>"
           );
         })
         .join("");

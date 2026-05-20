@@ -394,9 +394,9 @@ export default async function CollegePortalPage({
             <span className="tcp-brand-mark" aria-hidden="true">T</span>
             Tray<span className="tcp-brand-dot">.</span>
           </Link>
-          <a href="/" className="tcp-nav-back" aria-label="Back to home">
+          <Link href="/" className="tcp-nav-back" aria-label="Back to home">
             ← home
-          </a>
+          </Link>
         </div>
       </nav>
 
