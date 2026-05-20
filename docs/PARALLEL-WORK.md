@@ -102,12 +102,24 @@ Read AGENTS.md, docs/DEMO-SPEC.md, docs/PARALLEL-WORK.md. One file owner per lan
 - **Fix:** `avgPickupSec: 5`; `setSelectedCanteenId` no-ops when unchanged; expanded menus (10 dishes/canteen) + preset kitchen tickets; `package.json` `dev` pinned to **port 3000**.
 - **Open demos:** `npm run dev` → http://localhost:3000/demo/student.html (switch Aditya vs North Block). E2E: `DEMO_BASE=http://localhost:3000/demo node scripts/demo-verify.mjs --e2e`.
 
+### 2026-05-20 — Landing polish (Awwwards-tier motion + tokens)
+
+- **Shipped:** Per-section GSAP choreography in `landing-motion.tsx` (system fan-in, sync diagram lanes, pull blur reveal, flow numeral spin, stack center pop, closing cascade); ambient orbs + refined Pre-Monsoon Dusk tokens in `landing-page.tsx`; portal 3D tilt + button scale micro-interactions (CSS hover lift preserved).
+- **Docs:** `docs/design-system-figma.md` — Figma variable/component map for landing.
+- **Verify:** `npm run typecheck`, `npm run build` → http://localhost:3000
+
 ### 2026-05-20 — Landing GSAP motion fix (resume)
 
 - **Root cause:** Hero FOUC guard used .tray-landing:not(.tl-motion-ready) { opacity: 0 }. 	l-motion-ready only appeared after GSAP hero onComplete or a timer inside gsap.context() — if GSAP failed or Strict Mode interrupted setup, hero stayed invisible.
 - **Fix:** landing-motion.tsx rewritten — ScrollTrigger.batch section reveals, hero timeline, 700ms markReady() safety, 	ry/catch on dynamic import, FOUC CSS scoped to .tl-anim-init in landing-page.tsx. Nav sticky + is-scrolled + grid alignment (Tray | System | How it works | Sign in | Demo).
 - **Verify:** 
 pm run typecheck passes. Restart dev if port 3000 hangs: NODE_OPTIONS=--max-old-space-size=8192 npm run dev → http://localhost:3000
+
+### 2026-05-20 — Vercel production deploy fix (`trayy.vercel.app`)
+
+- **Root cause:** `playwright` in `package.json` but missing from committed `pnpm-lock.yaml` → Vercel `pnpm install --frozen-lockfile` failed in ~4s. Interim `vercel.json` `npm ci` also failed (React 19 RC peer deps vs npm strict resolve).
+- **Fix (commit `b755f14`):** Sync `pnpm-lock.yaml`; `vercel.json` → `pnpm install --frozen-lockfile` + `pnpm run build`; remove stale `package-lock.json`.
+- **Production:** https://trayy.vercel.app — deployment **Ready** (`dpl_4njrZ4e6S4AkVrd1ebDEQWrUGY1r`); `/demo/student.html` + `demo-canteens.js` serve dish data.
 
 ### 2026-05-19 — Team harness activated (earlier)
 
