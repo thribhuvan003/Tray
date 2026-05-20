@@ -121,3 +121,41 @@ export function upiQrPayload(opts: { vpa: string; name: string; amountPaise: num
   if (opts.note) params.set("tn", opts.note);
   return `upi://pay?${params.toString()}`;
 }
+
+/**
+ * Initiates a Razorpay refund for a captured payment.
+ * Returns the Razorpay refund ID on success.
+ * In simulator mode, returns a fake refund ID so the flow works end-to-end.
+ */
+export async function initiateRazorpayRefund(opts: {
+  razorpayPaymentId: string;
+  amountPaise: number;
+  notes?: Record<string, string>;
+}): Promise<{ refundId: string; simulated: boolean } | { error: string }> {
+  const { razorpayPaymentId, amountPaise, notes } = opts;
+
+  // Use simulator when live keys are absent or the payment ID itself is simulated.
+  if (!featureFlags.razorpayLive || razorpayPaymentId.startsWith("pay_sim_")) {
+    return {
+      refundId: "rfnd_sim_" + crypto.randomBytes(8).toString("hex"),
+      simulated: true,
+    };
+  }
+
+  const auth = Buffer.from(`${env.RAZORPAY_KEY_ID}:${env.RAZORPAY_KEY_SECRET}`).toString("base64");
+  const res = await fetch(`https://api.razorpay.com/v1/payments/${razorpayPaymentId}/refund`, {
+    method: "POST",
+    headers: {
+      Authorization: `Basic ${auth}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ amount: amountPaise, notes }),
+  });
+
+  if (!res.ok) {
+    return { error: `Razorpay refund failed: ${res.status}` };
+  }
+
+  const data = (await res.json()) as { id: string };
+  return { refundId: data.id, simulated: false };
+}

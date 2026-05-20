@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Activity, BookOpen, ClipboardList, LayoutGrid, LineChart, ListOrdered, LogOut, Users } from "lucide-react";
+import { Activity, BookOpen, ClipboardList, LayoutGrid, LineChart, ListOrdered, LogOut, Settings, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 
@@ -13,6 +13,7 @@ const NAV = [
   { href: "/admin/menu", label: "Menu", icon: BookOpen, kbd: "G M" },
   { href: "/admin/staff", label: "Staff", icon: Users, kbd: "G S" },
   { href: "/admin/analytics", label: "Insights", icon: LineChart, kbd: "G I" },
+  { href: "/admin/settings", label: "Settings", icon: Settings, kbd: "G ," },
 ];
 
 export function AdminShell({
@@ -108,13 +109,14 @@ export function AdminShell({
         </header>
         <main className="px-5 sm:px-6 py-6">{children}</main>
         <nav className="lg:hidden fixed bottom-0 inset-x-0 z-30 border-t border-graphite-200/10 bg-graphite-900/95 backdrop-blur-xl">
-          <div className="grid grid-cols-5">
+          <div className="grid grid-cols-6">
             {[
               { href: "/admin/dashboard", icon: LayoutGrid, label: "Home" },
               { href: "/admin/orders", icon: ListOrdered, label: "Orders" },
               { href: "/admin/menu", icon: BookOpen, label: "Menu" },
               { href: "/admin/staff", icon: Users, label: "Staff" },
               { href: "/admin/analytics", icon: LineChart, label: "Insights" },
+              { href: "/admin/settings", icon: Settings, label: "Settings" },
             ].map((n) => (
               <Link
                 key={n.href}

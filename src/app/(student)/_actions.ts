@@ -8,7 +8,7 @@ import { getServerClient } from "@/lib/supabase/server";
 import { getAdminClient } from "@/lib/supabase/admin";
 import { getCurrentUser } from "@/lib/auth/get-user";
 import { rateLimit } from "@/lib/rate-limit";
-import { createRazorpayOrder } from "@/lib/payments/razorpay";
+import { createRazorpayOrder, initiateRazorpayRefund } from "@/lib/payments/razorpay";
 import type { Diet, OrderType } from "@/lib/db/types";
 
 // ── Student-initiated cancel (Phase 8) ─────────────────────────────────
@@ -109,6 +109,9 @@ export async function cancelOrderByStudent(orderId: string): Promise<CancelResul
     target_id: orderId,
     meta: { elapsed_ms: elapsedMs },
   });
+
+  // Best-effort refund — don't block the cancellation on refund success.
+  void initiateRefundForOrder(orderId, tenant.id).catch(() => {});
 
   revalidatePath(`/track/${orderId}`);
   revalidatePath("/orders");
@@ -414,4 +417,91 @@ export async function verifyPaymentNow(orderId: string): Promise<VerifyResult> {
   }
 
   return { status: "paid" };
+}
+
+// ── Refund initiation ───────────────────────────────────────────────────────
+
+type PaymentRow = {
+  id: string;
+  razorpay_payment_id: string | null;
+  amount_paise: number;
+  status: string;
+};
+
+type OrderEventInsertUntyped = {
+  tenant_id: string;
+  order_id: string;
+  event_type: string;
+  payload: Record<string, unknown>;
+};
+
+/**
+ * Internal helper — called by cancelOrderByStudent and the reconcile cron.
+ * Looks up the captured payment for an order and initiates a Razorpay refund.
+ * Safe to call multiple times — idempotent via payment status check.
+ */
+export async function initiateRefundForOrder(
+  orderId: string,
+  tenantId: string
+): Promise<{ ok: boolean; error?: string; refundId?: string }> {
+  const admin = getAdminClient(tenantId);
+
+  const { data: payment } = await admin
+    .from("payments")
+    .select("id, razorpay_payment_id, amount_paise, status")
+    .eq("order_id", orderId)
+    .eq("tenant_id", tenantId)
+    .maybeSingle<PaymentRow>();
+
+  if (!payment || payment.status !== "captured") {
+    return { ok: false, error: "No captured payment found" };
+  }
+
+  if (!payment.razorpay_payment_id) {
+    return { ok: false, error: "No razorpay_payment_id on payment row" };
+  }
+
+  const result = await initiateRazorpayRefund({
+    razorpayPaymentId: payment.razorpay_payment_id,
+    amountPaise: payment.amount_paise,
+    notes: { order_id: orderId },
+  });
+
+  if ("error" in result) {
+    return { ok: false, error: result.error };
+  }
+
+  const { refundId } = result;
+
+  // Mark payment as refunded.
+  await admin
+    .from("payments")
+    .update({ status: "refunded" as unknown as "initiated" })
+    .eq("id", payment.id)
+    .eq("tenant_id", tenantId);
+
+  // Flip order status to refunded.
+  await admin
+    .from("orders")
+    .update({ status: "refunded" as unknown as "rejected" })
+    .eq("id", orderId)
+    .eq("tenant_id", tenantId);
+
+  // Append-only event row for Realtime listeners.
+  await (
+    admin as unknown as {
+      from: (t: string) => {
+        insert: (row: OrderEventInsertUntyped) => Promise<{ error: { message: string } | null }>;
+      };
+    }
+  )
+    .from("order_events")
+    .insert({
+      tenant_id: tenantId,
+      order_id: orderId,
+      event_type: "refunded",
+      payload: { refund_id: refundId, source: "initiateRefundForOrder" },
+    });
+
+  return { ok: true, refundId };
 }
