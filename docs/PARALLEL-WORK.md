@@ -153,6 +153,13 @@ pm run typecheck passes. Restart dev if port 3000 hangs: NODE_OPTIONS=--max-old-
 
 - **Added:** `docs/landing-team-brief.md` — merges research + ship state: animation verdict, top-6 motion shortlist, user-pick gate, workflow, anti-patterns. Links `docs/research/*`, `landing-design-options.md`, `design-preview/palettes.html`.
 
+### 2026-05-20 — Landing design-taste + motion-ui polish (GSAP only)
+
+- **Skills:** `/frontend-design`, `/design-taste-frontend`, `/motion-ui` — **skipped** `/compose-multiplatform-patterns` (Kotlin Compose; wrong stack for Next.js landing).
+- **CSS** (`landing-page.tsx`, commit `b0938c4` + prior): Slate Ember retained; `100dvh`; nav liquid-glass inset highlight; hero asymmetry offset; ember+green live dot pulse; portal spotlight `--spot-x/y` + rim glow; primary CTA inset highlight; `--tl-ink-4` contrast bump; Inter removed from `--tl-sans`; `data-magnetic` on hero/closing primary CTAs.
+- **Motion** (`landing-motion.tsx`, `src/lib/motionTokens.ts`): shared ease tokens; `power4.out` section reveals; diagram border glow on enter; portal spotlight tracks cursor; magnetic CTA via `gsap.quickTo` on `[data-magnetic]` (fine pointer only). No framer-motion on landing route.
+- **Verify:** `pnpm run build`, `npm run demo:verify` pass.
+
 ### 2026-05-20 — Council landing ship (palette C + font 2 + motion medium+)
 
 - **User pick:** Palette **C — Slate Ember** + font **2** (Newsreader + Manrope + JetBrains Mono) + motion **medium+ (tasteful bold)** — authorized change from default A/1/medium.
@@ -176,6 +183,13 @@ pm run typecheck passes. Restart dev if port 3000 hangs: NODE_OPTIONS=--max-old-
 - **Shipped:** `landing-page.tsx` — 44px touch targets (nav links, buttons, portal-open), `touch-action: manipulation`, extended `:focus-visible`, skip link focus-visible, hero `min-height` CLS reserve, `--tl-ink-3` contrast bump (0.52→0.58), live-dot pulse off under reduced-motion.
 - **Skipped:** View Transitions on `/` → `/college` (risky); mobile nav hash row unchanged (user-loved layout).
 - **Verify:** `pnpm run build`, `npm run demo:verify` — pass.
+
+### 2026-05-20 — Reel brand copy (BLOCKED)
+
+- **Ask:** Align landing copy to user’s social reel (tone, ideology, on-screen text).
+- **Blocked:** No reel URL, video file, caption, or transcript in repo or agent transcript.
+- **Added:** `docs/brand-reel-source.md` (BLOCKED + unblock checklist + landing mapping); `docs/assets/` placeholder for `reel-source.mp4`.
+- **Not changed:** `landing-page.tsx` (no invented reel copy); no commit.
 
 ### 2026-05-19 — Team harness activated (earlier)
 
