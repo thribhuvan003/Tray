@@ -34,6 +34,7 @@
 
   function setSelectedCanteenId(id) {
     if (!CANTEENS[id] || DEMO_CANTEEN_IDS.indexOf(id) < 0) return;
+    if (localStorage.getItem(STORAGE_CANTEEN) === id) return;
     localStorage.setItem(STORAGE_CANTEEN, id);
     try {
       global.dispatchEvent(
@@ -80,12 +81,25 @@
         { id: "drinks", label: "Drinks", sub: "Hot & cold" },
       ],
       menu: [
-        { id: "dal", name: "Dal Makhani", desc: "Slow-cooked black lentils, cream finish", price: 80, cat: "mains", diet: "veg", emoji: "🍛" },
+        { id: "biryani", name: "Chicken Biryani", desc: "Dum-style, raita on request", price: 140, cat: "mains", diet: "nv", emoji: "🍗" },
+        { id: "dosa", name: "Masala Dosa", desc: "Crisp rice crepe, potato masala", price: 70, cat: "mains", diet: "veg", emoji: "🫓" },
+        { id: "paneer", name: "Paneer Butter Masala", desc: "Rich tomato gravy, naan extra", price: 160, cat: "mains", diet: "veg", emoji: "🧀" },
         { id: "thali", name: "Veg Thali", desc: "Rice, dal, sabzi, roti, salad", price: 120, cat: "mains", diet: "veg", emoji: "🥗" },
+        { id: "mutton", name: "Mutton Curry", desc: "Slow braised, two rotis included", price: 220, cat: "mains", diet: "nv", emoji: "🍖" },
+        { id: "idli", name: "Idli + Sambar", desc: "Steamed rice cakes, hot sambar", price: 50, cat: "snacks", diet: "veg", emoji: "🍚" },
+        { id: "vada", name: "Vada Pav", desc: "Mumbai-style, chutney loaded", price: 35, cat: "snacks", diet: "veg", emoji: "🥪" },
         { id: "noodles", name: "Noodles", desc: "Wok-tossed hakka, mild spice", price: 60, cat: "snacks", diet: "veg", emoji: "🍜" },
         { id: "coffee", name: "Filter Coffee", desc: "South Indian filter, hot", price: 25, cat: "drinks", diet: "veg", emoji: "☕" },
-        { id: "biryani", name: "Chicken Biryani", desc: "Dum-style, raita on request", price: 140, cat: "mains", diet: "nv", emoji: "🍗" },
-        { id: "vada", name: "Vada Pav", desc: "Mumbai-style, chutney loaded", price: 35, cat: "snacks", diet: "veg", emoji: "🥪" },
+        { id: "lassi", name: "Sweet Lassi", desc: "Chilled, cardamom touch", price: 40, cat: "drinks", diet: "veg", emoji: "🥛" },
+      ],
+      kitchenTickets: [
+        { id: "T-2425", student: "Ananya R.", status: "incoming", elapsedSec: 42, total: 210, otp: "4821", items: [{ name: "Chicken Biryani", diet: "nonveg", tgt: 8, q: 1 }, { name: "Filter Coffee", diet: "veg", tgt: 2, q: 1 }] },
+        { id: "T-2424", student: "Karthik V.", status: "incoming", elapsedSec: 88, total: 210, otp: "7193", items: [{ name: "Paneer Butter Masala", diet: "veg", tgt: 6, q: 1 }, { name: "Sweet Lassi", diet: "veg", tgt: 2, q: 1 }] },
+        { id: "T-2423", student: "Priya M.", status: "preparing", elapsedSec: 240, total: 180, otp: "3056", items: [{ name: "Veg Thali", diet: "veg", tgt: 7, q: 1 }] },
+        { id: "T-2422", student: "Rohit S.", status: "preparing", elapsedSec: 520, total: 310, otp: "8840", items: [{ name: "Mutton Curry", diet: "nonveg", tgt: 9, q: 1 }, { name: "Masala Dosa", diet: "veg", tgt: 4, q: 1 }] },
+        { id: "T-2421", student: "Devansh K.", status: "ready", elapsedSec: 380, total: 90, otp: "1297", items: [{ name: "Idli + Sambar", diet: "veg", tgt: 3, q: 1 }] },
+        { id: "T-2420", student: "Sneha P.", status: "ready", elapsedSec: 410, total: 180, otp: "6502", items: [{ name: "Chicken Biryani", diet: "nonveg", tgt: 8, q: 1 }] },
+        { id: "T-2419", student: "Vikram T.", status: "collected", elapsedSec: 720, total: 140, otp: "3384", items: [{ name: "Masala Dosa", diet: "veg", tgt: 4, q: 2 }] },
       ],
       defaultSpecials: [
         { id: "sp1", name: "Hyderabadi Dum Biryani", desc: "Slow-cooked, sealed in dum", price: 240, prep: 8, diet: "nonveg", icon: "H", addedAt: Date.now() - 6 * 60 * 1000 },
@@ -172,11 +186,23 @@
       ],
       menu: [
         { id: "kathi", name: "Chicken Kathi Roll", desc: "Paratha wrap, onion salad", price: 95, cat: "rolls", diet: "nv", emoji: "🌯" },
+        { id: "egg-roll", name: "Double Egg Roll", desc: "Double paratha, chilli sauce", price: 110, cat: "rolls", diet: "nv", emoji: "🌯" },
         { id: "paneer-roll", name: "Paneer Roll", desc: "Tandoori paneer, mint chutney", price: 75, cat: "rolls", diet: "veg", emoji: "🌯" },
+        { id: "momo", name: "Steamed Momos (6)", desc: "Veg filling, red chutney", price: 50, cat: "rolls", diet: "veg", emoji: "🥟" },
         { id: "fried-rice", name: "Egg Fried Rice", desc: "Wok-fried, spring onion", price: 85, cat: "bowls", diet: "nv", emoji: "🍚" },
+        { id: "chowmein", name: "Veg Chowmein", desc: "Smoky wok, capsicum", price: 70, cat: "bowls", diet: "veg", emoji: "🍜" },
         { id: "manchow", name: "Veg Manchow Soup", desc: "Crispy noodles on top", price: 55, cat: "bowls", diet: "veg", emoji: "🍲" },
         { id: "lemon", name: "Fresh Lime Soda", desc: "Sweet or salted", price: 30, cat: "drinks", diet: "veg", emoji: "🥤" },
-        { id: "momo", name: "Steamed Momos (6)", desc: "Veg filling, red chutney", price: 50, cat: "rolls", diet: "veg", emoji: "🥟" },
+        { id: "cold-coffee", name: "Cold Coffee", desc: "Blended, light ice", price: 45, cat: "drinks", diet: "veg", emoji: "☕" },
+        { id: "spring", name: "Spring Roll (2)", desc: "Crispy veg, sweet chilli", price: 40, cat: "rolls", diet: "veg", emoji: "🥠" },
+      ],
+      kitchenTickets: [
+        { id: "N-1182", student: "Isha K.", status: "incoming", elapsedSec: 35, total: 190, otp: "5510", items: [{ name: "Chicken Kathi Roll", diet: "nonveg", tgt: 5, q: 2 }] },
+        { id: "N-1181", student: "Naveen L.", status: "incoming", elapsedSec: 70, total: 115, otp: "9023", items: [{ name: "Egg Fried Rice", diet: "nonveg", tgt: 6, q: 1 }, { name: "Fresh Lime Soda", diet: "veg", tgt: 2, q: 1 }] },
+        { id: "N-1180", student: "Zara H.", status: "preparing", elapsedSec: 200, total: 100, otp: "4418", items: [{ name: "Steamed Momos", diet: "veg", tgt: 5, q: 2 }] },
+        { id: "N-1179", student: "Arjun P.", status: "preparing", elapsedSec: 480, total: 75, otp: "7732", items: [{ name: "Paneer Roll", diet: "veg", tgt: 4, q: 1 }] },
+        { id: "N-1178", student: "Kavya S.", status: "ready", elapsedSec: 360, total: 55, otp: "2189", items: [{ name: "Veg Manchow Soup", diet: "veg", tgt: 4, q: 1 }] },
+        { id: "N-1177", student: "Manish T.", status: "collected", elapsedSec: 680, total: 95, otp: "6641", items: [{ name: "Chicken Kathi Roll", diet: "nonveg", tgt: 5, q: 1 }] },
       ],
       defaultSpecials: [
         { id: "nb1", name: "Double Egg Roll", desc: "Extra egg, double paratha", price: 110, prep: 4, diet: "nonveg", icon: "E", addedAt: Date.now() - 10 * 60 * 1000 },
@@ -270,7 +296,7 @@
       ],
       priceHints: { Thali: 80, Curry: 100, Rice: 45, Egg: 85 },
       students: ["Ravi M.", "Sana J.", "Omar F.", "Divya C.", "Harsh G.", "Neha B."],
-      kpis: { revenue: 14260, revenueDelta: "▲ 3.1%", orders: 312, ordersDelta: "▲ 11.2%", avgTicket: 46, avgTicketDelta: "▼ ₹2", avgPickupMin: 4, avgPickupSec: 05, avgPickupDelta: "▲ 0:08 faster" },
+      kpis: { revenue: 14260, revenueDelta: "▲ 3.1%", orders: 312, ordersDelta: "▲ 11.2%", avgTicket: 46, avgTicketDelta: "▼ ₹2", avgPickupMin: 4, avgPickupSec: 5, avgPickupDelta: "▲ 0:08 faster" },
       topItems: [
         { name: "Standard Mess Thali", diet: "veg", orders: 142, pct: 95 },
         { name: "Special Thali", diet: "veg", orders: 68, pct: 72 },
@@ -327,6 +353,54 @@
     return CANTEENS[id || getSelectedCanteenId()] || CANTEENS[DEFAULT_ID];
   }
 
+  /** Kitchen queue tickets shaped for kitchen.html */
+  function buildKitchenTickets(canteenId) {
+    var c = getCanteen(canteenId);
+    var list = c.kitchenTickets || [];
+    var now = Date.now();
+    return list.map(function (t) {
+      var items = (t.items || []).map(function (it) {
+        return {
+          name: it.name,
+          diet: it.diet || "veg",
+          tgt: it.tgt || 6,
+          q: it.q || 1,
+          special: !!it.special,
+        };
+      });
+      var target = t.target != null ? t.target : items.reduce(function (a, it) {
+        return Math.max(a, it.tgt || 6);
+      }, 0) * 60;
+      return {
+        id: t.id,
+        items: items,
+        total: t.total != null ? t.total : 100,
+        otp: t.otp || String(1000 + Math.floor(Math.random() * 9000)),
+        status: t.status || "incoming",
+        placedAt: now - (t.elapsedSec || 90) * 1000,
+        target: target,
+        student: t.student || "Student",
+      };
+    });
+  }
+
+  function showDemoLoadError(where) {
+    if (typeof document === "undefined") return;
+    var msg =
+      "Tray demo data did not load (demo-canteens.js). Open http://localhost:3000/demo/" +
+      (where || "index.html") +
+      " and hard-refresh (Ctrl+Shift+R).";
+    if (document.getElementById("demoLoadError")) return;
+    var bar = document.createElement("div");
+      bar.id = "demoLoadError";
+      bar.setAttribute(
+        "style",
+        "position:fixed;top:0;left:0;right:0;z-index:99999;padding:12px 16px;background:#7f1d1d;color:#fff;font:600 14px/1.4 system-ui,sans-serif;text-align:center"
+      );
+    bar.textContent = msg;
+    document.body.appendChild(bar);
+  }
+
   global.TRAY_DEMO = {
     STORAGE_CANTEEN: STORAGE_CANTEEN,
     INBOX_KEY: INBOX_KEY,
@@ -342,5 +416,7 @@
     setSpecials: setSpecials,
     listCanteens: listCanteens,
     getCanteen: getCanteen,
+    buildKitchenTickets: buildKitchenTickets,
+    showDemoLoadError: showDemoLoadError,
   };
 })(typeof window !== "undefined" ? window : globalThis);

@@ -648,6 +648,13 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
 
 <script src="demo-canteens.js"></script>
 <script>
+if (!window.TRAY_DEMO) {
+  document.body.insertAdjacentHTML(
+    "afterbegin",
+    '<div style="position:fixed;top:0;left:0;right:0;z-index:99999;padding:12px;background:#7f1d1d;color:#fff;text-align:center;font:600 14px system-ui">Admin demo data missing — open http://localhost:3000/demo/admin.html</div>'
+  );
+  throw new Error("TRAY_DEMO not loaded");
+}
 const TD = window.TRAY_DEMO;
 TD.migrateLegacySpecials();
 let currentTenantId = TD.getSelectedCanteenId();

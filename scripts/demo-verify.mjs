@@ -240,7 +240,7 @@ async function runE2E(base) {
 
       if (t.name === "student") {
         await page.click('.service-mode[data-service="dine"]').catch(() => {});
-        await page.click('[data-action="add"][data-id="dal"]').catch(() => {});
+        await page.click('[data-action="add"][data-id="biryani"]').catch(() => {});
         checks = await page.evaluate(() => ({
           brandHome: !!document.querySelector("a.brand[href='index.html']"),
           cartCount: Number(document.getElementById("cartBarCount")?.textContent || 0),
