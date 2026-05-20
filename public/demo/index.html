@@ -400,7 +400,7 @@ button{font-family:inherit;cursor:pointer;border:0;background:none;color:inherit
       <span>TRAY · CAMPUS EDITION</span>
     </div>
     <div class="r">
-      <span class="live"><span class="d"></span>Kitchen open · 11:42 IST</span>
+      <span class="live"><span class="d"></span>Kitchen open · <span id="liveClock">--:-- IST</span></span>
     </div>
   </div>
 
@@ -415,8 +415,8 @@ button{font-family:inherit;cursor:pointer;border:0;background:none;color:inherit
     </p>
     <div class="hero-cta">
       <div class="row">
-        <a class="btn btn-pri btn-lg" href="student.html">Try the live demo →</a>
-        <a class="btn btn-ghost btn-lg" href="student.html">I'm a student</a>
+        <a class="btn btn-pri btn-lg" href="student.html">I'm a student →</a>
+        <a class="btn btn-ghost btn-lg" href="admin.html">I run a canteen</a>
       </div>
       <div class="note">DEMO IS LIVE · NO SIGN-UP · 90-SECOND TOUR</div>
     </div>
@@ -743,6 +743,20 @@ document.querySelectorAll('.reveal').forEach(el => io.observe(el));
       card.style.transform = '';
     });
   });
+})();
+
+/* Live clock — updates every second so "Kitchen open · 11:42 IST" is never stale */
+(function liveClock(){
+  const el = document.getElementById('liveClock');
+  if (!el) return;
+  function tick(){
+    const now = new Date();
+    const h = now.getHours().toString().padStart(2,'0');
+    const m = now.getMinutes().toString().padStart(2,'0');
+    el.textContent = h + ':' + m + ' IST';
+  }
+  tick();
+  setInterval(tick, 1000);
 })();
 
 /* Portal iframes: fade in once they signal load — feels intentional even if CSP/network is slow */
