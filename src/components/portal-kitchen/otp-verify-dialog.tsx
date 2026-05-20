@@ -74,7 +74,9 @@ export function OtpVerifyDialog({
       }
       toast.error(r.error ?? "Wrong code");
       if (r.locked) {
+        // Order is locked — close dialog so staff can't keep retrying
         onResult(false);
+        onClose();
         return;
       }
       if (typeof r.attemptsLeft === "number") setAttemptsLeft(r.attemptsLeft);

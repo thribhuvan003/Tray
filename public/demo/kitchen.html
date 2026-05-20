@@ -435,7 +435,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
       <input maxlength="1" inputmode="numeric"/>
       <input maxlength="1" inputmode="numeric"/>
     </div>
-    <div class="hint">HINT FOR DEMO: <span class="v" id="otpHint">8421</span></div>
+    <div class="hint" style="background:rgba(227,160,42,0.12);border:1px solid rgba(227,160,42,0.35);border-radius:6px;padding:6px 10px;display:flex;align-items:center;gap:8px"><span style="font-family:var(--mono);font-size:10px;letter-spacing:0.12em;font-weight:700;background:var(--mustard);color:var(--ink);padding:2px 6px;border-radius:4px;text-transform:uppercase">DEMO OTP</span> Code for this session: <span class="v" id="otpHint" style="font-size:15px;letter-spacing:0.12em">8421</span></div>
     <div class="actions">
       <button class="btn btn-ghost btn-sm" onclick="closeOtp()">Cancel</button>
       <button class="btn btn-tomato btn-sm" onclick="confirmOtp()">Verify &amp; Hand over</button>
@@ -876,7 +876,16 @@ function tickClock(){
 }
 setInterval(tickClock, 1000); tickClock();
 
-document.getElementById('btnSounds')?.addEventListener('click', () => toast('Sounds enabled'));
+let soundsOn = true;
+const btnSounds = document.getElementById('btnSounds');
+if (btnSounds) {
+  btnSounds.addEventListener('click', () => {
+    soundsOn = !soundsOn;
+    btnSounds.textContent = soundsOn ? '🔔 Sounds' : '🔕 Muted';
+    btnSounds.style.color = soundsOn ? '' : 'var(--ink-3)';
+    toast(soundsOn ? '🔔 Sounds enabled' : '🔕 Sounds muted');
+  });
+}
 
 $('#btnRefresh').addEventListener('click', () => {
   renderQueue();

@@ -30,7 +30,7 @@ function useMediaQuery(query: string): boolean {
   return matches;
 }
 
-export function CartDrawer({ tenantUpi }: { tenantUpi: string }) {
+export function CartDrawer({ tenantSlug, tenantUpi }: { tenantSlug: string; tenantUpi: string }) {
   const lines = useCart((s) => s.lines);
   const note = useCart((s) => s.note);
   const setNote = useCart((s) => s.setNote);
@@ -74,13 +74,13 @@ export function CartDrawer({ tenantUpi }: { tenantUpi: string }) {
       if (!res.ok) {
         toast.error(res.error ?? "Could not place order");
         if (res.code === "AUTH_REQUIRED") {
-          router.push(`/login?next=/menu`);
+          router.push(`/c/${tenantSlug}/login?next=/c/${tenantSlug}/menu`);
         }
         return;
       }
       clear();
       setOpen(false);
-      router.push(`/pay/${res.orderId}`);
+      router.push(`/c/${tenantSlug}/pay/${res.orderId}`);
     });
   };
 

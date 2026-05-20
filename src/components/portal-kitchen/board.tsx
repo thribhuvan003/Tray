@@ -196,7 +196,7 @@ export function KitchenBoard({
         <div className="px-4 sm:px-6 lg:px-8 py-3 flex flex-wrap items-center gap-4 justify-between">
           <div>
             <div className="text-[10px] font-mono uppercase tracking-[0.16em] text-tomato-900/70 dark:text-cream-200/60">
-              Edition 03 · Tuesday 16 May 2026 · {tenantName} · Lunch Service
+              {new Date().toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long", year: "numeric" })} · {tenantName} · Lunch Service
             </div>
             <h1 className="font-display font-medium tracking-[-0.025em] text-[24px] sm:text-[28px] leading-none mt-1">
               The kitchen <span className="italic text-tomato-500">queue.</span>
@@ -261,6 +261,12 @@ export function KitchenBoard({
               const r = await markPreparing(id);
               if (!r.ok) toast.error(r.error);
               if (action === "start" && r.ok) toast.success(`Started ${id.slice(0, 6)}`);
+            }}
+            onReject={async (id, reason) => {
+              const { rejectOrder } = await import("@/app/(kitchen)/_actions");
+              const r = await rejectOrder(id, reason);
+              if (!r.ok) toast.error(r.error ?? "Failed to reject order");
+              else toast.success("Order rejected — refund queued");
             }}
           />
           <OrderColumn
