@@ -12,8 +12,8 @@ export function LoginForm({ next }: { next: string }) {
   const [password, setPassword] = useState("");
   const [pending, start] = useTransition();
   const [sent, setSent] = useState(false);
-  const [otpVisible, setOtpVisible] = useState(false);
-  const [otpCountdown, setOtpCountdown] = useState(60);
+  const [otpVisible, setOtpVisible] = useState(true);
+  const [otpCountdown, setOtpCountdown] = useState(0);
   const [otp, setOtp] = useState("");
   const [verifying, setVerifying] = useState(false);
 
@@ -111,11 +111,9 @@ export function LoginForm({ next }: { next: string }) {
             </form>
           </div>
         </div>
-        {!otpVisible && (
-          <p className="text-[11.5px] text-[color:var(--color-ink)]/45 mt-4">
-            Prefer a code? It will appear in {otpCountdown}s.
-          </p>
-        )}
+        <p className="text-[11.5px] text-[color:var(--color-ink)]/45 mt-3">
+          Or type the 6-digit code from the same email instead of clicking the link.
+        </p>
       </div>
     );
   }
