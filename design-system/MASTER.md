@@ -1,7 +1,7 @@
 # Tray — Design system (MASTER)
 
 **Product:** B2B2C campus canteen ordering (student / kitchen / admin portals)  
-**Scope:** Marketing landing (`.tray-landing`) — Slate Ember council pick (2026-05-20)  
+**Scope:** Marketing landing (`.tray-landing`) — Monsoon Paper council pick (2026-05-20)  
 **Stack:** Next.js 15 · React 19 · Tailwind v4 (app) · scoped CSS in `landing-page.tsx`  
 **Motion:** GSAP + ScrollTrigger in `landing-motion.tsx` only — no Framer Motion on landing
 
@@ -14,28 +14,28 @@
 | Attribute | Recommendation |
 |-----------|----------------|
 | **Pattern** | Hero + proof sections + portal previews + sync diagram + flow steps (B2B SaaS landing) |
-| **Style** | Editorial dark — warm stone dusk, ember accent, restrained glass (nav blur), no emoji-as-icons |
-| **Mood** | Professional campus food energy; trustworthy ops + lively kitchen signal |
+| **Style** | Editorial light — warm paper sheet, coral + sky accents, restrained glass (nav blur), no emoji-as-icons |
+| **Mood** | Daylight canteen editorial; trustworthy ops + lively kitchen signal |
 | **Anti-patterns** | Purple-on-white SaaS cliché; neon arcade lime; mixing flat + skeuomorphic randomly; decorative-only motion |
 
 ---
 
-## Color (Slate Ember)
+## Color (Monsoon Paper)
 
 | Token | Value | Role |
 |-------|-------|------|
-| `--tl-bg` | `#0d0c0a` | Page base |
-| `--tl-bg-2` … `--tl-bg-4` | `#16140f` → `#2a261e` | Elevated surfaces |
-| `--tl-ink` | `#f2ebe3` | Primary text / primary CTA fill |
-| `--tl-ink-2` | `rgba(242,235,227,0.78)` | Body |
-| `--tl-ink-3` | `rgba(242,235,227,0.58)` | Labels (AA-oriented bump from 0.52) |
-| `--tl-ink-4` | `rgba(242,235,227,0.32)` | Meta |
-| `--tl-accent` / warm | `#e8a86a` | Italic emphasis, focus ring, selection |
-| `--tl-accent-cool` | `#9ec4ff` | Ghost hover rim |
+| `--tl-bg` | `#f7f3ea` | Page base |
+| `--tl-bg-2` … `--tl-bg-4` | `#fffaf0` → `#e8decc` | Elevated surfaces |
+| `--tl-ink` | `#1a140e` | Primary text / primary CTA fill |
+| `--tl-ink-2` | `rgba(26,20,14,0.72)` | Body |
+| `--tl-ink-3` | `rgba(26,20,14,0.58)` | Labels (AA-oriented) |
+| `--tl-ink-4` | `rgba(26,20,14,0.38)` | Meta |
+| `--tl-accent` / warm | `#c43d2f` | Italic emphasis, focus ring, selection |
+| `--tl-accent-cool` | `#2a5db8` | Ghost hover rim |
 | **Portal rims** | student `#5cb1ff` · kitchen `#d52821` / bright `#ef5749` · admin `#cdfa50` | Demo alignment |
 | **Status** | `--tl-good` `#6dd4a0` | Live pill |
 
-**Page gradient:** `165deg` — `#0d0c0a` → `#1a1610` (42%) → `#221c14`.
+**Page gradient:** `165deg` — `#f7f3ea` → `#fffaf0` (38%) → `#f0e8d8`.
 
 **Contrast targets:** Normal text ≥4.5:1 on `--tl-bg`; large display ≥3:1. Avoid gray-on-gray for body pairs.
 
@@ -89,7 +89,7 @@
 | 2 | `touch-action: manipulation` on tap targets | **Pass** (this pass) |
 | 3 | Hero CLS reserve (`min-height` on `.tl-h1`) | **Pass** (this pass) |
 | 3 | Below-fold iframes / lazy patterns | **Pass** (existing scale(0.5) mock) |
-| 4 | Style consistency (Slate Ember + portal rims) | **Pass** |
+| 4 | Style consistency (Monsoon Paper + portal rims) | **Pass** |
 | 5 | No horizontal scroll; responsive grids | **Pass** |
 | 6 | Tokenized `--tl-*`; no raw hex in JSX | **Pass** (scoped CSS) |
 | 7 | `prefers-reduced-motion` CSS + GSAP skip | **Pass** (+ live dot pulse off) |

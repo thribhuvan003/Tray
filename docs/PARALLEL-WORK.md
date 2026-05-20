@@ -38,7 +38,7 @@ Read AGENTS.md, docs/DEMO-SPEC.md, docs/PARALLEL-WORK.md. One file owner per lan
 
 | Surface | Direction |
 |---------|-----------|
-| Landing (Next) | **Slate Ember** (palette C) + Newsreader/Manrope/JetBrains (font 2) + motion medium+ |
+| Landing (Next) | **Monsoon Paper** (palette E) + Newsreader/Manrope/JetBrains (font 2) + motion medium+ |
 | Student demo | Midnight Sky, desktop sidebar |
 | Kitchen | DO NOT TOUCH |
 
@@ -184,12 +184,27 @@ pm run typecheck passes. Restart dev if port 3000 hangs: NODE_OPTIONS=--max-old-
 - **Skipped:** View Transitions on `/` → `/college` (risky); mobile nav hash row unchanged (user-loved layout).
 - **Verify:** `pnpm run build`, `npm run demo:verify` — pass.
 
+### 2026-05-20 — Landing brand research doc
+
+- **Added:** `docs/brand-research-landing.md` — personality/voice, Slate Ember + portal hex, typography/clear space, Caregiver+Everyman archetype, motifs, layout map, favicon direction, deck structure, 28 Exa URLs.
+- **Exa:** 8 `web_search_exa` queries (campus dining, editorial dark SaaS, foodservice identity, archetypes, favicon, Newsreader).
+- **Parallel CLI:** `parallel-cli` not on PATH — no `tray-brand-research` poll output; doc notes setup needed.
+- **Not changed:** landing code; reel still BLOCKED (`brand-reel-source.md`).
+
 ### 2026-05-20 — Reel brand copy (BLOCKED)
 
 - **Ask:** Align landing copy to user’s social reel (tone, ideology, on-screen text).
 - **Blocked:** No reel URL, video file, caption, or transcript in repo or agent transcript.
 - **Added:** `docs/brand-reel-source.md` (BLOCKED + unblock checklist + landing mapping); `docs/assets/` placeholder for `reel-source.mp4`.
 - **Not changed:** `landing-page.tsx` (no invented reel copy); no commit.
+
+### 2026-05-20 — Landing Palette E (Monsoon Paper) council ship
+
+- **Palette:** **E — Monsoon Paper** (light editorial paper, coral `#c43d2f` + sky `#2a5db8`); portal rims unchanged (`#5cb1ff` / `#d52821` / `#ef5749` / `#cdfa50`).
+- **Shipped:** `landing-page.tsx` `--tl-*`, light nav glass, coral/sky orbs + section glows, softer portal shadows; dark browser chrome mocks retained.
+- **Docs:** `docs/landing-design-options.md` §7 + decision log; `design-system/MASTER.md`; `docs/design-system-figma.md`.
+- **Unchanged:** copy, navbar structure, card layout, `landing-motion.tsx`.
+- **Verify:** `pnpm run build`, `npm run demo:verify` — pass.
 
 ### 2026-05-19 — Team harness activated (earlier)
 
