@@ -1,6 +1,6 @@
 # Parallel work log (Tray)
 
-**Contract:** Bar **C** — premium landing **and** student demo = real laptop web app. Kitchen demo **untouched**.
+**Contract:** Bar **C** — premium landing **and** student demo = real laptop web app. Kitchen static demo: **click paths + student sync** (2026-05-20).
 
 **F1 mode (user):** Research → team discuss → one council pick → implement → Amazon/Microsoft QA bar. Spec: **`docs/DEMO-SPEC.md`**.
 
@@ -64,6 +64,44 @@ Read AGENTS.md, docs/DEMO-SPEC.md, docs/PARALLEL-WORK.md. One file owner per lan
 - **P1:** Keyboard focus — no `:focus-visible` on student demo controls or landing `.tl-line-chip` (search/table input only).
 - **Pass:** Student flow logic (service mode, veg lane, cart bump, checkout disable, ribbon on track, back to menu, reset confirm); admin export CSV, menu modal (Escape/backdrop), panel tabs; Next landing line-leave + reduced motion.
 - **Verdict:** **Hold** until P0 encoding + index device tag fixed.
+
+
+### 2026-05-20 — Demo kitchen + student click-path pass (resume teams)
+
+- **Kitchen demo** (`kitchen.html`): Tray brand → `index.html`; Refresh wired; specials `storage` event for same-tab student sync; responsive viewport; student portal label **laptop**.
+- **Student demo**: UTF-8/₹/emojis fixed; Tray brand → home; `tray_specials` live menu category; focus-visible; storage listener.
+- **Admin demo**: Tray brand link; responsive viewport.
+- **Verify:** `npm run demo:verify` — static file audit, **no browser / no Playwright MCP** (~instant). Optional: `npm run demo:verify:e2e` (Playwright + built-in static server on :4173).
+- **Real kitchen:** `src/app/(kitchen)/kitchen/page.tsx` + `KitchenBoard` — requires auth + Supabase (not static demo).
+
+### 2026-05-20 — Admin demo full click-path (resume teams)
+
+- **Admin demo** (`public/demo/admin.html`): Sidebar `data-view` router (Overview, Orders, Menu, Students, Insights, Tenant, API, Audit); tenant switcher dropdown; dynamic orders table with filter/search/pagination; Students/Tenant/API/Audit view panes; G+O/R/M/S/I shortcuts; search + export + menu modal wired; no `data-toast` dead links.
+- **Scripts:** `scripts/admin-demo-router.js` (inlined into admin.html), `scripts/_apply_admin_patch.py`, `scripts/demo-verify.mjs` admin interaction checks.
+- **Not touched:** `public/demo/kitchen.html` per lane lock.
+- **Verify:** `npm run demo:verify` (static); optional `npm run demo:verify:e2e`.
+
+### 2026-05-20 — Kitchen demo: history nav, student sync, OTP, scroll
+
+- **Kitchen** (`public/demo/kitchen.html`): History/Insights nav now hides queue chrome reliably (`display:none` + `queue-page-chrome`); student orders via `tray_kitchen_inbox` → Incoming; pushing a special also creates an Incoming ticket; OTP modal only closes on scrim click + paste/4-digit fill; column scroll preserved across 1s re-renders + flex `min-height:0`.
+- **Student** (`public/demo/student.html`): `pushOrderToKitchen()` on “I've paid” (includes live specials / chicken dum biryani).
+- **Verify:** `npm run demo:verify`
+
+### 2026-05-20 — Multi-canteen fake data (student / kitchen / admin demos)
+
+- **Shared:** `public/demo/demo-canteens.js` — demo picker shows **two** canteens (`aditya`, `north-block`) with clearly different menus/orders/KPIs; `hostel-b` data kept in file but hidden from pickers. Per-canteen specials (`tray_specials_<id>`); selection in `localStorage` `tray_canteen` (syncs across tabs).
+- **Student** (`student.html`): Segmented **“Which canteen?”** control + menu flash on switch; cart clears on change; kitchen push includes `canteenId`.
+- **Kitchen** (`kitchen.html`): Canteen dropdown in page header; queue/specials re-seed per canteen; inbox ingests only matching `canteenId`.
+- **Admin** (`admin.html`): `applyTenantData()` swaps KPIs, orders, top items, students, menu modal, audit, specials; repaired corrupted Students/Tenant/API/Audit view-pane HTML.
+- **Index** (`index.html`): Sync copy mentions shared `tray_canteen` across portals.
+- **Verify:** `npm run demo:verify`
+
+### 2026-05-20 — Landing GSAP motion fix (resume)
+
+- **Root cause:** Hero FOUC guard used .tray-landing:not(.tl-motion-ready) { opacity: 0 }. 	l-motion-ready only appeared after GSAP hero onComplete or a timer inside gsap.context() — if GSAP failed or Strict Mode interrupted setup, hero stayed invisible.
+- **Fix:** landing-motion.tsx rewritten — ScrollTrigger.batch section reveals, hero timeline, 700ms markReady() safety, 	ry/catch on dynamic import, FOUC CSS scoped to .tl-anim-init in landing-page.tsx. Nav sticky + is-scrolled + grid alignment (Tray | System | How it works | Sign in | Demo).
+- **Verify:** 
+pm run typecheck passes. Restart dev if port 3000 hangs: NODE_OPTIONS=--max-old-space-size=8192 npm run dev → http://localhost:3000
 
 ### 2026-05-19 — Team harness activated (earlier)
 
