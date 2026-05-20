@@ -6,6 +6,7 @@ import type { ResolvedTenant } from "@/lib/tenant";
 // kitchen / admin portals. Forces dark regardless of the user's theme.
 
 const SCOPED_CSS = `
+html { scroll-behavior: smooth; }
 .tray-landing {
   --tl-bg: #0D1220;
   --tl-bg-2: #111828;
@@ -32,6 +33,7 @@ const SCOPED_CSS = `
   -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
   min-height: 100vh;
+  scroll-behavior: smooth;
 }
 
 /* Sky atmosphere — cloud glows that shift subtly like dusk light */
@@ -71,9 +73,11 @@ const SCOPED_CSS = `
 .tray-landing .tl-nav-links a:hover { color: var(--tl-ink); }
 .tray-landing .tl-nav-cta { display: flex; gap: 10px; align-items: center; }
 
-.tray-landing .tl-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 10px 18px; border-radius: 999px; font-size: 14px; font-weight: 500; border: 1px solid transparent; transition: transform .12s, background .15s, color .15s, border-color .15s; line-height: 1; font-family: inherit; cursor: pointer; }
+.tray-landing .tl-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 10px 18px; border-radius: 999px; font-size: 14px; font-weight: 500; border: 1px solid transparent; transition: transform .12s cubic-bezier(0.16,1,0.3,1), background .15s, color .15s, border-color .15s; line-height: 1; font-family: inherit; cursor: pointer; }
+.tray-landing .tl-btn:hover { transform: translateY(-2px); }
+.tray-landing .tl-btn:active { transform: translateY(0); }
 .tray-landing .tl-btn-pri { background: var(--tl-ink); color: var(--tl-bg); border-color: var(--tl-ink); }
-.tray-landing .tl-btn-pri:hover { background: #fff; transform: translateY(-1px); }
+.tray-landing .tl-btn-pri:hover { background: #fff; }
 .tray-landing .tl-btn-ghost { color: var(--tl-ink); background: transparent; border-color: var(--tl-line-2); }
 .tray-landing .tl-btn-ghost:hover { background: rgba(255, 255, 255, .05); border-color: var(--tl-ink-3); }
 .tray-landing .tl-btn-lg { padding: 14px 24px; font-size: 15px; }
@@ -90,6 +94,14 @@ const SCOPED_CSS = `
 
 .tray-landing .tl-h1 { font-family: var(--font-instrument-serif), serif; font-weight: 400; font-size: clamp(56px, 11vw, 160px); line-height: 0.9; letter-spacing: -0.035em; margin: 0 0 32px; max-width: 14ch; }
 .tray-landing .tl-h1 .tl-it { font-style: italic; color: var(--tl-persimmon); }
+
+/* Word reveal animation */
+.tray-landing .tl-word { display: inline-block; clip-path: inset(0 100% 0 0); animation: tlWord 0.75s cubic-bezier(0.16,1,0.3,1) forwards; }
+.tray-landing .tl-word:nth-child(1) { animation-delay: 0.2s; }
+.tray-landing .tl-word:nth-child(2) { animation-delay: 0.35s; }
+.tray-landing .tl-word:nth-child(3) { animation-delay: 0.5s; }
+.tray-landing .tl-word:nth-child(4) { animation-delay: 0.65s; }
+@keyframes tlWord { to { clip-path: inset(0 0% 0 0); } }
 
 .tray-landing .tl-hero-meta { display: grid; grid-template-columns: 1fr; gap: 32px; align-items: flex-end; margin-bottom: 48px; }
 @media (min-width: 960px) { .tray-landing .tl-hero-meta { grid-template-columns: 1.2fr 1fr; gap: 64px; } }
@@ -111,6 +123,12 @@ const SCOPED_CSS = `
 .tray-landing .tl-hero-stat .tl-v { font-family: var(--font-instrument-serif), serif; font-size: clamp(32px, 5vw, 48px); letter-spacing: -0.025em; line-height: 1; font-weight: 400; }
 .tray-landing .tl-hero-stat .tl-v .tl-it { font-style: italic; color: var(--tl-persimmon); }
 .tray-landing .tl-hero-stat .tl-l { font-family: var(--font-geist-mono), monospace; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--tl-ink-3); font-weight: 500; }
+
+/* Ticker strip */
+.tray-landing .tl-ticker { overflow: hidden; border-top: 1px solid var(--tl-line); border-bottom: 1px solid var(--tl-line); padding: 8px 0; background: rgba(196,168,130,0.03); }
+.tray-landing .tl-ticker-track { display: flex; gap: 48px; width: max-content; animation: tlTicker 30s linear infinite; font-family: monospace; font-size: 11px; color: var(--tl-ink-3); letter-spacing: 0.1em; text-transform: uppercase; white-space: nowrap; }
+.tray-landing .tl-ticker-track span.on { color: var(--tl-good); }
+@keyframes tlTicker { from { transform: translateX(0); } to { transform: translateX(-50%); } }
 
 /* Section heads */
 .tray-landing .tl-section { padding: 80px 0; position: relative; }
@@ -164,7 +182,7 @@ const SCOPED_CSS = `
 @media (min-width: 768px) { .tray-landing .tl-sync { padding: 140px 0; } }
 .tray-landing .tl-sync-grid { display: grid; grid-template-columns: 1fr; gap: 48px; align-items: center; }
 @media (min-width: 960px) { .tray-landing .tl-sync-grid { grid-template-columns: 1fr 1.4fr; gap: 64px; } }
-.tray-landing .tl-sync-grid h2 { font-family: var(--font-instrument-serif), serif; font-weight: 400; font-size: clamp(40px, 7vw, 88px); line-height: 0.95; letter-spacing: -0.03em; margin: 0 0 24px; }
+.tray-landing .tl-sync-grid h2 { font-family: var(--font-instrument-serif), serif; font-weight: 400; font-size: clamp(40px, 7vw, 88px); line-height: 0.95; letter-spacing: -0.03em; margin: 0 0 24px; font-style: italic; }
 .tray-landing .tl-sync-grid h2 .tl-it { font-style: italic; color: var(--tl-persimmon); }
 .tray-landing .tl-sync-grid .tl-lede { font-size: 17px; line-height: 1.6; color: var(--tl-ink-2); margin: 0 0 24px; max-width: 42ch; }
 .tray-landing .tl-sync-meta { display: flex; flex-direction: column; gap: 10px; font-family: var(--font-geist-mono), monospace; font-size: 12px; color: var(--tl-ink-2); font-weight: 500; }
@@ -173,7 +191,8 @@ const SCOPED_CSS = `
 
 .tray-landing .tl-diagram { background: var(--tl-bg-3); border: 1px solid var(--tl-line); border-radius: 18px; padding: 24px; position: relative; display: flex; flex-direction: column; gap: 14px; overflow: hidden; }
 @media (min-width: 768px) { .tray-landing .tl-diagram { padding: 32px; gap: 18px; } }
-.tray-landing .tl-node { padding: 14px 18px; background: var(--tl-bg-2); border: 1px solid var(--tl-line); border-radius: 12px; display: flex; align-items: center; gap: 14px; position: relative; transition: transform .2s; }
+.tray-landing .tl-node { padding: 14px 18px; background: var(--tl-bg-2); border: 1px solid var(--tl-line); border-radius: 12px; display: flex; align-items: center; gap: 14px; position: relative; transition: transform .2s, border-color .2s; cursor: default; }
+.tray-landing .tl-node:hover { border-color: var(--tl-line-2); }
 .tray-landing .tl-node .tl-ic { width: 34px; height: 34px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-family: var(--font-geist-mono), monospace; font-weight: 700; font-size: 14px; flex-shrink: 0; }
 .tray-landing .tl-node .tl-info { flex: 1; min-width: 0; }
 .tray-landing .tl-node .tl-info .tl-n { font-size: 14px; font-weight: 600; }
@@ -191,14 +210,15 @@ const SCOPED_CSS = `
 /* Pull quote */
 .tray-landing .tl-pull { padding: 96px 0; text-align: center; }
 @media (min-width: 768px) { .tray-landing .tl-pull { padding: 140px 0; } }
-.tray-landing .tl-pull p { font-family: var(--font-instrument-serif), serif; font-size: clamp(36px, 6vw, 84px); line-height: 1.05; letter-spacing: -0.025em; margin: 0 auto; max-width: 24ch; font-weight: 400; color: var(--tl-ink); }
+.tray-landing .tl-pull p { font-family: var(--font-instrument-serif), serif; font-size: clamp(40px, 7vw, 88px); line-height: 1.05; letter-spacing: -0.025em; margin: 0 auto; max-width: 24ch; font-weight: 400; color: var(--tl-ink); font-style: italic; }
 .tray-landing .tl-pull p .tl-it { font-style: italic; color: var(--tl-persimmon); }
 .tray-landing .tl-pull .tl-cite { margin-top: 32px; font-family: var(--font-geist-mono), monospace; font-size: 12px; color: var(--tl-ink-3); letter-spacing: 0.1em; text-transform: uppercase; font-weight: 500; }
 
 /* Flow */
 .tray-landing .tl-flow { display: grid; grid-template-columns: 1fr; border: 1px solid var(--tl-line); border-radius: 18px; overflow: hidden; background: var(--tl-bg-2); }
 @media (min-width: 720px) { .tray-landing .tl-flow { grid-template-columns: repeat(4, 1fr); } }
-.tray-landing .tl-flow-step { padding: 28px 24px; border-bottom: 1px solid var(--tl-line); min-height: 220px; display: flex; flex-direction: column; gap: 12px; }
+.tray-landing .tl-flow-step { padding: 28px 24px; border-bottom: 1px solid var(--tl-line); min-height: 220px; display: flex; flex-direction: column; gap: 12px; transition: background 0.2s; }
+.tray-landing .tl-flow-step:hover { background: rgba(196,168,130,0.04); }
 @media (min-width: 720px) { .tray-landing .tl-flow-step { padding: 32px 28px; border-bottom: 0; border-right: 1px solid var(--tl-line); min-height: 280px; gap: 14px; } .tray-landing .tl-flow-step:last-child { border-right: 0; } }
 .tray-landing .tl-flow-step:last-child { border-bottom: 0; }
 .tray-landing .tl-flow-step .tl-ix { font-family: var(--font-geist-mono), monospace; font-size: 11px; color: var(--tl-ink-3); letter-spacing: 0.14em; text-transform: uppercase; font-weight: 500; }
@@ -213,7 +233,7 @@ const SCOPED_CSS = `
 /* Stack */
 .tray-landing .tl-stack { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
 @media (min-width: 720px) { .tray-landing .tl-stack { grid-template-columns: repeat(4, 1fr); } }
-.tray-landing .tl-stack-card { padding: 20px; background: var(--tl-bg-2); border: 1px solid var(--tl-line); border-radius: 12px; display: flex; flex-direction: column; gap: 8px; transition: border-color .15s, background .15s; }
+.tray-landing .tl-stack-card { padding: 20px; background: var(--tl-bg-2); border: 1px solid var(--tl-line); border-radius: 12px; display: flex; flex-direction: column; gap: 8px; transition: all 0.2s cubic-bezier(0.16,1,0.3,1); }
 .tray-landing .tl-stack-card:hover { border-color: var(--tl-line-2); background: var(--tl-bg-3); }
 .tray-landing .tl-stack-card .tl-n { font-weight: 600; font-size: 14px; color: var(--tl-ink); }
 .tray-landing .tl-stack-card .tl-r { font-family: var(--font-geist-mono), monospace; font-size: 11px; color: var(--tl-ink-3); letter-spacing: 0.06em; }
@@ -239,7 +259,30 @@ const SCOPED_CSS = `
 .tray-landing .tl-footer-mark { font-family: var(--font-instrument-serif), serif; font-size: clamp(120px, 22vw, 240px); line-height: 0.86; letter-spacing: -0.04em; color: rgba(196, 168, 130, 0.05); text-align: center; font-weight: 400; user-select: none; margin: 32px 0 0; overflow: hidden; border-top: 1px solid var(--tl-line); padding-top: 24px; }
 .tray-landing .tl-footer-mark .tl-it { font-style: italic; color: rgba(196, 168, 130, 0.10); }
 .tray-landing .tl-footer-bot { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; align-items: center; padding-top: 24px; font-family: var(--font-geist-mono), monospace; font-size: 11px; color: var(--tl-ink-4); letter-spacing: 0.08em; font-weight: 500; }
+
+/* Scroll reveal */
+[data-reveal] {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 0.7s cubic-bezier(0.16,1,0.3,1), transform 0.7s cubic-bezier(0.16,1,0.3,1);
+}
+[data-reveal].tl-in { opacity: 1; transform: translateY(0); }
+[data-reveal]:nth-child(1) { transition-delay: 0s; }
+[data-reveal]:nth-child(2) { transition-delay: 0.1s; }
+[data-reveal]:nth-child(3) { transition-delay: 0.2s; }
+[data-reveal]:nth-child(4) { transition-delay: 0.3s; }
+@media (prefers-reduced-motion: reduce) {
+  [data-reveal] { opacity: 1 !important; transform: none !important; transition: none !important; }
+}
 `;
+
+const TICKER_ITEMS = [
+  "Hostel 9 Mess · OPEN · 8 min",
+  "Main Canteen · OPEN · 12 min",
+  "Night Canteen · OPEN · 2 min",
+  "SAC Food Court · PAUSED",
+  "H12 Mess · OPEN · 5 min",
+];
 
 function BrandMark() {
   return (
@@ -265,7 +308,9 @@ function PortalPreview({ src, title }: { src: string; title: string }) {
 }
 
 export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
-  const college = tenant?.college_name ?? "Aditya Engineering College";
+  // campus name for generic use — no college-specific branding
+  const campusName = tenant?.college_name ?? "your campus";
+  void campusName; // reserved for future tenant-aware copy
   return (
     <div className="tray-landing">
       <style dangerouslySetInnerHTML={{ __html: SCOPED_CSS }} />
@@ -291,18 +336,24 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
       <section className="tl-hero tl-wrap">
         <div className="tl-hero-top">
           <div className="tl-l">
-            <span>EDITION 03 · 2026</span>
-            <span style={{ color: "var(--tl-ink-4)" }}>/</span>
-            <span>{college.toUpperCase()}</span>
+            <span>TRAY · v3.0 · CAMPUS EDITION</span>
           </div>
           <div className="tl-r">
             <span className="tl-live"><span className="tl-d" />Kitchen open</span>
           </div>
         </div>
-        <h1 className="tl-h1">
-          A canteen system<br />for the <span className="tl-it">whole campus.</span>
+        <h1 className="tl-h1" data-reveal>
+          <span className="tl-word">A</span>{" "}
+          <span className="tl-word">canteen</span>{" "}
+          <span className="tl-word">system</span>
+          <br />
+          for the{" "}
+          <span className="tl-it">
+            <span className="tl-word">whole</span>{" "}
+            campus.
+          </span>
         </h1>
-        <div className="tl-hero-meta">
+        <div className="tl-hero-meta" data-reveal>
           <p className="tl-hero-lede">
             Tray replaces the printed-token queue with a phone-first ordering system.{" "}
             <span className="tl-em">Students order and pay before they walk to the counter.</span>{" "}
@@ -316,7 +367,7 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
             <div className="tl-note">DEMO IS LIVE · NO SIGN-UP · 90-SECOND TOUR</div>
           </div>
         </div>
-        <div className="tl-hero-stats">
+        <div className="tl-hero-stats" data-reveal>
           <div className="tl-hero-stat"><div className="tl-v">12<span className="tl-it">min</span></div><div className="tl-l">Saved per lunch</div></div>
           <div className="tl-hero-stat"><div className="tl-v">3</div><div className="tl-l">Role-based portals</div></div>
           <div className="tl-hero-stat"><div className="tl-v">UPI</div><div className="tl-l">Native payments</div></div>
@@ -324,22 +375,37 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
         </div>
       </section>
 
+      {/* Live status ticker */}
+      <div className="tl-ticker">
+        <div className="tl-ticker-track">
+          {[...TICKER_ITEMS, ...TICKER_ITEMS].map((item, i) => {
+            const isOpen = item.includes("OPEN");
+            const isPaused = item.includes("PAUSED");
+            return (
+              <span key={i} className={isOpen ? "on" : isPaused ? "" : ""}>
+                {item}
+              </span>
+            );
+          })}
+        </div>
+      </div>
+
       <section className="tl-section tl-wrap" id="system">
         <div className="tl-section-num"><span className="tl-bar" /><span className="tl-num">01</span> / The system</div>
         <div className="tl-section-head">
           <h2>Three portals,<br /><span className="tl-it">one source of truth.</span></h2>
           <div className="tl-side">
             Tray runs as a single application with three role-based views. The same data drives every screen.{" "}
-            <strong style={{ color: "var(--tl-ink)" }}>Open any portal below</strong> — they're fully functional, no install required.
+            <strong style={{ color: "var(--tl-ink)" }}>Open any portal below</strong> — they&apos;re fully functional, no install required.
           </div>
         </div>
 
         <div className="tl-portals">
-          <article className="tl-portal" data-c="student">
+          <article className="tl-portal" data-c="student" data-reveal>
             <div className="tl-portal-head">
               <div>
                 <span className="tl-portal-ix tl-ix">01 — Student</span>
-                <h3>Order &<br /><span className="tl-it">collect.</span></h3>
+                <h3>Order &amp;<br /><span className="tl-it">collect.</span></h3>
               </div>
               <span className="tl-portal-dot" />
             </div>
@@ -362,11 +428,11 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
             </div>
           </article>
 
-          <article className="tl-portal" data-c="kitchen">
+          <article className="tl-portal" data-c="kitchen" data-reveal>
             <div className="tl-portal-head">
               <div>
                 <span className="tl-portal-ix tl-ix">02 — Kitchen</span>
-                <h3>Prepare &<br /><span className="tl-it">hand over.</span></h3>
+                <h3>Prepare &amp;<br /><span className="tl-it">hand over.</span></h3>
               </div>
               <span className="tl-portal-dot" />
             </div>
@@ -375,7 +441,7 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
               <PortalPreview src="/demo/kitchen.html" title="Kitchen view preview" />
             </div>
             <div className="tl-portal-body">
-              <p>Live queue with preparation timers, status updates, and OTP verification on every handover. Add today's specials → push to every student instantly.</p>
+              <p>Live queue with preparation timers, status updates, and OTP verification on every handover. Add today&apos;s specials → push to every student instantly.</p>
               <div className="tl-feat-tags">
                 <span className="tl-feat-tag">Live queue</span>
                 <span className="tl-feat-tag">SLA timers</span>
@@ -389,7 +455,7 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
             </div>
           </article>
 
-          <article className="tl-portal" data-c="admin">
+          <article className="tl-portal" data-c="admin" data-reveal>
             <div className="tl-portal-head">
               <div>
                 <span className="tl-portal-ix tl-ix">03 — Admin</span>
@@ -422,7 +488,7 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
         <div className="tl-wrap">
           <div className="tl-section-num"><span className="tl-bar" /><span className="tl-num">02</span> / The connected canteen</div>
           <div className="tl-sync-grid">
-            <div>
+            <div data-reveal>
               <h2>Add a special.<br /><span className="tl-it">Watch it land everywhere.</span></h2>
               <p className="tl-lede">
                 The kitchen adds a dish today — it appears on every student phone in under 300 ms, and an audit-log entry lands in the admin console.
@@ -434,7 +500,7 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
                 <div className="tl-row"><span className="tl-k">FALLBACK</span><span>HTTP long-poll on degraded networks</span></div>
               </div>
             </div>
-            <div className="tl-diagram">
+            <div className="tl-diagram" data-reveal>
               <div className="tl-node" data-c="kitchen">
                 <div className="tl-ic">K</div>
                 <div className="tl-info">
@@ -448,7 +514,7 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
                 <div className="tl-ic">DB</div>
                 <div className="tl-info">
                   <div className="tl-n">Postgres · menu_items table</div>
-                  <div className="tl-d">tenant_id = 'aditya' · row inserted</div>
+                  <div className="tl-d">tenant_id scoped · row inserted</div>
                 </div>
                 <span className="tl-role">SOURCE OF TRUTH</span>
               </div>
@@ -465,7 +531,7 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
                 <div className="tl-ic">A</div>
                 <div className="tl-info">
                   <div className="tl-n">Admin audit-log row</div>
-                  <div className="tl-d">menu.add by chef@aditya · logged</div>
+                  <div className="tl-d">menu.add by kitchen staff · logged</div>
                 </div>
                 <span className="tl-role">CLIENT</span>
               </div>
@@ -475,39 +541,39 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
       </section>
 
       <section className="tl-pull tl-wrap">
-        <p>Lunch is thirty minutes. Students currently spend <span className="tl-it">twelve of them</span> standing in line.</p>
-        <div className="tl-cite">{college.toUpperCase()} · CANTEEN AUDIT · 2025</div>
+        <p data-reveal>Lunch is thirty minutes. Students currently spend <span className="tl-it">twelve of them</span> standing in line.</p>
+        <div className="tl-cite">CAMPUS CANTEEN AUDIT · 2025</div>
       </section>
 
       <section className="tl-section tl-wrap" id="flow">
         <div className="tl-section-num"><span className="tl-bar" /><span className="tl-num">03</span> / How it works</div>
         <div className="tl-section-head">
-          <h2>Phone to plate,<br /><span className="tl-it">in eleven minutes.</span></h2>
+          <h2><span style={{ fontStyle: "italic" }}>Phone to plate,</span><br /><span className="tl-it">in eleven minutes.</span></h2>
           <div className="tl-side">Four touchpoints. The student walks straight to the counter. The kitchen never repeats a name. Everyone gets their hour back.</div>
         </div>
         <div className="tl-flow">
-          <div className="tl-flow-step">
+          <div className="tl-flow-step" data-reveal>
             <div className="tl-ix">01 — 11:42</div>
             <div className="tl-num">01</div>
             <h3>Browse the <span className="tl-it">menu.</span></h3>
             <p>Live availability, prep times, veg/non-veg filters. Add to cart with one tap.</p>
             <div className="tl-tag">→ STATUS: CART</div>
           </div>
-          <div className="tl-flow-step">
+          <div className="tl-flow-step" data-reveal>
             <div className="tl-ix">02 — 11:43</div>
             <div className="tl-num">02</div>
             <h3>Pay by <span className="tl-it">UPI.</span></h3>
             <p>Single-use QR with exact amount. Webhook confirms automatically.</p>
             <div className="tl-tag">→ STATUS: PAID</div>
           </div>
-          <div className="tl-flow-step">
+          <div className="tl-flow-step" data-reveal>
             <div className="tl-ix">03 — 11:46</div>
             <div className="tl-num">03</div>
             <h3>Track <span className="tl-it">live.</span></h3>
             <p>Queued → preparing → ready, updated by the kitchen in under 250 ms.</p>
             <div className="tl-tag">→ STATUS: PREPARING</div>
           </div>
-          <div className="tl-flow-step">
+          <div className="tl-flow-step" data-reveal>
             <div className="tl-ix">04 — 11:53</div>
             <div className="tl-num">04</div>
             <h3>Collect with <span className="tl-it">OTP.</span></h3>
@@ -534,7 +600,7 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
             ["Razorpay", "PAYMENTS · UPI"],
             ["Vercel · Edge", "HOSTING · CDN"],
           ].map(([n, r]) => (
-            <div key={n} className="tl-stack-card">
+            <div key={n} className="tl-stack-card" data-reveal>
               <span className="tl-n">{n}</span>
               <span className="tl-r">{r}</span>
             </div>
@@ -547,8 +613,8 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
           <div className="tl-section-num" style={{ justifyContent: "center", marginBottom: 24 }}>
             <span className="tl-bar" /><span className="tl-num">DEMO</span> / Live · clickable · no sign-up
           </div>
-          <h2>Skip the<br /><span className="tl-it">line.</span></h2>
-          <p>Three portals. One platform. Built for college canteens that are tired of printed tokens.</p>
+          <h2 data-reveal>Skip the<br /><span className="tl-it">line.</span></h2>
+          <p>Three portals. One platform. Built for campus canteens that are tired of printed tokens.</p>
           <div className="tl-cta-row">
             <a href="/demo/student.html" className="tl-btn tl-btn-pri tl-btn-lg">Open the student app →</a>
             <a href="/demo/kitchen.html" className="tl-btn tl-btn-ghost tl-btn-lg">Kitchen view</a>
@@ -594,6 +660,18 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
           <span>v3.0 · 2026</span>
         </div>
       </footer>
+
+      {/* IntersectionObserver for scroll-triggered reveals */}
+      <script dangerouslySetInnerHTML={{ __html: `
+        (function() {
+          var obs = new IntersectionObserver(function(entries) {
+            entries.forEach(function(e) {
+              if (e.isIntersecting) { e.target.classList.add('tl-in'); obs.unobserve(e.target); }
+            });
+          }, { threshold: 0.12, rootMargin: '0px 0px -60px 0px' });
+          document.querySelectorAll('[data-reveal]').forEach(function(el) { obs.observe(el); });
+        })();
+      ` }} />
     </div>
   );
 }
