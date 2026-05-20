@@ -3,6 +3,7 @@ import { Receiver } from "@upstash/qstash";
 import { getAdminClient } from "@/lib/supabase/admin";
 import { fetchRazorpayOrderStatus } from "@/lib/payments/razorpay";
 import { env } from "@/lib/env";
+import { initiateRefundForOrder } from "@/app/(student)/_actions";
 
 // Belt-and-braces for the webhook: India sees ~2-3% Razorpay webhook drops
 // (NAT churn, ISP filtering, our own cold starts). QStash hits this every
@@ -146,5 +147,42 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  return NextResponse.json({ ok: true, reconciled });
+  // ── Refund loop ────────────────────────────────────────────────────────────
+  // Find orders stuck in cancelled_by_kitchen that still have a captured
+  // payment (i.e. the best-effort refund call in cancelOrderByStudent either
+  // never ran or failed transiently). Cap at 20 per cron run.
+
+  type CancelledOrder = { id: string; tenant_id: string };
+  type RefundCandidate = { order_id: string; tenant_id: string };
+
+  const { data: cancelledOrders } = await admin
+    .from("orders")
+    .select("id, tenant_id")
+    .eq("status", "cancelled_by_kitchen")
+    .limit(20)
+    .returns<CancelledOrder[]>();
+
+  let refunded = 0;
+  if (cancelledOrders && cancelledOrders.length > 0) {
+    const cancelledIds = cancelledOrders.map((o) => o.id);
+
+    // Find which of those have a still-captured payment (not yet refunded).
+    const { data: capturedPayments } = await admin
+      .from("payments")
+      .select("order_id, tenant_id")
+      .in("order_id", cancelledIds)
+      .eq("status", "captured")
+      .returns<RefundCandidate[]>();
+
+    for (const pay of capturedPayments ?? []) {
+      try {
+        const result = await initiateRefundForOrder(pay.order_id, pay.tenant_id);
+        if (result.ok) refunded += 1;
+      } catch {
+        // Transient failure — leave for next cron run.
+      }
+    }
+  }
+
+  return NextResponse.json({ ok: true, reconciled, refunded });
 }
