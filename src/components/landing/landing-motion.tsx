@@ -2,10 +2,13 @@
 
 import { useEffect } from "react";
 
+const HERO_EASE = "expo.out";
+const MAGNET_MAX_PX = 8;
+
 /**
  * GSAP ScrollTrigger for the marketing landing only.
- * Motion tier: medium+ (tasteful bold) — council pick 2026-05-20.
- * Skips scrub/tilt on coarse pointer + narrow viewport; honors prefers-reduced-motion.
+ * Framer-inspired pass: expo hero, nav pill, portal shine, sync sequence, magnetic CTA, orb parallax.
+ * No framer-motion on this route. Skips scrub/tilt on coarse pointer + narrow viewport.
  */
 export function LandingMotion() {
   useEffect(() => {
@@ -21,9 +24,13 @@ export function LandingMotion() {
     }
 
     const nav = root.querySelector<HTMLElement>(".tl-nav");
+    const navLinksWrap = root.querySelector<HTMLElement>(".tl-nav-links");
+    const navPill = root.querySelector<HTMLElement>(".tl-nav-pill");
     const progressBar = root.querySelector<HTMLElement>(".tl-scroll-progress");
+    const ambientShift = root.querySelector<HTMLElement>(".tl-ambient-shift");
     const portalCleanups: Array<() => void> = [];
     const btnCleanups: Array<() => void> = [];
+    const magneticCleanups: Array<() => void> = [];
 
     let ctxRevert: (() => void) | undefined;
     let readyTimer: ReturnType<typeof setTimeout> | undefined;
@@ -44,7 +51,12 @@ export function LandingMotion() {
       ctxRevert?.();
       portalCleanups.forEach((fn) => fn());
       btnCleanups.forEach((fn) => fn());
-      nav?.classList.remove("is-scrolled");
+      magneticCleanups.forEach((fn) => fn());
+      nav?.classList.remove("is-scrolled", "is-scrolled-deep");
+      navLinksWrap?.classList.remove("has-pill");
+      root.querySelectorAll<HTMLElement>(".tl-portal").forEach((p) => {
+        p.classList.remove("is-lift", "is-shine");
+      });
       markReady();
     };
 
@@ -66,11 +78,27 @@ export function LandingMotion() {
         if (cancelled) return;
 
         gsap.registerPlugin(ScrollTrigger);
+        ScrollTrigger.config({ limitCallbacks: true, ignoreMobileResize: true });
 
         const coarsePointer = window.matchMedia("(pointer: coarse)").matches;
         const narrowViewport = window.matchMedia("(max-width: 768px)").matches;
         const lightMotion = coarsePointer || narrowViewport;
         const finePointer = !coarsePointer;
+
+        const moveNavPill = (activeLink: HTMLAnchorElement | null) => {
+          if (!navPill || !navLinksWrap || !activeLink) return;
+          const wrapRect = navLinksWrap.getBoundingClientRect();
+          const linkRect = activeLink.getBoundingClientRect();
+          const left = linkRect.left - wrapRect.left;
+          navLinksWrap.classList.add("has-pill");
+          gsap.to(navPill, {
+            x: left,
+            width: linkRect.width,
+            duration: 0.38,
+            ease: "power3.out",
+            overwrite: true,
+          });
+        };
 
         const ctx = gsap.context(() => {
           if (progressBar) {
@@ -93,31 +121,46 @@ export function LandingMotion() {
             ScrollTrigger.create({
               start: "top -48",
               onEnter: () => nav.classList.add("is-scrolled"),
-              onLeaveBack: () => nav.classList.remove("is-scrolled"),
+              onLeaveBack: () => {
+                nav.classList.remove("is-scrolled", "is-scrolled-deep");
+              },
+            });
+            ScrollTrigger.create({
+              start: "top -140",
+              onEnter: () => nav.classList.add("is-scrolled-deep"),
+              onLeaveBack: () => nav.classList.remove("is-scrolled-deep"),
             });
           }
 
           const navLinks = root.querySelectorAll<HTMLAnchorElement>('.tl-nav-links a[href^="#"]');
-          const sections = ["#system", "#flow"].map((id) => root.querySelector(id)).filter(Boolean);
-          if (navLinks.length && sections.length) {
-            sections.forEach((section) => {
-              if (!section) return;
-              ScrollTrigger.create({
-                trigger: section,
-                start: "top 55%",
-                end: "bottom 45%",
-                onToggle: (self) => {
-                  const id = `#${(self.trigger as HTMLElement).id}`;
-                  navLinks.forEach((link) => {
-                    link.classList.toggle("is-active", link.getAttribute("href") === id && self.isActive);
-                  });
-                },
+          const spySections = ["#system", "#flow"]
+            .map((id) => root.querySelector(id))
+            .filter(Boolean) as HTMLElement[];
+
+          if (navLinks.length && spySections.length) {
+              spySections.forEach((section) => {
+                ScrollTrigger.create({
+                  trigger: section,
+                  start: "top 55%",
+                  end: "bottom 45%",
+                  onToggle: (self) => {
+                    const id = `#${(self.trigger as HTMLElement).id}`;
+                    let active: HTMLAnchorElement | null = null;
+                    navLinks.forEach((link) => {
+                      const on = link.getAttribute("href") === id && self.isActive;
+                      link.classList.toggle("is-active", on);
+                      if (on) active = link;
+                    });
+                    if (self.isActive && active) moveNavPill(active);
+                  },
+                });
               });
-            });
+            const initial = Array.from(navLinks).find((l) => l.classList.contains("is-active"));
+            if (initial) moveNavPill(initial);
           }
 
           const heroTl = gsap.timeline({
-            defaults: { ease: "power3.out" },
+            defaults: { ease: HERO_EASE },
             onComplete: markReady,
           });
 
@@ -125,16 +168,20 @@ export function LandingMotion() {
             .from(".tray-landing .tl-hero-top", { y: 18, opacity: 0, duration: 0.65 })
             .from(
               ".tray-landing .tl-h1 .tl-word",
-              { y: 52, opacity: 0, stagger: 0.05, duration: 0.9 },
-              "-=0.35",
+              { y: 48, opacity: 0, stagger: 0.055, duration: 0.95 },
+              "-=0.38",
             )
-            .from(".tray-landing .tl-hero-lede", { y: 22, opacity: 0, duration: 0.75 }, "-=0.5")
-            .from(".tray-landing .tl-hero-cta .tl-row", { y: 16, opacity: 0, duration: 0.6 }, "-=0.45")
-            .from(".tray-landing .tl-note", { opacity: 0, duration: 0.45 }, "-=0.4")
+            .from(".tray-landing .tl-hero-lede", { y: 22, opacity: 0, duration: 0.78 }, "-=0.52")
+            .from(
+              ".tray-landing .tl-hero-cta .tl-row .tl-btn",
+              { y: 14, opacity: 0, scale: 0.92, stagger: 0.06, duration: 0.62 },
+              "-=0.48",
+            )
+            .from(".tray-landing .tl-note", { opacity: 0, duration: 0.45 }, "-=0.38")
             .from(
               ".tray-landing .tl-hero-stat",
-              { y: 24, opacity: 0, stagger: 0.07, duration: 0.65 },
-              "-=0.35",
+              { y: 24, opacity: 0, stagger: 0.07, duration: 0.68 },
+              "-=0.34",
             );
 
           root.querySelectorAll<HTMLElement>(".tl-hero-stat[data-count]").forEach((stat, i) => {
@@ -146,13 +193,13 @@ export function LandingMotion() {
               counter,
               {
                 val: target,
-                duration: 1,
-                ease: "power2.out",
+                duration: 1.05,
+                ease: "expo.out",
                 onUpdate: () => {
                   numEl.textContent = String(Math.round(counter.val));
                 },
               },
-              i === 0 ? "-=0.45" : "<0.1",
+              i === 0 ? "-=0.42" : "<0.08",
             );
           });
 
@@ -184,6 +231,22 @@ export function LandingMotion() {
                 },
               });
             });
+
+            if (finePointer && ambientShift) {
+              const onAmbientMove = (e: MouseEvent) => {
+                const px = (e.clientX / window.innerWidth - 0.5) * 2;
+                const py = (e.clientY / window.innerHeight - 0.5) * 2;
+                gsap.to(ambientShift, {
+                  x: px * 14,
+                  y: py * 10,
+                  duration: 1.15,
+                  ease: "power2.out",
+                  overwrite: "auto",
+                });
+              };
+              window.addEventListener("mousemove", onAmbientMove, { passive: true });
+              magneticCleanups.push(() => window.removeEventListener("mousemove", onAmbientMove));
+            }
           }
 
           const sectionEnter = (
@@ -209,23 +272,17 @@ export function LandingMotion() {
                   rotateX: 0,
                   rotateY: 0,
                   rotate: 0,
-                  filter: "blur(0px)",
                   clipPath: "inset(0% 0% 0% 0%)",
                   duration: vars.duration ?? 0.85,
                   stagger: vars.stagger ?? 0.08,
-                  ease: vars.ease ?? "power3.out",
+                  ease: vars.ease ?? HERO_EASE,
                   overwrite: "auto",
                 });
               },
             });
           };
 
-          // 01 — System: editorial slide + portal deck fan-in
-          sectionEnter(
-            "#system",
-            "#system .tl-section-num",
-            { opacity: 0, y: 12, duration: 0.5 },
-          );
+          sectionEnter("#system", "#system .tl-section-num", { opacity: 0, y: 12, duration: 0.5 });
           sectionEnter(
             "#system",
             "#system .tl-section-head h2",
@@ -247,7 +304,7 @@ export function LandingMotion() {
               transformOrigin: "50% 100%",
               stagger: 0.16,
               duration: 1.05,
-              ease: "power3.out",
+              ease: HERO_EASE,
             },
             "top 80%",
           );
@@ -258,7 +315,6 @@ export function LandingMotion() {
             "top 75%",
           );
 
-          // 02 — Sync: scale panel + alternating node lanes
           sectionEnter(
             ".tl-sync",
             ".tl-sync .tl-section-num, .tl-sync h2, .tl-sync .tl-lede",
@@ -270,52 +326,64 @@ export function LandingMotion() {
             { opacity: 0, x: -24, stagger: 0.09, duration: 0.65 },
             "top 78%",
           );
+
           const diagram = root.querySelector(".tl-diagram");
           if (diagram) {
-            gsap.set(diagram, { scale: 0.94, opacity: 0 });
+            const nodes = diagram.querySelectorAll<HTMLElement>(".tl-node");
+            const arrs = diagram.querySelectorAll<HTMLElement>(".tl-arr");
+            gsap.set(diagram, { scale: 0.96, opacity: 0 });
+            nodes.forEach((node, i) => {
+              gsap.set(node, { opacity: 0, y: 20, scale: 0.94 });
+              const dot = node.querySelector(".tl-role");
+              if (dot) gsap.set(dot, { scale: 0.85 });
+            });
+            arrs.forEach((arr) => {
+              gsap.set(arr, { opacity: 0 });
+              arr.querySelectorAll<HTMLElement>(".tl-line").forEach((line) => {
+                gsap.set(line, { scaleX: 0, transformOrigin: "0% 50%" });
+              });
+            });
+
             ScrollTrigger.create({
               trigger: diagram,
               start: "top 85%",
               once: true,
               onEnter: () => {
-                gsap.to(diagram, {
-                  scale: 1,
-                  opacity: 1,
-                  duration: 0.9,
-                  ease: "power2.out",
+                gsap.to(diagram, { scale: 1, opacity: 1, duration: 0.75, ease: HERO_EASE });
+                const seq = gsap.timeline({ defaults: { ease: HERO_EASE } });
+                nodes.forEach((node, i) => {
+                  const offset = i * 0.14;
+                  seq.to(
+                    node,
+                    { opacity: 1, y: 0, scale: 1, duration: 0.55 },
+                    offset,
+                  );
+                  const role = node.querySelector(".tl-role");
+                  if (role) {
+                    seq.to(role, { scale: 1, duration: 0.45, ease: "back.out(2)" }, offset + 0.08);
+                  }
+                  const arr = arrs[i];
+                  if (arr) {
+                    seq.to(arr, { opacity: 1, duration: 0.25 }, offset + 0.1);
+                    arr.querySelectorAll<HTMLElement>(".tl-line").forEach((line) => {
+                      seq.to(line, { scaleX: 1, duration: 0.4, ease: "power2.out" }, offset + 0.12);
+                    });
+                    const pulseDot = arr.querySelector<HTMLElement>(".tl-dot");
+                    if (pulseDot) {
+                      seq.fromTo(
+                        pulseDot,
+                        { scale: 0.6, opacity: 0.35 },
+                        { scale: 1.25, opacity: 1, duration: 0.35, ease: "power2.out" },
+                        offset + 0.2,
+                      );
+                      seq.to(pulseDot, { scale: 1, duration: 0.5, ease: "elastic.out(1, 0.55)" }, offset + 0.38);
+                    }
+                  }
                 });
               },
             });
           }
-          root.querySelectorAll<HTMLElement>(".tl-diagram .tl-node").forEach((node, i) => {
-            gsap.set(node, { opacity: 0, x: i % 2 === 0 ? -44 : 44 });
-            ScrollTrigger.create({
-              trigger: node,
-              start: "top 90%",
-              once: true,
-              onEnter: () => {
-                gsap.to(node, {
-                  opacity: 1,
-                  x: 0,
-                  duration: 0.7,
-                  ease: "back.out(1.55)",
-                });
-              },
-            });
-          });
-          root.querySelectorAll<HTMLElement>(".tl-diagram .tl-arr").forEach((arr) => {
-            gsap.set(arr, { opacity: 0, scaleX: 0.6, transformOrigin: "50% 50%" });
-            ScrollTrigger.create({
-              trigger: arr,
-              start: "top 92%",
-              once: true,
-              onEnter: () => {
-                gsap.to(arr, { opacity: 1, scaleX: 1, duration: 0.5, ease: "power2.out" });
-              },
-            });
-          });
 
-          // 02b — Line leave: spring chips
           sectionEnter(
             "#where",
             "#where .tl-line-leave-title, #where .tl-line-leave-lede",
@@ -335,10 +403,12 @@ export function LandingMotion() {
             "top 80%",
           );
 
-          // Pull quote: soft zoom + blur dissolve
           const pullP = root.querySelector(".tl-pull p");
           if (pullP) {
-            gsap.set(pullP, { opacity: 0, scale: 1.08, filter: "blur(10px)" });
+            const pullVars = narrowViewport
+              ? { opacity: 0, y: 32 }
+              : { opacity: 0, y: 36, scale: 0.98 };
+            gsap.set(pullP, pullVars);
             ScrollTrigger.create({
               trigger: pullP,
               start: "top 80%",
@@ -346,17 +416,16 @@ export function LandingMotion() {
               onEnter: () => {
                 gsap.to(pullP, {
                   opacity: 1,
+                  y: 0,
                   scale: 1,
-                  filter: "blur(0px)",
-                  duration: 1.1,
-                  ease: "power2.out",
+                  duration: 1,
+                  ease: HERO_EASE,
                 });
               },
             });
           }
           sectionEnter(".tl-pull", ".tl-pull .tl-cite", { opacity: 0, y: 14, duration: 0.5 }, "top 72%");
 
-          // 03 — Flow: stepped rise + number spin
           sectionEnter(
             "#flow",
             "#flow .tl-section-num, #flow .tl-section-head h2, #flow .tl-section-head .tl-side",
@@ -371,7 +440,13 @@ export function LandingMotion() {
               start: "top 88%",
               once: true,
               onEnter: () => {
-                gsap.to(step, { opacity: 1, y: 0, duration: 0.75, ease: "power3.out", delay: i * 0.05 });
+                gsap.to(step, {
+                  opacity: 1,
+                  y: 0,
+                  duration: 0.75,
+                  ease: HERO_EASE,
+                  delay: i * 0.05,
+                });
                 if (num) {
                   gsap.to(num, { rotate: 0, duration: 0.95, ease: "back.out(2)" });
                 }
@@ -379,7 +454,6 @@ export function LandingMotion() {
             });
           });
 
-          // 04 — Stack: radial pop
           sectionEnter(
             "#stack",
             "#stack .tl-section-num, #stack .tl-section-head h2, #stack .tl-section-head .tl-side",
@@ -399,7 +473,6 @@ export function LandingMotion() {
             "top 82%",
           );
 
-          // Closing: lift + CTA cascade
           const closing = root.querySelector(".tl-closing");
           if (closing) {
             gsap.set(closing.querySelector("h2"), { opacity: 0, y: 48, scale: 0.96 });
@@ -409,13 +482,12 @@ export function LandingMotion() {
               start: "top 78%",
               once: true,
               onEnter: () => {
-                const tl = gsap.timeline();
+                const tl = gsap.timeline({ defaults: { ease: HERO_EASE } });
                 tl.to(closing.querySelector("h2"), {
                   opacity: 1,
                   y: 0,
                   scale: 1,
                   duration: 1,
-                  ease: "power3.out",
                 }).to(
                   closing.querySelector("p"),
                   { opacity: 1, y: 0, duration: 0.7, ease: "power2.out" },
@@ -437,59 +509,102 @@ export function LandingMotion() {
             "top 90%",
           );
 
-          // Portal preview tilt (fine pointer only; CSS hover lift unchanged)
           if (finePointer) {
-          root.querySelectorAll<HTMLElement>(".tl-portal").forEach((portal) => {
-            const chrome = portal.querySelector<HTMLElement>(".tl-browser-chrome");
-            if (!chrome) return;
-
-            const onMove = (e: MouseEvent) => {
-              const rect = portal.getBoundingClientRect();
-              const px = (e.clientX - rect.left) / rect.width - 0.5;
-              const py = (e.clientY - rect.top) / rect.height - 0.5;
-              gsap.to(chrome, {
-                rotateY: px * 9,
-                rotateX: -py * 6,
-                duration: 0.35,
-                ease: "power2.out",
-                overwrite: "auto",
+            root.querySelectorAll<HTMLElement>(".tl-portal").forEach((portal) => {
+              const chrome = portal.querySelector<HTMLElement>(".tl-browser-chrome");
+              const quickY = gsap.quickTo(portal, "y", { duration: 0.35, ease: "power3.out" });
+              const onEnter = () => {
+                portal.classList.add("is-lift", "is-shine");
+                quickY(-10);
+                if (chrome) {
+                  gsap.to(chrome, {
+                    rotateY: 0,
+                    rotateX: 0,
+                    duration: 0.4,
+                    ease: "power2.out",
+                  });
+                }
+              };
+              const onMove = (e: MouseEvent) => {
+                if (!chrome) return;
+                const rect = portal.getBoundingClientRect();
+                const px = (e.clientX - rect.left) / rect.width - 0.5;
+                const py = (e.clientY - rect.top) / rect.height - 0.5;
+                gsap.to(chrome, {
+                  rotateY: px * 9,
+                  rotateX: -py * 6,
+                  duration: 0.35,
+                  ease: "power2.out",
+                  overwrite: "auto",
+                });
+              };
+              const onLeave = () => {
+                portal.classList.remove("is-lift", "is-shine");
+                quickY(0);
+                if (chrome) {
+                  gsap.to(chrome, {
+                    rotateY: 0,
+                    rotateX: 0,
+                    duration: 0.55,
+                    ease: "power3.out",
+                  });
+                }
+              };
+              portal.addEventListener("mouseenter", onEnter);
+              portal.addEventListener("mousemove", onMove);
+              portal.addEventListener("mouseleave", onLeave);
+              portalCleanups.push(() => {
+                portal.removeEventListener("mouseenter", onEnter);
+                portal.removeEventListener("mousemove", onMove);
+                portal.removeEventListener("mouseleave", onLeave);
+                portal.classList.remove("is-lift", "is-shine");
               });
-            };
-            const onLeave = () => {
-              gsap.to(chrome, {
-                rotateY: 0,
-                rotateX: 0,
-                duration: 0.55,
-                ease: "power3.out",
-              });
-            };
-            portal.addEventListener("mousemove", onMove);
-            portal.addEventListener("mouseleave", onLeave);
-            portalCleanups.push(() => {
-              portal.removeEventListener("mousemove", onMove);
-              portal.removeEventListener("mouseleave", onLeave);
             });
-          });
-          }
 
-          // Button micro-interaction (fine pointer; CSS still handles colors)
-          if (finePointer) {
-          root.querySelectorAll<HTMLElement>(".tl-btn").forEach((btn) => {
-            const onEnter = () => gsap.to(btn, { scale: 1.03, duration: 0.2, ease: "power2.out" });
-            const onLeave = () => gsap.to(btn, { scale: 1, duration: 0.25, ease: "power2.out" });
-            const onDown = () => gsap.to(btn, { scale: 0.97, duration: 0.08 });
-            const onUp = () => gsap.to(btn, { scale: 1.03, duration: 0.15 });
-            btn.addEventListener("mouseenter", onEnter);
-            btn.addEventListener("mouseleave", onLeave);
-            btn.addEventListener("mousedown", onDown);
-            btn.addEventListener("mouseup", onUp);
-            btnCleanups.push(() => {
-              btn.removeEventListener("mouseenter", onEnter);
-              btn.removeEventListener("mouseleave", onLeave);
-              btn.removeEventListener("mousedown", onDown);
-              btn.removeEventListener("mouseup", onUp);
+            root.querySelectorAll<HTMLElement>(".tl-btn").forEach((btn) => {
+              const onEnter = () => gsap.to(btn, { scale: 1.03, duration: 0.2, ease: "power2.out" });
+              const onLeave = () => gsap.to(btn, { scale: 1, duration: 0.25, ease: "power2.out" });
+              const onDown = () => gsap.to(btn, { scale: 0.97, duration: 0.08 });
+              const onUp = () => gsap.to(btn, { scale: 1.03, duration: 0.15 });
+              btn.addEventListener("mouseenter", onEnter);
+              btn.addEventListener("mouseleave", onLeave);
+              btn.addEventListener("mousedown", onDown);
+              btn.addEventListener("mouseup", onUp);
+              btnCleanups.push(() => {
+                btn.removeEventListener("mouseenter", onEnter);
+                btn.removeEventListener("mouseleave", onLeave);
+                btn.removeEventListener("mousedown", onDown);
+                btn.removeEventListener("mouseup", onUp);
+              });
             });
-          });
+
+            const magneticBtn = closing?.querySelector<HTMLElement>(".tl-btn-pri");
+            if (magneticBtn) {
+              gsap.set(magneticBtn, { x: 0, y: 0 });
+              const onMagMove = (e: MouseEvent) => {
+                const rect = magneticBtn.getBoundingClientRect();
+                const cx = rect.left + rect.width / 2;
+                const cy = rect.top + rect.height / 2;
+                const dx = ((e.clientX - cx) / rect.width) * MAGNET_MAX_PX * 2;
+                const dy = ((e.clientY - cy) / rect.height) * MAGNET_MAX_PX * 2;
+                gsap.to(magneticBtn, {
+                  x: Math.max(-MAGNET_MAX_PX, Math.min(MAGNET_MAX_PX, dx)),
+                  y: Math.max(-MAGNET_MAX_PX, Math.min(MAGNET_MAX_PX, dy)),
+                  duration: 0.35,
+                  ease: "power3.out",
+                  overwrite: "auto",
+                });
+              };
+              const onMagLeave = () => {
+                gsap.to(magneticBtn, { x: 0, y: 0, duration: 0.5, ease: "power3.out" });
+              };
+              magneticBtn.addEventListener("mousemove", onMagMove);
+              magneticBtn.addEventListener("mouseleave", onMagLeave);
+              magneticCleanups.push(() => {
+                magneticBtn.removeEventListener("mousemove", onMagMove);
+                magneticBtn.removeEventListener("mouseleave", onMagLeave);
+              });
+            }
           }
         }, root);
 
