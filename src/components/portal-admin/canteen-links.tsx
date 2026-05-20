@@ -97,9 +97,9 @@ export function CanteenLinks({
       label: "Admin dashboard",
       description: "Your management console",
       url: `${base}/c/${tenantSlug}/admin/dashboard`,
-      icon: <LayoutDashboard size={16} className="text-lime-400" />,
+      icon: <LayoutDashboard size={16} className="text-lime" />,
       who: "You · Canteen admin",
-      accent: "bg-lime-500/15",
+      accent: "bg-lime/15",
     },
     ...(collegeSlug
       ? [
