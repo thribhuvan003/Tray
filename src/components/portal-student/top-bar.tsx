@@ -29,11 +29,18 @@ export function StudentTopBar({ tenant }: { tenant: ResolvedTenant }) {
           <span className="inline-flex h-6 w-6 items-center justify-center rounded-md bg-ocean-500 text-white font-mono text-[11px] font-bold">T</span>
           <span className="font-medium">Tray<span className="italic text-ocean-500">.</span></span>
         </Link>
-        <div className="hidden sm:flex flex-col items-center text-center flex-1">
-          <div className="text-[11px] font-mono uppercase tracking-wider text-[color:var(--color-ink)]/55">
+        <div className="flex flex-col items-center text-center flex-1">
+          <div className="text-[12px] font-semibold tracking-tight text-[color:var(--color-ink)] truncate max-w-[180px] sm:max-w-none">
+            {tenant.name}
+          </div>
+          <div className="hidden sm:flex text-[11px] font-mono uppercase tracking-wider text-[color:var(--color-ink)]/55">
             {tenant.college_name}
           </div>
-          <div className="text-[11px] font-mono tabular text-[color:var(--color-ink)]/45 flex items-center gap-1.5">
+          <div className="text-[10px] font-mono tabular text-[color:var(--color-ink)]/45 flex items-center gap-1.5 sm:hidden">
+            <Clock size={10} />
+            {t || "--:--"} IST
+          </div>
+          <div className="hidden sm:flex text-[11px] font-mono tabular text-[color:var(--color-ink)]/45 items-center gap-1.5">
             <Clock size={10} />
             Lunch · {t || "--:--"} IST
           </div>

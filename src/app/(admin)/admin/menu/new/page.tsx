@@ -184,6 +184,14 @@ export default async function NewMenuItemPage() {
           />
         </div>
 
+        {/* Publish note */}
+        <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3">
+          <p className="text-[12px] text-amber-400 leading-relaxed">
+            <strong>Heads up:</strong> New items are saved as <strong>Draft</strong> — students cannot see them yet.
+            After saving, open the item and change Status to <strong>Live</strong> to make it visible on the menu.
+          </p>
+        </div>
+
         {/* Actions */}
         <div className="flex items-center gap-3 pt-2">
           <button

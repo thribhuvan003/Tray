@@ -254,24 +254,24 @@ export default async function SettingsPage() {
               </label>
             </div>
 
-            {/* UPI VPA */}
+            {/* UPI ID */}
             <div className="border-t border-graphite-200/10 pt-4 flex flex-col gap-1.5">
               <label
                 htmlFor="upi_vpa"
                 className="text-[11px] font-mono uppercase tracking-[0.1em] text-graphite-400"
               >
-                UPI VPA
+                UPI ID <span className="normal-case tracking-normal font-sans text-graphite-500">(your payment address)</span>
               </label>
               <input
                 id="upi_vpa"
                 type="text"
                 name="upi_vpa"
                 defaultValue={row.upi_vpa ?? ""}
-                placeholder="e.g. mess@okaxis"
+                placeholder="e.g. canteen@okaxis or 9876543210@ybl"
                 className="h-9 px-3 rounded-md border border-graphite-200/15 bg-graphite-700/60 text-[13px] text-graphite-200 placeholder:text-graphite-500 focus:outline-none focus:border-lime/60 transition-colors"
               />
               <p className="text-[11px] text-graphite-500">
-                UPI address shown to students on the payment screen.
+                Your UPI ID (e.g. yourname@okaxis). Students will pay directly to this ID — money goes straight to your bank. No platform cut.
               </p>
             </div>
 
