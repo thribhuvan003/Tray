@@ -190,6 +190,72 @@ export async function verifyAndCollect(
   return { ok: true };
 }
 
+// Mark a menu item sold out (86) or back in stock from kitchen board.
+// Looks up the item by name within this tenant — name_snapshot matches menu_items.name.
+export async function markItemSoldOut(
+  itemName: string,
+  inStock: boolean
+): Promise<{ ok: boolean; error?: string; itemId?: string }> {
+  const ctx = await staffContext();
+  if (!ctx.ok) return ctx;
+
+  const admin = getAdminClient(ctx.tenant.id);
+
+  // Resolve menu item by name within this tenant (live items only).
+  const { data: item } = await admin
+    .from("menu_items")
+    .select("id")
+    .eq("tenant_id", ctx.tenant.id)
+    .eq("name", itemName)
+    .eq("status", "live")
+    .maybeSingle<{ id: string }>();
+
+  if (!item) return { ok: false, error: "Item not found — check the name" };
+
+  const { error: updateErr } = await admin
+    .from("menu_items")
+    .update({ in_stock: inStock })
+    .eq("id", item.id);
+
+  if (updateErr) return { ok: false, error: updateErr.message };
+
+  await admin.from("audit_logs").insert({
+    tenant_id: ctx.tenant.id,
+    actor_user_id: ctx.user.id,
+    action: inStock ? "menu.86_undo" : "menu.86",
+    target_type: "menu_item",
+    target_id: item.id,
+    meta: { name: itemName },
+  });
+
+  // Emit a menu_item_86 event so kitchen Realtime subscribers pick it up.
+  // Prefer the oldest active order as the anchor; fall back to a dummy UUID
+  // when the board is empty (menu ops can happen between service periods).
+  const DUMMY_ORDER_ID = "00000000-0000-0000-0000-000000000000";
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const { data: activeOrder } = await admin
+    .from("orders")
+    .select("id")
+    .eq("tenant_id", ctx.tenant.id)
+    .in("status", ["placed", "preparing", "ready"])
+    .gte("placed_at", today.toISOString())
+    .order("placed_at", { ascending: true })
+    .limit(1)
+    .maybeSingle<{ id: string }>();
+
+  await emitOrderEvent(admin, {
+    order_id: activeOrder?.id ?? DUMMY_ORDER_ID,
+    tenant_id: ctx.tenant.id,
+    event_type: "menu_item_86",
+    payload: { name: itemName, in_stock: inStock },
+  });
+
+  revalidatePath("/menu");
+  revalidatePath("/kitchen");
+  return { ok: true, itemId: item.id };
+}
+
 export async function rejectOrder(orderId: string, reason: string): Promise<Outcome> {
   const ctx = await staffContext();
   if (!ctx.ok) return ctx;

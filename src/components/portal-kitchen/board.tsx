@@ -328,6 +328,12 @@ function KitchenKpiStrip({ orders }: { orders: OrderRow[] }) {
 }
 
 function PrepTotalsStrip({ orders, lines }: { orders: OrderRow[]; lines: LineRow[] }) {
+  // loading: set of item names currently being 86'd/un-86'd
+  const [loading, setLoading] = useState<Set<string>>(new Set());
+  // recentlySoldOut: tracks items 86'd this session so we can show undo pill
+  // Map<name, true> — persists until undo is pressed or page refreshes
+  const [recentlySoldOut, setRecentlySoldOut] = useState<Map<string, true>>(new Map());
+
   const totals = useMemo(() => {
     const activeIds = new Set(
       orders.filter((o) => o.status === "placed" || o.status === "preparing").map((o) => o.id)
@@ -342,7 +348,43 @@ function PrepTotalsStrip({ orders, lines }: { orders: OrderRow[]; lines: LineRow
       .slice(0, 8);
   }, [orders, lines]);
 
-  if (totals.length === 0) return null;
+  // Collect item names that were recently 86'd but have dropped to 0 active qty
+  // so we can render ghost "undo" pills for them.
+  const zeroedOut86Names = useMemo(() => {
+    const activeNames = new Set(totals.map(([n]) => n));
+    return Array.from(recentlySoldOut.keys()).filter((n) => !activeNames.has(n));
+  }, [totals, recentlySoldOut]);
+
+  const handle86 = async (name: string, inStock: boolean) => {
+    setLoading((prev) => new Set(prev).add(name));
+    try {
+      const { markItemSoldOut } = await import("@/app/(kitchen)/_actions");
+      const r = await markItemSoldOut(name, inStock);
+      if (!r.ok) {
+        toast.error(r.error ?? "Failed");
+      } else if (!inStock) {
+        toast.success(`86 — ${name} marked sold out. Student menu updated.`);
+        setRecentlySoldOut((prev) => new Map(prev).set(name, true));
+      } else {
+        toast.success(`${name} back in stock.`);
+        setRecentlySoldOut((prev) => {
+          const next = new Map(prev);
+          next.delete(name);
+          return next;
+        });
+      }
+    } catch {
+      toast.error("Unexpected error — try again");
+    } finally {
+      setLoading((prev) => {
+        const next = new Set(prev);
+        next.delete(name);
+        return next;
+      });
+    }
+  };
+
+  if (totals.length === 0 && zeroedOut86Names.length === 0) return null;
 
   return (
     <section
@@ -353,19 +395,61 @@ function PrepTotalsStrip({ orders, lines }: { orders: OrderRow[]; lines: LineRow
         Prep totals · placed + preparing
       </div>
       <div className="flex flex-wrap gap-2">
-        {totals.map(([name, qty]) => (
-          <div
-            key={name}
-            className="inline-flex items-baseline gap-2 px-3 py-1.5 rounded-md border-2 border-tomato-900 dark:border-cream-200/30 bg-cream-100 dark:bg-graphite-900"
-          >
-            <span className="font-display text-[20px] sm:text-[22px] font-medium tabular leading-none text-tomato-500">
-              {qty}
-            </span>
-            <span className="text-[12px] sm:text-[13px] font-medium truncate max-w-[180px]">
-              {name}
-            </span>
-          </div>
-        ))}
+        {totals.map(([name, qty]) => {
+          const isLoading = loading.has(name);
+          return (
+            <div
+              key={name}
+              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md border-2 border-tomato-900 dark:border-cream-200/30 bg-cream-100 dark:bg-graphite-900"
+            >
+              <span className="font-display text-[20px] sm:text-[22px] font-medium tabular leading-none text-tomato-500">
+                {qty}
+              </span>
+              <span className="text-[12px] sm:text-[13px] font-medium truncate max-w-[180px]">
+                {name}
+              </span>
+              {/* 86 button */}
+              <button
+                type="button"
+                disabled={isLoading}
+                onClick={() => void handle86(name, false)}
+                title={`86 — mark ${name} sold out`}
+                aria-label={`Mark ${name} sold out`}
+                className="ml-1 inline-flex items-center gap-1 px-2 py-0.5 rounded border border-tomato-900/40 dark:border-cream-200/25 text-[10px] font-mono font-semibold uppercase tracking-wider text-tomato-700 dark:text-cream-300 hover:bg-tomato-900 hover:text-cream-50 dark:hover:bg-cream-200 dark:hover:text-graphite-900 disabled:opacity-40 disabled:cursor-wait transition-colors"
+              >
+                <span className="line-through leading-none">86</span>
+              </button>
+            </div>
+          );
+        })}
+
+        {/* Ghost "undo 86" pills for items recently sold out that now have 0 active qty */}
+        {zeroedOut86Names.map((name) => {
+          const isLoading = loading.has(name);
+          return (
+            <div
+              key={`undo-${name}`}
+              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md border-2 border-tomato-900/30 dark:border-cream-200/15 bg-cream-100/50 dark:bg-graphite-900/50 opacity-60"
+            >
+              <span className="font-display text-[20px] sm:text-[22px] font-medium tabular leading-none text-tomato-500/40 line-through">
+                0
+              </span>
+              <span className="text-[12px] sm:text-[13px] font-medium truncate max-w-[180px] line-through text-tomato-900/40 dark:text-cream-200/40">
+                {name}
+              </span>
+              <button
+                type="button"
+                disabled={isLoading}
+                onClick={() => void handle86(name, true)}
+                title={`Undo 86 — restore ${name}`}
+                aria-label={`Undo 86 — mark ${name} back in stock`}
+                className="ml-1 inline-flex items-center gap-1 px-2 py-0.5 rounded border border-tomato-900/30 dark:border-cream-200/20 text-[10px] font-mono font-semibold uppercase tracking-wider text-tomato-900/60 dark:text-cream-200/60 hover:bg-tomato-900 hover:text-cream-50 dark:hover:bg-cream-200 dark:hover:text-graphite-900 hover:opacity-100 disabled:opacity-40 disabled:cursor-wait transition-colors"
+              >
+                Undo
+              </button>
+            </div>
+          );
+        })}
       </div>
     </section>
   );
