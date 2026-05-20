@@ -262,12 +262,12 @@ export function PayPanel({
                 <Loader2 size={14} className="animate-spin" /> Confirming…
               </>
             ) : (
-              <>I&rsquo;ve paid →</>
+              <>I&rsquo;ve paid &mdash; confirm my order</>
             )}
           </button>
           {stillWaiting && !verifying && (
             <p className="text-[12.5px] text-amber-600 text-center -mt-2">
-              UPI confirmation can lag 30–60 seconds — leave this page open and we&rsquo;ll flip it the moment it lands.
+              Still confirming your payment — UPI can take 30–60 seconds. Keep this page open.
             </p>
           )}
 
@@ -281,7 +281,7 @@ export function PayPanel({
                 <Sparkles size={14} /> DEV · simulate paid
               </button>
               <p className="text-[11px] text-[color:var(--color-ink)]/45 text-center -mt-2">
-                Razorpay test-mode hasn&rsquo;t been wired yet — this stand-in flips the order to <b>placed</b>.
+                Dev-only shortcut — flips the order to <b>placed</b> without a real payment.
               </p>
             </>
           )}
