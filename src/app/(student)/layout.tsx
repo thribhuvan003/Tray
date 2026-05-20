@@ -19,7 +19,7 @@ export default async function StudentLayout({ children }: { children: React.Reac
           floating button + Vaul drawer below the lg breakpoint. */}
       <main className="pb-32 sm:pb-20 lg:pb-12 lg:grid lg:grid-cols-[1fr,20rem] lg:gap-6 lg:max-w-7xl lg:mx-auto lg:px-6">
         <div className="min-w-0">{children}</div>
-        <CartDrawer tenantUpi={tenant.name} />
+        <CartDrawer tenantSlug={tenant.slug} tenantUpi={tenant.upi_vpa ?? "canteen@upi"} />
       </main>
     </div>
   );
