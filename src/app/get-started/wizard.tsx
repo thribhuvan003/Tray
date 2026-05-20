@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useTransition } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createInstitution, type CreateInstitutionForm } from "./_actions";
 
@@ -787,7 +788,7 @@ export function GetStartedWizard() {
           top: 0,
           zIndex: 10,
         }}>
-          <a href="/" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none" }}>
+          <Link href="/" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none" }}>
             <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
               <rect width="28" height="28" rx="8" fill="#0066ff" />
               <rect x="6" y="10" width="16" height="2.5" rx="1.25" fill="white" />
@@ -795,10 +796,10 @@ export function GetStartedWizard() {
               <rect x="10" y="19" width="8" height="2.5" rx="1.25" fill="white" />
             </svg>
             <span style={{ fontWeight: 700, fontSize: 16, color: "var(--gs-ink)", letterSpacing: "-0.02em" }}>Tray</span>
-          </a>
-          <a href="/login" style={{ fontSize: 13, color: "var(--gs-ink-muted)", textDecoration: "none" }}>
+          </Link>
+          <Link href="/login" style={{ fontSize: 13, color: "var(--gs-ink-muted)", textDecoration: "none" }}>
             Already have an account? <span style={{ color: "#0066ff", fontWeight: 600 }}>Sign in</span>
-          </a>
+          </Link>
         </header>
 
         {/* Body */}

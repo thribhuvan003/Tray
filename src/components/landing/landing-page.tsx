@@ -973,9 +973,9 @@ function NoCollegeBanner() {
           If your institution restricts ordering by email domain, ask your admin to add{" "}
           <strong>@{"{your domain}"}</strong> in the canteen settings.
           Otherwise,{" "}
-          <a href="/college/aditya" style={{ color: "#b45309", fontWeight: 600 }}>
+          <Link href="/college/aditya" style={{ color: "#b45309", fontWeight: 600 }}>
             browse all canteens
-          </a>{" "}
+          </Link>{" "}
           or contact your institution to get set up on Tray.
         </p>
       </div>
