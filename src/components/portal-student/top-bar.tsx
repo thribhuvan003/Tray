@@ -1,13 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { Clock, History, User } from "lucide-react";
+import { ArrowLeft, Clock, History, User } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import type { ResolvedTenant } from "@/lib/tenant";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 
 export function StudentTopBar({ tenant }: { tenant: ResolvedTenant }) {
   const [t, setT] = useState<string>("");
+  const router = useRouter();
   useEffect(() => {
     const tick = () =>
       setT(
@@ -25,10 +27,19 @@ export function StudentTopBar({ tenant }: { tenant: ResolvedTenant }) {
   return (
     <header className="sticky top-0 z-40 bg-[color:var(--color-paper)]/85 backdrop-blur-xl border-b border-[color:var(--color-line)]">
       <div className="mx-auto max-w-5xl px-4 sm:px-6 h-14 flex items-center justify-between gap-3">
-        <Link href={`/c/${tenant.slug}/menu`} className="inline-flex items-center gap-2 font-display text-[17px] tracking-tight">
-          <span className="inline-flex h-6 w-6 items-center justify-center rounded-md bg-ocean-500 text-white font-mono text-[11px] font-bold">T</span>
-          <span className="font-medium">Tray<span className="italic text-ocean-500">.</span></span>
-        </Link>
+        <div className="flex items-center gap-3">
+          <button
+            aria-label="Go back"
+            onClick={() => router.back()}
+            className="inline-flex items-center gap-1 text-[12px] font-mono text-[color:var(--color-ink)]/50 hover:text-[color:var(--color-ink)] transition-colors"
+          >
+            <ArrowLeft size={13} /> Back
+          </button>
+          <Link href={`/c/${tenant.slug}/menu`} className="inline-flex items-center gap-2 font-display text-[17px] tracking-tight">
+            <span className="inline-flex h-6 w-6 items-center justify-center rounded-md bg-ocean-500 text-white font-mono text-[11px] font-bold">T</span>
+            <span className="font-medium">Tray<span className="italic text-ocean-500">.</span></span>
+          </Link>
+        </div>
         <div className="flex flex-col items-center text-center flex-1">
           <div className="text-[12px] font-semibold tracking-tight text-[color:var(--color-ink)] truncate max-w-[180px] sm:max-w-none">
             {tenant.name}

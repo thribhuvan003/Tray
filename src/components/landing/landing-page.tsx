@@ -933,12 +933,63 @@ function HeroLine({
   );
 }
 
-export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
+/**
+ * Contextual banner shown when `?msg=no-college` is present in the URL —
+ * the user authenticated but has no canteen memberships. The message
+ * distinguishes the two root causes:
+ *   1. Domain-restricted institution — email domain not registered yet.
+ *   2. Truly no canteen exists for this account.
+ */
+function NoCollegeBanner() {
+  return (
+    <div
+      role="alert"
+      style={{
+        position: "fixed",
+        top: 16,
+        left: "50%",
+        transform: "translateX(-50%)",
+        zIndex: 9999,
+        width: "min(92vw, 560px)",
+        background: "#fffbeb",
+        border: "1.5px solid #f59e0b",
+        borderRadius: 12,
+        padding: "14px 18px",
+        display: "flex",
+        gap: 12,
+        alignItems: "flex-start",
+        boxShadow: "0 4px 24px rgba(0,0,0,0.10)",
+      }}
+    >
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" style={{ flexShrink: 0, marginTop: 1 }}>
+        <circle cx="10" cy="10" r="9" stroke="#f59e0b" strokeWidth="1.5" />
+        <path d="M10 6v5M10 13.5v.01" stroke="#f59e0b" strokeWidth="1.5" strokeLinecap="round" />
+      </svg>
+      <div>
+        <p style={{ margin: "0 0 4px", fontWeight: 700, fontSize: 14, color: "#92400e" }}>
+          No canteen found for your account
+        </p>
+        <p style={{ margin: 0, fontSize: 13, color: "#78350f", lineHeight: 1.55 }}>
+          If your institution restricts ordering by email domain, ask your admin to add{" "}
+          <strong>@{"{your domain}"}</strong> in the canteen settings.
+          Otherwise,{" "}
+          <a href="/college/aditya" style={{ color: "#b45309", fontWeight: 600 }}>
+            browse all canteens
+          </a>{" "}
+          or contact your institution to get set up on Tray.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+export function LandingPage({ tenant, msg }: { tenant: ResolvedTenant | null; msg?: string }) {
   void tenant;
   const tickerDoubled = [...TICKER_ITEMS, ...TICKER_ITEMS];
   return (
     <div className="tray-landing">
       <style dangerouslySetInnerHTML={{ __html: SCOPED_CSS }} />
+      {msg === "no-college" && <NoCollegeBanner />}
       <div className="tl-grain" />
       <div className="tl-ambient" aria-hidden>
         <div className="tl-ambient-shift">

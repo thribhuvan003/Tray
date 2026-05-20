@@ -30,7 +30,7 @@ function useMediaQuery(query: string): boolean {
   return matches;
 }
 
-export function CartDrawer({ tenantSlug, tenantUpi }: { tenantSlug: string; tenantUpi: string }) {
+export function CartDrawer({ tenantSlug, tenantName, tenantUpi }: { tenantSlug: string; tenantName: string; tenantUpi: string }) {
   const lines = useCart((s) => s.lines);
   const note = useCart((s) => s.note);
   const setNote = useCart((s) => s.setNote);
@@ -96,7 +96,7 @@ export function CartDrawer({ tenantSlug, tenantUpi }: { tenantSlug: string; tena
         <div>
           <div className="font-display text-[22px] font-medium tracking-tight">Your tray.</div>
           <div className="text-[11px] font-mono uppercase tracking-wider text-[color:var(--color-ink)]/55">
-            {tenantUpi} · ready in ~7 min
+            Paying to: {tenantName} · ready in ~7 min
           </div>
         </div>
         {!isDesktop && (
@@ -244,11 +244,11 @@ export function CartDrawer({ tenantSlug, tenantUpi }: { tenantSlug: string; tena
                 pending && "opacity-70 cursor-not-allowed"
               )}
             >
-              {pending ? "Placing order…" : "Pay with UPI →"}
+              {pending ? "Placing order…" : "Place order →"}
             </button>
           </div>
           <p className="text-[11px] text-[color:var(--color-ink)]/45 text-center">
-            Tray takes 0%. Payment goes straight to {tenantUpi}.
+            Tray takes 0%. Payment goes straight to {tenantName}.
           </p>
         </div>
       )}

@@ -220,6 +220,12 @@ function SelectInput({
 
 // ── Step 1: Institution details ───────────────────────────────────────────────
 
+/**
+ * Institution types that should restrict ordering to an email domain.
+ * All other types default to open access (allowed_domains = []).
+ */
+const DOMAIN_RESTRICTED_TYPES = new Set(["college_university", "school"]);
+
 function Step1({
   data,
   errors,
@@ -229,11 +235,22 @@ function Step1({
   errors: FieldErrors;
   onChange: (k: keyof FormData, v: string) => void;
 }) {
+  const showDomainField = DOMAIN_RESTRICTED_TYPES.has(data.institutionType);
+
+  function handleTypeChange(value: string) {
+    onChange("institutionType", value);
+    // When switching away from a domain-restricted type, clear the email
+    // domain so we don't silently pass a stale value to the server action.
+    if (!DOMAIN_RESTRICTED_TYPES.has(value)) {
+      onChange("emailDomain", "");
+    }
+  }
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       <Field label="Institution name" error={errors.institutionName}>
         <TextInput
-          placeholder="e.g. IIT Bombay, AIIMS Delhi, Infosys Campus"
+          placeholder="e.g. IIT Bombay, Hotel Taj, Infosys Campus"
           value={data.institutionName}
           onChange={(e) => onChange("institutionName", e.target.value)}
           error={errors.institutionName}
@@ -244,7 +261,7 @@ function Step1({
       <Field label="Institution type" error={errors.institutionType}>
         <SelectInput
           value={data.institutionType}
-          onChange={(e) => onChange("institutionType", e.target.value)}
+          onChange={(e) => handleTypeChange(e.target.value)}
           error={errors.institutionType}
         >
           <option value="">Select type…</option>
@@ -252,6 +269,8 @@ function Step1({
           <option value="school">School</option>
           <option value="corporate_campus">Corporate Campus</option>
           <option value="hospital">Hospital</option>
+          <option value="hotel_restaurant">Hotel / Restaurant</option>
+          <option value="standalone_canteen">Standalone Canteen</option>
           <option value="other">Other</option>
         </SelectInput>
       </Field>
@@ -265,21 +284,43 @@ function Step1({
         />
       </Field>
 
-      <Field
-        label="Primary email domain"
-        error={errors.emailDomain}
-        hint="Students signing up with @yourdomain.edu.in will be auto-enrolled in your canteens. Optional — you can add this later."
-      >
-        <div style={{ position: "relative" }}>
-          <span style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", color: "var(--gs-ink-muted)", fontSize: 14, pointerEvents: "none" }}>@</span>
-          <input
-            style={{ ...inputStyle, paddingLeft: 28 }}
-            placeholder="iitb.ac.in"
-            value={data.emailDomain}
-            onChange={(e) => onChange("emailDomain", e.target.value)}
-          />
+      {showDomainField ? (
+        <Field
+          label="Restrict ordering to institutional emails only"
+          error={errors.emailDomain}
+          hint="Only users whose email ends in this domain can place orders. e.g. iitb.ac.in"
+        >
+          <div style={{ position: "relative" }}>
+            <span style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", color: "var(--gs-ink-muted)", fontSize: 14, pointerEvents: "none" }}>@</span>
+            <input
+              style={{ ...inputStyle, paddingLeft: 28 }}
+              placeholder="iitb.ac.in"
+              value={data.emailDomain}
+              onChange={(e) => onChange("emailDomain", e.target.value)}
+            />
+          </div>
+        </Field>
+      ) : data.institutionType ? (
+        <div
+          style={{
+            display: "flex",
+            alignItems: "flex-start",
+            gap: 10,
+            padding: "12px 14px",
+            borderRadius: 10,
+            background: "rgba(0,102,255,0.06)",
+            border: "1px solid rgba(0,102,255,0.15)",
+          }}
+        >
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ marginTop: 1, flexShrink: 0 }}>
+            <circle cx="8" cy="8" r="7" stroke="#0066ff" strokeWidth="1.5" />
+            <path d="M8 5v4M8 10.5v.01" stroke="#0066ff" strokeWidth="1.5" strokeLinecap="round" />
+          </svg>
+          <p style={{ margin: 0, fontSize: 13, color: "rgba(0,102,255,0.9)", lineHeight: 1.5 }}>
+            <strong>Open access</strong> — any signed-in user can order here. No email domain required.
+          </p>
         </div>
-      </Field>
+      ) : null}
     </div>
   );
 }
@@ -552,7 +593,7 @@ function Sidebar() {
       >
         {[
           "No payment required to start",
-          "Auto-enroll students by email domain",
+          "Open access or domain-restricted — your choice",
           "UPI payments, no gateway fees",
         ].map((item) => (
           <div key={item} style={{ display: "flex", alignItems: "center", gap: 8 }}>

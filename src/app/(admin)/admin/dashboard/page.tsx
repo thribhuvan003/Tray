@@ -4,6 +4,8 @@ import { getServerClient } from "@/lib/supabase/server";
 import { getAdminClient } from "@/lib/supabase/admin";
 import { DashboardView } from "@/components/portal-admin/dashboard-view";
 import { WelcomeBanner } from "@/components/portal-admin/welcome-banner";
+import { CanteenLinks } from "@/components/portal-admin/canteen-links";
+import { env } from "@/lib/env";
 
 type OrderRow = {
   id: string;
@@ -134,6 +136,12 @@ export default async function DashboardPage({
           collegeSlug={collegeSlug}
         />
       )}
+      <CanteenLinks
+        tenantSlug={tenant.slug}
+        tenantName={tenant.name}
+        collegeSlug={collegeSlug !== tenant.slug ? collegeSlug : null}
+        appUrl={env.APP_URL}
+      />
       <DashboardView
         tenantName={tenant.name}
         ordersWeek={ordersWeek}

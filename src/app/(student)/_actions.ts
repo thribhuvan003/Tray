@@ -249,7 +249,7 @@ export async function placeOrder(
     status: "initiated",
   });
 
-  revalidatePath("/menu");
+  revalidatePath(`/c/${tenant.slug}/menu`);
   return { ok: true, orderId: order.id, razorpayOrderId: rzp.id, simulated: rzp.simulated };
 }
 

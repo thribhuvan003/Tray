@@ -38,9 +38,9 @@ type Line = {
 };
 
 const STEPS: { v: Status; label: string; icon: typeof Check; copy: string }[] = [
-  { v: "placed", label: "Placed", icon: Check, copy: "We've got it." },
+  { v: "placed", label: "Placed", icon: Check, copy: "We've got your order!" },
   { v: "preparing", label: "Preparing", icon: ChefHat, copy: "The kitchen is on it." },
-  { v: "ready", label: "Ready", icon: BellRing, copy: "Walk over — your code's below." },
+  { v: "ready", label: "Ready", icon: BellRing, copy: "Your order is ready!" },
   { v: "collected", label: "Collected", icon: HandPlatter, copy: "Enjoy. ☕" },
 ];
 
@@ -196,7 +196,7 @@ export function TrackPanel({ tenantSlug, tenantName, order: initial, lines }: { 
               {otp.split("").join(" ")}
             </div>
             <p className="text-[13px] text-white/80 mt-3">
-              Valid for the next 15 minutes. Three attempts at the counter, then the order locks for staff review.
+              Show this code at the counter. You have 3 tries — if it doesn&rsquo;t work, show your order number #{order.short_code} to the staff.
             </p>
           </div>
         </div>
@@ -237,9 +237,6 @@ export function TrackPanel({ tenantSlug, tenantName, order: initial, lines }: { 
                   )}
                 >
                   <Icon size={13} />
-                </div>
-                <div className="text-[11px] font-mono uppercase tracking-wider text-[color:var(--color-ink)]/55">
-                  Step {i + 1}
                 </div>
                 <div className="text-[13.5px] font-medium">{s.label}</div>
               </li>
