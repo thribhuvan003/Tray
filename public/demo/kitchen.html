@@ -277,7 +277,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
 <div class="app">
   <!-- SIDEBAR -->
   <aside class="sb">
-    <a href="index.html" class="brand" title="Tray home"><span class="brand-mark">T</span>Tray<span class="dot">.</span></a>
+    <a href="/" class="brand" title="Tray home"><span class="brand-mark">T</span>Tray<span class="dot">.</span></a>
     <div class="sb-group">Kitchen</div>
     <div class="sb-link active" data-nav="queue">
       <svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 4h12M2 8h12M2 12h8"/></svg>
@@ -311,7 +311,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
       <div class="sb-portals">
         <a href="student.html">Student app · laptop <span>→</span></a>
         <a href="admin.html">Admin dashboard <span>→</span></a>
-        <a href="index.html">Marketing site <span>→</span></a>
+        <a href="/">Marketing site <span>→</span></a>
       </div>
       <div class="sb-user">
         <div class="av">M</div>
@@ -843,7 +843,18 @@ $('#spPush').addEventListener('click', () => {
   renderLiveSpecials();
   orders.unshift(orderFromSpecial(spec));
   renderQueue();
-  $('#spPush').animate([{transform:'scale(1)'},{transform:'scale(.92)'},{transform:'scale(1)'}],{duration:280});
+  // #region agent log
+  const spBtn = $('#spPush');
+  if (spBtn && typeof spBtn.animate === 'function') {
+    spBtn.animate([{ transform: 'scale(1)' }, { transform: 'scale(.92)' }, { transform: 'scale(1)' }], { duration: 280 });
+  } else if (spBtn) {
+    spBtn.animate(
+      [{ transform: 'scale(1)' }, { transform: 'scale(.92)' }, { transform: 'scale(1)' }],
+      { duration: 280 },
+    );
+  }
+  fetch('http://127.0.0.1:7604/ingest/a3479709-2bc3-493e-b119-fcffac44b7e5',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'c2df94'},body:JSON.stringify({sessionId:'c2df94',location:'kitchen.html:spPush',message:'push special',data:{name,hasNativeAnimate:!!(spBtn&&spBtn.animate)},timestamp:Date.now(),hypothesisId:'C',runId:'pre-fix'})}).catch(()=>{});
+  // #endregion
   toast(`✓ Pushed live · "${name}" · ticket in Incoming`);
 
   // Cycle to a new sample

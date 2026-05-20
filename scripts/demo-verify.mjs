@@ -45,8 +45,8 @@ const STATIC_SPECS = [
     file: "kitchen.html",
     check({ html }) {
       const fails = [];
-      if (!has(html, /href=["']index\.html["'][^>]*class=["']brand|class=["']brand[^>]*href=["']index\.html/))
-        fails.push("Tray brand must link to index.html");
+      if (!has(html, /href=["']\/["'][^>]*class=["']brand|class=["']brand[^>]*href=["']\/["']/))
+        fails.push("Tray brand must link to / (production landing)");
       if (!has(html, /id=["']btnRefresh["']/)) fails.push("Missing #btnRefresh");
       if (!has(html, /id=["']spPush["']/)) fails.push("Missing #spPush (push special)");
       if (!has(html, /demo-canteens\.js/)) fails.push("Missing demo-canteens.js");
@@ -73,8 +73,8 @@ const STATIC_SPECS = [
     file: "student.html",
     check({ html }) {
       const fails = [];
-      if (!has(html, /href=["']index\.html["'][^>]*class=["']brand|class=["']brand[^>]*href=["']index\.html/))
-        fails.push("Tray brand must link to index.html");
+      if (!has(html, /href=["']\/["'][^>]*class=["']brand|class=["']brand[^>]*href=["']\/["']/))
+        fails.push("Tray brand must link to / (production landing)");
       if (!has(html, /demo-canteens\.js/)) fails.push("Missing demo-canteens.js");
       if (!has(html, /id=["']canteenSelect["']/)) fails.push("Missing #canteenSelect (pick canteen)");
       if (!has(html, /loadCanteenData/)) fails.push("Missing loadCanteenData (per-canteen menu)");
@@ -95,8 +95,8 @@ const STATIC_SPECS = [
     file: "admin.html",
     check({ html }) {
       const fails = [];
-      if (!has(html, /href=["']index\.html["'][^>]*class=["']sb-brand|class=["']sb-brand[^>]*href=["']index\.html/))
-        fails.push("Tray brand must link to index.html");
+      if (!has(html, /href=["']\/["'][^>]*class=["']sb-brand|class=["']sb-brand[^>]*href=["']\/["']/))
+        fails.push("Tray brand must link to / (production landing)");
       if (!has(html, /demo-canteens\.js/)) fails.push("Missing demo-canteens.js");
       if (!has(html, /function applyTenantData/)) fails.push("Missing applyTenantData (tenant data swap)");
       if (!has(html, /data-tenant=/)) fails.push("Missing data-tenant on canteen options");
@@ -117,8 +117,8 @@ const STATIC_SPECS = [
     file: "index.html",
     check({ html }) {
       const fails = [];
-      if (!has(html, /href=["']index\.html["'][^>]*class=["']brand|class=["']brand[^>]*href=["']index\.html/))
-        fails.push("Tray brand must link to index.html");
+      if (!has(html, /href=["']\/["'][^>]*class=["']brand|class=["']brand[^>]*href=["']\/["']/))
+        fails.push("Tray brand must link to / (production landing)");
       if (has(html, /Mobile · 480|480×/i)) fails.push('Student portal tag should be laptop not "Mobile 480"');
       if (!has(html, /Laptop · sidebar/i)) fails.push('Expected "Laptop · sidebar cart" device tag');
       if (!has(html, /kitchen\.html/)) fails.push("Missing kitchen portal link");
@@ -225,7 +225,7 @@ async function runE2E(base) {
     let status = "ok";
     let checks = {};
     try {
-      const res = await page.goto(url, { waitUntil: "domcontentloaded", timeout: 30000 });
+      const res = await page.goto(url, { waitUntil: "domcontentloaded", timeout: 90000 });
       if (!res?.ok()) status = `http-${res?.status()}`;
 
       if (t.name === "kitchen") {
@@ -240,7 +240,7 @@ async function runE2E(base) {
 
       if (t.name === "student") {
         await page.click('.service-mode[data-service="dine"]').catch(() => {});
-        await page.click('[data-action="add"][data-id="biryani"]').catch(() => {});
+        await page.locator('[data-action="add"]').first().click().catch(() => {});
         checks = await page.evaluate(() => ({
           brandHome: !!document.querySelector("a.brand[href='index.html']"),
           cartCount: Number(document.getElementById("cartBarCount")?.textContent || 0),

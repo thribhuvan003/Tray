@@ -123,6 +123,8 @@ Warmer dusk, less blue in the base gradient.
 
 **Senior UX council:** C is the emotional middle: still dark-mode premium, but the base neutrals lean brown-stone so canteen context lands faster. Good if stakeholders found A “too cold.” Risk: slightly lower contrast on tertiary ink—verify WCAG on `.tl-ink-3` labels.
 
+**Shipped (marketing landing, 2026-05-20):** Implemented **Palette C — Slate Ember** on `.tray-landing` (`landing-page.tsx` + matching GSAP shadows in `landing-motion.tsx`): near-black brown stone base, bone ink, ember `#e8a86a` and sky `#9ec4ff` accents, black-heavy elevation shadows, and primary CTA as cream-on-charcoal for AA body contrast—portal rim hues unchanged so the three iframe previews still read as distinct products.
+
 ---
 
 ### Palette D — Graphite Signal

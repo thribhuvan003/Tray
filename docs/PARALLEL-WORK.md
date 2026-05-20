@@ -74,6 +74,10 @@ Read AGENTS.md, docs/DEMO-SPEC.md, docs/PARALLEL-WORK.md. One file owner per lan
 - **Verify:** `npm run demo:verify` — static file audit, **no browser / no Playwright MCP** (~instant). Optional: `npm run demo:verify:e2e` (Playwright + built-in static server on :4173).
 - **Real kitchen:** `src/app/(kitchen)/kitchen/page.tsx` + `KitchenBoard` — requires auth + Supabase (not static demo).
 
+### 2026-05-20 — Student demo typography (Newsreader sitewide)
+
+- **Student** (`public/demo/student.html`): `--font-display` (Newsreader) on `.shell`, `.views-flow`, `.cart-bar`; `--font-ui` (Manrope) on `.topbar` and control surfaces; base `17px` / tuned line-heights; one-step size bump across menu, cart, and flow views; tabular prices on Manrope; inline script passes `node --check`.
+
 ### 2026-05-20 — Admin demo full click-path (resume teams)
 
 - **Admin demo** (`public/demo/admin.html`): Sidebar `data-view` router (Overview, Orders, Menu, Students, Insights, Tenant, API, Audit); tenant switcher dropdown; dynamic orders table with filter/search/pagination; Students/Tenant/API/Audit view panes; G+O/R/M/S/I shortcuts; search + export + menu modal wired; no `data-toast` dead links.
@@ -96,6 +100,10 @@ Read AGENTS.md, docs/DEMO-SPEC.md, docs/PARALLEL-WORK.md. One file owner per lan
 - **Index** (`index.html`): Sync copy mentions shared `tray_canteen` across portals.
 - **Verify:** `npm run demo:verify`
 
+### 2026-05-20 — Student demo responsive (phones)
+
+- **Student** (`public/demo/student.html`): mobile `@media` (640px/480px) — full-width content, stacked service modes, canteen segments 2-col→1-col, 44px taps, safe-area cart bar, no horizontal scroll.
+
 ### 2026-05-20 — Demo data not showing (fix)
 
 - **Root cause:** `demo-canteens.js` had `avgPickupSec: 05` (invalid strict-mode octal) → entire script failed → no menu/orders anywhere. Student also looped on `storage` because `loadCanteenData` always called `setSelectedCanteenId`.
@@ -104,6 +112,7 @@ Read AGENTS.md, docs/DEMO-SPEC.md, docs/PARALLEL-WORK.md. One file owner per lan
 
 ### 2026-05-20 — Landing polish (Awwwards-tier motion + tokens)
 
+- **Also:** Hero lede — shorter scan-first copy + tighter `--tl-measure-lede` / lede line-height + `color-mix` hierarchy (`landing-page.tsx`).
 - **Shipped:** Per-section GSAP choreography in `landing-motion.tsx` (system fan-in, sync diagram lanes, pull blur reveal, flow numeral spin, stack center pop, closing cascade); ambient orbs + refined Pre-Monsoon Dusk tokens in `landing-page.tsx`; portal 3D tilt + button scale micro-interactions (CSS hover lift preserved).
 - **Docs:** `docs/design-system-figma.md` — Figma variable/component map for landing.
 - **Verify:** `npm run typecheck`, `npm run build` → http://localhost:3000
@@ -246,3 +255,117 @@ pm run typecheck passes. Restart dev if port 3000 hangs: NODE_OPTIONS=--max-old-
 ### 2026-05-19 — Team harness activated (earlier)
 
 - GSAP on `landing-page.tsx`; student.html rebuild; parallel PM/research agents launched.
+
+### 2026-05-20 — Landing portal cards (copy + hierarchy + motion)
+
+- **System section:** Phase strip **College → Prepare → Handover → Run the operations** (text only, no URLs); browser chrome shows **phase label** instead of fake URL; `PortalPreview` uses **College** / **Prepare · Handover** / **Run the operations** per card.
+- **Styling:** Less white/muddy treatment (toned kitchen frame glow, subtler hover spot); **fixed** duplicate `tl-portal-frame` media query and **restored** `student.is-lift` border/shadow; portal head styling superseded by **§02 shell alignment** entry (editorial `tl-bg-2` band + shared diagram tokens).
+- **Motion:** `landing-motion.tsx` — snappier portal enter/hover lift, comment updated (lift/tilt not shine).
+- **Verify:** `pnpm exec tsc --noEmit` — pass.
+
+### 2026-05-20 — Portal shells aligned with §02 diagram card
+
+- **Shipped:** `landing-page.tsx` — `--tl-editorial-card-*` tokens shared by `.tl-diagram` and `.tl-portal` (Slate Ember `tl-bg-3` surface, `tl-line` border, 18px radius, dashed top hairline like the “connected canteen” diagram). Portal **head** + **preview frame** use `tl-bg-2` inset bands; **feat tags** / **portal-open** use `tl-bg-2` on the lighter shell; preview **overlay** fades to `tl-editorial-card-bg`. Restored **`.tl-portal-frame::before`** shine + `.is-shine` for `landing-motion.tsx`.
+- **Not changed:** `landing-motion.tsx` logic; iframe / phase chrome.
+- **Verify:** `pnpm exec tsc --noEmit` — pass.
+
+### 2026-05-20 — Landing scroll section motion pass
+
+- **Shipped:** `landing-motion.tsx` — ticker center-out stagger (`REVEAL_EASE`); hero stats scrub parallax when not `lightMotion`; portal head/body stagger after chrome; sync diagram scrub `y` parallax; `#where` line-leave panel scale+fade; `#flow` rail clip/scale enter + flow-step inner stagger; closing `.tl-section-num` timeline; `.tl-footer-mark` scale-in.
+- **Shipped:** `landing-page.tsx` — `data-tl-scroll="1"` on ticker + CSS initial state (reduced-motion bypass).
+- **Verify:** `pnpm exec tsc --noEmit` — pass.
+
+### 2026-05-20 — Landing portal clutter removal (`landing-page.tsx`: device tags, kitchen/admin browser phase, ix + phase-strip tail; `pnpm exec tsc --noEmit` pass).
+
+### 2026-05-20 — Landing hero + footer polish (Slate Ember continuity, “Tray” mark, GSAP)
+
+- **Hero:** Page shell + nav use `--tl-bg*` tokens; hero band uses `--tl-editorial-card-*` (card-aligned gradient + border); tighter vertical rhythm (padding, h1 min-height, meta/stats gaps); hero rail `Tray · v3.0` with `tl-hero-brandline` (no forced lowercase brand).
+- **Footer:** Watermark letters **Tray** with per-char stagger in `landing-motion.tsx` (ScrollTrigger + timeline); footer mark layout/padding; reduced-motion CSS for `[data-tl-footer-char]`.
+- **Verify:** `pnpm exec tsc --noEmit`.
+
+### 2026-05-20 — Landing hash nav arrival (GSAP)
+
+- **Shipped:** `landing-motion.tsx` — capture-phase intercept for in-landing `a[href^="#"]` to same targets as `LANDING_HASH_IDS`; `preventDefault` + `history.pushState` + `scrollIntoView({ behavior: "smooth" })`; after settle (`scrollend` + 640ms fallback, deduped) runs `playLandingArrival` (ring pulse, section scale, inner stagger for `#system` / `#flow` / `#stack`) or `reducedMotionArrivalFlash` (~150ms opacity). Initial URL hash: `scheduleInitialHashArrival` with toned-down `"soft"` mode + visibility gate; cleanups wired into existing `cleanup()`.
+- **CSS / hooks:** `.tl-arrival-host` + `.tl-arrival-ring` on sections `#system`, `#sync`, `#pull`, `#flow`, `#stack` (`landing-page.tsx`) and `#where` (`landing-line-leave.tsx`).
+- **Verify:** `pnpm exec tsc --noEmit` — pass.
+
+### 2026-05-20 — Landing hero h1 wrap seam
+
+- **Fixed:** `landing-page.tsx` — `.tl-h1-line` `row-gap: 0.04em` caused a thin horizontal strip between wrapped flex rows (“reach the counter.”); set `row-gap: 0`.
+- **Verify:** `pnpm exec tsc --noEmit` — pass.
+
+### 2026-05-20 — `public/demo/student.html`: student demo shell + menu controls
+
+- **Shell:** Cart / payment chrome still use `--dark-*` / `--on-dark`; **menu** uses `.menu-controls` paper card (`--demo-bar-*`) wrapping `#canteenBar` + `#serviceBar`.
+- **Tiles:** `.canteen-segment` and `.service-mode` share `--demo-choice-*` (cream/off-white, `rgba(26,20,14,0.7)` meta, blue-ring selected + light elevation); hint/footer line uses `--demo-choice-meta` + hairline divider.
+
+### 2026-05-20 — Student demo: visible canteen switch + unified menu controls
+
+- **Shipped:** `public/demo/student.html` — `#canteenSelect` visible dropdown; `.menu-controls` + divider; quick canteen pills + `loadCanteenData` / `is-active` unchanged.
+
+### 2026-05-20 — Footer giant mark: tighten T→r tracking (`landing-page.css-in-tsx` split-span margins; `pnpm exec tsc --noEmit`).
+
+### 2026-05-20 — Landing footer row1 typography + grid (`landing-page.tsx` SCOPED_CSS)
+
+- **Layout:** `.tl-footer-row1` — single column below 640px; 640–899px brand full-width + `repeat(3, 1fr)` link columns; ≥900px `minmax(220px, 1.2fr) repeat(3, minmax(0, 1fr))` + responsive gap (replaces `2fr` dead space). First column class `tl-footer-brand`.
+- **Type:** Newsreader wordmark/blurb; Manrope (`--tl-sans`) column `h4` + links with bumped rem sizes; `.tl-footer-mark` unchanged.
+- **Verify:** `pnpm exec tsc --noEmit` — pass.
+
+### 2026-05-20 — `public/demo/student.html`: `#menuControls` — Newsreader + Manrope only (one stylesheet); `--font-display` / `--font-ui`; global `--mono` → system stack.
+
+### 2026-05-20 — Landing `#sync` layout / headline clipping (`landing-page.tsx` SCOPED_CSS)
+
+- **Fixed:** `.tl-sync` — removed section `overflow: hidden` (was clipping ascenders with tight `h2` metrics); extra top/bottom padding; `#sync` `scroll-margin-top: 100px` (other anchors stay 88px). `.tl-sync-grid` — `align-items: start` (was `center`, copy vs diagram vertical balance). `.tl-sync-grid h2` — `line-height: var(--tl-lh-h2)` + small `padding-top` for glyph headroom.
+- **Motion:** No change — `#sync` uses one-shot `y` reveal only (no pin / no diagram parallax).
+- **Verify:** `pnpm exec tsc --noEmit` — pass.
+
+### 2026-05-20 — Landing `#pull` + `#sync` impeccable pass (layout, distill, critique)
+
+- **`#pull` layout:** Dropped centered testimonial slab; nested in `.tl-wrap` with `tl-section-num` (`· / From the counter`); left-led `blockquote.tl-pull-quote` (max 44ch); section padding/border-top aligned with `tl-section` rhythm; glow biased top-left (not centered).
+- **`#sync` layout:** `.tl-sync-copy` wrapper; lede/meta `max-width` 70ch + `line-height: var(--tl-lh-body)`; meta rows `align-items: flex-start`, keys 56px (left edge with copy).
+- **Distill:** Shorter pull quote lines + cite unchanged; sync lede and meta (`PIPE` / `p95` / `BACKUP`) tightened, same proof.
+- **Verify:** `pnpm exec tsc --noEmit` — pass; lints clean on `landing-page.tsx`.
+
+### 2026-05-20 — Landing alignment system (`landing-page.tsx` SCOPED_CSS + JSX)
+
+- **Gutter:** `--tl-gutter` (24px / 56px ≥768) + `--tl-max` 1280px; `.tl-wrap` and `.tl-nav-inner` share the same horizontal padding (nav was 20px on small screens vs body 24px).
+- **Sync:** `.tl-sync-grid .tl-lede` and `.tl-sync-meta` `max-width` aligned to `min(var(--tl-measure), 48ch)` (same band as `.tl-section-head .tl-side`), replacing 70ch.
+- **`#where`:** `.tl-line-leave` vertical padding `80px` / `120px` (≥768) to match `.tl-section` rhythm.
+- **`#pull`:** `.tl-pull-quote` — `margin-inline: 0`, `max-width: min(var(--tl-measure-pull), 100%)` (UA blockquote indent + measure).
+- **Closing:** Removed inline `justifyContent: center` on demo eyebrow; `.tl-closing` CSS already left-led with `.tl-wrap`.
+- **Verify:** `npm run typecheck`; `npm run lint` — pass. No browser screenshots in this pass.
+
+### 2026-05-20 — Landing footer row1 gutter fix (`landing-page.tsx`)
+
+- **Cause:** `footer.tl-footer.tl-wrap` — `.tl-footer { padding: 56px 0 24px }` shorthand overwrote `.tl-wrap { padding: 0 var(--tl-gutter) }` horizontal inset (same specificity, footer rule later).
+- **Fix:** `.tl-footer` uses `padding-block` only so `--tl-gutter` (24px / 56px ≥768) applies to row1, mark, and bot.
+- **Verify:** lints clean on `landing-page.tsx`.
+
+### 2026-05-20 — Landing footer giant mark right inset (`landing-page.tsx`)
+
+- **Issue:** `.tl-footer-mark` right-aligned watermark — italic “y” visually hugged the edge (glyph overshoot + `padding: 28px 0 12px` had no inline end).
+- **Fix:** `padding-block: 28px 12px` + `padding-inline-end: var(--tl-gutter)` (matches site gutter token; scales 24px / 56px). `transform-origin: 100% 50%` unchanged; GSAP footer mark uses its own origins on enter.
+- **Mobile:** `overflow: hidden` on mark unchanged — no horizontal bleed.
+- **Verify:** lints clean on `landing-page.tsx`.
+
+### 2026-05-20 — Landing section scroll clip + hash anchor (motion layer)
+
+- **Root cause:** `playLandingArrival` scaled entire sections (`transformOrigin: 50% 8%`) so content shifted up under the sticky nav; hash nav used `scrollIntoView({ block: "start" })` with mismatched `scroll-margin-top`; ScrollTrigger pre-reveal tweens (`y`, `#system` clip-path) could stick mid-state on hash jumps or interrupted scroll.
+- **Motion (`landing-motion.tsx`):** Removed section scale on arrival (ring pulse only); `getScrollAnchorOffset()` + `scrollLandingSectionTo()` manual scroll with nav offset; `snapSectionRevealState()` on hash click/load; `withRevealCleanup()` clears `transform/clipPath/filter` after reveals; `#sync` reveal retargeted to num/copy/diagram (not grid cols), reduced `y`; sets `scrollPaddingTop` on mount.
+- **CSS (`landing-page.tsx`):** `--tl-scroll-anchor: 96px` unified on all anchors; `.tl-arrival-host { overflow: visible }`; ascender padding on display headings; reduced-motion + `.tl-motion-ready` force `#system` clip-path open.
+- **Verify:** `npm run typecheck` + `npm run lint` — pass. Manual: hash to `#sync` / each section — headline fully visible below nav; scroll reveals no stuck translateY.
+
+### 2026-05-20 — Landing impeccable pass (critique, layout, animate, overdrive)
+
+- **Layout (`landing-page.tsx`):** Hero cadence: second line uses `.tl-h1-line--secondary` (smaller display size, same Newsreader stack); subtle `text-shadow` on `.tl-h1` for depth (not gradient text); `#system.tl-section` extra top padding after ticker for section rhythm; ≥960px `.tl-sync .tl-diagram` `margin-left: clamp(8px, 2.2vw, 40px)` for asymmetric sync column (no side-stripe border). Copy: em dashes removed from visible marketing strings where touched.
+- **Motion (`landing-motion.tsx`):** Nav pill: `gsap.set` width, tween **x + opacity** only (no animated width). Hero CTA row: removed `scale` entrance; hero word stagger slightly tighter. Pull quote: **opacity + y** only (dropped blur + scale). Ticker item stagger slightly wider.
+- **Line leave (`landing-line-leave.tsx`):** Hint punctuation: colon instead of em dash in “Skip the crowd” line.
+- **a11y / PRM:** `@media (prefers-reduced-motion: reduce)` clears hero `text-shadow` on `.tl-h1`.
+- **Verify:** `npm run typecheck`, `npm run lint` — pass. No git commit (per operator). Eyeball: dev default `npm run dev` is **:3000**; use **:3050** only if overridden locally.
+
+### 2026-05-20 — Demo brand → production landing + debug strip (resume)
+
+- **Fixed:** Tray brand / “Marketing site” on `student.html`, `admin.html`, `kitchen.html`, `index.html` now `href="/"` (Next landing at trayy.vercel.app), not stale static `index.html`.
+- **Removed:** Session debug ingest (`debug-ingest` API, `landing-motion` probes); cleared stale `.next/types/app/api/debug-ingest`.
+- **Verify:** `npm run typecheck`, `npm run lint`, `npm run demo:verify` — pass.
+- **Pushed:** `main` for Vercel deploy.
