@@ -1,6 +1,6 @@
 # Tray landing — Figma integration map
 
-Pre-Monsoon Dusk marketing surface only (`.tray-landing`). Student, kitchen, and admin product UIs use separate palettes.
+Slate Ember marketing surface only (`.tray-landing`). Student, kitchen, and admin product UIs use separate palettes.
 
 ## Source files
 
@@ -13,50 +13,53 @@ Pre-Monsoon Dusk marketing surface only (`.tray-landing`). Student, kitchen, and
 
 ## Color tokens (CSS → Figma variables)
 
-Create a Figma collection **Tray / Landing / Pre-Monsoon Dusk** with modes **Dark** (default).
+Create a Figma collection **Tray / Landing / Slate Ember** with modes **Dark** (default).
 
 | Token | Hex / value | Usage |
 |-------|-------------|--------|
-| `bg/base` | `#0a0f1a` | Page background top |
-| `bg/elevated-1` | `#121a2e` | Cards, sync band |
-| `bg/elevated-2` | `#182240` | Frames, chips |
-| `bg/elevated-3` | `#223058` | Hover surfaces |
-| `ink/primary` | `#ece8e0` | Headlines, primary buttons |
-| `ink/secondary` | `rgba(236,232,224,0.76)` | Body |
-| `ink/tertiary` | `rgba(236,232,224,0.5)` | Labels |
-| `ink/muted` | `rgba(236,232,224,0.3)` | Meta, footer |
-| `line/default` | `rgba(236,232,224,0.09)` | Borders |
-| `line/strong` | `rgba(236,232,224,0.17)` | Nav scrolled |
-| `accent/warm` | `#d4b896` | Italic emphasis, selection, progress mid |
-| `accent/cool` | `#8eb8ff` | Ghost hover, hero cool rim |
-| `portal/student` | `#5cb1ff` | Student portal accent (demo `--portal-student`) |
-| `portal/kitchen` | `#d52821` | Kitchen portal accent (demo `--tomato`) |
-| `portal/admin` | `#cdfa50` | Admin portal accent (demo `--lime`) |
+| `bg/base` | `#0d0c0a` | Page background top |
+| `bg/elevated-1` | `#16140f` | Cards, sync band |
+| `bg/elevated-2` | `#1f1c16` | Frames, chips |
+| `bg/elevated-3` | `#2a261e` | Hover surfaces |
+| `ink/primary` | `#f2ebe3` | Headlines, primary buttons |
+| `ink/secondary` | `rgba(242,235,227,0.78)` | Body |
+| `ink/tertiary` | `rgba(242,235,227,0.52)` | Labels |
+| `ink/muted` | `rgba(242,235,227,0.32)` | Meta, footer |
+| `line/default` | `rgba(242,235,227,0.10)` | Borders |
+| `line/strong` | `rgba(242,235,227,0.18)` | Nav scrolled |
+| `accent/warm` | `#e8a86a` | Italic emphasis, selection, progress mid |
+| `accent/cool` | `#9ec4ff` | Ghost hover, hero cool rim |
+| `portal/student` | `#5cb1ff` | Student portal accent (demo) |
+| `portal/kitchen` | `#d52821` | Kitchen portal accent (demo tomato) |
+| `portal/kitchen-bright` | `#ef5749` | Kitchen dot glow |
+| `portal/admin` | `#cdfa50` | Admin portal accent (demo lime) |
 | `status/live` | `#6dd4a0` | Live pill |
 
 **Section ambient glows** (radial overlays, bind as optional variables):
 
 | Section | `section-glow` |
 |---------|----------------|
-| `#system` | `rgba(126,184,255,0.14)` |
-| `#sync` | `rgba(212,184,150,0.14)` |
-| `#where` | `rgba(184,232,106,0.10)` |
-| `.tl-pull` | `rgba(212,184,150,0.16)` |
-| `#flow` | `rgba(255,123,110,0.10)` |
-| `#stack` | `rgba(142,184,255,0.11)` |
+| `#system` | `rgba(92,177,255,0.13)` |
+| `#sync` | `rgba(232,168,106,0.16)` |
+| `#where` | `rgba(205,250,80,0.09)` |
+| `.tl-pull` | `rgba(232,168,106,0.18)` |
+| `#flow` | `rgba(213,40,33,0.11)` |
+| `#stack` | `rgba(158,196,255,0.10)` |
 
-**Page gradient:** `165deg` — `#0a0f1a` → `#10182b` (42%) → `#141f38`.
+**Page gradient:** `165deg` — `#0d0c0a` → `#1a1610` (42%) → `#221c14`.
+
+**Hero / ambient orbs:** ember gold (orb-a), cool sky (orb-b), service green (orb-c).
 
 ## Typography
 
 | Role | CSS | Figma text style |
 |------|-----|------------------|
-| Display / H1 | `var(--font-instrument-serif)` | Instrument Serif Regular, tracking −2.5%, line ~104% |
+| Display / H1 | `var(--font-newsreader)` | Newsreader 400–500, tracking −2%, line ~100% |
 | Display / H2 | same | clamp 2.5–6rem equivalent |
 | Body | `var(--font-manrope)` | Manrope 400–600, 18–22px |
-| Mono / labels | `var(--font-geist-mono)` | Geist Mono 600, uppercase, +10–14% tracking |
+| Mono / labels | `var(--font-jetbrains)` | JetBrains Mono 600, uppercase, +10–14% tracking |
 
-Italic emphasis uses Instrument Serif Italic + `accent/warm`.
+Italic emphasis uses Newsreader Italic + `accent/warm`.
 
 ## Spacing & layout
 
@@ -69,7 +72,7 @@ Italic emphasis uses Instrument Serif Italic + `accent/warm`.
 
 | Component | Class / selector | Notes |
 |-----------|------------------|--------|
-| Nav sticky | `.tl-nav` | 82% blur, border `line/default`; scrolled state darkens |
+| Nav sticky | `.tl-nav` | Warm dark blur, border `line/default`; scrolled state darkens |
 | Scroll progress | `.tl-scroll-progress` | 2px gradient student → warm → kitchen |
 | Primary button | `.tl-btn-pri` | Bone fill on ink-dark text |
 | Ghost button | `.tl-btn-ghost` | Subtle fill, cool border on hover |
@@ -84,19 +87,21 @@ Italic emphasis uses Instrument Serif Italic + `accent/warm`.
 
 ## Motion (for Figma prototyping / dev handoff)
 
+**Tier:** medium+ (tasteful bold). GSAP in `landing-motion.tsx`; hybrid stack per `docs/research/senior-dev-animation-decision.md`.
+
 | Section | Scroll behavior (GSAP) |
 |---------|-------------------------|
-| Hero | Timeline: words stagger, stat count-up, glow parallax |
-| `#system` | Head slides from left; portals rise + rotateX; tags scale in |
-| `#sync` | Copy fade-up; diagram scale; nodes alternate from L/R |
-| `#where` | Chips `back.out` spring |
-| `.tl-pull` | Quote blur → sharp scale |
-| `#flow` | Steps stagger; numerals rotate into place |
-| `#stack` | Cards pop from center stagger |
+| Hero | Timeline: words stagger (52px Y), stat count-up, glow parallax (desktop) |
+| `#system` | Head slides from left; portals rise + rotateX 14°; tags scale in |
+| `#sync` | Copy fade-up; diagram scale; nodes alternate ±44px `back.out(1.55)` |
+| `#where` | Chips `back.out(1.75)` spring |
+| `.tl-pull` | Quote blur 10px → sharp scale |
+| `#flow` | Steps stagger; numerals `back.out(2)` |
+| `#stack` | Cards pop from center scale 0.82→1 |
 | `.tl-closing` | Headline lift + CTA cascade |
-| Global | Ambient orbs scrub; nav section spy; portal 3D tilt on hover |
+| Global | Ambient orbs scrub (desktop fine pointer); nav section spy; portal 3D tilt 9°/6° |
 
-`prefers-reduced-motion: reduce` → skip GSAP; CSS keeps static layout.
+**Guards:** `prefers-reduced-motion: reduce` → skip GSAP; `(pointer: coarse)` or `max-width: 768px` → no scrub orbs, no portal tilt.
 
 ## Tailwind / global app
 
@@ -117,12 +122,3 @@ Landing styles are **scoped inline** in `landing-page.tsx` (`SCOPED_CSS`), not T
 3. Build **Landing / Portal card** as component set with `student | kitchen | admin` variant (dot color + top accent).
 4. Use **Code Connect** (optional): map `.tl-btn-pri` → Button primary, `.tl-portal` → Card/Large.
 5. For pixel parity, screenshot `http://localhost:3000` at 1440× and 390× after `npm run dev`.
-
-## Local verify
-
-```bash
-npm run dev
-# http://localhost:3000
-```
-
-Check reduced motion: OS setting **Reduce motion** → hero visible immediately, no scroll choreography.

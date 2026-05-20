@@ -38,7 +38,7 @@ Read AGENTS.md, docs/DEMO-SPEC.md, docs/PARALLEL-WORK.md. One file owner per lan
 
 | Surface | Direction |
 |---------|-----------|
-| Landing (Next) | Pre-Monsoon Dusk |
+| Landing (Next) | **Slate Ember** (palette C) + Newsreader/Manrope/JetBrains (font 2) + motion medium+ |
 | Student demo | Midnight Sky, desktop sidebar |
 | Kitchen | DO NOT TOUCH |
 
@@ -146,7 +146,15 @@ pm run typecheck passes. Restart dev if port 3000 hangs: NODE_OPTIONS=--max-old-
 
 - **Added:** `docs/landing-team-brief.md` — merges research + ship state: animation verdict, top-6 motion shortlist, user-pick gate, workflow, anti-patterns. Links `docs/research/*`, `landing-design-options.md`, `design-preview/palettes.html`.
 
-### 2026-05-20 — F1 landing ship (palette A + font 1 + motion medium)
+### 2026-05-20 — Council landing ship (palette C + font 2 + motion medium+)
+
+- **User pick:** Palette **C — Slate Ember** + font **2** (Newsreader + Manrope + JetBrains Mono) + motion **medium+ (tasteful bold)** — authorized change from default A/1/medium.
+- **Shipped:** `landing-page.tsx` — warm stone `--tl-*`, ember/cool accents, demo portal rims (`#5cb1ff` / `#d52821` / `#ef5749` glow / `#cdfa50`); section glows retuned.
+- **Shipped:** `layout.tsx` — `Newsreader` next/font; `landing-motion.tsx` — bolder hero/portal/sync/pull/stack; coarse/narrow + reduced-motion guards unchanged.
+- **Docs:** `docs/landing-design-options.md` §7 Council selection; `docs/design-system-figma.md` Slate Ember tokens.
+- **Verify:** `pnpm run build`, `npm run demo:verify`; push `main` → https://trayy.vercel.app
+
+### 2026-05-20 — F1 landing ship (palette A + font 1 + motion medium) — superseded by council pick above
 
 - **User pick (default):** Palette **A** + font **1** + motion **medium** per `docs/landing-design-options.md`.
 - **Shipped:** `landing-page.tsx` — Pre-Monsoon Dusk tokens; portal rims aligned to demos (`#5cb1ff` / `#d52821` / `#cdfa50`); ambient orbs, section glows, nav spy active state; card hover preserved.
