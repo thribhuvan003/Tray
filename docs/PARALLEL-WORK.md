@@ -121,6 +121,40 @@ pm run typecheck passes. Restart dev if port 3000 hangs: NODE_OPTIONS=--max-old-
 - **Fix (commit `b755f14`):** Sync `pnpm-lock.yaml`; `vercel.json` → `pnpm install --frozen-lockfile` + `pnpm run build`; remove stale `package-lock.json`.
 - **Production:** https://trayy.vercel.app — deployment **Ready** (`dpl_4njrZ4e6S4AkVrd1ebDEQWrUGY1r`); `/demo/student.html` + `demo-canteens.js` serve dish data.
 
+### 2026-05-20 — Landing animation stack decision (senior-dev / architect)
+
+- **Doc:** `docs/research/senior-dev-animation-decision.md` — **hybrid:** keep GSAP+ScrollTrigger in `landing-motion.tsx` (dynamic import, single context, kill on unmount); CSS for ticker/ambient; **no** `framer-motion` on landing; ≤55 KB gzip deferred animation chunk; per-section tool table; palette/visual changes still blocked on `landing-design-options.md` (not in repo yet).
+- **Parallel OK:** motion perf hardening (mobile scrub gating, pointer-only tilt) without token edits.
+
+### 2026-05-20 — Typography & color research (user selection)
+
+- **Added:** `docs/research/typography-color-research.md` — 4 type pairings (Google Fonts + fallbacks, landing scale, demo fit) + 5 palette options A–E (hex tokens, personalities, admin `#0b0e14` / `#cdfa50` vs Pre-Monsoon landing).
+- **Blocked on user:** Pick one palette + one pairing before retokenizing landing and/or demos.
+
+### 2026-05-20 — Landing design options (user selection doc)
+
+- **Added:** `docs/landing-design-options.md` — palettes A–E, fonts 1–4, motion subtle/medium/bold matrix, cross-portal roadmap. Superseded for type/color depth by `docs/research/typography-color-research.md`; options derived from landing + demo HTML.
+- **Added:** `public/design-preview/palettes.html` — static side-by-side palette cards; click selects + `localStorage` key `tray-landing-palette`.
+- **Blocked on user:** Reply `I pick palette [A–E] + font [1–4] + motion [subtle|medium|bold]` before retokenizing `landing-page.tsx`.
+- **Default recommendation:** Palette **A** + font **1** + motion **medium** (current ship).
+
+### 2026-05-20 — Landing scroll motion research (external)
+
+- **Added:** `docs/research/motion-patterns.md` — 10 premium B2B/SaaS scroll/micro patterns (Awwwards/Godly/GSAP sources), per-section recommendations (hero→footer + Tray section map), performance (`transform`/`opacity`, `will-change`, `ScrollTrigger.batch()`). No code changes.
+
+### 2026-05-20 — Landing team brief (coordination)
+
+- **Added:** `docs/landing-team-brief.md` — merges research + ship state: animation verdict, top-6 motion shortlist, user-pick gate, workflow, anti-patterns. Links `docs/research/*`, `landing-design-options.md`, `design-preview/palettes.html`.
+
+### 2026-05-20 — F1 landing ship (palette A + font 1 + motion medium)
+
+- **User pick (default):** Palette **A** + font **1** + motion **medium** per `docs/landing-design-options.md`.
+- **Shipped:** `landing-page.tsx` — Pre-Monsoon Dusk tokens; portal rims aligned to demos (`#5cb1ff` / `#d52821` / `#cdfa50`); ambient orbs, section glows, nav spy active state; card hover preserved.
+- **Shipped:** `landing-motion.tsx` — section choreography (system/sync/flow/stack); GSAP dynamic import; scrub parallax gated off `pointer: coarse` / `max-width: 768px`; portal tilt + btn scale gated to fine pointer; reduced-motion early exit unchanged.
+- **Docs:** `docs/design-system-figma.md`, `docs/landing-team-brief.md`, `docs/landing-design-options.md`, `docs/research/*`, `public/design-preview/palettes.html`, `scripts/landing-verify.mjs`.
+- **Student portal follow-up (not this pass):** Retokenize `public/demo/student.html` Midnight Sky vars from landing pick; add 5-line token comment block pointing at `--tl-*` source; optional `--portal-*` alias on demo hub only.
+- **Verify:** `pnpm install --frozen-lockfile`, `pnpm run typecheck`, `pnpm run build`, `npm run demo:verify`; push `main` → Vercel production.
+
 ### 2026-05-19 — Team harness activated (earlier)
 
 - GSAP on `landing-page.tsx`; student.html rebuild; parallel PM/research agents launched.
