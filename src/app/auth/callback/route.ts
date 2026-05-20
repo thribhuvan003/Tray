@@ -51,15 +51,31 @@ async function ensureStudentEnrolled(userId: string): Promise<void> {
 export async function GET(req: NextRequest) {
   const { searchParams, origin } = req.nextUrl;
   const code = searchParams.get("code");
-  const next = searchParams.get("next") ?? "/menu";
+  const token_hash = searchParams.get("token_hash");
+  const type = searchParams.get("type");
+  const next = searchParams.get("next") ?? "/";
   const tenantSlug = searchParams.get("tenant") ?? req.headers.get("x-tenant-slug") ?? "aditya";
 
-  if (!code) return NextResponse.redirect(new URL("/login?error=Missing+code", origin));
-
   const supabase = await getServerClient();
-  const { error } = await supabase.auth.exchangeCodeForSession(code);
-  if (error) {
-    return NextResponse.redirect(new URL(`/login?error=${encodeURIComponent(error.message)}`, origin));
+  let authError: { message: string } | null = null;
+
+  if (code) {
+    // PKCE flow — Supabase auth flow type = PKCE
+    const { error } = await supabase.auth.exchangeCodeForSession(code);
+    authError = error;
+  } else if (token_hash && type) {
+    // Implicit/email OTP flow — Supabase auth flow type = Implicit
+    const { error } = await supabase.auth.verifyOtp({
+      token_hash,
+      type: type as Parameters<typeof supabase.auth.verifyOtp>[0]["type"],
+    });
+    authError = error;
+  } else {
+    return NextResponse.redirect(new URL("/auth/login?error=Missing+code", origin));
+  }
+
+  if (authError) {
+    return NextResponse.redirect(new URL(`/auth/login?error=${encodeURIComponent(authError.message)}`, origin));
   }
   const tenant = await resolveTenant(tenantSlug);
   const { data: u } = await supabase.auth.getUser();
