@@ -561,13 +561,48 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
           </tbody>
         </table>
         <div class="table-foot">
-          <span>SHOWING 8 OF 248 ORDERS TODAY</span>
-          <span style="display:flex;gap:8px"><span style="color:var(--ink-2)">←</span>1 / 31<span style="color:var(--ink-2)">→</span></span>
+          <span id="ordersFootLabel">SHOWING 8 OF 248 ORDERS TODAY</span>
+          <span style="display:flex;gap:8px;align-items:center">
+            <span id="pgPrev" style="color:var(--ink-2);cursor:pointer;user-select:none;padding:2px 6px;border-radius:4px;transition:background .12s" onmouseover="this.style.background='var(--bg-3)'" onmouseout="this.style.background='transparent'">←</span>
+            <span id="pgLabel">1 / 31</span>
+            <span id="pgNext" style="color:var(--ink-2);cursor:pointer;user-select:none;padding:2px 6px;border-radius:4px;transition:background .12s" onmouseover="this.style.background='var(--bg-3)'" onmouseout="this.style.background='transparent'">→</span>
+          </span>
         </div>
       </div>
     </div>
 
   </main>
+</div>
+
+<!-- Orders full view -->
+<div id="ordersView" style="display:none;padding:0 32px 64px;max-width:1380px;margin:0 auto;width:100%">
+  <div style="padding:18px 0 20px;border-bottom:1px solid var(--line);margin-bottom:24px;display:flex;justify-content:space-between;align-items:center">
+    <h2 style="margin:0;font-size:22px;font-weight:600;letter-spacing:-0.025em">All Orders</h2>
+    <div class="actions" id="ordersViewFilter" style="display:flex;gap:6px">
+      <button class="panel-tab active">All</button>
+      <button class="panel-tab">Preparing</button>
+      <button class="panel-tab">Ready</button>
+      <button class="panel-tab">Collected</button>
+    </div>
+  </div>
+  <div class="panel" style="padding:0">
+    <table class="table" style="font-size:14px">
+      <thead><tr><th>Order</th><th>Student</th><th>Items</th><th style="text-align:right">Total</th><th>Status</th><th>Time</th></tr></thead>
+      <tbody id="ordersBodyFull"></tbody>
+    </table>
+    <div class="table-foot"><span id="ordersViewCount">SHOWING ALL ORDERS</span></div>
+  </div>
+</div>
+
+<!-- Menu manager full view -->
+<div id="menuView" style="display:none;padding:0 32px 64px;max-width:1380px;margin:0 auto;width:100%">
+  <div style="padding:18px 0 20px;border-bottom:1px solid var(--line);margin-bottom:24px">
+    <h2 style="margin:0;font-size:22px;font-weight:600;letter-spacing:-0.025em">Menu Manager</h2>
+    <div style="font-family:var(--mono);font-size:11px;color:var(--ink-3);letter-spacing:0.06em;margin-top:4px">5 ITEMS · LIVE SYNC</div>
+  </div>
+  <div class="panel" style="gap:0">
+    <div id="menuItemsList"></div>
+  </div>
 </div>
 
 <!-- Toast -->
@@ -822,13 +857,14 @@ if (ordersFilterGroup){
   ordersFilterGroup.querySelectorAll('.panel-tab').forEach(tab => {
     tab.addEventListener('click', () => {
       const want = tab.textContent.trim().toLowerCase();
-      let shown = 0;
       $$('#ordersBody tr').forEach(tr => {
         const pill = tr.querySelector('.status-pill');
         const match = want === 'all' || (pill && pill.classList.contains(want)) || (want === 'preparing' && pill && pill.classList.contains('incoming'));
-        tr.style.display = match ? '' : 'none';
-        if (match) shown++;
+        tr.dataset.filterHide = match ? '' : '1';
       });
+      currentPage = 1;
+      applyPagination();
+      const shown = [...$$('#ordersBody tr')].filter(tr => tr.style.display !== 'none').length;
       toast(`${shown} order${shown===1?'':'s'} · ${tab.textContent}`);
     });
   });
@@ -952,20 +988,185 @@ if (menuModal){
 }
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && menuModal.classList.contains('show')) closeMenuModal(); });
 
-/* Sidebar placeholder routes */
-$$('.sb-link[data-toast]').forEach(l => l.addEventListener('click', () => {
-  toast(l.dataset.toast);
-}));
-
-/* ⌘K */
-$$('.search input').forEach(i => i.addEventListener('keydown', e => {
-  if (e.key === 'Enter') toast('Searching for "' + e.target.value + '"…');
-}));
+/* =========================================================
+   BUG 1: Real-time search with 120ms debounce
+   ========================================================= */
+const searchInput = $('.search input');
+let searchTimer = null;
+function applySearch(){
+  const q = searchInput.value.trim().toLowerCase();
+  $$('#ordersBody tr').forEach(tr => {
+    const code  = (tr.querySelector('.oid')  || {textContent:''}).textContent.toLowerCase();
+    const name  = (tr.querySelector('.name') || {textContent:''}).textContent.toLowerCase();
+    const items = (tr.querySelector('.items')|| {textContent:''}).textContent.toLowerCase();
+    tr.dataset.searchHide = (!q || code.includes(q) || name.includes(q) || items.includes(q)) ? '' : '1';
+  });
+  currentPage = 1;
+  applyPagination();
+}
+searchInput.addEventListener('input', () => {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(applySearch, 120);
+});
+// keep ⌘K focus shortcut
 window.addEventListener('keydown', e => {
   if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k'){
     e.preventDefault();
-    $('.search input').focus();
+    searchInput.focus();
   }
+});
+
+/* =========================================================
+   BUG 2: Pagination (8 rows/page, works with search+filter)
+   ========================================================= */
+const PAGE_SIZE = 8;
+let currentPage = 1;
+
+function getVisibleRows(){
+  return [...$$('#ordersBody tr')].filter(tr =>
+    tr.style.display !== 'none' &&
+    tr.dataset.filterHide !== '1' &&
+    tr.dataset.searchHide !== '1'
+  );
+}
+
+function applyPagination(){
+  // first, mark all rows visible to count them
+  $$('#ordersBody tr').forEach(tr => {
+    // respect filter + search hides
+    const hidden = tr.dataset.filterHide === '1' || tr.dataset.searchHide === '1';
+    tr.style.display = hidden ? 'none' : '';
+  });
+  const visible = [...$$('#ordersBody tr')].filter(tr => tr.style.display !== 'none');
+  const totalPages = Math.max(1, Math.ceil(visible.length / PAGE_SIZE));
+  if (currentPage > totalPages) currentPage = totalPages;
+  const start = (currentPage - 1) * PAGE_SIZE;
+  visible.forEach((tr, i) => { tr.style.display = (i >= start && i < start + PAGE_SIZE) ? '' : 'none'; });
+  const showing = visible.slice(start, start + PAGE_SIZE).length;
+  $('#pgLabel').textContent = currentPage + ' / ' + totalPages;
+  $('#ordersFootLabel').textContent = `SHOWING ${showing} OF ${visible.length} ORDERS TODAY`;
+}
+
+$('#pgPrev').addEventListener('click', () => {
+  if (currentPage > 1){ currentPage--; applyPagination(); }
+});
+$('#pgNext').addEventListener('click', () => {
+  const visible = [...$$('#ordersBody tr')].filter(tr =>
+    tr.dataset.filterHide !== '1' && tr.dataset.searchHide !== '1'
+  );
+  const totalPages = Math.max(1, Math.ceil(visible.length / PAGE_SIZE));
+  if (currentPage < totalPages){ currentPage++; applyPagination(); }
+});
+
+// Run once to set up initial state
+applyPagination();
+
+/* =========================================================
+   BUG 3: Sidebar nav — Orders + Menu views
+   ========================================================= */
+const MENU_ITEMS = [
+  { name:'Dal Makhani',    price:140, veg:true,  inStock:true  },
+  { name:'Veg Thali',      price:120, veg:true,  inStock:true  },
+  { name:'Rajma Rice',     price:110, veg:true,  inStock:true  },
+  { name:'Paneer Butter Masala', price:160, veg:true,  inStock:false },
+  { name:'Chicken Curry',  price:180, veg:false, inStock:true  },
+];
+
+function renderMenuView(){
+  const list = $('#menuItemsList');
+  list.innerHTML = MENU_ITEMS.map((item, idx) => `
+    <div style="display:flex;align-items:center;gap:16px;padding:14px 20px;border-bottom:1px solid var(--line)${idx===MENU_ITEMS.length-1?';border-bottom:none':''}">
+      <span class="veg-dot ${item.veg?'':'nv'}" style="flex-shrink:0"></span>
+      <span style="flex:1;font-size:14px;font-weight:500;color:var(--ink)">${item.name}</span>
+      <span style="font-family:var(--mono);font-size:12px;color:var(--ink-3);min-width:48px;text-align:right">₹${item.price}</span>
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;margin-left:16px">
+        <span style="font-family:var(--mono);font-size:10px;color:var(--ink-3);letter-spacing:0.08em">${item.inStock?'IN STOCK':'OUT'}</span>
+        <span class="menu-toggle-track" data-idx="${idx}" style="display:inline-block;width:36px;height:20px;border-radius:10px;background:${item.inStock?'var(--lime)':'var(--bg-4)'};position:relative;cursor:pointer;transition:background .2s;flex-shrink:0">
+          <span style="position:absolute;top:3px;left:${item.inStock?'17px':'3px'};width:14px;height:14px;border-radius:50%;background:${item.inStock?'var(--bg)':'var(--ink-3)'};transition:left .2s"></span>
+        </span>
+      </label>
+    </div>`).join('');
+
+  list.querySelectorAll('.menu-toggle-track').forEach(track => {
+    track.addEventListener('click', () => {
+      const idx = +track.dataset.idx;
+      MENU_ITEMS[idx].inStock = !MENU_ITEMS[idx].inStock;
+      renderMenuView();
+      toast('Stock updated · ' + MENU_ITEMS[idx].name);
+    });
+  });
+}
+
+function syncOrdersFullView(){
+  const tbody = $('#ordersBodyFull');
+  const src = $('#ordersBody');
+  tbody.innerHTML = src.innerHTML;
+  const rows = tbody.querySelectorAll('tr');
+  const count = rows.length;
+  $('#ordersViewCount').textContent = `SHOWING ${count} ORDERS`;
+}
+
+// Wire orders view filter tabs
+const ordersViewFilterGroup = $('#ordersViewFilter');
+if (ordersViewFilterGroup){
+  ordersViewFilterGroup.querySelectorAll('.panel-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      ordersViewFilterGroup.querySelectorAll('.panel-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      const want = tab.textContent.trim().toLowerCase();
+      let shown = 0;
+      $$('#ordersBodyFull tr').forEach(tr => {
+        const pill = tr.querySelector('.status-pill');
+        const match = want === 'all' || (pill && pill.classList.contains(want)) || (want === 'preparing' && pill && pill.classList.contains('incoming'));
+        tr.style.display = match ? '' : 'none';
+        if (match) shown++;
+      });
+      $('#ordersViewCount').textContent = `SHOWING ${shown} ORDERS · ${tab.textContent.trim()}`;
+    });
+  });
+}
+
+const dashboardContent = [
+  document.querySelector('.kpi-grid'),
+  document.getElementById('specialsStrip'),
+  document.querySelector('.dash-row.r1'),
+  document.querySelector('.dash-row.r2'),
+  document.querySelector('.dash-row.r3'),
+];
+
+function showView(view){
+  // hide all secondary views
+  $('#ordersView').style.display = 'none';
+  $('#menuView').style.display = 'none';
+  // show/hide dashboard grid
+  const showDash = (view === 'overview');
+  dashboardContent.forEach(el => { if (el) el.style.display = showDash ? '' : 'none'; });
+
+  if (view === 'orders'){
+    syncOrdersFullView();
+    $('#ordersView').style.display = '';
+  } else if (view === 'menu'){
+    renderMenuView();
+    $('#menuView').style.display = '';
+  }
+
+  // update active sidebar state
+  $$('.sb-link').forEach(l => l.classList.remove('active'));
+  const map = { overview: 0, orders: 1, menu: 2 };
+  if (map[view] !== undefined){
+    $$('.sb-link')[map[view]].classList.add('active');
+  }
+}
+
+// Sidebar click wiring
+$$('.sb-link').forEach((link, idx) => {
+  link.addEventListener('click', () => {
+    if (idx === 0) { showView('overview'); return; }
+    if (idx === 1) { showView('orders');   return; }
+    if (idx === 2) { showView('menu');     return; }
+    const msg = link.dataset.toast;
+    if (msg) toast(msg);
+  });
 });
 
 /* Toast */
