@@ -339,4 +339,37 @@ Landing tokens stay scoped to `.tray-landing` until an ADR approves app-wide mer
 
 ---
 
-*Document version: 2026-05-20. Owner: landing design track. Do not implement in `landing-page.tsx` until user selection is recorded above.*
+## 7. Council selection — shipped
+
+**Date:** 2026-05-20  
+**Authority:** Product owner authorized palette, font, and motion change (no longer locked to Palette A + Font 1).
+
+| Dimension | Choice | Shipped in |
+|-----------|--------|------------|
+| **Palette** | **C — Slate Ember** | `landing-page.tsx` `--tl-*` |
+| **Fonts** | **2 — Newsreader + Manrope + JetBrains Mono** | `layout.tsx` + `landing-page.tsx` |
+| **Motion** | **Medium+ (tasteful bold)** | `landing-motion.tsx` |
+
+### Why this direction
+
+**Painter / concept lens:** Slate Ember treats the page as a **warm stone ground at night**—umber-brown neutrals with ember-orange light pools and a cool service-lane rim (student sky). It reads like canteen heat after sunset: appetite, trust, and the glow of a line still moving—not cold SaaS blue or purple-gradient slop. Portal accents stay **demo-true** (`#5cb1ff` / `#d52821` / `#cdfa50`) so the three cards remain legible genre shifts.
+
+**UX lens:** Palette A was credible but emotionally cool; **C** lands campus-food context in the first second without going light-mode (E) or admin-first (D). **Font 2** bridges the **kitchen** demo (Newsreader) while Manrope keeps UI density for stats and CTAs; JetBrains Mono matches kitchen operational labels. **Medium+** motion adds confidence on hero words, portal fan-in, and pull-quote dissolve while **coarse pointer / narrow viewport** still skip scrub orbs and 3D tilt; `prefers-reduced-motion` unchanged.
+
+### Portal preview tokens (landing only)
+
+| Role | Hex | Source |
+|------|-----|--------|
+| Student | `#5cb1ff` | Demo audit |
+| Kitchen | `#d52821` (dot), `#ef5749` (glow) | Demo audit |
+| Admin | `#cdfa50` | Demo audit |
+| Live | `#6dd4a0` | Unchanged |
+
+### Not in this pass
+
+- Marketing copy / navbar / card structure unchanged.
+- `public/demo/student.html` token migration deferred (Phase 2 in §5).
+
+---
+
+*Document version: 2026-05-20 (council ship). Owner: landing design track.*
