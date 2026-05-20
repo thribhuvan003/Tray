@@ -198,6 +198,17 @@ pm run typecheck passes. Restart dev if port 3000 hangs: NODE_OPTIONS=--max-old-
 - **Added:** `docs/brand-reel-source.md` (BLOCKED + unblock checklist + landing mapping); `docs/assets/` placeholder for `reel-source.mp4`.
 - **Not changed:** `landing-page.tsx` (no invented reel copy); no commit.
 
+### 2026-05-20 — External design corpus (motion + type)
+
+- **Added:** `docs/research/external-design-corpus-2026.md` — deep extract from Zajno Motion, Tubik (6 web animation types), Capital One micro-interaction handoff, UX Planet + Designlab + Figma typography anatomy; Dribbble pattern recon (10 adapt/avoid); Palette E Monsoon Paper section map; quoted metrics table (1.618 lh example, Tray 150–300ms / ≤800ms).
+- **Not changed:** landing code.
+
+### 2026-05-20 — Council 05 Palette E implementation brief
+
+- **Added:** `docs/council/05-implementation-brief-palette-e.md` — single frontend handoff: motifs (ribbon/halo/perforation) + CSS vs GSAP, typography measure/lh, motion retune for paper, critic gates (dark portal chrome, contrast), P0/P1/P2 checklist.
+- **Sources:** council 01–04, `brand-research-landing.md`, `landing-design-options.md` E, `MASTER.md`, `docs/research/external-design-corpus-2026.md`.
+- **Not changed:** landing code.
+
 ### 2026-05-20 — Landing Palette E (Monsoon Paper) council ship
 
 - **Palette:** **E — Monsoon Paper** (light editorial paper, coral `#c43d2f` + sky `#2a5db8`); portal rims unchanged (`#5cb1ff` / `#d52821` / `#ef5749` / `#cdfa50`).
@@ -205,6 +216,18 @@ pm run typecheck passes. Restart dev if port 3000 hangs: NODE_OPTIONS=--max-old-
 - **Docs:** `docs/landing-design-options.md` §7 + decision log; `design-system/MASTER.md`; `docs/design-system-figma.md`.
 - **Unchanged:** copy, navbar structure, card layout, `landing-motion.tsx`.
 - **Verify:** `pnpm run build`, `npm run demo:verify` — pass.
+
+### 2026-05-20 — Palette E frontend polish (council + research)
+
+- **Shipped:** `landing-page.tsx` — Newsreader display scale tokens, 58ch measure, tabular nums, ink-3/4 contrast bump; ticket perforation on hero stats + steam halo in hero glow; queue ribbon on `#sync`; darker portal browser chrome; Monsoon voice hero lede.
+- **Shipped:** `landing-motion.tsx` — light-theme diagram shadow; scroll-scrub section headings (fine pointer); richer button hover/press; orb opacity tuned for paper.
+- **Sources:** council 01–04, `05-implementation-brief-palette-e.md`, `external-design-corpus-2026.md`, `zajno-motion-notes.md`.
+- **Verify:** `pnpm run build`, `npm run demo:verify` — pass.
+
+### 2026-05-20 — Zajno Motion browser research
+
+- **Added:** `docs/research/zajno-motion-notes.md` — live review of https://motion.zajno.com/ (GSAP + ScrollTrigger, stagger/mask/easing patterns); five Palette E–adaptable patterns + technical ranges + avoid list (WebGL, scroll hijack, dark showcase).
+- **Not changed:** landing code.
 
 ### 2026-05-19 — Team harness activated (earlier)
 
