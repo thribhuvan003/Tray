@@ -395,9 +395,8 @@
   function showDemoLoadError(where) {
     if (typeof document === "undefined") return;
     var msg =
-      "Tray demo data did not load (demo-canteens.js). Open http://localhost:3000/demo/" +
-      (where || "index.html") +
-      " and hard-refresh (Ctrl+Shift+R).";
+      "Demo data failed to load. Try a hard-refresh (Ctrl+Shift+R) or visit https://trayy.vercel.app/demo/" +
+      (where || "index.html");
     if (document.getElementById("demoLoadError")) return;
     var bar = document.createElement("div");
       bar.id = "demoLoadError";

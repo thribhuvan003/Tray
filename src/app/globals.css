@@ -18,6 +18,7 @@
   --color-ocean-100: #cfe3f6;
   --color-ocean-200: #9cc6ec;
   --color-ocean-300: #5aa3df;
+  --color-ocean-400: #2e80ef;
   --color-ocean-500: #0066ff;
   --color-ocean-600: #0052cc;
   --color-ocean-700: #003f99;
@@ -46,6 +47,7 @@
   --color-graphite-400: #646d80;
   --color-graphite-300: #a3acbd;
   --color-graphite-200: #e8ecf2;
+  --color-graphite-100: #f4f6fa;
   --color-lime-DEFAULT: #d2fb50;
   --color-lime-dim:     #b4dc3a;
   --color-amber-DEFAULT:#ffae29;

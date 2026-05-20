@@ -144,6 +144,7 @@ export default async function DashboardPage({
       />
       <DashboardView
         tenantName={tenant.name}
+        tenantSlug={tenant.slug}
         ordersWeek={ordersWeek}
         todayOrders={todayOrders}
         lastWeekToday={lastWeekToday}
