@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { CheckCircle2, ChefHat, Hand, KeyRound, ShoppingBag, UtensilsCrossed } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { CheckCircle2, ChefHat, Hand, KeyRound, ShoppingBag, UtensilsCrossed, X } from "lucide-react";
+import { toast } from "sonner";
 import { cn, formatRupees, formatTimeIST, elapsedSeconds, fmtElapsed } from "@/lib/utils";
 
 type Status = "placed" | "preparing" | "ready" | "collected";
@@ -42,6 +43,7 @@ export function OrderColumn({
   orders,
   linesByOrder,
   onAction,
+  onReject,
 }: {
   title: string;
   subtitle: string;
@@ -49,6 +51,7 @@ export function OrderColumn({
   orders: Order[];
   linesByOrder: Map<string, Line[]>;
   onAction: (id: string, action: "start" | "ready" | "verify") => void;
+  onReject?: (id: string, reason: string) => Promise<void>;
 }) {
   const cfg = COL_CFG[status];
   return (
@@ -85,6 +88,7 @@ export function OrderColumn({
               rotation={idx % 2 === 0 ? "-rotate-[0.4deg]" : "rotate-[0.3deg]"}
               cfg={cfg}
               onAction={(act) => onAction(o.id, act)}
+              onReject={onReject ? (reason) => onReject(o.id, reason) : undefined}
             />
           ))
         )}
@@ -99,18 +103,29 @@ function TicketCard({
   rotation,
   cfg,
   onAction,
+  onReject,
 }: {
   order: Order;
   lines: Line[];
   rotation: string;
   cfg: (typeof COL_CFG)[Status];
   onAction: (action: "start" | "ready" | "verify") => void;
+  onReject?: (reason: string) => Promise<void>;
 }) {
   const [elapsed, setElapsed] = useState(elapsedSeconds(order.placed_at));
+  const [showReject, setShowReject] = useState(false);
+  const [reason, setReason] = useState("");
+  const [rejecting, setRejecting] = useState(false);
+  const reasonRef = useRef<HTMLTextAreaElement>(null);
+
   useEffect(() => {
     const id = setInterval(() => setElapsed(elapsedSeconds(order.placed_at)), 1000);
     return () => clearInterval(id);
   }, [order.placed_at]);
+
+  useEffect(() => {
+    if (showReject) setTimeout(() => reasonRef.current?.focus(), 30);
+  }, [showReject]);
 
   const overtime = order.status !== "collected" && elapsed > 480;
   const isCollected = order.status === "collected";
@@ -119,6 +134,24 @@ function TicketCard({
     if (order.status === "placed") onAction("start");
     else if (order.status === "preparing") onAction("ready");
     else if (order.status === "ready") onAction("verify");
+  };
+
+  const submitReject = async () => {
+    if (!onReject) return;
+    const trimmed = reason.trim();
+    if (!trimmed) {
+      toast.error("Enter a reason before rejecting");
+      reasonRef.current?.focus();
+      return;
+    }
+    setRejecting(true);
+    try {
+      await onReject(trimmed);
+      setShowReject(false);
+      setReason("");
+    } finally {
+      setRejecting(false);
+    }
   };
 
   return (
@@ -198,20 +231,73 @@ function TicketCard({
         <div className="text-[11px] font-mono text-tomato-900/55 dark:text-cream-200/55">
           {order.customer_name ?? "Customer"} · {formatRupees(order.total_paise)}
         </div>
-        {cfg.cta && (
-          <button
-            onClick={handle}
-            className="inline-flex items-center gap-1.5 h-8 px-3 rounded-md bg-tomato-500 text-white text-[12px] font-semibold hover:bg-tomato-600 transition-colors"
-          >
-            <cfg.cta.icon size={12} /> {cfg.cta.label}
-          </button>
-        )}
-        {isCollected && order.collected_at && (
-          <span className="inline-flex items-center gap-1 text-[10px] font-mono text-emerald-600">
-            <Hand size={10} /> {formatTimeIST(order.collected_at)}
-          </span>
-        )}
+        <div className="flex items-center gap-1.5">
+          {/* Reject button — only on placed orders */}
+          {order.status === "placed" && onReject && !showReject && (
+            <button
+              type="button"
+              onClick={() => setShowReject(true)}
+              title="Reject this order"
+              aria-label="Reject order"
+              className="inline-flex items-center justify-center h-8 w-8 rounded-md border-2 border-tomato-900/30 dark:border-cream-200/25 text-tomato-900/50 dark:text-cream-200/50 hover:border-tomato-500 hover:text-tomato-500 transition-colors"
+            >
+              <X size={13} />
+            </button>
+          )}
+          {cfg.cta && (
+            <button
+              onClick={handle}
+              className="inline-flex items-center gap-1.5 h-8 px-3 rounded-md bg-tomato-500 text-white text-[12px] font-semibold hover:bg-tomato-600 transition-colors"
+            >
+              <cfg.cta.icon size={12} /> {cfg.cta.label}
+            </button>
+          )}
+          {isCollected && order.collected_at && (
+            <span className="inline-flex items-center gap-1 text-[10px] font-mono text-emerald-600">
+              <Hand size={10} /> {formatTimeIST(order.collected_at)}
+            </span>
+          )}
+        </div>
       </div>
+
+      {/* Reject inline form — slides in below the card footer */}
+      {showReject && (
+        <div className="mt-3 pt-3 border-t-2 border-tomato-500/30">
+          <p className="text-[11px] font-mono uppercase tracking-wider text-tomato-500 mb-1.5">
+            Reject reason (required)
+          </p>
+          <textarea
+            ref={reasonRef}
+            value={reason}
+            onChange={(e) => setReason(e.target.value.slice(0, 200))}
+            rows={2}
+            maxLength={200}
+            placeholder="e.g. Item unavailable, wrong order, etc."
+            className="w-full resize-none border-2 border-tomato-900/30 dark:border-cream-200/25 bg-cream-50 dark:bg-graphite-700 text-[12px] p-2 focus:outline-none focus:border-tomato-500 rounded-sm"
+          />
+          <div className="text-right text-[10px] font-mono text-tomato-900/40 dark:text-cream-200/40 mb-2">
+            {reason.length}/200
+          </div>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => { setShowReject(false); setReason(""); }}
+              disabled={rejecting}
+              className="flex-1 h-8 rounded-md border-2 border-tomato-900/30 dark:border-cream-200/25 text-[12px] font-medium hover:bg-tomato-900/5 transition-colors disabled:opacity-50"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={() => void submitReject()}
+              disabled={rejecting || !reason.trim()}
+              className="flex-1 h-8 rounded-md bg-tomato-500 text-white text-[12px] font-semibold hover:bg-tomato-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {rejecting ? "Rejecting…" : "Confirm reject"}
+            </button>
+          </div>
+        </div>
+      )}
     </article>
   );
 }

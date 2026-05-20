@@ -691,7 +691,7 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
           </div>
           <div className="tl-nav-cta">
             <Link href="/login" className="tl-btn tl-btn-ghost">Sign in</Link>
-            <a href="/demo/index.html" className="tl-btn tl-btn-pri">Demo</a>
+            <a href="https://trayy.vercel.app/demo/index.html" className="tl-btn tl-btn-pri">Live demo</a>
           </div>
         </div>
       </nav>
@@ -722,10 +722,10 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
           </p>
           <div className="tl-hero-cta">
             <div className="tl-row">
-              <a href="/demo/index.html" className="tl-btn tl-btn-pri tl-btn-lg" data-magnetic>
-                Try the live demo →
+              <a href="https://trayy.vercel.app/c/aditya/menu" className="tl-btn tl-btn-pri tl-btn-lg" data-magnetic>
+                Try the student app →
               </a>
-              <a href="#system" className="tl-btn tl-btn-ghost tl-btn-lg">See the system</a>
+              <a href="https://trayy.vercel.app/c/aditya/admin/dashboard" className="tl-btn tl-btn-ghost tl-btn-lg">I run a canteen</a>
             </div>
             <div className="tl-note">DEMO IS LIVE · NO SIGN-UP · 90-SECOND TOUR</div>
           </div>
@@ -782,7 +782,7 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
                 <span className="tl-feat-tag">Pickup window</span>
                 <span className="tl-feat-tag">Veg lane</span>
               </div>
-              <a href="/demo/student.html" className="tl-portal-open">
+              <a href="https://trayy.vercel.app/c/aditya/menu" className="tl-portal-open">
                 <span>Open the student app</span>
                 <span className="tl-arrow">→</span>
               </a>
@@ -809,7 +809,7 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
                 <span className="tl-feat-tag">Add specials</span>
                 <span className="tl-feat-tag">OTP verify</span>
               </div>
-              <a href="/demo/kitchen.html" className="tl-portal-open">
+              <a href="https://trayy.vercel.app/c/aditya/kitchen" className="tl-portal-open">
                 <span>Open the kitchen view</span>
                 <span className="tl-arrow">→</span>
               </a>
@@ -836,7 +836,7 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
                 <span className="tl-feat-tag">Audit log</span>
                 <span className="tl-feat-tag">⌘K search</span>
               </div>
-              <a href="/demo/admin.html" className="tl-portal-open">
+              <a href="https://trayy.vercel.app/c/aditya/admin/dashboard" className="tl-portal-open">
                 <span>Open the admin console</span>
                 <span className="tl-arrow">→</span>
               </a>
@@ -987,11 +987,11 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
           <h2>Skip the<br /><span className="tl-it">queue.</span></h2>
           <p>Three screens. One lunch service. Built for college canteens that are tired of printed tokens.</p>
           <div className="tl-cta-row">
-            <a href="/demo/student.html" className="tl-btn tl-btn-pri tl-btn-lg" data-magnetic>
-              Open the student app →
+            <a href="https://trayy.vercel.app/c/aditya/menu" className="tl-btn tl-btn-pri tl-btn-lg" data-magnetic>
+              Try the student app →
             </a>
-            <a href="/demo/kitchen.html" className="tl-btn tl-btn-ghost tl-btn-lg">Kitchen view</a>
-            <a href="/demo/admin.html" className="tl-btn tl-btn-ghost tl-btn-lg">Admin dashboard</a>
+            <a href="https://trayy.vercel.app/c/aditya/kitchen" className="tl-btn tl-btn-ghost tl-btn-lg">Kitchen view</a>
+            <a href="https://trayy.vercel.app/c/aditya/admin/dashboard" className="tl-btn tl-btn-ghost tl-btn-lg">Admin dashboard</a>
           </div>
         </div>
       </section>
@@ -1009,7 +1009,7 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
               <Link href="/menu">Student app</Link>
               <Link href="/kitchen">Kitchen view</Link>
               <Link href="/admin/dashboard">Admin console</Link>
-              <Link href="/signup">Get started</Link>
+              <Link href="/get-started">Get started</Link>
             </div>
           </div>
           <div>

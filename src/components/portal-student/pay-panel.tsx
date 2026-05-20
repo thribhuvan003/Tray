@@ -4,7 +4,7 @@ import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import QRCode from "react-qr-code";
 import Link from "next/link";
-import { ArrowLeft, Loader2, Smartphone, Sparkles } from "lucide-react";
+import { ArrowLeft, Loader2, Smartphone, Sparkles, X as XIcon } from "lucide-react";
 import { toast } from "sonner";
 import { formatRupees, cn } from "@/lib/utils";
 import { upiQrPayload } from "@/lib/payments/upi";
@@ -45,6 +45,8 @@ export function PayPanel({
   const [verifying, startVerify] = useTransition();
   const [stillWaiting, setStillWaiting] = useState(false);
   const [remaining, setRemaining] = useState(0);
+  const [demoDismissed, setDemoDismissed] = useState(false);
+  const isSimMode = !process.env.NEXT_PUBLIC_RAZORPAY_LIVE;
 
   useEffect(() => {
     if (!order.payment_expires_at) return;
@@ -65,7 +67,7 @@ export function PayPanel({
         (payload) => {
           const next = (payload.new as { status: string }).status;
           if (next === "placed" || next === "preparing" || next === "ready") {
-            router.push(`/track/${order.id}`);
+            router.push(`/c/${tenantSlug}/track/${order.id}`);
           }
         }
       )
@@ -84,7 +86,7 @@ export function PayPanel({
         .eq("id", order.id)
         .maybeSingle<{ status: string }>();
       if (data && data.status !== "pending_payment") {
-        router.push(`/track/${order.id}`);
+        router.push(`/c/${tenantSlug}/track/${order.id}`);
       }
     }, 4000);
     return () => clearInterval(id);
@@ -107,7 +109,7 @@ export function PayPanel({
       if (!r.ok) toast.error(r.error ?? "Could not simulate payment");
       else {
         toast.success("Payment captured");
-        router.push(`/track/${order.id}`);
+        router.push(`/c/${tenantSlug}/track/${order.id}`);
       }
     });
 
@@ -117,7 +119,7 @@ export function PayPanel({
       const r = await verifyPaymentNow(order.id);
       if (r.status === "paid") {
         toast.success("Payment confirmed");
-        router.push(`/track/${order.id}`);
+        router.push(`/c/${tenantSlug}/track/${order.id}`);
       } else if (r.status === "failed") {
         toast.error("Payment failed — try the QR again");
       } else {
@@ -133,6 +135,22 @@ export function PayPanel({
       >
         <ArrowLeft size={14} /> Back to menu
       </Link>
+
+      {isSimMode && !demoDismissed && (
+        <div className="mb-4 flex items-center justify-between gap-3 rounded-xl bg-amber-50 border border-amber-200 dark:bg-amber-500/10 dark:border-amber-500/30 px-4 py-2.5">
+          <p className="text-[12.5px] text-amber-800 dark:text-amber-300 leading-snug">
+            <span className="font-semibold">Demo mode</span> — any UPI payment works. Tap &ldquo;I&rsquo;ve paid&rdquo; to continue.
+          </p>
+          <button
+            aria-label="Dismiss demo banner"
+            onClick={() => setDemoDismissed(true)}
+            className="shrink-0 text-amber-600 hover:text-amber-800 dark:text-amber-400 transition-colors"
+          >
+            <XIcon size={14} />
+          </button>
+        </div>
+      )}
+
       <div className="mb-6">
         <div className="text-[11px] font-mono uppercase tracking-wider text-[color:var(--color-ink)]/55">
           Order {order.short_code}

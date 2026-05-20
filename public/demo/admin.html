@@ -824,7 +824,12 @@ function addFeed(forceType){
 }
 for (let i=0;i<8;i++) addFeed();
 feed.dataset.initDone = '1';
-setInterval(addFeed, 3000);
+// New events every 7-9 seconds — realistic, not spammy
+function scheduleFeed(){
+  const delay = 7000 + Math.random() * 2000;
+  setTimeout(function(){ addFeed(); scheduleFeed(); }, delay);
+}
+scheduleFeed();
 
 /* Cross-tab sync — when kitchen pushes a special, refresh the strip + feed */
 window.addEventListener('storage', (e) => {
@@ -862,17 +867,21 @@ function renderRev(range){
   if (sub) sub.textContent = cfg.sub;
 }
 
+let currentRange = 'day';
 $$('#rangeToggle button').forEach(b => b.addEventListener('click', () => {
   $$('#rangeToggle button').forEach(x => x.classList.remove('active'));
   b.classList.add('active');
+  currentRange = b.dataset.r;
   renderHeat(b.dataset.r);
-  renderRev(b.dataset.r);
+  // Range toggle updates heatmap sub + re-animates the chart via applyRevMetric
+  applyRevMetric(currentRevMetric);
   staggerTopBars();
-  toast('Range: ' + b.textContent);
 }));
 
-/* Panel-tab active toggle (generic — works for every .panel-tab group) */
+/* Panel-tab active toggle (generic — skips revenue panel which has its own handler) */
 $$('.panel-head .actions').forEach(group => {
+  // Skip the revenue chart group — handled by applyRevMetric above
+  if (group.closest('.dash-row.r1')) return;
   const tabs = group.querySelectorAll('.panel-tab');
   if (tabs.length < 2) return;
   tabs.forEach(tab => tab.addEventListener('click', () => {
@@ -894,19 +903,74 @@ if (ordersFilterGroup){
   });
 }
 
-/* Revenue panel-tabs swap demo data labels */
+/* Revenue panel-tabs: swap chart line + y-axis labels + subtitle */
 const revGroup = document.querySelector('.dash-row.r1 .panel-head .actions');
-if (revGroup){
-  const REV_MODE = {
-    revenue:    'DAILY TOTAL · ₹ THOUSANDS',
-    orders:     'ORDERS PER DAY · COUNT',
-    'avg ticket': 'AVG TICKET · ₹ PER ORDER'
-  };
+let currentRevMetric = 'revenue';
+const REV_METRICS = {
+  revenue: {
+    sub: 'DAILY TOTAL · ₹ THOUSANDS',
+    hl: '₹38.4K · today',
+    hlSub: '↑ 12.4% vs yest.',
+    line: 'M0,160 L88,140 L175,148 L263,110 L350,118 L438,84 L525,96 L613,56 L700,42',
+    fill: 'M0,160 L88,140 L175,148 L263,110 L350,118 L438,84 L525,96 L613,56 L700,42 L700,220 L0,220 Z',
+    y1: '40K', y2: '25K', y3: '10K',
+  },
+  orders: {
+    sub: 'ORDERS PER DAY · COUNT',
+    hl: '248 orders · today',
+    hlSub: '↑ 8.1% vs yest.',
+    line: 'M0,175 L88,165 L175,170 L263,145 L350,150 L438,120 L525,130 L613,85 L700,70',
+    fill: 'M0,175 L88,165 L175,170 L263,145 L350,150 L438,120 L525,130 L613,85 L700,70 L700,220 L0,220 Z',
+    y1: '300', y2: '180', y3: '80',
+  },
+  'avg ticket': {
+    sub: 'AVG TICKET · ₹ PER ORDER',
+    hl: '₹155 · avg today',
+    hlSub: '↑ ₹6 vs yest.',
+    line: 'M0,140 L88,145 L175,138 L263,132 L350,140 L438,125 L525,135 L613,115 L700,108',
+    fill: 'M0,140 L88,145 L175,138 L263,132 L350,140 L438,125 L525,135 L613,115 L700,108 L700,220 L0,220 Z',
+    y1: '₹200', y2: '₹150', y3: '₹100',
+  },
+};
+function applyRevMetric(key) {
+  currentRevMetric = key;
+  const cfg = REV_METRICS[key] || REV_METRICS.revenue;
+  const svg = document.querySelector('.rev-chart svg');
+  if (!svg) return;
+  const area = svg.querySelector('path.area');
+  const line = svg.querySelector('path.line');
+  if (area) { area.setAttribute('d', cfg.fill); }
+  if (line) {
+    // Re-trigger draw animation
+    line.style.animation = 'none';
+    line.setAttribute('d', cfg.line);
+    line.style.strokeDasharray = '1200';
+    line.style.strokeDashoffset = '1200';
+    void line.getBoundingClientRect();
+    line.style.animation = 'drawIn 1.8s cubic-bezier(.2,.7,.3,1) forwards';
+  }
+  const sub = svg.closest('.panel').querySelector('.panel-head .sub');
+  if (sub) sub.textContent = cfg.sub;
+  // Update y-axis labels
+  const yLabels = svg.querySelectorAll('.y-label:not([fill])');
+  const yAll = [...svg.querySelectorAll('text.y-label')].filter(t => !t.hasAttribute('fill') || t.getAttribute('fill') === '');
+  const yTexts = svg.querySelectorAll('text.y-label');
+  yTexts.forEach((t, i) => {
+    if (i === 0) t.textContent = cfg.y1;
+    else if (i === 1) t.textContent = cfg.y2;
+    else if (i === 2) t.textContent = cfg.y3;
+  });
+  const hl = svg.querySelector('.label-hl');
+  const hlSub = svg.querySelector('.label-hl-sub');
+  if (hl) hl.textContent = cfg.hl;
+  if (hlSub) hlSub.textContent = cfg.hlSub;
+}
+if (revGroup) {
   revGroup.querySelectorAll('.panel-tab').forEach(tab => {
     tab.addEventListener('click', () => {
-      const sub = revGroup.closest('.panel').querySelector('.panel-head .sub');
-      const key = tab.textContent.trim().toLowerCase();
-      if (sub && REV_MODE[key]) sub.textContent = REV_MODE[key];
+      revGroup.querySelectorAll('.panel-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      applyRevMetric(tab.textContent.trim().toLowerCase());
     });
   });
 }

@@ -1141,9 +1141,100 @@
         transition-duration: 0.01ms !important;
       }
     }
+    /* ─── Demo banner ─── */
+    .demo-banner {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 10px 16px;
+      background: linear-gradient(135deg, #fbbf24, #f59e0b);
+      color: #1a1100;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.01em;
+      border-bottom: 1px solid rgba(180, 120, 0, 0.25);
+      box-shadow: 0 2px 8px rgba(245, 158, 11, 0.25);
+    }
+    .demo-banner.is-dismissed { display: none; }
+    .demo-banner__left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .demo-banner__pill {
+      background: rgba(0,0,0,0.12);
+      border-radius: 999px;
+      padding: 3px 8px;
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+    .demo-banner__otp {
+      font-family: var(--mono);
+      font-weight: 700;
+      font-size: 14px;
+      letter-spacing: 0.1em;
+      background: rgba(0,0,0,0.1);
+      border-radius: 6px;
+      padding: 2px 8px;
+    }
+    .demo-banner__dismiss {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: inherit;
+      opacity: 0.6;
+      font-size: 16px;
+      padding: 0 4px;
+      line-height: 1;
+      transition: opacity 0.15s;
+    }
+    .demo-banner__dismiss:hover { opacity: 1; }
+
+    /* ─── Payment confirming state ─── */
+    .btn-primary.is-confirming {
+      opacity: 0.75;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+
+    /* ─── OTP screen dramatic ─── */
+    .otp-display {
+      background: linear-gradient(180deg, rgba(12, 18, 32, 0.9) 0%, rgba(8, 12, 24, 0.96) 100%) !important;
+      border: 1px solid rgba(92, 177, 255, 0.4) !important;
+      box-shadow: 0 0 60px rgba(92, 177, 255, 0.1), inset 0 0 40px rgba(92, 177, 255, 0.04) !important;
+      cursor: pointer;
+    }
+    .otp-display:hover .otp-code { text-shadow: 0 0 60px var(--accent-glow); }
+    .otp-label { color: rgba(92, 177, 255, 0.7) !important; }
+    .otp-hint { color: rgba(200, 215, 240, 0.6) !important; }
+    .otp-copied-tip {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--ok);
+      margin-top: 8px;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .otp-copied-tip.show { opacity: 1; }
   </style>
 </head>
 <body data-view="menu">
+  <!-- Demo mode banner -->
+  <div class="demo-banner" id="demoBanner" role="alert">
+    <div class="demo-banner__left">
+      <span class="demo-banner__pill">Demo</span>
+      <span>Tap <strong>"I've paid"</strong> to continue — use OTP <span class="demo-banner__otp">1234</span> at the counter</span>
+    </div>
+    <button class="demo-banner__dismiss" id="demoBannerDismiss" aria-label="Dismiss banner">✕</button>
+  </div>
+
   <div class="app">
     <header class="topbar">
       <a href="index.html" class="brand" title="Tray home">
@@ -1295,11 +1386,12 @@
         <div class="view-panel">
           <h1 class="view-title">Ready for pickup</h1>
           <p class="view-sub">Show this code at the counter. Staff will verify before handing over your order.</p>
-          <div class="otp-display">
-            <p class="otp-label">Pickup code</p>
+          <div class="otp-display" id="otpDisplay" title="Tap to copy" role="button" tabindex="0" aria-label="Pickup code — tap to copy">
+            <p class="otp-label">Pickup code · tap to copy</p>
             <p class="otp-code" id="otpCode" aria-live="polite">----</p>
             <p class="order-mode-tag" id="orderModeTag">Takeaway</p>
-          <p class="otp-hint">Do not share this code. It expires when your order is collected.</p>
+            <p class="otp-hint">Show this code at the counter. Staff will verify before handing over your order.</p>
+            <p class="otp-copied-tip" id="otpCopiedTip">Copied to clipboard ✓</p>
           </div>
           <button type="button" class="btn-primary" id="btnNewOrder">Place another order</button>
         </div>
@@ -1704,7 +1796,7 @@
   }
 
   function genOtp() {
-    return String(Math.floor(1000 + Math.random() * 9000));
+    return "1234"; // Fixed demo OTP — matches banner hint
   }
 
   function pushOrderToKitchen() {
@@ -1793,22 +1885,29 @@
   }
 
   function confirmPaid() {
-    if (payInterval) {
-      clearInterval(payInterval);
-      payInterval = null;
-    }
-    pickupOtp = genOtp();
-    pushOrderToKitchen();
-    var now = new Date();
-    $("#placedTime").textContent = now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-    updateFlowCopy();
-    setView("tracking");
-    runTrackingSimulation();
+    var btn = $("#btnPaid");
+    if (btn.classList.contains("is-confirming")) return;
+    btn.classList.add("is-confirming");
+    btn.textContent = "Confirming…";
+    setTimeout(function () {
+      btn.classList.remove("is-confirming");
+      btn.textContent = "I've paid";
+      if (payInterval) {
+        clearInterval(payInterval);
+        payInterval = null;
+      }
+      pickupOtp = genOtp();
+      pushOrderToKitchen();
+      var now = new Date();
+      $("#placedTime").textContent = now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+      updateFlowCopy();
+      setView("tracking");
+      runTrackingSimulation();
+    }, 700);
   }
 
   function runTrackingSimulation() {
-    var steps = ["placed", "preparing", "ready"];
-    var progress = [33, 66, 100];
+    var progress = [25, 60, 100];
     var idx = 1;
     $("#progressFill").style.width = progress[0] + "%";
     updateTrackUI(1);
@@ -1816,7 +1915,7 @@
     if (trackInterval) clearInterval(trackInterval);
     trackInterval = setInterval(function () {
       idx += 1;
-      if (idx >= steps.length) {
+      if (idx >= 3) {
         clearInterval(trackInterval);
         trackInterval = null;
         updateTrackUI(2);
@@ -1826,12 +1925,12 @@
         setTimeout(function () {
           $("#otpCode").textContent = pickupOtp;
           setView("otp");
-        }, 1200);
+        }, 1500);
         return;
       }
       updateTrackUI(idx);
       $("#progressFill").style.width = progress[idx] + "%";
-    }, 2200);
+    }, 4000);
   }
 
   function updateTrackUI(currentIndex) {
@@ -1923,6 +2022,36 @@
       searchQuery = e.target.value;
       renderMenu();
     });
+
+    // Demo banner dismiss
+    var bannerDismiss = $("#demoBannerDismiss");
+    if (bannerDismiss) {
+      bannerDismiss.addEventListener("click", function () {
+        var banner = $("#demoBanner");
+        if (banner) banner.classList.add("is-dismissed");
+      });
+    }
+
+    // OTP tap-to-copy
+    var otpDisplay = $("#otpDisplay");
+    if (otpDisplay) {
+      var copyOtp = function () {
+        var code = $("#otpCode").textContent;
+        if (!code || code === "----") return;
+        if (navigator.clipboard) {
+          navigator.clipboard.writeText(code).catch(function () {});
+        }
+        var tip = $("#otpCopiedTip");
+        if (tip) {
+          tip.classList.add("show");
+          setTimeout(function () { tip.classList.remove("show"); }, 2000);
+        }
+      };
+      otpDisplay.addEventListener("click", copyOtp);
+      otpDisplay.addEventListener("keydown", function (e) {
+        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); copyOtp(); }
+      });
+    }
 
     $("#btnCheckoutDesktop").addEventListener("click", startPayment);
     $("#btnCheckoutMobile").addEventListener("click", startPayment);
