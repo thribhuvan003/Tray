@@ -116,9 +116,11 @@ export function PayPanel({
   const onIvePaid = () =>
     startVerify(async () => {
       setStillWaiting(false);
+      // Show a brief "Confirming…" state before the server round-trip resolves
+      await new Promise((r) => setTimeout(r, 700));
       const r = await verifyPaymentNow(order.id);
       if (r.status === "paid") {
-        toast.success("Payment confirmed");
+        toast.success("Order placed — kitchen has it!");
         router.push(`/c/${tenantSlug}/track/${order.id}`);
       } else if (r.status === "failed") {
         toast.error("Payment failed — try the QR again");
@@ -139,7 +141,7 @@ export function PayPanel({
       {isSimMode && !demoDismissed && (
         <div className="mb-4 flex items-center justify-between gap-3 rounded-xl bg-amber-50 border border-amber-200 dark:bg-amber-500/10 dark:border-amber-500/30 px-4 py-2.5">
           <p className="text-[12.5px] text-amber-800 dark:text-amber-300 leading-snug">
-            <span className="font-semibold">Demo mode</span> — any UPI payment works. Tap &ldquo;I&rsquo;ve paid&rdquo; to continue.
+            <span className="font-semibold">Demo mode</span> — scan the QR with any UPI app, then tap &ldquo;I&rsquo;ve paid&rdquo; to send your order to the kitchen.
           </p>
           <button
             aria-label="Dismiss demo banner"
@@ -257,15 +259,15 @@ export function PayPanel({
           >
             {verifying ? (
               <>
-                <Loader2 size={14} className="animate-spin" /> Checking with Razorpay…
+                <Loader2 size={14} className="animate-spin" /> Confirming…
               </>
             ) : (
-              <>I&rsquo;ve paid · verify now</>
+              <>I&rsquo;ve paid →</>
             )}
           </button>
           {stillWaiting && !verifying && (
             <p className="text-[12.5px] text-amber-600 text-center -mt-2">
-              Still waiting on Razorpay. UPI confirmation can lag 30–60 seconds — leave this page open and we&rsquo;ll flip it the moment it lands.
+              UPI confirmation can lag 30–60 seconds — leave this page open and we&rsquo;ll flip it the moment it lands.
             </p>
           )}
 

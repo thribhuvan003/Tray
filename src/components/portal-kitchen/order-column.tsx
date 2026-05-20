@@ -239,17 +239,17 @@ function TicketCard({
               onClick={() => setShowReject(true)}
               title="Reject this order"
               aria-label="Reject order"
-              className="inline-flex items-center justify-center h-8 w-8 rounded-md border-2 border-tomato-900/30 dark:border-cream-200/25 text-tomato-900/50 dark:text-cream-200/50 hover:border-tomato-500 hover:text-tomato-500 transition-colors"
+              className="inline-flex items-center justify-center h-11 w-11 rounded-md border-2 border-tomato-900/30 dark:border-cream-200/25 text-tomato-900/50 dark:text-cream-200/50 hover:border-tomato-500 hover:text-tomato-500 active:scale-95 transition-colors"
             >
-              <X size={13} />
+              <X size={15} />
             </button>
           )}
           {cfg.cta && (
             <button
               onClick={handle}
-              className="inline-flex items-center gap-1.5 h-8 px-3 rounded-md bg-tomato-500 text-white text-[12px] font-semibold hover:bg-tomato-600 transition-colors"
+              className="inline-flex items-center gap-1.5 h-11 px-4 rounded-md bg-tomato-500 text-white text-[13px] font-semibold hover:bg-tomato-600 active:scale-95 transition-colors"
             >
-              <cfg.cta.icon size={12} /> {cfg.cta.label}
+              <cfg.cta.icon size={14} /> {cfg.cta.label}
             </button>
           )}
           {isCollected && order.collected_at && (

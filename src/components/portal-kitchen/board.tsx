@@ -53,8 +53,19 @@ export function KitchenBoard({
   const [clock, setClock] = useState<string>("--:--");
   const [wsConnected, setWsConnected] = useState(false);
   const [bellOn, setBellOn] = useState(true);
+  const [sessionExpired, setSessionExpired] = useState(false);
   const bellOnRef = useRef(true);
   const seenOrderIdsRef = useRef<Set<string>>(new Set(initialOrders.map((o) => o.id)));
+
+  // Detect session expiry from server action errors and show a blocking overlay
+  // so kitchen staff know they must re-login rather than silently losing orders.
+  const handleActionError = (error: string) => {
+    if (error === "Not authorised" || error.toLowerCase().includes("not authorised") || error.toLowerCase().includes("unauthorized")) {
+      setSessionExpired(true);
+    } else {
+      toast.error(error);
+    }
+  };
 
   useEffect(() => {
     bellOnRef.current = bellOn;
@@ -192,6 +203,40 @@ export function KitchenBoard({
 
   return (
     <div className="min-h-screen">
+      {/* Session-expired overlay — blocks all interaction until staff re-login */}
+      {sessionExpired && (
+        <div
+          role="alertdialog"
+          aria-modal
+          aria-label="Session expired — please log in again"
+          className="fixed inset-0 z-[100] flex flex-col items-center justify-center gap-6 bg-graphite-900/95 backdrop-blur-sm text-cream-50 px-6 text-center"
+        >
+          <div className="text-[48px] sm:text-[64px] font-display font-bold text-tomato-500">!</div>
+          <p className="font-display text-[24px] sm:text-[32px] font-medium">Session timeout</p>
+          <p className="text-[15px] text-cream-200/80 max-w-xs">
+            Your login has expired. Tap below to sign in again — orders are safe.
+          </p>
+          <a
+            href={`/c/${tenantSlug}/kitchen/staff-select`}
+            className="inline-flex items-center justify-center h-14 px-8 rounded-xl bg-tomato-500 text-white text-[16px] font-bold hover:bg-tomato-600 transition-colors"
+          >
+            Log in again
+          </a>
+        </div>
+      )}
+
+      {/* Wi-Fi disconnection banner — big and visible from across the kitchen */}
+      {!wsConnected && (
+        <div
+          role="status"
+          aria-live="polite"
+          className="sticky top-0 z-40 flex items-center justify-center gap-3 bg-amber-500 text-graphite-900 px-4 py-3 text-[14px] font-semibold"
+        >
+          <Radio size={16} className="shrink-0 animate-pulse" />
+          <span>Wi-Fi disconnected — orders may be delayed. Reconnecting…</span>
+        </div>
+      )}
+
       <header className="sticky top-0 z-30 border-b-2 border-tomato-900 bg-cream-50 dark:bg-graphite-900">
         <div className="px-4 sm:px-6 lg:px-8 py-3 flex flex-wrap items-center gap-4 justify-between">
           <div>
@@ -215,9 +260,9 @@ export function KitchenBoard({
               onClick={() => setBellOn((v) => !v)}
               aria-label={bellOn ? "Mute new-order chime" : "Unmute new-order chime"}
               title={bellOn ? "New-order chime: on" : "New-order chime: off"}
-              className="inline-flex items-center justify-center h-9 w-9 rounded-full border-2 border-tomato-900 dark:border-cream-200 text-tomato-900 dark:text-cream-200 hover:bg-tomato-900 hover:text-cream-50 dark:hover:bg-cream-200 dark:hover:text-graphite-900 transition-colors"
+              className="inline-flex items-center justify-center h-11 w-11 rounded-full border-2 border-tomato-900 dark:border-cream-200 text-tomato-900 dark:text-cream-200 hover:bg-tomato-900 hover:text-cream-50 dark:hover:bg-cream-200 dark:hover:text-graphite-900 active:scale-95 transition-colors"
             >
-              {bellOn ? <Bell size={14} /> : <BellOff size={14} />}
+              {bellOn ? <Bell size={16} /> : <BellOff size={16} />}
             </button>
             <ThemeToggle className="text-tomato-900 dark:text-cream-200" />
             <Link
@@ -248,7 +293,7 @@ export function KitchenBoard({
       <KitchenMarquee items={marquee} />
 
       <main className="px-4 sm:px-6 lg:px-8 py-6">
-        <PrepTotalsStrip orders={orders} lines={lines} />
+        <PrepTotalsStrip orders={orders} lines={lines} onSessionExpired={() => setSessionExpired(true)} />
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
           <OrderColumn
             title="Incoming"
@@ -259,13 +304,13 @@ export function KitchenBoard({
             onAction={async (id, action) => {
               const { markPreparing } = await import("@/app/(kitchen)/_actions");
               const r = await markPreparing(id);
-              if (!r.ok) toast.error(r.error);
+              if (!r.ok) handleActionError(r.error);
               if (action === "start" && r.ok) toast.success(`Started ${id.slice(0, 6)}`);
             }}
             onReject={async (id, reason) => {
               const { rejectOrder } = await import("@/app/(kitchen)/_actions");
               const r = await rejectOrder(id, reason);
-              if (!r.ok) toast.error(r.error ?? "Failed to reject order");
+              if (!r.ok) handleActionError(r.error ?? "Failed to reject order");
               else toast.success("Order rejected — refund queued");
             }}
           />
@@ -278,7 +323,7 @@ export function KitchenBoard({
             onAction={async (id) => {
               const { markReady } = await import("@/app/(kitchen)/_actions");
               const r = await markReady(id);
-              if (!r.ok) toast.error(r.error);
+              if (!r.ok) handleActionError(r.error);
               else toast.success("Ready — pickup code issued");
             }}
           />
@@ -349,7 +394,7 @@ function KitchenKpiStrip({ orders }: { orders: OrderRow[] }) {
   );
 }
 
-function PrepTotalsStrip({ orders, lines }: { orders: OrderRow[]; lines: LineRow[] }) {
+function PrepTotalsStrip({ orders, lines, onSessionExpired }: { orders: OrderRow[]; lines: LineRow[]; onSessionExpired: () => void }) {
   // loading: set of item names currently being 86'd/un-86'd
   const [loading, setLoading] = useState<Set<string>>(new Set());
   // recentlySoldOut: tracks items 86'd this session so we can show undo pill
@@ -383,7 +428,12 @@ function PrepTotalsStrip({ orders, lines }: { orders: OrderRow[]; lines: LineRow
       const { markItemSoldOut } = await import("@/app/(kitchen)/_actions");
       const r = await markItemSoldOut(name, inStock);
       if (!r.ok) {
-        toast.error(r.error ?? "Failed");
+        const err = r.error ?? "Failed";
+        if (err.toLowerCase().includes("not authorised") || err.toLowerCase().includes("unauthorized")) {
+          onSessionExpired();
+        } else {
+          toast.error(err);
+        }
       } else if (!inStock) {
         toast.success(`86 — ${name} marked sold out. Student menu updated.`);
         setRecentlySoldOut((prev) => new Map(prev).set(name, true));
@@ -427,17 +477,17 @@ function PrepTotalsStrip({ orders, lines }: { orders: OrderRow[]; lines: LineRow
               <span className="font-display text-[20px] sm:text-[22px] font-medium tabular leading-none text-tomato-500">
                 {qty}
               </span>
-              <span className="text-[12px] sm:text-[13px] font-medium truncate max-w-[180px]">
+              <span className="text-[12px] sm:text-[14px] font-medium max-w-[220px] break-words leading-tight">
                 {name}
               </span>
-              {/* 86 button */}
+              {/* 86 button — min 44px touch target for tablet use */}
               <button
                 type="button"
                 disabled={isLoading}
                 onClick={() => void handle86(name, false)}
                 title={`86 — mark ${name} sold out`}
                 aria-label={`Mark ${name} sold out`}
-                className="ml-1 inline-flex items-center gap-1 px-2 py-0.5 rounded border border-tomato-900/40 dark:border-cream-200/25 text-[10px] font-mono font-semibold uppercase tracking-wider text-tomato-700 dark:text-cream-300 hover:bg-tomato-900 hover:text-cream-50 dark:hover:bg-cream-200 dark:hover:text-graphite-900 disabled:opacity-40 disabled:cursor-wait transition-colors"
+                className="ml-1 inline-flex items-center justify-center gap-1 px-3 h-11 min-w-[44px] rounded border-2 border-tomato-900/40 dark:border-cream-200/25 text-[11px] font-mono font-semibold uppercase tracking-wider text-tomato-700 dark:text-cream-300 hover:bg-tomato-900 hover:text-cream-50 dark:hover:bg-cream-200 dark:hover:text-graphite-900 active:scale-95 disabled:opacity-40 disabled:cursor-wait transition-colors"
               >
                 <span className="line-through leading-none">86</span>
               </button>
@@ -465,7 +515,7 @@ function PrepTotalsStrip({ orders, lines }: { orders: OrderRow[]; lines: LineRow
                 onClick={() => void handle86(name, true)}
                 title={`Undo 86 — restore ${name}`}
                 aria-label={`Undo 86 — mark ${name} back in stock`}
-                className="ml-1 inline-flex items-center gap-1 px-2 py-0.5 rounded border border-tomato-900/30 dark:border-cream-200/20 text-[10px] font-mono font-semibold uppercase tracking-wider text-tomato-900/60 dark:text-cream-200/60 hover:bg-tomato-900 hover:text-cream-50 dark:hover:bg-cream-200 dark:hover:text-graphite-900 hover:opacity-100 disabled:opacity-40 disabled:cursor-wait transition-colors"
+                className="ml-1 inline-flex items-center justify-center gap-1 px-3 h-11 min-w-[44px] rounded border-2 border-tomato-900/30 dark:border-cream-200/20 text-[11px] font-mono font-semibold uppercase tracking-wider text-tomato-900/60 dark:text-cream-200/60 hover:bg-tomato-900 hover:text-cream-50 dark:hover:bg-cream-200 dark:hover:text-graphite-900 hover:opacity-100 active:scale-95 disabled:opacity-40 disabled:cursor-wait transition-colors"
               >
                 Undo
               </button>

@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowDown, ArrowUp, Download, IndianRupee, ListOrdered, Receipt, Timer } from "lucide-react";
+import { ArrowDown, ArrowRight, ArrowUp, Download, IndianRupee, ListOrdered, Receipt, Timer } from "lucide-react";
 import dayjs from "dayjs";
 import { formatRupees, formatTimeIST, fmtElapsed } from "@/lib/utils";
 import { getBrowserClient } from "@/lib/supabase/browser";
@@ -161,8 +161,62 @@ export function DashboardView({
     return [...m.values()].sort((a, b) => b.qty - a.qty).slice(0, 6);
   }, [todayItems]);
 
+  const isFirstDay = ordersWeek.length === 0;
+
   return (
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
+      {/* ── First-run onboarding checklist ───────────────────────────── */}
+      {isFirstDay && (
+        <div className="mb-5 rounded-xl border border-lime/25 bg-lime/[0.05] p-5">
+          <div className="text-[13px] font-semibold text-lime mb-3">
+            Welcome! Here&rsquo;s how to get your first order in 3 steps:
+          </div>
+          <ol className="flex flex-col gap-2.5">
+            {[
+              {
+                n: "1",
+                text: "Add your menu items",
+                href: "/admin/menu/new",
+                cta: "Go to Menu →",
+              },
+              {
+                n: "2",
+                text: "Set your UPI ID so students can pay you",
+                href: "/admin/settings",
+                cta: "Go to Settings →",
+              },
+              {
+                n: "3",
+                text: "Share your ordering link with students",
+                href: null,
+                cta: null,
+                note: "Look for it in the sidebar — copy and WhatsApp it to your class groups.",
+              },
+            ].map((step) => (
+              <li key={step.n} className="flex items-start gap-3">
+                <span className="mt-0.5 shrink-0 h-5 w-5 rounded-full bg-lime/20 text-lime text-[11px] font-bold inline-flex items-center justify-center">
+                  {step.n}
+                </span>
+                <div className="flex-1 text-[13px] text-graphite-300">
+                  {step.text}
+                  {"note" in step && step.note && (
+                    <span className="ml-1 text-graphite-500">{step.note}</span>
+                  )}
+                  {step.href && step.cta && (
+                    <a
+                      href={step.href}
+                      className="ml-2 text-lime text-[12px] font-medium hover:underline inline-flex items-center gap-0.5"
+                    >
+                      {step.cta} <ArrowRight size={11} />
+                    </a>
+                  )}
+                </div>
+              </li>
+            ))}
+          </ol>
+        </div>
+      )}
+
       <div className="flex flex-wrap items-end justify-between gap-3 mb-5">
         <div>
           <h1 className="font-display text-[26px] sm:text-[30px] font-semibold tracking-tight">
