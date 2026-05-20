@@ -8,22 +8,25 @@ import { LandingMotion } from "@/components/landing/landing-motion";
 
 const SCOPED_CSS = `
 .tray-landing {
-  --tl-bg: #0d1220;
-  --tl-bg-2: #141d38;
-  --tl-bg-3: #1a2548;
-  --tl-bg-4: #243060;
-  --tl-line: rgba(232, 228, 220, 0.10);
-  --tl-line-2: rgba(232, 228, 220, 0.18);
-  --tl-ink: #e8e4dc;
-  --tl-ink-2: rgba(232, 228, 220, 0.74);
-  --tl-ink-3: rgba(232, 228, 220, 0.48);
-  --tl-ink-4: rgba(232, 228, 220, 0.28);
-  --tl-accent: #c4a882;
-  --tl-persimmon: #c4a882;
-  --tl-student: #7eb8ff;
-  --tl-kitchen: #ff7b6e;
-  --tl-admin: #b8e86a;
+  --tl-bg: #0a0f1a;
+  --tl-bg-2: #121a2e;
+  --tl-bg-3: #182240;
+  --tl-bg-4: #223058;
+  --tl-line: rgba(232, 228, 220, 0.09);
+  --tl-line-2: rgba(232, 228, 220, 0.17);
+  --tl-ink: #ece8e0;
+  --tl-ink-2: rgba(236, 232, 224, 0.76);
+  --tl-ink-3: rgba(236, 232, 224, 0.5);
+  --tl-ink-4: rgba(236, 232, 224, 0.3);
+  --tl-accent: #d4b896;
+  --tl-accent-cool: #8eb8ff;
+  --tl-persimmon: #d4b896;
+  /* Portal rims — aligned with public/demo (student sky, kitchen tomato, admin lime) */
+  --tl-student: #5cb1ff;
+  --tl-kitchen: #d52821;
+  --tl-admin: #cdfa50;
   --tl-good: #6dd4a0;
+  --tl-section-glow: rgba(212, 184, 150, 0.12);
 
   /* Type scale — display / Manrope body / Geist Mono labels */
   --tl-display: var(--font-instrument-serif), ui-serif, Georgia;
@@ -36,7 +39,7 @@ const SCOPED_CSS = `
   --tl-size-md: 1.25rem;
   --tl-size-lg: 1.375rem;
 
-  background: linear-gradient(180deg, #0d1220 0%, #111827 42%, #141d38 100%);
+  background: linear-gradient(165deg, #0a0f1a 0%, #10182b 42%, #141f38 100%);
   color: var(--tl-ink);
   font-family: var(--tl-sans);
   font-feature-settings: "ss01", "kern";
@@ -55,6 +58,27 @@ const SCOPED_CSS = `
 .tray-landing .tl-grain {
   position: fixed; inset: -30%; pointer-events: none; z-index: 1; opacity: .045; mix-blend-mode: overlay;
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.4' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.5 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+.tray-landing .tl-ambient { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
+.tray-landing .tl-orb {
+  position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.55;
+  will-change: transform;
+}
+.tray-landing .tl-orb-a {
+  width: min(52vw, 520px); height: min(52vw, 520px);
+  left: -12%; top: 8%;
+  background: radial-gradient(circle, rgba(126, 184, 255, 0.22) 0%, transparent 68%);
+}
+.tray-landing .tl-orb-b {
+  width: min(44vw, 440px); height: min(44vw, 440px);
+  right: -8%; top: 42%;
+  background: radial-gradient(circle, rgba(212, 184, 150, 0.18) 0%, transparent 70%);
+}
+.tray-landing .tl-orb-c {
+  width: min(36vw, 360px); height: min(36vw, 360px);
+  left: 38%; bottom: -8%;
+  background: radial-gradient(circle, rgba(109, 212, 160, 0.12) 0%, transparent 72%);
+  opacity: 0.4;
 }
 
 .tray-landing .tl-wrap { max-width: 1280px; margin: 0 auto; padding: 0 24px; position: relative; z-index: 2; }
@@ -81,7 +105,7 @@ const SCOPED_CSS = `
     gap: 20px 32px;
   }
 }
-.tray-landing .tl-scroll-progress { position: fixed; top: 0; left: 0; right: 0; height: 2px; z-index: 60; background: linear-gradient(90deg, var(--tl-student), var(--tl-accent)); transform: scaleX(0); transform-origin: 0% 50%; pointer-events: none; }
+.tray-landing .tl-scroll-progress { position: fixed; top: 0; left: 0; right: 0; height: 2px; z-index: 60; background: linear-gradient(90deg, var(--tl-student) 0%, var(--tl-accent) 55%, var(--tl-kitchen) 100%); transform: scaleX(0); transform-origin: 0% 50%; pointer-events: none; }
 .tray-landing .tl-nav.is-scrolled { background: rgba(13, 18, 32, 0.94); border-bottom-color: var(--tl-line-2); box-shadow: 0 8px 32px rgba(0, 0, 0, 0.28); }
 .tray-landing .tl-nav.is-scrolled .tl-nav-inner { padding-top: 8px; padding-bottom: 8px; min-height: 52px; }
 .tray-landing .tl-brand { font-family: var(--tl-display); font-size: clamp(1.5rem, 4vw, 1.75rem); letter-spacing: -0.03em; font-weight: 400; color: var(--tl-ink); text-decoration: none; white-space: nowrap; justify-self: start; line-height: 1; }
@@ -95,11 +119,11 @@ const SCOPED_CSS = `
 .tray-landing .tl-nav-cta .tl-btn { padding: 9px 16px; font-size: var(--tl-size-xs); }
 @media (min-width: 480px) { .tray-landing .tl-nav-cta .tl-btn { padding: 11px 20px; font-size: var(--tl-size-sm); } }
 
-.tray-landing .tl-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 11px 20px; border-radius: 999px; font-size: var(--tl-size-sm); font-weight: 600; border: 1px solid transparent; transition: transform .12s, background .15s, color .15s, border-color .15s; line-height: 1.2; font-family: inherit; cursor: pointer; }
-.tray-landing .tl-btn-pri { background: var(--tl-ink); color: var(--tl-bg); border-color: var(--tl-ink); }
-.tray-landing .tl-btn-pri:hover { background: #fff; transform: translateY(-1px); }
-.tray-landing .tl-btn-ghost { color: var(--tl-ink); background: transparent; border-color: var(--tl-line-2); }
-.tray-landing .tl-btn-ghost:hover { background: rgba(255, 255, 255, .05); border-color: var(--tl-ink-3); }
+.tray-landing .tl-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 11px 20px; border-radius: 999px; font-size: var(--tl-size-sm); font-weight: 600; border: 1px solid transparent; transition: background .15s, color .15s, border-color .15s, box-shadow .2s; line-height: 1.2; font-family: inherit; cursor: pointer; will-change: transform; }
+.tray-landing .tl-btn-pri { background: var(--tl-ink); color: var(--tl-bg); border-color: var(--tl-ink); box-shadow: 0 0 0 0 rgba(236, 232, 224, 0); }
+.tray-landing .tl-btn-pri:hover { background: #fff; box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35); }
+.tray-landing .tl-btn-ghost { color: var(--tl-ink); background: rgba(255, 255, 255, 0.02); border-color: var(--tl-line-2); }
+.tray-landing .tl-btn-ghost:hover { background: rgba(255, 255, 255, .06); border-color: var(--tl-accent-cool); color: #fff; }
 .tray-landing .tl-btn-lg { padding: 15px 26px; font-size: var(--tl-size-base); }
 
 .tray-landing a:focus { outline: none; }
@@ -128,7 +152,7 @@ const SCOPED_CSS = `
 /* Hero */
 .tray-landing .tl-hero { padding: 80px 0 64px; position: relative; }
 @media (min-width: 768px) { .tray-landing .tl-hero { padding: 96px 0 80px; } }
-.tray-landing .tl-hero-glow { position: absolute; left: 50%; top: -220px; width: min(1100px, 120vw); height: 900px; border-radius: 50%; background: radial-gradient(ellipse at center, rgba(126, 184, 255, 0.16) 0%, rgba(196, 168, 130, 0.1) 38%, transparent 70%); transform: translateX(-50%); pointer-events: none; z-index: 0; }
+.tray-landing .tl-hero-glow { position: absolute; left: 50%; top: -220px; width: min(1100px, 120vw); height: 900px; border-radius: 50%; background: radial-gradient(ellipse at center, rgba(126, 184, 255, 0.2) 0%, rgba(212, 184, 150, 0.12) 38%, transparent 70%); transform: translateX(-50%); pointer-events: none; z-index: 0; will-change: transform; }
 .tray-landing .tl-hero > :not(.tl-hero-glow) { position: relative; z-index: 1; }
 .tray-landing .tl-h1 {
   display: flex; flex-direction: column; gap: 0.08em; max-width: none; line-height: 1.04;
@@ -143,6 +167,8 @@ const SCOPED_CSS = `
 .tray-landing #system, .tray-landing #sync, .tray-landing #where, .tray-landing #flow, .tray-landing #stack { scroll-margin-top: 88px; }
 @media (prefers-reduced-motion: reduce) {
   .tray-landing [data-reveal], .tray-landing .tl-h1 .tl-word { opacity: 1 !important; transform: none !important; }
+  .tray-landing .tl-orb { display: none; }
+  .tray-landing .tl-browser-chrome { transform: none !important; }
 }
 .tray-landing.tl-anim-init .tl-hero-top,
 .tray-landing.tl-anim-init .tl-h1 .tl-word,
@@ -201,8 +227,20 @@ const SCOPED_CSS = `
 .tray-landing .tl-sync::before {
   content: ""; position: absolute; left: 50%; top: 0; width: min(900px, 100%); height: 320px;
   transform: translateX(-50%); pointer-events: none; z-index: 0;
-  background: radial-gradient(ellipse 70% 80% at 50% 0%, rgba(196, 168, 130, 0.1), transparent 72%);
+  background: radial-gradient(ellipse 70% 80% at 50% 0%, var(--tl-section-glow), transparent 72%);
 }
+.tray-landing #system { --tl-section-glow: rgba(126, 184, 255, 0.14); }
+.tray-landing .tl-sync { --tl-section-glow: rgba(212, 184, 150, 0.14); }
+.tray-landing #where { --tl-section-glow: rgba(184, 232, 106, 0.1); }
+.tray-landing .tl-pull { --tl-section-glow: rgba(212, 184, 150, 0.16); }
+.tray-landing #flow { --tl-section-glow: rgba(213, 40, 33, 0.1); }
+.tray-landing #stack { --tl-section-glow: rgba(142, 184, 255, 0.11); }
+.tray-landing .tl-pull { position: relative; }
+.tray-landing .tl-pull::before {
+  content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 0;
+  background: radial-gradient(ellipse 80% 60% at 50% 50%, var(--tl-section-glow), transparent 70%);
+}
+.tray-landing .tl-pull > * { position: relative; z-index: 1; }
 .tray-landing .tl-section > .tl-wrap,
 .tray-landing .tl-sync > .tl-wrap { position: relative; z-index: 1; }
 .tray-landing .tl-section-num { font-family: var(--tl-mono); font-size: var(--tl-size-2xs); letter-spacing: 0.14em; text-transform: uppercase; color: var(--tl-ink-3); display: flex; align-items: center; gap: 10px; margin-bottom: 20px; font-weight: 600; }
@@ -287,7 +325,7 @@ const SCOPED_CSS = `
 .tray-landing .tl-node .tl-info .tl-n { font-size: var(--tl-size-sm); font-weight: 600; }
 .tray-landing .tl-node .tl-info .tl-d { font-family: var(--tl-mono); font-size: var(--tl-size-2xs); color: var(--tl-ink-3); letter-spacing: 0.04em; margin-top: 2px; }
 .tray-landing .tl-node .tl-role { font-family: var(--tl-mono); font-size: var(--tl-size-xs); letter-spacing: 0.08em; font-weight: 600; text-transform: uppercase; padding: 4px 9px; border-radius: 5px; white-space: nowrap; }
-.tray-landing .tl-node[data-c="kitchen"] .tl-ic, .tray-landing .tl-node[data-c="kitchen"] .tl-role { color: var(--tl-kitchen); background: rgba(239, 87, 73, 0.16); }
+.tray-landing .tl-node[data-c="kitchen"] .tl-ic, .tray-landing .tl-node[data-c="kitchen"] .tl-role { color: var(--tl-kitchen); background: rgba(213, 40, 33, 0.16); }
 .tray-landing .tl-node[data-c="student"] .tl-ic, .tray-landing .tl-node[data-c="student"] .tl-role { color: var(--tl-student); background: rgba(92, 177, 255, 0.16); }
 .tray-landing .tl-node[data-c="admin"] .tl-ic, .tray-landing .tl-node[data-c="admin"] .tl-role { color: var(--tl-admin); background: rgba(205, 250, 80, 0.16); }
 .tray-landing .tl-node[data-c="db"] .tl-ic, .tray-landing .tl-node[data-c="db"] .tl-role { color: var(--tl-persimmon); background: rgba(239, 106, 58, 0.16); }
@@ -368,7 +406,9 @@ const SCOPED_CSS = `
 .tray-landing .tl-line-chip:focus-visible { outline: 2px solid var(--tl-accent); outline-offset: 2px; }
 .tray-landing .tl-nav-links a { transition: color .15s; position: relative; }
 .tray-landing .tl-nav-links a::after { content: ""; position: absolute; left: 0; right: 0; bottom: -4px; height: 1px; background: var(--tl-accent); transform: scaleX(0); transition: transform .2s ease; }
-.tray-landing .tl-nav-links a:hover::after { transform: scaleX(1); }
+.tray-landing .tl-nav-links a:hover::after,
+.tray-landing .tl-nav-links a.is-active::after { transform: scaleX(1); }
+.tray-landing .tl-nav-links a.is-active { color: var(--tl-ink); }
 .tray-landing .tl-line-hint { margin: 8px 2px 0; font-size: var(--tl-size-sm); line-height: 1.55; color: var(--tl-ink-2); min-height: 3em; transition: opacity .28s ease, transform .28s ease; }
 .tray-landing .tl-line-hint.is-fading { opacity: 0; transform: translateY(6px); }
 .tray-landing .tl-hero-stat .tl-stat-num { font-variant-numeric: tabular-nums; }
@@ -439,6 +479,11 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
     <div className="tray-landing">
       <style dangerouslySetInnerHTML={{ __html: SCOPED_CSS }} />
       <div className="tl-grain" />
+      <div className="tl-ambient" aria-hidden>
+        <span className="tl-orb tl-orb-a" />
+        <span className="tl-orb tl-orb-b" />
+        <span className="tl-orb tl-orb-c" />
+      </div>
       <div className="tl-scroll-progress" aria-hidden />
       <LandingMotion />
       <a href="#main" className="tl-skip">
