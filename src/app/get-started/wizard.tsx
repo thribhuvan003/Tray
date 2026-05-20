@@ -796,7 +796,7 @@ export function GetStartedWizard() {
             </svg>
             <span style={{ fontWeight: 700, fontSize: 16, color: "var(--gs-ink)", letterSpacing: "-0.02em" }}>Tray</span>
           </a>
-          <a href="/auth/login" style={{ fontSize: 13, color: "var(--gs-ink-muted)", textDecoration: "none" }}>
+          <a href="/login" style={{ fontSize: 13, color: "var(--gs-ink-muted)", textDecoration: "none" }}>
             Already have an account? <span style={{ color: "#0066ff", fontWeight: 600 }}>Sign in</span>
           </a>
         </header>

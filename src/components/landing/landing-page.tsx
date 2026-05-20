@@ -1010,7 +1010,9 @@ export function LandingPage({ tenant, msg }: { tenant: ResolvedTenant | null; ms
           <div className="tl-nav-links">
             <span className="tl-nav-pill" aria-hidden />
             <a href="#system">System</a>
+            <a href="#sync">How it syncs</a>
             <a href="#flow">How it works</a>
+            <a href="#stack">Stack</a>
           </div>
           <div className="tl-nav-cta">
             <Link href="/login" className="tl-btn tl-btn-ghost">Sign in</Link>
@@ -1347,9 +1349,9 @@ export function LandingPage({ tenant, msg }: { tenant: ResolvedTenant | null; ms
           <div>
             <h4>Product</h4>
             <div className="tl-links">
-              <Link href="/menu">Student app</Link>
-              <Link href="/kitchen">Kitchen view</Link>
-              <Link href="/admin/dashboard">Admin console</Link>
+              <a href="https://trayy.vercel.app/c/aditya/menu">Student app</a>
+              <a href="https://trayy.vercel.app/c/aditya/kitchen">Kitchen view</a>
+              <a href="https://trayy.vercel.app/c/aditya/admin/dashboard">Admin console</a>
               <Link href="/get-started">Get started</Link>
             </div>
           </div>

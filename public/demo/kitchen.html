@@ -451,7 +451,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
 if (!window.TRAY_DEMO) {
   document.body.insertAdjacentHTML(
     "afterbegin",
-    '<div style="position:fixed;top:0;left:0;right:0;z-index:99999;padding:12px;background:#7f1d1d;color:#fff;text-align:center;font:600 14px system-ui">Kitchen demo data missing — open http://localhost:3000/demo/kitchen.html</div>'
+    '<div style="position:fixed;top:0;left:0;right:0;z-index:99999;padding:12px;background:#7f1d1d;color:#fff;text-align:center;font:600 14px system-ui">Demo data failed to load — <a href="https://trayy.vercel.app/demo/kitchen.html" style="color:#fff;text-decoration:underline">reload the demo</a> or try a hard-refresh (Ctrl+Shift+R)</div>'
   );
   throw new Error("TRAY_DEMO not loaded");
 }
@@ -843,18 +843,10 @@ $('#spPush').addEventListener('click', () => {
   renderLiveSpecials();
   orders.unshift(orderFromSpecial(spec));
   renderQueue();
-  // #region agent log
   const spBtn = $('#spPush');
   if (spBtn && typeof spBtn.animate === 'function') {
     spBtn.animate([{ transform: 'scale(1)' }, { transform: 'scale(.92)' }, { transform: 'scale(1)' }], { duration: 280 });
-  } else if (spBtn) {
-    spBtn.animate(
-      [{ transform: 'scale(1)' }, { transform: 'scale(.92)' }, { transform: 'scale(1)' }],
-      { duration: 280 },
-    );
   }
-  fetch('http://127.0.0.1:7604/ingest/a3479709-2bc3-493e-b119-fcffac44b7e5',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'c2df94'},body:JSON.stringify({sessionId:'c2df94',location:'kitchen.html:spPush',message:'push special',data:{name,hasNativeAnimate:!!(spBtn&&spBtn.animate)},timestamp:Date.now(),hypothesisId:'C',runId:'pre-fix'})}).catch(()=>{});
-  // #endregion
   toast(`✓ Pushed live · "${name}" · ticket in Incoming`);
 
   // Cycle to a new sample

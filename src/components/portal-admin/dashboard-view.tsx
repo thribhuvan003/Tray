@@ -42,6 +42,7 @@ type ItemRow = {
 
 export function DashboardView({
   tenantName,
+  tenantSlug,
   ordersWeek,
   todayOrders,
   lastWeekToday,
@@ -49,6 +50,7 @@ export function DashboardView({
   todayItems,
 }: {
   tenantName: string;
+  tenantSlug: string;
   ordersWeek: OrderRow[];
   todayOrders: OrderRow[];
   lastWeekToday: OrderRow[];
@@ -176,13 +178,13 @@ export function DashboardView({
               {
                 n: "1",
                 text: "Add your menu items",
-                href: "/admin/menu/new",
+                href: `/c/${tenantSlug}/admin/menu/new`,
                 cta: "Go to Menu →",
               },
               {
                 n: "2",
                 text: "Set your UPI ID so students can pay you",
-                href: "/admin/settings",
+                href: `/c/${tenantSlug}/admin/settings`,
                 cta: "Go to Settings →",
               },
               {

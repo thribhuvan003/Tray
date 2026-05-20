@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { X as XIcon, CheckCircle2 } from "lucide-react";
 
+// Fallback for SSR; overridden on client mount via link href construction.
 const BASE_URL = "https://trayy.vercel.app";
 
 type Link = { label: string; url: string };
