@@ -1,6 +1,6 @@
 # Tray landing — Figma integration map
 
-Slate Ember marketing surface only (`.tray-landing`). Student, kitchen, and admin product UIs use separate palettes.
+Monsoon Paper marketing surface only (`.tray-landing`). Student, kitchen, and admin product UIs use separate palettes.
 
 ## Source files
 
@@ -13,22 +13,22 @@ Slate Ember marketing surface only (`.tray-landing`). Student, kitchen, and admi
 
 ## Color tokens (CSS → Figma variables)
 
-Create a Figma collection **Tray / Landing / Slate Ember** with modes **Dark** (default).
+Create a Figma collection **Tray / Landing / Monsoon Paper** with modes **Light** (default).
 
 | Token | Hex / value | Usage |
 |-------|-------------|--------|
-| `bg/base` | `#0d0c0a` | Page background top |
-| `bg/elevated-1` | `#16140f` | Cards, sync band |
-| `bg/elevated-2` | `#1f1c16` | Frames, chips |
-| `bg/elevated-3` | `#2a261e` | Hover surfaces |
-| `ink/primary` | `#f2ebe3` | Headlines, primary buttons |
-| `ink/secondary` | `rgba(242,235,227,0.78)` | Body |
-| `ink/tertiary` | `rgba(242,235,227,0.52)` | Labels |
-| `ink/muted` | `rgba(242,235,227,0.32)` | Meta, footer |
-| `line/default` | `rgba(242,235,227,0.10)` | Borders |
-| `line/strong` | `rgba(242,235,227,0.18)` | Nav scrolled |
-| `accent/warm` | `#e8a86a` | Italic emphasis, selection, progress mid |
-| `accent/cool` | `#9ec4ff` | Ghost hover, hero cool rim |
+| `bg/base` | `#f7f3ea` | Page background top |
+| `bg/elevated-1` | `#fffaf0` | Cards, sync band |
+| `bg/elevated-2` | `#f0e8d8` | Frames, chips |
+| `bg/elevated-3` | `#e8decc` | Hover surfaces |
+| `ink/primary` | `#1a140e` | Headlines, primary buttons |
+| `ink/secondary` | `rgba(26,20,14,0.72)` | Body |
+| `ink/tertiary` | `rgba(26,20,14,0.58)` | Labels |
+| `ink/muted` | `rgba(26,20,14,0.38)` | Meta, footer |
+| `line/default` | `rgba(26,20,14,0.12)` | Borders |
+| `line/strong` | `rgba(26,20,14,0.18)` | Nav scrolled |
+| `accent/warm` | `#c43d2f` | Italic emphasis, selection, progress mid |
+| `accent/cool` | `#2a5db8` | Ghost hover, hero cool rim |
 | `portal/student` | `#5cb1ff` | Student portal accent (demo) |
 | `portal/kitchen` | `#d52821` | Kitchen portal accent (demo tomato) |
 | `portal/kitchen-bright` | `#ef5749` | Kitchen dot glow |
@@ -39,16 +39,16 @@ Create a Figma collection **Tray / Landing / Slate Ember** with modes **Dark** (
 
 | Section | `section-glow` |
 |---------|----------------|
-| `#system` | `rgba(92,177,255,0.13)` |
-| `#sync` | `rgba(232,168,106,0.16)` |
-| `#where` | `rgba(205,250,80,0.09)` |
-| `.tl-pull` | `rgba(232,168,106,0.18)` |
-| `#flow` | `rgba(213,40,33,0.11)` |
-| `#stack` | `rgba(158,196,255,0.10)` |
+| `#system` | `rgba(42,93,184,0.12)` |
+| `#sync` | `rgba(196,61,47,0.12)` |
+| `#where` | `rgba(205,250,80,0.14)` |
+| `.tl-pull` | `rgba(196,61,47,0.15)` |
+| `#flow` | `rgba(196,61,47,0.10)` |
+| `#stack` | `rgba(42,93,184,0.10)` |
 
-**Page gradient:** `165deg` — `#0d0c0a` → `#1a1610` (42%) → `#221c14`.
+**Page gradient:** `165deg` — `#f7f3ea` → `#fffaf0` (38%) → `#f0e8d8`.
 
-**Hero / ambient orbs:** ember gold (orb-a), cool sky (orb-b), service green (orb-c).
+**Hero / ambient orbs:** coral wash (orb-a), sky blue (orb-b), service green (orb-c).
 
 ## Typography
 
@@ -72,11 +72,11 @@ Italic emphasis uses Newsreader Italic + `accent/warm`.
 
 | Component | Class / selector | Notes |
 |-----------|------------------|--------|
-| Nav sticky | `.tl-nav` | Warm dark blur, border `line/default`; scrolled state darkens |
+| Nav sticky | `.tl-nav` | Light paper blur, border `line/default`; scrolled state lifts |
 | Scroll progress | `.tl-scroll-progress` | 2px gradient student → warm → kitchen |
-| Primary button | `.tl-btn-pri` | Bone fill on ink-dark text |
-| Ghost button | `.tl-btn-ghost` | Subtle fill, cool border on hover |
-| Portal card | `.tl-portal[data-c]` | Role dot + top border on hover; browser chrome mock |
+| Primary button | `.tl-btn-pri` | Ink fill on paper text |
+| Ghost button | `.tl-btn-ghost` | Subtle ink tint fill, cool border on hover |
+| Portal card | `.tl-portal[data-c]` | Role dot + top border on hover; **dark** browser chrome mock |
 | Sync diagram node | `.tl-node[data-c]` | Icon square + role pill |
 | Flow step | `.tl-flow-step` | Large italic numeral |
 | Stack tile | `.tl-stack-card` | 2×4 grid |
@@ -109,11 +109,11 @@ Landing styles are **scoped inline** in `landing-page.tsx` (`SCOPED_CSS`), not T
 
 ## Assets & icons
 
-- **Grain:** inline SVG turbulence (no file)
+- **Grain:** inline SVG turbulence (no file); `multiply` blend on light
 - **Ambient orbs:** CSS radial gradients only
 - **Portal device tags:** emoji prefixes in copy (💻 🖥) — optional SF Symbol / Lucide swap in Figma
-- **Live dot:** CSS animation `tlLive`
-- **Demo URLs:** `tray.app/demo/*` chrome bar (decorative)
+- **Live dot:** CSS animation `tlLiveEmber`
+- **Demo URLs:** `tray.app/demo/*` chrome bar (decorative, dark frame)
 
 ## Figma workflow
 
