@@ -754,7 +754,12 @@ function addFeed(forceType){
 }
 for (let i=0;i<8;i++) addFeed();
 feed.dataset.initDone = '1';
-setInterval(addFeed, 3000);
+/* BUG FIX: was 3000ms (too fast), now 5000-8000ms random interval as per spec */
+function scheduleFeed(){
+  const delay = 5000 + Math.random() * 3000;
+  setTimeout(() => { addFeed(); scheduleFeed(); }, delay);
+}
+scheduleFeed();
 
 /* Cross-tab sync — when kitchen pushes a special, refresh the strip + feed */
 window.addEventListener('storage', (e) => {
@@ -829,19 +834,61 @@ if (ordersFilterGroup){
   });
 }
 
-/* Revenue panel-tabs swap demo data labels */
+/* BUG FIX: Revenue/Orders/Avg Ticket panel-tabs previously only changed label text.
+   Now they also redraw the chart path, y-axis labels, and gradient so each tab
+   shows visually distinct data. */
 const revGroup = document.querySelector('.dash-row.r1 .panel-head .actions');
 if (revGroup){
   const REV_MODE = {
-    revenue:    'DAILY TOTAL · ₹ THOUSANDS',
-    orders:     'ORDERS PER DAY · COUNT',
-    'avg ticket': 'AVG TICKET · ₹ PER ORDER'
+    revenue: {
+      sub:  'DAILY TOTAL · ₹ THOUSANDS',
+      line: 'M0 160 L88 140 L175 148 L263 110 L350 118 L438 84 L525 96 L613 56 L700 42',
+      fill: 'M0 160 L88 140 L175 148 L263 110 L350 118 L438 84 L525 96 L613 56 L700 42 L700 220 L0 220 Z',
+      ylabels: ['40K','25K','10K'], title: 'Revenue this week',
+      stroke: 'var(--lime)',
+    },
+    orders: {
+      sub:  'ORDERS PER DAY · COUNT',
+      line: 'M0 180 L88 155 L175 165 L263 130 L350 140 L438 105 L525 115 L613 70 L700 55',
+      fill: 'M0 180 L88 155 L175 165 L263 130 L350 140 L438 105 L525 115 L613 70 L700 55 L700 220 L0 220 Z',
+      ylabels: ['300','200','100'], title: 'Orders this week',
+      stroke: 'var(--sky)',
+    },
+    'avg ticket': {
+      sub:  'AVG TICKET · ₹ PER ORDER',
+      line: 'M0 130 L88 125 L175 135 L263 115 L350 120 L438 100 L525 110 L613 90 L700 85',
+      fill: 'M0 130 L88 125 L175 135 L263 115 L350 120 L438 100 L525 110 L613 90 L700 85 L700 220 L0 220 Z',
+      ylabels: ['₹200','₹155','₹100'], title: 'Avg ticket this week',
+      stroke: 'var(--amber)',
+    }
   };
+  const revSvg = document.querySelector('.rev-chart svg');
   revGroup.querySelectorAll('.panel-tab').forEach(tab => {
     tab.addEventListener('click', () => {
       const sub = revGroup.closest('.panel').querySelector('.panel-head .sub');
+      const h3  = revGroup.closest('.panel').querySelector('.panel-head h3');
       const key = tab.textContent.trim().toLowerCase();
-      if (sub && REV_MODE[key]) sub.textContent = REV_MODE[key];
+      const cfg = REV_MODE[key];
+      if (!cfg) return;
+      if (sub) sub.textContent = cfg.sub;
+      if (h3)  h3.textContent  = cfg.title;
+      if (revSvg){
+        const area = revSvg.querySelector('path.area');
+        const linePath = revSvg.querySelector('path.line');
+        if (area) area.setAttribute('d', cfg.fill);
+        if (linePath){
+          linePath.setAttribute('d', cfg.line);
+          linePath.style.stroke = cfg.stroke;
+          /* re-trigger draw animation */
+          linePath.style.animation = 'none';
+          void linePath.offsetWidth;
+          linePath.style.animation = '';
+        }
+        const yLabels = revSvg.querySelectorAll('.y-label');
+        yLabels.forEach((el, i) => {
+          if (cfg.ylabels[i] !== undefined) el.textContent = cfg.ylabels[i];
+        });
+      }
     });
   });
 }
