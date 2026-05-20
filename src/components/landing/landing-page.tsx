@@ -37,6 +37,11 @@ const SCOPED_CSS = `
   --tl-display-md: clamp(2.5rem, 7vw, 6rem);
   --tl-display-sm: clamp(2rem, 5vw, 3.25rem);
   --tl-measure: 58ch;
+  --tl-measure-lede: 62ch;
+  --tl-measure-pull: 42ch;
+  --tl-lh-body: 1.62;
+  --tl-lh-display: 1.02;
+  --tl-lh-h2: 1;
   --tl-size-2xs: 0.8125rem;
   --tl-size-xs: 0.875rem;
   --tl-size-sm: 1rem;
@@ -216,9 +221,10 @@ const SCOPED_CSS = `
   width: min(36vw, 260px); height: min(36vw, 260px); left: 12%; bottom: 8%;
   background: radial-gradient(circle, rgba(42, 93, 184, 0.12) 0%, transparent 70%);
 }
-.tray-landing .tl-hero > :not(.tl-hero-glow) { position: relative; z-index: 1; }
+.tray-landing .tl-hero > :not(.tl-hero-glow):not(.tl-hero-ribbon) { position: relative; z-index: 1; }
+.tray-landing .tl-hero { position: relative; }
 .tray-landing .tl-h1 {
-  display: flex; flex-direction: column; gap: 0.08em; max-width: none; line-height: 1.02;
+  display: flex; flex-direction: column; gap: 0.08em; max-width: none; line-height: var(--tl-lh-display);
   font-family: var(--tl-display); font-weight: 400;
   font-size: var(--tl-display-lg); letter-spacing: -0.028em; margin: 0 0 40px;
   min-height: clamp(6.5rem, 20vw, 17rem);
@@ -229,7 +235,14 @@ const SCOPED_CSS = `
   .tray-landing .tl-hero-meta { transform: translateX(clamp(0px, 3vw, 28px)); }
 }
 .tray-landing .tl-h1-line { display: flex; flex-wrap: wrap; align-items: baseline; column-gap: 0.26em; row-gap: 0.04em; }
-.tray-landing .tl-h1 .tl-word { display: inline-block; transform-origin: 50% 100%; white-space: nowrap; }
+.tray-landing .tl-h1 .tl-word {
+  display: inline-block; transform-origin: 50% 100%; white-space: nowrap;
+  clip-path: inset(100% 0% 0% 0%);
+}
+@media (prefers-reduced-motion: reduce) {
+  .tray-landing .tl-h1 .tl-word { clip-path: inset(0% 0% 0% 0%); }
+}
+.tray-landing.tl-motion-ready .tl-h1 .tl-word { clip-path: inset(0% 0% 0% 0%); }
 .tray-landing .tl-h1 .tl-it { font-style: italic; color: var(--tl-persimmon); }
 .tray-landing [data-reveal] { will-change: transform, opacity; }
 .tray-landing #system, .tray-landing #sync, .tray-landing #where, .tray-landing #flow, .tray-landing #stack { scroll-margin-top: 88px; }
@@ -277,7 +290,7 @@ const SCOPED_CSS = `
 .tray-landing .tl-hero-meta { display: grid; grid-template-columns: 1fr; gap: 32px; align-items: flex-end; margin-bottom: 48px; }
 @media (min-width: 960px) { .tray-landing .tl-hero-meta { grid-template-columns: 1.2fr 1fr; gap: 64px; } }
 .tray-landing .tl-measure { max-width: var(--tl-measure); }
-.tray-landing .tl-hero-lede { font-size: var(--tl-size-md); line-height: 1.58; color: var(--tl-ink-2); max-width: min(var(--tl-measure), 52ch); font-weight: 400; }
+.tray-landing .tl-hero-lede { font-size: var(--tl-size-md); line-height: var(--tl-lh-body); color: var(--tl-ink-2); max-width: min(var(--tl-measure-lede), 62ch); font-weight: 400; }
 @media (min-width: 768px) { .tray-landing .tl-hero-lede { font-size: var(--tl-size-lg); line-height: 1.55; } }
 .tray-landing .tl-hero-lede .tl-em { color: var(--tl-ink); font-weight: 600; }
 .tray-landing .tl-hero-cta { display: flex; flex-direction: column; gap: 14px; align-items: flex-start; }
@@ -334,7 +347,7 @@ const SCOPED_CSS = `
 .tray-landing .tl-section-num .tl-num { color: var(--tl-persimmon); font-weight: 600; }
 .tray-landing .tl-section-head { display: grid; grid-template-columns: 1fr; gap: 32px; align-items: flex-end; margin-bottom: 40px; }
 @media (min-width: 900px) { .tray-landing .tl-section-head { grid-template-columns: 1.3fr 1fr; gap: 80px; margin-bottom: 56px; } }
-.tray-landing .tl-section-head h2 { margin: 0; font-family: var(--tl-display); font-weight: 400; font-size: var(--tl-display-md); letter-spacing: -0.03em; line-height: 0.94; text-wrap: balance; }
+.tray-landing .tl-section-head h2 { margin: 0; font-family: var(--tl-display); font-weight: 400; font-size: var(--tl-display-md); letter-spacing: -0.03em; line-height: var(--tl-lh-h2); text-wrap: balance; }
 .tray-landing .tl-section-head h2 .tl-it { font-style: italic; color: var(--tl-persimmon); }
 .tray-landing .tl-section-head .tl-side { color: var(--tl-ink-2); max-width: min(var(--tl-measure), 48ch); font-size: var(--tl-size-base); line-height: 1.62; }
 @media (min-width: 768px) { .tray-landing .tl-section-head .tl-side { font-size: var(--tl-size-md); } }
@@ -383,6 +396,24 @@ const SCOPED_CSS = `
 .tray-landing .tl-portal[data-c="admin"] .tl-portal-head h3 .tl-it { color: var(--tl-admin); }
 
 .tray-landing .tl-portal-frame { position: relative; height: 280px; overflow: hidden; background: var(--tl-bg-3); border-bottom: 1px solid var(--tl-line); transform-style: preserve-3d; will-change: transform; }
+.tray-landing .tl-portal[data-c="kitchen"] .tl-portal-frame::after {
+  content: ""; position: absolute; left: 50%; top: 42%; width: min(88%, 340px); height: 55%;
+  transform: translate(-50%, -50%); border-radius: 50%; pointer-events: none; z-index: 1;
+  background: radial-gradient(ellipse at center, rgba(196, 61, 47, 0.14) 0%, rgba(42, 93, 184, 0.08) 42%, transparent 72%);
+  filter: blur(72px); opacity: 0.85;
+}
+.tray-landing .tl-hero-ribbon {
+  position: absolute; left: -6%; top: 38%; width: 112%; height: 3px; z-index: 0; pointer-events: none;
+  border-radius: 2px; opacity: 0.7;
+  background: linear-gradient(90deg, transparent 0%, rgba(26, 20, 14, 0.14) 14%, rgba(42, 93, 184, 0.36) 50%, rgba(26, 20, 14, 0.14) 86%, transparent 100%);
+  transform: rotate(-0.45deg);
+}
+.tray-landing .tl-flow-accent {
+  position: absolute; left: 0; right: 0; top: 0; height: 3px; z-index: 2; pointer-events: none;
+  transform-origin: 0% 50%; transform: scaleX(0);
+  background: linear-gradient(90deg, var(--tl-accent-cool) 0%, var(--tl-accent) 55%, var(--tl-kitchen-bright) 100%);
+  opacity: 0.85;
+}
 .tray-landing .tl-portal-frame::before {
   content: ""; position: absolute; inset: 0; z-index: 6; pointer-events: none; opacity: 0;
   background: linear-gradient(118deg, transparent 38%, rgba(255, 255, 255, 0.14) 50%, transparent 62%);
@@ -456,7 +487,11 @@ const SCOPED_CSS = `
 .tray-landing .tl-sync-meta .tl-row { display: flex; align-items: center; gap: 14px; }
 .tray-landing .tl-sync-meta .tl-k { color: var(--tl-persimmon); width: 70px; flex-shrink: 0; }
 
-.tray-landing .tl-diagram { background: var(--tl-bg-3); border: 1px solid var(--tl-line); border-radius: 18px; padding: 24px; position: relative; display: flex; flex-direction: column; gap: 14px; overflow: hidden; }
+.tray-landing .tl-diagram {
+  background: var(--tl-bg-3); border: 1px solid var(--tl-line); border-radius: 18px; padding: 24px;
+  position: relative; display: flex; flex-direction: column; gap: 14px; overflow: hidden;
+  border-top: 1px dashed rgba(26, 20, 14, 0.22);
+}
 @media (min-width: 768px) { .tray-landing .tl-diagram { padding: 32px; gap: 18px; } }
 .tray-landing .tl-node { padding: 14px 18px; background: var(--tl-bg-2); border: 1px solid var(--tl-line); border-radius: 12px; display: flex; align-items: center; gap: 14px; position: relative; transition: transform .2s; }
 .tray-landing .tl-node .tl-ic { width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-family: var(--tl-mono); font-weight: 700; font-size: var(--tl-size-sm); flex-shrink: 0; }
@@ -476,7 +511,15 @@ const SCOPED_CSS = `
 /* Pull quote */
 .tray-landing .tl-pull { padding: 96px 0; text-align: center; }
 @media (min-width: 768px) { .tray-landing .tl-pull { padding: 140px 0; } }
-.tray-landing .tl-pull p { font-family: var(--tl-display); font-size: clamp(2.25rem, 6vw, 5.25rem); line-height: 1.05; letter-spacing: -0.025em; margin: 0 auto; max-width: 24ch; font-weight: 400; color: var(--tl-ink); }
+.tray-landing .tl-pull p {
+  font-family: var(--tl-display); font-size: clamp(2.25rem, 6vw, 5.25rem); line-height: 1.38;
+  letter-spacing: -0.025em; margin: 0 auto; max-width: var(--tl-measure-pull); font-weight: 400; color: var(--tl-ink);
+}
+.tray-landing .tl-pull p .tl-pull-line { display: block; clip-path: inset(100% 0% 0% 0%); }
+@media (prefers-reduced-motion: reduce) {
+  .tray-landing .tl-pull p .tl-pull-line { clip-path: inset(0% 0% 0% 0%); }
+}
+.tray-landing.tl-motion-ready .tl-pull p .tl-pull-line { clip-path: inset(0% 0% 0% 0%); }
 .tray-landing .tl-pull p .tl-it { font-style: italic; color: var(--tl-persimmon); }
 .tray-landing .tl-pull .tl-cite { margin-top: 32px; font-family: var(--tl-mono); font-size: var(--tl-size-xs); color: var(--tl-ink-3); letter-spacing: 0.1em; text-transform: uppercase; font-weight: 600; }
 
@@ -508,7 +551,10 @@ const SCOPED_CSS = `
 .tray-landing .tl-stack-card .tl-r { font-family: var(--tl-mono); font-size: var(--tl-size-2xs); color: var(--tl-ink-3); letter-spacing: 0.06em; font-weight: 600; }
 
 /* Closing */
-.tray-landing .tl-closing { padding: 120px 0; text-align: center; position: relative; overflow: hidden; border-top: 1px solid var(--tl-line); }
+.tray-landing .tl-closing {
+  padding: 120px 0; text-align: center; position: relative; overflow: hidden;
+  border-top: 1px dashed rgba(26, 20, 14, 0.22);
+}
 @media (min-width: 768px) { .tray-landing .tl-closing { padding: 180px 0; } }
 .tray-landing .tl-closing::before { content: ""; position: absolute; left: 50%; top: 0; width: 800px; height: 400px; background: radial-gradient(ellipse at center top, rgba(196, 168, 130, 0.14), transparent 70%); transform: translateX(-50%); }
 .tray-landing .tl-closing h2 { font-family: var(--tl-display); font-weight: 400; font-size: clamp(4rem, 12vw, 10rem); line-height: 0.92; letter-spacing: -0.04em; margin: 0 0 24px; color: var(--tl-ink); position: relative; z-index: 2; }
@@ -653,6 +699,7 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
       <main id="main">
       <section className="tl-hero tl-wrap">
         <div className="tl-hero-glow" aria-hidden />
+        <div className="tl-hero-ribbon" aria-hidden />
         <div className="tl-hero-top">
           <div className="tl-l">
             <span>TRAY · v3.0</span>
@@ -664,13 +711,13 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
           </div>
         </div>
         <h1 className="tl-h1">
-          <HeroLine words={["A", "canteen", "system"]} />
-          <HeroLine words={["for", "the", "whole", "campus."]} italicFrom={2} />
+          <HeroLine words={["Order", "before", "you"]} />
+          <HeroLine words={["reach", "the", "counter."]} italicFrom={2} />
         </h1>
         <div className="tl-hero-meta">
           <p className="tl-hero-lede tl-measure">
-            Tray runs your canteen on three screens: students browse today&apos;s menu, pay by UPI, and collect with a four-digit code at the handover.{" "}
-            <span className="tl-em">The kitchen sees a live board. Admin sees sales, peak hours, and menu changes—per college, tenant-safe.</span>{" "}
+            Tray runs your canteen on three screens: students browse today&apos;s menu on a laptop, pay by UPI, and collect with a four-digit code at the handover.{" "}
+            <span className="tl-em">Kitchen sees every ticket on a live board. Admin sees sales, peak hours, and menu changes—per college, tenant-safe.</span>{" "}
             Same queue, less standing around.
           </p>
           <div className="tl-hero-cta">
@@ -858,11 +905,18 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
       <LandingLineLeave />
 
       <section className="tl-pull tl-wrap">
-        <p>Lunch is thirty minutes. Students currently spend <span className="tl-it">twelve of them</span> standing in line.</p>
-        <div className="tl-cite">CAMPUS CANTEEN AUDIT · 2025</div>
+        <p>
+          <span className="tl-pull-line">We stopped shouting names over the crowd.</span>
+          <span className="tl-pull-line">The board tells us what&apos;s next; the student shows a code.</span>
+          <span className="tl-pull-line">
+            <span className="tl-it">Lunch service</span> actually finishes on time.
+          </span>
+        </p>
+        <div className="tl-cite">Kitchen supervisor · campus canteen</div>
       </section>
 
       <section className="tl-section tl-wrap" id="flow">
+        <div className="tl-flow-accent" aria-hidden />
         <div className="tl-section-num"><span className="tl-bar" /><span className="tl-num">03</span> / How it works</div>
         <div className="tl-section-head">
           <h2>Phone to plate,<br /><span className="tl-it">in eleven minutes.</span></h2>
@@ -930,8 +984,8 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
           <div className="tl-section-num" style={{ justifyContent: "center", marginBottom: 24 }}>
             <span className="tl-bar" /><span className="tl-num">DEMO</span> / Live · clickable · no sign-up
           </div>
-          <h2>Skip the<br /><span className="tl-it">line.</span></h2>
-          <p>Three portals. One platform. Built for college canteens that are tired of printed tokens.</p>
+          <h2>Skip the<br /><span className="tl-it">queue.</span></h2>
+          <p>Three screens. One lunch service. Built for college canteens that are tired of printed tokens.</p>
           <div className="tl-cta-row">
             <a href="/demo/student.html" className="tl-btn tl-btn-pri tl-btn-lg" data-magnetic>
               Open the student app →
