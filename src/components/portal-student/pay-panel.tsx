@@ -75,7 +75,7 @@ export function PayPanel({
     return () => {
       sb.removeChannel(channel);
     };
-  }, [order.id, router]);
+  }, [order.id, router, tenantSlug]);
 
   useEffect(() => {
     const id = setInterval(async () => {
@@ -90,7 +90,7 @@ export function PayPanel({
       }
     }, 4000);
     return () => clearInterval(id);
-  }, [order.id, router]);
+  }, [order.id, router, tenantSlug]);
 
   const mins = Math.floor(remaining / 60);
   const secs = remaining % 60;
