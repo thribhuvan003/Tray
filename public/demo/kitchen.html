@@ -448,6 +448,13 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
 /* =====================================================
    STATE (per-canteen via TRAY_DEMO)
    ===================================================== */
+if (!window.TRAY_DEMO) {
+  document.body.insertAdjacentHTML(
+    "afterbegin",
+    '<div style="position:fixed;top:0;left:0;right:0;z-index:99999;padding:12px;background:#7f1d1d;color:#fff;text-align:center;font:600 14px system-ui">Kitchen demo data missing — open http://localhost:3000/demo/kitchen.html</div>'
+  );
+  throw new Error("TRAY_DEMO not loaded");
+}
 const TD = window.TRAY_DEMO;
 TD.migrateLegacySpecials();
 const INBOX_KEY = TD.INBOX_KEY;
@@ -600,14 +607,22 @@ function makeOrder(status='incoming'){
 }
 
 function seed(){
+  const c = TD.getCanteen(currentCanteenId);
+  const preset = TD.buildKitchenTickets(currentCanteenId);
+  if (preset.length) {
+    orders = preset;
+    const over = orders.find(o => o.status === 'preparing');
+    if (over) over.placedAt = Date.now() - 600000;
+    return;
+  }
   orders = [
     makeOrder('incoming'), makeOrder('incoming'),
     makeOrder('preparing'), makeOrder('preparing'), makeOrder('preparing'),
     makeOrder('ready'), makeOrder('ready'),
     makeOrder('collected'),
   ];
-  // Make one preparing be over-time
-  orders.find(o => o.status === 'preparing').placedAt = Date.now() - 600000;
+  const fallbackOver = orders.find(o => o.status === 'preparing');
+  if (fallbackOver) fallbackOver.placedAt = Date.now() - 600000;
 }
 
 const $ = (q) => document.querySelector(q);
