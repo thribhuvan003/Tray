@@ -4,7 +4,8 @@ import { useEffect } from "react";
 
 /**
  * GSAP ScrollTrigger for the marketing landing only.
- * Distinct section choreography + hero intro; respects prefers-reduced-motion.
+ * Motion tier: medium+ (tasteful bold) — council pick 2026-05-20.
+ * Skips scrub/tilt on coarse pointer + narrow viewport; honors prefers-reduced-motion.
  */
 export function LandingMotion() {
   useEffect(() => {
@@ -124,7 +125,7 @@ export function LandingMotion() {
             .from(".tray-landing .tl-hero-top", { y: 18, opacity: 0, duration: 0.65 })
             .from(
               ".tray-landing .tl-h1 .tl-word",
-              { y: 44, opacity: 0, stagger: 0.045, duration: 0.85 },
+              { y: 52, opacity: 0, stagger: 0.05, duration: 0.9 },
               "-=0.35",
             )
             .from(".tray-landing .tl-hero-lede", { y: 22, opacity: 0, duration: 0.75 }, "-=0.5")
@@ -241,11 +242,11 @@ export function LandingMotion() {
             "#system .tl-portal",
             {
               opacity: 0,
-              y: 72,
-              rotateX: 12,
+              y: 82,
+              rotateX: 14,
               transformOrigin: "50% 100%",
-              stagger: 0.14,
-              duration: 1,
+              stagger: 0.16,
+              duration: 1.05,
               ease: "power3.out",
             },
             "top 80%",
@@ -287,7 +288,7 @@ export function LandingMotion() {
             });
           }
           root.querySelectorAll<HTMLElement>(".tl-diagram .tl-node").forEach((node, i) => {
-            gsap.set(node, { opacity: 0, x: i % 2 === 0 ? -36 : 36 });
+            gsap.set(node, { opacity: 0, x: i % 2 === 0 ? -44 : 44 });
             ScrollTrigger.create({
               trigger: node,
               start: "top 90%",
@@ -297,7 +298,7 @@ export function LandingMotion() {
                   opacity: 1,
                   x: 0,
                   duration: 0.7,
-                  ease: "back.out(1.4)",
+                  ease: "back.out(1.55)",
                 });
               },
             });
@@ -325,11 +326,11 @@ export function LandingMotion() {
             "#where .tl-line-chip",
             {
               opacity: 0,
-              scale: 0.88,
-              y: 16,
-              stagger: 0.08,
-              duration: 0.55,
-              ease: "back.out(1.6)",
+              scale: 0.85,
+              y: 20,
+              stagger: 0.09,
+              duration: 0.6,
+              ease: "back.out(1.75)",
             },
             "top 80%",
           );
@@ -337,7 +338,7 @@ export function LandingMotion() {
           // Pull quote: soft zoom + blur dissolve
           const pullP = root.querySelector(".tl-pull p");
           if (pullP) {
-            gsap.set(pullP, { opacity: 0, scale: 1.06, filter: "blur(8px)" });
+            gsap.set(pullP, { opacity: 0, scale: 1.08, filter: "blur(10px)" });
             ScrollTrigger.create({
               trigger: pullP,
               start: "top 80%",
@@ -372,7 +373,7 @@ export function LandingMotion() {
               onEnter: () => {
                 gsap.to(step, { opacity: 1, y: 0, duration: 0.75, ease: "power3.out", delay: i * 0.05 });
                 if (num) {
-                  gsap.to(num, { rotate: 0, duration: 0.9, ease: "back.out(1.8)" });
+                  gsap.to(num, { rotate: 0, duration: 0.95, ease: "back.out(2)" });
                 }
               },
             });
@@ -389,11 +390,11 @@ export function LandingMotion() {
             "#stack .tl-stack-card",
             {
               opacity: 0,
-              scale: 0.86,
-              y: 20,
-              stagger: { amount: 0.35, from: "center" },
-              duration: 0.65,
-              ease: "back.out(1.3)",
+              scale: 0.82,
+              y: 24,
+              stagger: { amount: 0.38, from: "center" },
+              duration: 0.7,
+              ease: "back.out(1.45)",
             },
             "top 82%",
           );
@@ -447,8 +448,8 @@ export function LandingMotion() {
               const px = (e.clientX - rect.left) / rect.width - 0.5;
               const py = (e.clientY - rect.top) / rect.height - 0.5;
               gsap.to(chrome, {
-                rotateY: px * 7,
-                rotateX: -py * 5,
+                rotateY: px * 9,
+                rotateX: -py * 6,
                 duration: 0.35,
                 ease: "power2.out",
                 overwrite: "auto",
