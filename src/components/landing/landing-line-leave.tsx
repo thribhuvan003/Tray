@@ -11,7 +11,7 @@ const OPTIONS = [
   {
     id: "queue",
     label: "Stuck in line",
-    hint: "Skip the crowd — pay on your phone, walk to the handover window.",
+    hint: "Skip the crowd: pay on your phone, walk to the handover window.",
   },
   {
     id: "counter",
@@ -36,7 +36,7 @@ export function LandingLineLeave() {
   }, [active]);
 
   return (
-    <section className="tl-line-leave tl-wrap" id="where">
+    <section className="tl-line-leave tl-wrap tl-arrival-host" id="where">
       <div className="tl-section-num">
         <span className="tl-bar" />
         <span className="tl-num">02b</span> / Where are you right now?
@@ -44,7 +44,7 @@ export function LandingLineLeave() {
       <div className="tl-line-leave-grid">
         <div>
           <h2 className="tl-line-leave-title">
-            Dine in or takeaway —<br />
+            Dine in or takeaway<br />
             <span className="tl-it">before you order.</span>
           </h2>
           <p className="tl-line-leave-lede">
