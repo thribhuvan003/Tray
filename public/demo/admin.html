@@ -866,6 +866,24 @@ function renderRev(range){
 }
 
 let currentRange = 'day';
+var PERIOD_MULT = { hour: 0.12, day: 1, week: 7, month: 30 };
+function applyKpiPeriod(range) {
+  var c = TD.getCanteen(currentTenantId);
+  var k = c.kpis;
+  var mult = PERIOD_MULT[range] || 1;
+  var scaled = {
+    revenue:      Math.round(k.revenue * mult),
+    orders:       Math.round(k.orders * mult),
+    avgTicket:    k.avgTicket, // average doesn't scale with period
+    avgPickupSec: k.avgPickupSec,
+    avgPickupMin: k.avgPickupMin,
+    revenueDelta: k.revenueDelta,
+    ordersDelta:  k.ordersDelta,
+    avgTicketDelta: k.avgTicketDelta,
+    avgPickupDelta: k.avgPickupDelta,
+  };
+  resetKpiCounters(scaled);
+}
 $$('#rangeToggle button').forEach(b => b.addEventListener('click', () => {
   $$('#rangeToggle button').forEach(x => x.classList.remove('active'));
   b.classList.add('active');
@@ -873,6 +891,7 @@ $$('#rangeToggle button').forEach(b => b.addEventListener('click', () => {
   renderHeat(b.dataset.r);
   // Range toggle updates heatmap sub + re-animates the chart via applyRevMetric
   applyRevMetric(currentRevMetric);
+  applyKpiPeriod(currentRange);
   staggerTopBars();
 }));
 
@@ -1313,6 +1332,16 @@ if (searchInput) {
     $$('.feed-item').forEach((row) => {
       const t = row.textContent.toLowerCase();
       row.style.display = !ordersSearch || t.includes(ordersSearch.toLowerCase()) ? '' : 'none';
+    });
+    // Filter student cards and table rows when in students view
+    const q = ordersSearch.toLowerCase();
+    $$('#studentsGrid .student-card').forEach((card) => {
+      const t = card.textContent.toLowerCase();
+      card.style.display = !q || t.includes(q) ? '' : 'none';
+    });
+    $$('#studentsBody tr').forEach((row) => {
+      const t = row.textContent.toLowerCase();
+      row.style.display = !q || t.includes(q) ? '' : 'none';
     });
   });
 }
