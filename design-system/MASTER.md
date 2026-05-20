@@ -51,7 +51,7 @@
 
 **Scale (landing):** base 18px (`--tl-size-base`); labels `--tl-size-2xs` (13px) — use sparingly, never for long body copy.
 
-**Measure tokens (landing, shipped):** `--tl-measure-lede` 62ch · `--tl-measure-pull` 42ch · `--tl-lh-body` 1.62 · `--tl-lh-display` 1.02 · `--tl-lh-h2` 1.
+**Measure tokens (landing, shipped):** `--tl-measure-lede` 52ch · `--tl-measure-pull` 42ch · `--tl-lh-body` 1.62 · `--tl-lh-display` 1.02 · `--tl-lh-h2` 1.
 
 **Motifs (landing):** queue ribbon (hero + sync), kitchen steam halo, ticket perforation (dashed edges), sync→flow accent scrub (GSAP).
 

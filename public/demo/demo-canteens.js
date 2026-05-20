@@ -60,9 +60,9 @@
     } catch (_) {}
   }
 
-  var DEFAULT_ID = "aditya";
-  /** Shown in student / kitchen / admin pickers — two menus that look clearly different. */
-  var DEMO_CANTEEN_IDS = ["aditya", "north-block"];
+  var DEFAULT_ID = "hostel-b";
+  /** Shown in student / kitchen / admin pickers — three distinct menus (eng / north / mess). */
+  var DEMO_CANTEEN_IDS = ["hostel-b", "aditya", "north-block"];
 
   var CANTEENS = {
     aditya: {
@@ -283,6 +283,14 @@
         { id: "curd", name: "Curd Rice", desc: "Tempered, light", price: 45, cat: "meal", diet: "veg", emoji: "🍚" },
         { id: "buttermilk", name: "Spiced Buttermilk", desc: "Chilled, meal add-on", price: 15, cat: "drinks", diet: "veg", emoji: "🥛" },
         { id: "banana", name: "Banana (2)", desc: "Mess fruit counter", price: 20, cat: "extras", diet: "veg", emoji: "🍌" },
+      ],
+      kitchenTickets: [
+        { id: "H-902", student: "Ravi M.", status: "incoming", elapsedSec: 38, total: 70, otp: "4021", items: [{ name: "Standard Mess Thali", diet: "veg", tgt: 6, q: 1 }] },
+        { id: "H-901", student: "Sana J.", status: "incoming", elapsedSec: 72, total: 105, otp: "7193", items: [{ name: "Special Thali", diet: "veg", tgt: 7, q: 1 }, { name: "Spiced Buttermilk", diet: "veg", tgt: 1, q: 1 }] },
+        { id: "H-900", student: "Omar F.", status: "preparing", elapsedSec: 210, total: 85, otp: "3056", items: [{ name: "Egg Curry Meal", diet: "nonveg", tgt: 8, q: 1 }] },
+        { id: "H-899", student: "Divya C.", status: "preparing", elapsedSec: 390, total: 90, otp: "8840", items: [{ name: "Curd Rice", diet: "veg", tgt: 4, q: 2 }] },
+        { id: "H-898", student: "Harsh G.", status: "ready", elapsedSec: 320, total: 140, otp: "1297", items: [{ name: "Standard Mess Thali", diet: "veg", tgt: 6, q: 2 }] },
+        { id: "H-897", student: "Neha B.", status: "collected", elapsedSec: 650, total: 35, otp: "3384", items: [{ name: "Banana (2)", diet: "veg", tgt: 1, q: 1 }, { name: "Spiced Buttermilk", diet: "veg", tgt: 1, q: 1 }] },
       ],
       defaultSpecials: [
         { id: "hb1", name: "Sunday Chicken Curry", desc: "Mess special · limited plates", price: 100, prep: 10, diet: "nonveg", icon: "S", addedAt: Date.now() - 25 * 60 * 1000 },
