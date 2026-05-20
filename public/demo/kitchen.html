@@ -330,9 +330,9 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
         </div>
       </div>
       <div class="r">
-        <button class="btn btn-ghost btn-sm" onclick="toast('Sounds enabled','ok')">🔔 Sounds</button>
+        <button class="btn btn-ghost btn-sm" id="btnSounds" onclick="toggleSounds(this)">🔔 Sounds</button>
         <button class="btn btn-ghost btn-sm" onclick="manualPush()">+ Walk-in order</button>
-        <button class="btn btn-pri btn-sm">⟳ Refresh</button>
+        <button class="btn btn-pri btn-sm" onclick="handleRefresh(this)">⟳ Refresh</button>
       </div>
     </div>
 
@@ -907,6 +907,48 @@ $$('.sb-link:not([data-nav])').forEach(l => {
     l.addEventListener('click', () => toast('Counter 01 · printer online'));
   }
 });
+
+/* ── Sounds toggle ── */
+let soundsOn = false;
+function toggleSounds(btn) {
+  soundsOn = !soundsOn;
+  btn.textContent = soundsOn ? '🔔 Sounds on' : '🔕 Sounds off';
+  btn.style.borderColor = soundsOn ? 'var(--lime)' : '';
+  btn.style.color = soundsOn ? 'var(--lime)' : '';
+  toast(soundsOn ? 'New-order chime enabled' : 'Sounds muted');
+  if (soundsOn) {
+    try {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (AC) {
+        const ctx = new AC();
+        const o = ctx.createOscillator();
+        const g = ctx.createGain();
+        o.type = 'sine';
+        o.frequency.setValueAtTime(880, ctx.currentTime);
+        o.frequency.exponentialRampToValueAtTime(660, ctx.currentTime + 0.18);
+        g.gain.setValueAtTime(0.0001, ctx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.25, ctx.currentTime + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.4);
+        o.connect(g).connect(ctx.destination);
+        o.start(); o.stop(ctx.currentTime + 0.45);
+        setTimeout(() => ctx.close().catch(() => {}), 600);
+      }
+    } catch(_) {}
+  }
+}
+
+/* ── Refresh button ── */
+function handleRefresh(btn) {
+  const orig = btn.textContent;
+  btn.textContent = '↻ Loading…';
+  btn.disabled = true;
+  setTimeout(() => {
+    renderQueue();
+    btn.textContent = orig;
+    btn.disabled = false;
+    toast('Board refreshed');
+  }, 600);
+}
 </script>
 </body>
 </html>
