@@ -1,30 +1,31 @@
 import Link from "next/link";
 import type { ResolvedTenant } from "@/lib/tenant";
+import { LandingLineLeave } from "@/components/landing/landing-line-leave";
+import { LandingMotion } from "@/components/landing/landing-motion";
 
-// Editorial dark landing — warm dark + persimmon, Instrument Serif headlines.
-// All styles scoped to .tray-landing so they never bleed into the student /
-// kitchen / admin portals. Forces dark regardless of the user's theme.
+// Pre-Monsoon Dusk — sky slate + bone + amber accent. Instrument Serif headlines.
+// Scoped to .tray-landing only; student/kitchen/admin portals stay separate.
 
 const SCOPED_CSS = `
-html { scroll-behavior: smooth; }
 .tray-landing {
-  --tl-bg: #0D1220;
-  --tl-bg-2: #111828;
-  --tl-bg-3: #161F32;
-  --tl-bg-4: #1C2740;
-  --tl-line: rgba(196, 168, 130, 0.10);
-  --tl-line-2: rgba(196, 168, 130, 0.20);
-  --tl-ink: #E8E4DC;
-  --tl-ink-2: #B5ADA0;
-  --tl-ink-3: #7A7268;
-  --tl-ink-4: #4A4540;
-  --tl-persimmon: #C4A882;
-  --tl-student: #6AABDC;
-  --tl-kitchen: #D4854A;
-  --tl-admin: #8BBFA0;
-  --tl-good: #7BAA90;
+  --tl-bg: #0d1220;
+  --tl-bg-2: #141d38;
+  --tl-bg-3: #1a2548;
+  --tl-bg-4: #243060;
+  --tl-line: rgba(232, 228, 220, 0.10);
+  --tl-line-2: rgba(232, 228, 220, 0.18);
+  --tl-ink: #e8e4dc;
+  --tl-ink-2: rgba(232, 228, 220, 0.62);
+  --tl-ink-3: rgba(232, 228, 220, 0.38);
+  --tl-ink-4: rgba(232, 228, 220, 0.22);
+  --tl-accent: #c4a882;
+  --tl-persimmon: #c4a882;
+  --tl-student: #7eb8ff;
+  --tl-kitchen: #ff7b6e;
+  --tl-admin: #b8e86a;
+  --tl-good: #6dd4a0;
 
-  background: linear-gradient(170deg, #0D1220 0%, #141D38 55%, #0D1220 100%);
+  background: linear-gradient(180deg, #0d1220 0%, #111827 42%, #141d38 100%);
   color: var(--tl-ink);
   font-family: var(--font-geist), var(--font-inter), ui-sans-serif, system-ui;
   font-feature-settings: "ss01";
@@ -33,20 +34,6 @@ html { scroll-behavior: smooth; }
   -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
   min-height: 100vh;
-  scroll-behavior: smooth;
-}
-
-/* Sky atmosphere — cloud glows that shift subtly like dusk light */
-.tray-landing::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 0;
-  background:
-    radial-gradient(ellipse 90% 40% at 20% 5%, rgba(196,168,130,0.07) 0%, transparent 60%),
-    radial-gradient(ellipse 60% 30% at 80% 10%, rgba(100,140,200,0.06) 0%, transparent 55%),
-    radial-gradient(ellipse 70% 25% at 50% 0%, rgba(180,200,240,0.04) 0%, transparent 50%);
 }
 .tray-landing ::selection { background: var(--tl-persimmon); color: var(--tl-bg); }
 .tray-landing .tl-serif { font-family: var(--font-instrument-serif), ui-serif, Georgia; font-weight: 400; }
@@ -54,7 +41,7 @@ html { scroll-behavior: smooth; }
 .tray-landing .tl-mono { font-family: var(--font-geist-mono), var(--font-jetbrains), ui-monospace, Menlo, monospace; font-feature-settings: "ss01"; }
 
 .tray-landing .tl-grain {
-  position: fixed; inset: -30%; pointer-events: none; z-index: 1; opacity: .03; mix-blend-mode: overlay;
+  position: fixed; inset: -30%; pointer-events: none; z-index: 1; opacity: .045; mix-blend-mode: overlay;
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.4' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.5 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
@@ -62,46 +49,70 @@ html { scroll-behavior: smooth; }
 @media (min-width: 768px) { .tray-landing .tl-wrap { padding: 0 56px; } }
 
 /* Nav */
-.tray-landing .tl-nav { position: sticky; top: 0; z-index: 50; backdrop-filter: blur(24px) saturate(1.6); background: rgba(13, 18, 32, 0.80); border-bottom: 1px solid var(--tl-line); }
+.tray-landing .tl-nav { position: sticky; top: 0; z-index: 50; backdrop-filter: blur(20px) saturate(1.4); background: rgba(13, 18, 32, 0.78); border-bottom: 1px solid var(--tl-line); }
 .tray-landing .tl-nav-inner { max-width: 1280px; margin: 0 auto; padding: 14px 24px; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
 @media (min-width: 768px) { .tray-landing .tl-nav-inner { padding: 14px 56px; } }
 .tray-landing .tl-brand { display: flex; align-items: center; gap: 10px; font-family: var(--font-instrument-serif), serif; font-size: 26px; letter-spacing: -0.02em; font-weight: 400; }
 .tray-landing .tl-brand .tl-brand-dot { font-style: italic; color: var(--tl-persimmon); }
-.tray-landing .tl-brand-mark { width: 32px; height: 32px; border-radius: 7px; background: linear-gradient(135deg, var(--tl-persimmon), #c5421d); display: inline-flex; align-items: center; justify-content: center; font-family: var(--font-instrument-serif), serif; font-weight: 400; font-size: 18px; color: var(--tl-ink); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .15); }
+.tray-landing .tl-brand-mark { width: 32px; height: 32px; border-radius: 7px; background: linear-gradient(135deg, var(--tl-accent), #8a7358); display: inline-flex; align-items: center; justify-content: center; font-family: var(--font-instrument-serif), serif; font-weight: 400; font-size: 18px; color: var(--tl-bg); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .12); }
 .tray-landing .tl-nav-links { display: none; gap: 32px; font-size: 14px; color: var(--tl-ink-2); }
 @media (min-width: 900px) { .tray-landing .tl-nav-links { display: flex; } }
 .tray-landing .tl-nav-links a:hover { color: var(--tl-ink); }
 .tray-landing .tl-nav-cta { display: flex; gap: 10px; align-items: center; }
 
-.tray-landing .tl-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 10px 18px; border-radius: 999px; font-size: 14px; font-weight: 500; border: 1px solid transparent; transition: transform .12s cubic-bezier(0.16,1,0.3,1), background .15s, color .15s, border-color .15s; line-height: 1; font-family: inherit; cursor: pointer; }
-.tray-landing .tl-btn:hover { transform: translateY(-2px); }
-.tray-landing .tl-btn:active { transform: translateY(0); }
+.tray-landing .tl-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 10px 18px; border-radius: 999px; font-size: 14px; font-weight: 500; border: 1px solid transparent; transition: transform .12s, background .15s, color .15s, border-color .15s; line-height: 1; font-family: inherit; cursor: pointer; }
 .tray-landing .tl-btn-pri { background: var(--tl-ink); color: var(--tl-bg); border-color: var(--tl-ink); }
-.tray-landing .tl-btn-pri:hover { background: #fff; }
+.tray-landing .tl-btn-pri:hover { background: #fff; transform: translateY(-1px); }
 .tray-landing .tl-btn-ghost { color: var(--tl-ink); background: transparent; border-color: var(--tl-line-2); }
 .tray-landing .tl-btn-ghost:hover { background: rgba(255, 255, 255, .05); border-color: var(--tl-ink-3); }
 .tray-landing .tl-btn-lg { padding: 14px 24px; font-size: 15px; }
 
+.tray-landing a:focus { outline: none; }
+.tray-landing a:focus-visible,
+.tray-landing .tl-btn:focus-visible {
+  outline: 2px solid var(--tl-accent);
+  outline-offset: 3px;
+}
+
+.tray-landing .tl-skip {
+  position: absolute;
+  left: -9999px;
+  top: 12px;
+  z-index: 100;
+  padding: 10px 16px;
+  background: var(--tl-ink);
+  color: var(--tl-bg);
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+}
+.tray-landing .tl-skip:focus {
+  left: 12px;
+}
+
 /* Hero */
 .tray-landing .tl-hero { padding: 80px 0 64px; position: relative; }
 @media (min-width: 768px) { .tray-landing .tl-hero { padding: 96px 0 80px; } }
-.tray-landing .tl-hero::before { content: ""; position: absolute; left: 50%; top: -200px; width: 1200px; height: 1200px; border-radius: 50%; background: radial-gradient(circle, rgba(196, 168, 130, 0.10) 0%, rgba(100, 140, 200, 0.04) 45%, transparent 65%); transform: translateX(-50%); pointer-events: none; z-index: 0; }
+.tray-landing .tl-hero::before { content: ""; position: absolute; left: 50%; top: -220px; width: 1100px; height: 900px; border-radius: 50%; background: radial-gradient(ellipse at center, rgba(126, 184, 255, 0.14) 0%, rgba(196, 168, 130, 0.08) 35%, transparent 68%); transform: translateX(-50%); pointer-events: none; z-index: 0; }
+.tray-landing .tl-h1 .tl-word { display: inline-block; transform-origin: 50% 100%; }
+.tray-landing [data-reveal] { will-change: transform, opacity; }
+.tray-landing .tl-ticker { overflow: hidden; border-block: 1px solid var(--tl-line); background: rgba(20, 29, 56, 0.55); position: relative; z-index: 2; }
+.tray-landing .tl-ticker-track { display: flex; width: max-content; animation: tlTicker 42s linear infinite; }
+.tray-landing .tl-ticker:hover .tl-ticker-track { animation-play-state: paused; }
+.tray-landing .tl-ticker-item { flex-shrink: 0; padding: 14px 28px; font-family: var(--font-geist-mono), monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--tl-ink-3); white-space: nowrap; }
+.tray-landing .tl-ticker-item em { font-style: normal; color: var(--tl-accent); font-weight: 600; }
+@keyframes tlTicker { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+@media (prefers-reduced-motion: reduce) {
+  .tray-landing .tl-ticker-track { animation: none; flex-wrap: wrap; width: 100%; justify-content: center; }
+}
 .tray-landing .tl-hero-top { display: flex; align-items: center; justify-content: space-between; gap: 16px; font-family: var(--font-geist-mono), monospace; font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--tl-ink-3); padding-bottom: 24px; border-bottom: 1px solid var(--tl-line); margin-bottom: 40px; font-weight: 500; flex-wrap: wrap; }
 .tray-landing .tl-hero-top .tl-l, .tray-landing .tl-hero-top .tl-r { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
 .tray-landing .tl-live { display: inline-flex; align-items: center; gap: 8px; color: var(--tl-good); text-transform: none; letter-spacing: 0.02em; font-family: var(--font-geist), sans-serif; font-weight: 500; font-size: 12px; }
 .tray-landing .tl-live .tl-d { width: 7px; height: 7px; border-radius: 50%; background: var(--tl-good); animation: tlLive 2s infinite; }
-@keyframes tlLive { 0% { box-shadow: 0 0 0 0 rgba(123, 170, 144, 0.5); } 70% { box-shadow: 0 0 0 8px rgba(123, 170, 144, 0); } 100% { box-shadow: 0 0 0 0 rgba(123, 170, 144, 0); } }
+@keyframes tlLive { 0% { box-shadow: 0 0 0 0 rgba(124, 199, 136, 0.5); } 70% { box-shadow: 0 0 0 8px rgba(124, 199, 136, 0); } 100% { box-shadow: 0 0 0 0 rgba(124, 199, 136, 0); } }
 
 .tray-landing .tl-h1 { font-family: var(--font-instrument-serif), serif; font-weight: 400; font-size: clamp(56px, 11vw, 160px); line-height: 0.9; letter-spacing: -0.035em; margin: 0 0 32px; max-width: 14ch; }
 .tray-landing .tl-h1 .tl-it { font-style: italic; color: var(--tl-persimmon); }
-
-/* Word reveal animation */
-.tray-landing .tl-word { display: inline-block; clip-path: inset(0 100% 0 0); animation: tlWord 0.75s cubic-bezier(0.16,1,0.3,1) forwards; }
-.tray-landing .tl-word:nth-child(1) { animation-delay: 0.2s; }
-.tray-landing .tl-word:nth-child(2) { animation-delay: 0.35s; }
-.tray-landing .tl-word:nth-child(3) { animation-delay: 0.5s; }
-.tray-landing .tl-word:nth-child(4) { animation-delay: 0.65s; }
-@keyframes tlWord { to { clip-path: inset(0 0% 0 0); } }
 
 .tray-landing .tl-hero-meta { display: grid; grid-template-columns: 1fr; gap: 32px; align-items: flex-end; margin-bottom: 48px; }
 @media (min-width: 960px) { .tray-landing .tl-hero-meta { grid-template-columns: 1.2fr 1fr; gap: 64px; } }
@@ -124,12 +135,6 @@ html { scroll-behavior: smooth; }
 .tray-landing .tl-hero-stat .tl-v .tl-it { font-style: italic; color: var(--tl-persimmon); }
 .tray-landing .tl-hero-stat .tl-l { font-family: var(--font-geist-mono), monospace; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--tl-ink-3); font-weight: 500; }
 
-/* Ticker strip */
-.tray-landing .tl-ticker { overflow: hidden; border-top: 1px solid var(--tl-line); border-bottom: 1px solid var(--tl-line); padding: 8px 0; background: rgba(196,168,130,0.03); }
-.tray-landing .tl-ticker-track { display: flex; gap: 48px; width: max-content; animation: tlTicker 30s linear infinite; font-family: monospace; font-size: 11px; color: var(--tl-ink-3); letter-spacing: 0.1em; text-transform: uppercase; white-space: nowrap; }
-.tray-landing .tl-ticker-track span.on { color: var(--tl-good); }
-@keyframes tlTicker { from { transform: translateX(0); } to { transform: translateX(-50%); } }
-
 /* Section heads */
 .tray-landing .tl-section { padding: 80px 0; position: relative; }
 @media (min-width: 768px) { .tray-landing .tl-section { padding: 120px 0; } }
@@ -146,7 +151,7 @@ html { scroll-behavior: smooth; }
 .tray-landing .tl-portals { display: grid; grid-template-columns: 1fr; gap: 18px; }
 @media (min-width: 720px) { .tray-landing .tl-portals { grid-template-columns: repeat(3, 1fr); } }
 .tray-landing .tl-portal { background: var(--tl-bg-2); border: 1px solid var(--tl-line); border-radius: 18px; overflow: hidden; display: flex; flex-direction: column; position: relative; transition: transform .25s, border-color .2s, box-shadow .25s; }
-.tray-landing .tl-portal:hover { transform: translateY(-4px); border-color: rgba(196,168,130,0.25); box-shadow: 0 20px 60px rgba(0, 0, 0, .5), 0 0 40px rgba(100,140,200,0.04); }
+.tray-landing .tl-portal:hover { transform: translateY(-4px); border-color: var(--tl-ink-4); box-shadow: 0 20px 50px rgba(0, 0, 0, .4); }
 .tray-landing .tl-portal-head { padding: 22px 24px 14px; display: flex; justify-content: space-between; align-items: flex-start; gap: 14px; border-bottom: 1px solid var(--tl-line); }
 .tray-landing .tl-portal-head .tl-ix { font-family: var(--font-geist-mono), monospace; font-size: 10.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--tl-ink-3); font-weight: 500; }
 .tray-landing .tl-portal-head h3 { font-family: var(--font-instrument-serif), serif; font-size: 30px; letter-spacing: -0.025em; margin: 6px 0 0; font-weight: 400; line-height: 1.05; }
@@ -178,11 +183,11 @@ html { scroll-behavior: smooth; }
 .tray-landing .tl-portal-open:hover .tl-arrow { transform: translateX(4px); }
 
 /* Sync section */
-.tray-landing .tl-sync { padding: 96px 0; background: linear-gradient(135deg, #111828 0%, #131C32 100%); border-top: 1px solid var(--tl-line); border-bottom: 1px solid var(--tl-line); position: relative; overflow: hidden; }
+.tray-landing .tl-sync { padding: 96px 0; background: var(--tl-bg-2); border-top: 1px solid var(--tl-line); border-bottom: 1px solid var(--tl-line); position: relative; overflow: hidden; }
 @media (min-width: 768px) { .tray-landing .tl-sync { padding: 140px 0; } }
 .tray-landing .tl-sync-grid { display: grid; grid-template-columns: 1fr; gap: 48px; align-items: center; }
 @media (min-width: 960px) { .tray-landing .tl-sync-grid { grid-template-columns: 1fr 1.4fr; gap: 64px; } }
-.tray-landing .tl-sync-grid h2 { font-family: var(--font-instrument-serif), serif; font-weight: 400; font-size: clamp(40px, 7vw, 88px); line-height: 0.95; letter-spacing: -0.03em; margin: 0 0 24px; font-style: italic; }
+.tray-landing .tl-sync-grid h2 { font-family: var(--font-instrument-serif), serif; font-weight: 400; font-size: clamp(40px, 7vw, 88px); line-height: 0.95; letter-spacing: -0.03em; margin: 0 0 24px; }
 .tray-landing .tl-sync-grid h2 .tl-it { font-style: italic; color: var(--tl-persimmon); }
 .tray-landing .tl-sync-grid .tl-lede { font-size: 17px; line-height: 1.6; color: var(--tl-ink-2); margin: 0 0 24px; max-width: 42ch; }
 .tray-landing .tl-sync-meta { display: flex; flex-direction: column; gap: 10px; font-family: var(--font-geist-mono), monospace; font-size: 12px; color: var(--tl-ink-2); font-weight: 500; }
@@ -191,8 +196,7 @@ html { scroll-behavior: smooth; }
 
 .tray-landing .tl-diagram { background: var(--tl-bg-3); border: 1px solid var(--tl-line); border-radius: 18px; padding: 24px; position: relative; display: flex; flex-direction: column; gap: 14px; overflow: hidden; }
 @media (min-width: 768px) { .tray-landing .tl-diagram { padding: 32px; gap: 18px; } }
-.tray-landing .tl-node { padding: 14px 18px; background: var(--tl-bg-2); border: 1px solid var(--tl-line); border-radius: 12px; display: flex; align-items: center; gap: 14px; position: relative; transition: transform .2s, border-color .2s; cursor: default; }
-.tray-landing .tl-node:hover { border-color: var(--tl-line-2); }
+.tray-landing .tl-node { padding: 14px 18px; background: var(--tl-bg-2); border: 1px solid var(--tl-line); border-radius: 12px; display: flex; align-items: center; gap: 14px; position: relative; transition: transform .2s; }
 .tray-landing .tl-node .tl-ic { width: 34px; height: 34px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-family: var(--font-geist-mono), monospace; font-weight: 700; font-size: 14px; flex-shrink: 0; }
 .tray-landing .tl-node .tl-info { flex: 1; min-width: 0; }
 .tray-landing .tl-node .tl-info .tl-n { font-size: 14px; font-weight: 600; }
@@ -204,21 +208,20 @@ html { scroll-behavior: smooth; }
 .tray-landing .tl-node[data-c="db"] .tl-ic, .tray-landing .tl-node[data-c="db"] .tl-role { color: var(--tl-persimmon); background: rgba(239, 106, 58, 0.16); }
 .tray-landing .tl-arr { display: flex; align-items: center; justify-content: center; gap: 12px; font-family: var(--font-geist-mono), monospace; font-size: 10.5px; color: var(--tl-ink-3); letter-spacing: 0.04em; padding: 4px 0; }
 .tray-landing .tl-arr .tl-line { height: 1px; background: var(--tl-line-2); flex: 1; }
-.tray-landing .tl-arr .tl-dot { width: 6px; height: 6px; border-radius: 50%; background: #C4A882; box-shadow: 0 0 10px rgba(196,168,130,0.6); animation: tlTravel 3s infinite; }
+.tray-landing .tl-arr .tl-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--tl-persimmon); box-shadow: 0 0 10px var(--tl-persimmon); animation: tlTravel 3s infinite; }
 @keyframes tlTravel { 0%, 100% { opacity: .4; transform: scale(1); } 50% { opacity: 1; transform: scale(1.3); } }
 
 /* Pull quote */
 .tray-landing .tl-pull { padding: 96px 0; text-align: center; }
 @media (min-width: 768px) { .tray-landing .tl-pull { padding: 140px 0; } }
-.tray-landing .tl-pull p { font-family: var(--font-instrument-serif), serif; font-size: clamp(40px, 7vw, 88px); line-height: 1.05; letter-spacing: -0.025em; margin: 0 auto; max-width: 24ch; font-weight: 400; color: var(--tl-ink); font-style: italic; }
+.tray-landing .tl-pull p { font-family: var(--font-instrument-serif), serif; font-size: clamp(36px, 6vw, 84px); line-height: 1.05; letter-spacing: -0.025em; margin: 0 auto; max-width: 24ch; font-weight: 400; color: var(--tl-ink); }
 .tray-landing .tl-pull p .tl-it { font-style: italic; color: var(--tl-persimmon); }
 .tray-landing .tl-pull .tl-cite { margin-top: 32px; font-family: var(--font-geist-mono), monospace; font-size: 12px; color: var(--tl-ink-3); letter-spacing: 0.1em; text-transform: uppercase; font-weight: 500; }
 
 /* Flow */
 .tray-landing .tl-flow { display: grid; grid-template-columns: 1fr; border: 1px solid var(--tl-line); border-radius: 18px; overflow: hidden; background: var(--tl-bg-2); }
 @media (min-width: 720px) { .tray-landing .tl-flow { grid-template-columns: repeat(4, 1fr); } }
-.tray-landing .tl-flow-step { padding: 28px 24px; border-bottom: 1px solid var(--tl-line); min-height: 220px; display: flex; flex-direction: column; gap: 12px; transition: background 0.2s; }
-.tray-landing .tl-flow-step:hover { background: rgba(196,168,130,0.04); }
+.tray-landing .tl-flow-step { padding: 28px 24px; border-bottom: 1px solid var(--tl-line); min-height: 220px; display: flex; flex-direction: column; gap: 12px; }
 @media (min-width: 720px) { .tray-landing .tl-flow-step { padding: 32px 28px; border-bottom: 0; border-right: 1px solid var(--tl-line); min-height: 280px; gap: 14px; } .tray-landing .tl-flow-step:last-child { border-right: 0; } }
 .tray-landing .tl-flow-step:last-child { border-bottom: 0; }
 .tray-landing .tl-flow-step .tl-ix { font-family: var(--font-geist-mono), monospace; font-size: 11px; color: var(--tl-ink-3); letter-spacing: 0.14em; text-transform: uppercase; font-weight: 500; }
@@ -233,7 +236,7 @@ html { scroll-behavior: smooth; }
 /* Stack */
 .tray-landing .tl-stack { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
 @media (min-width: 720px) { .tray-landing .tl-stack { grid-template-columns: repeat(4, 1fr); } }
-.tray-landing .tl-stack-card { padding: 20px; background: var(--tl-bg-2); border: 1px solid var(--tl-line); border-radius: 12px; display: flex; flex-direction: column; gap: 8px; transition: all 0.2s cubic-bezier(0.16,1,0.3,1); }
+.tray-landing .tl-stack-card { padding: 20px; background: var(--tl-bg-2); border: 1px solid var(--tl-line); border-radius: 12px; display: flex; flex-direction: column; gap: 8px; transition: border-color .15s, background .15s; }
 .tray-landing .tl-stack-card:hover { border-color: var(--tl-line-2); background: var(--tl-bg-3); }
 .tray-landing .tl-stack-card .tl-n { font-weight: 600; font-size: 14px; color: var(--tl-ink); }
 .tray-landing .tl-stack-card .tl-r { font-family: var(--font-geist-mono), monospace; font-size: 11px; color: var(--tl-ink-3); letter-spacing: 0.06em; }
@@ -241,14 +244,14 @@ html { scroll-behavior: smooth; }
 /* Closing */
 .tray-landing .tl-closing { padding: 120px 0; text-align: center; position: relative; overflow: hidden; border-top: 1px solid var(--tl-line); }
 @media (min-width: 768px) { .tray-landing .tl-closing { padding: 180px 0; } }
-.tray-landing .tl-closing::before { content: ""; position: absolute; left: 50%; top: 0; width: 900px; height: 500px; background: radial-gradient(ellipse at center top, rgba(196,168,130,0.12) 0%, rgba(100,140,200,0.06) 40%, transparent 70%); transform: translateX(-50%); }
+.tray-landing .tl-closing::before { content: ""; position: absolute; left: 50%; top: 0; width: 800px; height: 400px; background: radial-gradient(ellipse at center top, rgba(239, 106, 58, 0.16), transparent 70%); transform: translateX(-50%); }
 .tray-landing .tl-closing h2 { font-family: var(--font-instrument-serif), serif; font-weight: 400; font-size: clamp(64px, 12vw, 160px); line-height: 0.92; letter-spacing: -0.04em; margin: 0 0 24px; color: var(--tl-ink); position: relative; z-index: 2; }
 .tray-landing .tl-closing h2 .tl-it { font-style: italic; color: var(--tl-persimmon); }
 .tray-landing .tl-closing p { color: var(--tl-ink-2); font-size: 17px; max-width: 48ch; margin: 0 auto 36px; position: relative; z-index: 2; padding: 0 16px; }
 .tray-landing .tl-closing .tl-cta-row { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; position: relative; z-index: 2; padding: 0 16px; }
 
 /* Footer */
-.tray-landing .tl-footer { padding: 56px 0 24px; border-top: 1px solid var(--tl-line); background: #0D1220; }
+.tray-landing .tl-footer { padding: 56px 0 24px; border-top: 1px solid var(--tl-line); background: var(--tl-bg-2); }
 @media (min-width: 768px) { .tray-landing .tl-footer { padding: 72px 0 32px; } }
 .tray-landing .tl-footer-row1 { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin-bottom: 40px; }
 @media (min-width: 768px) { .tray-landing .tl-footer-row1 { grid-template-columns: 2fr 1fr 1fr 1fr; gap: 48px; margin-bottom: 56px; } }
@@ -256,33 +259,23 @@ html { scroll-behavior: smooth; }
 .tray-landing .tl-footer .tl-links { display: flex; flex-direction: column; gap: 10px; font-size: 14px; color: var(--tl-ink-2); }
 .tray-landing .tl-footer .tl-links a:hover { color: var(--tl-ink); }
 .tray-landing .tl-footer-tag { font-size: 14px; color: var(--tl-ink-2); max-width: 32ch; line-height: 1.6; margin-top: 14px; }
-.tray-landing .tl-footer-mark { font-family: var(--font-instrument-serif), serif; font-size: clamp(120px, 22vw, 240px); line-height: 0.86; letter-spacing: -0.04em; color: rgba(196, 168, 130, 0.05); text-align: center; font-weight: 400; user-select: none; margin: 32px 0 0; overflow: hidden; border-top: 1px solid var(--tl-line); padding-top: 24px; }
-.tray-landing .tl-footer-mark .tl-it { font-style: italic; color: rgba(196, 168, 130, 0.10); }
+.tray-landing .tl-footer-mark { font-family: var(--font-instrument-serif), serif; font-size: clamp(120px, 22vw, 240px); line-height: 0.86; letter-spacing: -0.04em; color: rgba(245, 239, 228, 0.04); text-align: center; font-weight: 400; user-select: none; margin: 32px 0 0; overflow: hidden; border-top: 1px solid var(--tl-line); padding-top: 24px; }
+.tray-landing .tl-footer-mark .tl-it { font-style: italic; color: rgba(196, 168, 130, 0.14); }
+.tray-landing .tl-closing::before { background: radial-gradient(ellipse at center top, rgba(196, 168, 130, 0.12), transparent 70%); }
+
+.tray-landing .tl-line-leave { padding: 64px 0; position: relative; z-index: 2; }
+.tray-landing .tl-line-leave-grid { display: grid; grid-template-columns: 1fr; gap: 28px; align-items: start; }
+@media (min-width: 900px) { .tray-landing .tl-line-leave-grid { grid-template-columns: 1.1fr 1fr; gap: 48px; } }
+.tray-landing .tl-line-leave-title { font-family: var(--font-instrument-serif), serif; font-size: clamp(32px, 5vw, 48px); letter-spacing: -0.03em; margin: 0 0 12px; font-weight: 400; line-height: 1.05; }
+.tray-landing .tl-line-leave-title .tl-it { font-style: italic; color: var(--tl-persimmon); }
+.tray-landing .tl-line-leave-lede { color: var(--tl-ink-2); font-size: 15px; line-height: 1.55; margin: 0; max-width: 42ch; }
+.tray-landing .tl-line-leave-panel { display: flex; flex-direction: column; gap: 10px; padding: 20px; border-radius: 16px; border: 1px solid var(--tl-line); background: var(--tl-bg-2); }
+.tray-landing .tl-line-chip { text-align: left; padding: 14px 16px; border-radius: 12px; border: 1px solid var(--tl-line); background: var(--tl-bg-3); font-size: 14px; font-weight: 500; transition: border-color .2s, background .2s, transform .15s; }
+.tray-landing .tl-line-chip:hover { border-color: var(--tl-ink-4); }
+.tray-landing .tl-line-chip.is-on { border-color: rgba(196, 168, 130, 0.55); background: rgba(196, 168, 130, 0.12); color: var(--tl-ink); }
+.tray-landing .tl-line-hint { margin: 8px 2px 0; font-size: 14px; line-height: 1.5; color: var(--tl-ink-2); min-height: 3em; }
 .tray-landing .tl-footer-bot { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; align-items: center; padding-top: 24px; font-family: var(--font-geist-mono), monospace; font-size: 11px; color: var(--tl-ink-4); letter-spacing: 0.08em; font-weight: 500; }
-
-/* Scroll reveal */
-[data-reveal] {
-  opacity: 0;
-  transform: translateY(28px);
-  transition: opacity 0.7s cubic-bezier(0.16,1,0.3,1), transform 0.7s cubic-bezier(0.16,1,0.3,1);
-}
-[data-reveal].tl-in { opacity: 1; transform: translateY(0); }
-[data-reveal]:nth-child(1) { transition-delay: 0s; }
-[data-reveal]:nth-child(2) { transition-delay: 0.1s; }
-[data-reveal]:nth-child(3) { transition-delay: 0.2s; }
-[data-reveal]:nth-child(4) { transition-delay: 0.3s; }
-@media (prefers-reduced-motion: reduce) {
-  [data-reveal] { opacity: 1 !important; transform: none !important; transition: none !important; }
-}
 `;
-
-const TICKER_ITEMS = [
-  "Hostel 9 Mess · OPEN · 8 min",
-  "Main Canteen · OPEN · 12 min",
-  "Night Canteen · OPEN · 2 min",
-  "SAC Food Court · PAUSED",
-  "H12 Mess · OPEN · 5 min",
-];
 
 function BrandMark() {
   return (
@@ -307,20 +300,48 @@ function PortalPreview({ src, title }: { src: string; title: string }) {
   );
 }
 
+const TICKER_ITEMS = [
+  "Hostel mess · 47 orders live",
+  "Night canteen · queue 3 min",
+  "Sports cafe · specials updated",
+  "UPI confirmed · avg 8s",
+  "OTP verified · handover 12:04",
+  "Kitchen SLA · 94% on time",
+  "Multi-canteen · one campus",
+  "Realtime sync · 240ms p95",
+] as const;
+
+function HeroWords({ text, italicFrom }: { text: string; italicFrom?: number }) {
+  const words = text.split(/\s+/);
+  return (
+    <>
+      {words.map((w, i) => (
+        <span key={`${w}-${i}`} className={italicFrom !== undefined && i >= italicFrom ? "tl-word tl-it" : "tl-word"}>
+          {w}{" "}
+        </span>
+      ))}
+    </>
+  );
+}
+
 export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
-  // campus name for generic use — no college-specific branding
-  const campusName = tenant?.college_name ?? "your campus";
-  void campusName; // reserved for future tenant-aware copy
+  void tenant;
+  const tickerDoubled = [...TICKER_ITEMS, ...TICKER_ITEMS];
   return (
     <div className="tray-landing">
       <style dangerouslySetInnerHTML={{ __html: SCOPED_CSS }} />
       <div className="tl-grain" />
+      <LandingMotion />
+      <a href="#main" className="tl-skip">
+        Skip to content
+      </a>
 
       <nav className="tl-nav">
         <div className="tl-nav-inner">
           <BrandMark />
           <div className="tl-nav-links">
             <a href="#system">System</a>
+            <a href="#where">Dine · Takeaway</a>
             <a href="#sync">How it syncs</a>
             <a href="#flow">How it works</a>
             <a href="#stack">Stack</a>
@@ -333,30 +354,27 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
         </div>
       </nav>
 
+      <main id="main">
       <section className="tl-hero tl-wrap">
         <div className="tl-hero-top">
           <div className="tl-l">
-            <span>TRAY · v3.0 · CAMPUS EDITION</span>
+            <span>TRAY · v3.0</span>
+            <span style={{ color: "var(--tl-ink-4)" }}>/</span>
+            <span>CAMPUS EDITION</span>
           </div>
           <div className="tl-r">
             <span className="tl-live"><span className="tl-d" />Kitchen open</span>
           </div>
         </div>
-        <h1 className="tl-h1" data-reveal>
-          <span className="tl-word">A</span>{" "}
-          <span className="tl-word">canteen</span>{" "}
-          <span className="tl-word">system</span>
+        <h1 className="tl-h1">
+          <HeroWords text="A canteen system" />
           <br />
-          for the{" "}
-          <span className="tl-it">
-            <span className="tl-word">whole</span>{" "}
-            campus.
-          </span>
+          <HeroWords text="for the whole campus." italicFrom={2} />
         </h1>
-        <div className="tl-hero-meta" data-reveal>
+        <div className="tl-hero-meta">
           <p className="tl-hero-lede">
             Tray replaces the printed-token queue with a phone-first ordering system.{" "}
-            <span className="tl-em">Students order and pay before they walk to the counter.</span>{" "}
+            <span className="tl-em">Students choose dine-in or takeaway, pay on phone, then walk to handover.</span>{" "}
             The kitchen sees a live queue. Pickup is verified with a four-digit code. One system, three portals, every metric in real time.
           </p>
           <div className="tl-hero-cta">
@@ -367,7 +385,7 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
             <div className="tl-note">DEMO IS LIVE · NO SIGN-UP · 90-SECOND TOUR</div>
           </div>
         </div>
-        <div className="tl-hero-stats" data-reveal>
+        <div className="tl-hero-stats">
           <div className="tl-hero-stat"><div className="tl-v">12<span className="tl-it">min</span></div><div className="tl-l">Saved per lunch</div></div>
           <div className="tl-hero-stat"><div className="tl-v">3</div><div className="tl-l">Role-based portals</div></div>
           <div className="tl-hero-stat"><div className="tl-v">UPI</div><div className="tl-l">Native payments</div></div>
@@ -375,51 +393,49 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
         </div>
       </section>
 
-      {/* Live status ticker */}
-      <div className="tl-ticker">
+      <div className="tl-ticker" aria-hidden>
         <div className="tl-ticker-track">
-          {[...TICKER_ITEMS, ...TICKER_ITEMS].map((item, i) => {
-            const isOpen = item.includes("OPEN");
-            const isPaused = item.includes("PAUSED");
-            return (
-              <span key={i} className={isOpen ? "on" : isPaused ? "" : ""}>
-                {item}
-              </span>
-            );
-          })}
+          {tickerDoubled.map((item, i) => (
+            <span key={`${item}-${i}`} className="tl-ticker-item">
+              <em>●</em> {item}
+            </span>
+          ))}
         </div>
       </div>
 
-      <section className="tl-section tl-wrap" id="system">
+      <section className="tl-section tl-wrap" id="system" data-reveal>
         <div className="tl-section-num"><span className="tl-bar" /><span className="tl-num">01</span> / The system</div>
         <div className="tl-section-head">
           <h2>Three portals,<br /><span className="tl-it">one source of truth.</span></h2>
           <div className="tl-side">
             Tray runs as a single application with three role-based views. The same data drives every screen.{" "}
-            <strong style={{ color: "var(--tl-ink)" }}>Open any portal below</strong> — they&apos;re fully functional, no install required.
+            <strong style={{ color: "var(--tl-ink)" }}>Open any portal below</strong> — they're fully functional, no install required.
           </div>
         </div>
 
         <div className="tl-portals">
-          <article className="tl-portal" data-c="student" data-reveal>
+          <article className="tl-portal" data-c="student">
             <div className="tl-portal-head">
               <div>
                 <span className="tl-portal-ix tl-ix">01 — Student</span>
-                <h3>Order &amp;<br /><span className="tl-it">collect.</span></h3>
+                <h3>Order &<br /><span className="tl-it">collect.</span></h3>
               </div>
               <span className="tl-portal-dot" />
             </div>
             <div className="tl-portal-frame">
-              <span className="tl-device-tag">📱 Mobile · 480×</span>
+              <span className="tl-device-tag">💻 Laptop · sidebar cart</span>
               <PortalPreview src="/demo/student.html" title="Student app preview" />
             </div>
             <div className="tl-portal-body">
-              <p>Browse the daily menu, pay through UPI, and receive a four-digit pickup code. Mobile-first, made for the phone in their hand.</p>
+              <p>
+                Dine-in or takeaway up front (QSR-style), veg lane, UPI checkout, pickup-window ETA, and OTP handover —
+                full laptop layout with sidebar cart on wide screens.
+              </p>
               <div className="tl-feat-tags">
+                <span className="tl-feat-tag">Dine · Takeaway</span>
                 <span className="tl-feat-tag">UPI · QR</span>
-                <span className="tl-feat-tag">OTP pickup</span>
-                <span className="tl-feat-tag">Live tracking</span>
-                <span className="tl-feat-tag">Veg / non-veg</span>
+                <span className="tl-feat-tag">Pickup window</span>
+                <span className="tl-feat-tag">Veg lane</span>
               </div>
               <a href="/demo/student.html" className="tl-portal-open">
                 <span>Open the student app</span>
@@ -428,11 +444,11 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
             </div>
           </article>
 
-          <article className="tl-portal" data-c="kitchen" data-reveal>
+          <article className="tl-portal" data-c="kitchen">
             <div className="tl-portal-head">
               <div>
                 <span className="tl-portal-ix tl-ix">02 — Kitchen</span>
-                <h3>Prepare &amp;<br /><span className="tl-it">hand over.</span></h3>
+                <h3>Prepare &<br /><span className="tl-it">hand over.</span></h3>
               </div>
               <span className="tl-portal-dot" />
             </div>
@@ -441,7 +457,7 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
               <PortalPreview src="/demo/kitchen.html" title="Kitchen view preview" />
             </div>
             <div className="tl-portal-body">
-              <p>Live queue with preparation timers, status updates, and OTP verification on every handover. Add today&apos;s specials → push to every student instantly.</p>
+              <p>Live queue with preparation timers, status updates, and OTP verification on every handover. Add today's specials → push to every student instantly.</p>
               <div className="tl-feat-tags">
                 <span className="tl-feat-tag">Live queue</span>
                 <span className="tl-feat-tag">SLA timers</span>
@@ -455,7 +471,7 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
             </div>
           </article>
 
-          <article className="tl-portal" data-c="admin" data-reveal>
+          <article className="tl-portal" data-c="admin">
             <div className="tl-portal-head">
               <div>
                 <span className="tl-portal-ix tl-ix">03 — Admin</span>
@@ -484,11 +500,11 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
         </div>
       </section>
 
-      <section className="tl-sync" id="sync">
+      <section className="tl-sync" id="sync" data-reveal>
         <div className="tl-wrap">
           <div className="tl-section-num"><span className="tl-bar" /><span className="tl-num">02</span> / The connected canteen</div>
           <div className="tl-sync-grid">
-            <div data-reveal>
+            <div>
               <h2>Add a special.<br /><span className="tl-it">Watch it land everywhere.</span></h2>
               <p className="tl-lede">
                 The kitchen adds a dish today — it appears on every student phone in under 300 ms, and an audit-log entry lands in the admin console.
@@ -500,7 +516,7 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
                 <div className="tl-row"><span className="tl-k">FALLBACK</span><span>HTTP long-poll on degraded networks</span></div>
               </div>
             </div>
-            <div className="tl-diagram" data-reveal>
+            <div className="tl-diagram">
               <div className="tl-node" data-c="kitchen">
                 <div className="tl-ic">K</div>
                 <div className="tl-info">
@@ -531,7 +547,7 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
                 <div className="tl-ic">A</div>
                 <div className="tl-info">
                   <div className="tl-n">Admin audit-log row</div>
-                  <div className="tl-d">menu.add by kitchen staff · logged</div>
+                  <div className="tl-d">menu.add · audit logged</div>
                 </div>
                 <span className="tl-role">CLIENT</span>
               </div>
@@ -540,40 +556,42 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
         </div>
       </section>
 
-      <section className="tl-pull tl-wrap">
-        <p data-reveal>Lunch is thirty minutes. Students currently spend <span className="tl-it">twelve of them</span> standing in line.</p>
+      <LandingLineLeave />
+
+      <section className="tl-pull tl-wrap" data-reveal>
+        <p>Lunch is thirty minutes. Students currently spend <span className="tl-it">twelve of them</span> standing in line.</p>
         <div className="tl-cite">CAMPUS CANTEEN AUDIT · 2025</div>
       </section>
 
-      <section className="tl-section tl-wrap" id="flow">
+      <section className="tl-section tl-wrap" id="flow" data-reveal>
         <div className="tl-section-num"><span className="tl-bar" /><span className="tl-num">03</span> / How it works</div>
         <div className="tl-section-head">
-          <h2><span style={{ fontStyle: "italic" }}>Phone to plate,</span><br /><span className="tl-it">in eleven minutes.</span></h2>
+          <h2>Phone to plate,<br /><span className="tl-it">in eleven minutes.</span></h2>
           <div className="tl-side">Four touchpoints. The student walks straight to the counter. The kitchen never repeats a name. Everyone gets their hour back.</div>
         </div>
         <div className="tl-flow">
-          <div className="tl-flow-step" data-reveal>
+          <div className="tl-flow-step">
             <div className="tl-ix">01 — 11:42</div>
             <div className="tl-num">01</div>
             <h3>Browse the <span className="tl-it">menu.</span></h3>
             <p>Live availability, prep times, veg/non-veg filters. Add to cart with one tap.</p>
             <div className="tl-tag">→ STATUS: CART</div>
           </div>
-          <div className="tl-flow-step" data-reveal>
+          <div className="tl-flow-step">
             <div className="tl-ix">02 — 11:43</div>
             <div className="tl-num">02</div>
             <h3>Pay by <span className="tl-it">UPI.</span></h3>
             <p>Single-use QR with exact amount. Webhook confirms automatically.</p>
             <div className="tl-tag">→ STATUS: PAID</div>
           </div>
-          <div className="tl-flow-step" data-reveal>
+          <div className="tl-flow-step">
             <div className="tl-ix">03 — 11:46</div>
             <div className="tl-num">03</div>
             <h3>Track <span className="tl-it">live.</span></h3>
             <p>Queued → preparing → ready, updated by the kitchen in under 250 ms.</p>
             <div className="tl-tag">→ STATUS: PREPARING</div>
           </div>
-          <div className="tl-flow-step" data-reveal>
+          <div className="tl-flow-step">
             <div className="tl-ix">04 — 11:53</div>
             <div className="tl-num">04</div>
             <h3>Collect with <span className="tl-it">OTP.</span></h3>
@@ -583,7 +601,7 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
         </div>
       </section>
 
-      <section className="tl-section tl-wrap" id="stack">
+      <section className="tl-section tl-wrap" id="stack" data-reveal>
         <div className="tl-section-num"><span className="tl-bar" /><span className="tl-num">04</span> / Built with</div>
         <div className="tl-section-head">
           <h2>A boring stack,<br /><span className="tl-it">on purpose.</span></h2>
@@ -600,7 +618,7 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
             ["Razorpay", "PAYMENTS · UPI"],
             ["Vercel · Edge", "HOSTING · CDN"],
           ].map(([n, r]) => (
-            <div key={n} className="tl-stack-card" data-reveal>
+            <div key={n} className="tl-stack-card">
               <span className="tl-n">{n}</span>
               <span className="tl-r">{r}</span>
             </div>
@@ -608,13 +626,13 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
         </div>
       </section>
 
-      <section className="tl-closing">
+      <section className="tl-closing" data-reveal>
         <div className="tl-wrap">
           <div className="tl-section-num" style={{ justifyContent: "center", marginBottom: 24 }}>
             <span className="tl-bar" /><span className="tl-num">DEMO</span> / Live · clickable · no sign-up
           </div>
-          <h2 data-reveal>Skip the<br /><span className="tl-it">line.</span></h2>
-          <p>Three portals. One platform. Built for campus canteens that are tired of printed tokens.</p>
+          <h2>Skip the<br /><span className="tl-it">line.</span></h2>
+          <p>Three portals. One platform. Built for college canteens that are tired of printed tokens.</p>
           <div className="tl-cta-row">
             <a href="/demo/student.html" className="tl-btn tl-btn-pri tl-btn-lg">Open the student app →</a>
             <a href="/demo/kitchen.html" className="tl-btn tl-btn-ghost tl-btn-lg">Kitchen view</a>
@@ -622,6 +640,7 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
           </div>
         </div>
       </section>
+      </main>
 
       <footer className="tl-footer tl-wrap">
         <div className="tl-footer-row1">
@@ -660,18 +679,6 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
           <span>v3.0 · 2026</span>
         </div>
       </footer>
-
-      {/* IntersectionObserver for scroll-triggered reveals */}
-      <script dangerouslySetInnerHTML={{ __html: `
-        (function() {
-          var obs = new IntersectionObserver(function(entries) {
-            entries.forEach(function(e) {
-              if (e.isIntersecting) { e.target.classList.add('tl-in'); obs.unobserve(e.target); }
-            });
-          }, { threshold: 0.12, rootMargin: '0px 0px -60px 0px' });
-          document.querySelectorAll('[data-reveal]').forEach(function(el) { obs.observe(el); });
-        })();
-      ` }} />
     </div>
   );
 }
