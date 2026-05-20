@@ -1,7 +1,9 @@
 import { headers } from "next/headers";
 import { resolveTenant } from "@/lib/tenant";
 import { getServerClient } from "@/lib/supabase/server";
+import { getAdminClient } from "@/lib/supabase/admin";
 import { DashboardView } from "@/components/portal-admin/dashboard-view";
+import { WelcomeBanner } from "@/components/portal-admin/welcome-banner";
 
 type OrderRow = {
   id: string;
@@ -35,12 +37,38 @@ type OrderItemRow = {
 
 export const dynamic = "force-dynamic";
 
-export default async function DashboardPage() {
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const sp = await searchParams;
+  const showWelcome = sp.welcome === "1";
+
   const h = await headers();
   const slug = h.get("x-tenant-slug") ?? "aditya";
   const tenant = await resolveTenant(slug);
   if (!tenant) return null;
   const supabase = await getServerClient(tenant.id);
+
+  // Fetch college slug for the welcome banner (only on first load).
+  let collegeSlug: string = tenant.slug; // safe fallback
+  if (showWelcome) {
+    const adm = getAdminClient(tenant.id);
+    const { data: tenantRow } = await adm
+      .from("tenants")
+      .select("college_id")
+      .eq("id", tenant.id)
+      .maybeSingle<{ college_id: string | null }>();
+    if (tenantRow?.college_id) {
+      const { data: collegeRow } = await adm
+        .from("colleges")
+        .select("slug")
+        .eq("id", tenantRow.college_id)
+        .maybeSingle<{ slug: string }>();
+      if (collegeRow?.slug) collegeSlug = collegeRow.slug;
+    }
+  }
 
   const startOfDay = new Date();
   startOfDay.setHours(0, 0, 0, 0);
@@ -99,13 +127,21 @@ export default async function DashboardPage() {
   );
 
   return (
-    <DashboardView
-      tenantName={tenant.name}
-      ordersWeek={ordersWeek}
-      todayOrders={todayOrders}
-      lastWeekToday={lastWeekToday}
-      logs={logs ?? []}
-      todayItems={todayItems}
-    />
+    <>
+      {showWelcome && (
+        <WelcomeBanner
+          tenantSlug={tenant.slug}
+          collegeSlug={collegeSlug}
+        />
+      )}
+      <DashboardView
+        tenantName={tenant.name}
+        ordersWeek={ordersWeek}
+        todayOrders={todayOrders}
+        lastWeekToday={lastWeekToday}
+        logs={logs ?? []}
+        todayItems={todayItems}
+      />
+    </>
   );
 }

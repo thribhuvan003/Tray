@@ -126,12 +126,21 @@ export function TrackPanel({ tenantSlug, tenantName, order: initial, lines }: { 
 
   return (
     <div className="mx-auto max-w-3xl px-4 sm:px-6 pt-6 pb-12">
-      <Link
-        href={`/c/${tenantSlug}/orders`}
-        className="inline-flex items-center gap-1.5 text-[13px] text-[color:var(--color-ink)]/60 hover:text-ocean-500 mb-4"
-      >
-        <ArrowLeft size={14} /> Orders
-      </Link>
+      <div className="flex items-center gap-3 mb-4">
+        <Link
+          href={`/c/${tenantSlug}/menu`}
+          className="inline-flex items-center gap-1.5 text-[13px] text-[color:var(--color-ink)]/60 hover:text-ocean-500"
+        >
+          <ArrowLeft size={14} /> Menu
+        </Link>
+        <span className="text-[color:var(--color-line-strong)]">·</span>
+        <Link
+          href={`/c/${tenantSlug}/orders`}
+          className="inline-flex items-center gap-1.5 text-[13px] text-[color:var(--color-ink)]/60 hover:text-ocean-500"
+        >
+          All orders
+        </Link>
+      </div>
 
       <div className="mb-6 flex items-start justify-between flex-wrap gap-3">
         <div>
@@ -193,8 +202,9 @@ export function TrackPanel({ tenantSlug, tenantName, order: initial, lines }: { 
         </div>
       )}
       {!isCancelled && isReady && !otp && (
-        <div className="mb-6 rounded-3xl border border-amber-500/30 bg-amber-500/5 p-5 text-[13px] text-[color:var(--color-ink)]/70">
-          Your order is ready. Reload to fetch the pickup code.
+        <div className="mb-6 rounded-3xl border border-amber-500/30 bg-amber-500/5 p-5 text-[13px] text-[color:var(--color-ink)]/70 flex items-center gap-3">
+          <span className="animate-spin inline-block h-4 w-4 border-2 border-amber-500 border-t-transparent rounded-full shrink-0" />
+          <span>Your order is ready — fetching your pickup code…</span>
         </div>
       )}
 

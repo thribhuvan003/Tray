@@ -2,19 +2,69 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Activity, BookOpen, ClipboardList, LayoutGrid, LineChart, ListOrdered, LogOut, Settings, Users } from "lucide-react";
+import { Activity, BookOpen, ClipboardList, Copy, ExternalLink, LayoutGrid, LineChart, ListOrdered, LogOut, Settings, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 
-const NAV = [
+const NAV_ITEMS = [
   { group: "Operations" },
-  { href: "/admin/dashboard", label: "Overview", icon: LayoutGrid, kbd: "G O" },
-  { href: "/admin/orders", label: "Orders", icon: ClipboardList, kbd: "G R" },
-  { href: "/admin/menu", label: "Menu", icon: BookOpen, kbd: "G M" },
-  { href: "/admin/staff", label: "Staff", icon: Users, kbd: "G S" },
-  { href: "/admin/analytics", label: "Insights", icon: LineChart, kbd: "G I" },
-  { href: "/admin/settings", label: "Settings", icon: Settings, kbd: "G ," },
-];
+  { key: "dashboard", label: "Overview", icon: LayoutGrid, kbd: "G O" },
+  { key: "orders", label: "Orders", icon: ClipboardList, kbd: "G R" },
+  { key: "menu", label: "Menu", icon: BookOpen, kbd: "G M" },
+  { key: "staff", label: "Staff", icon: Users, kbd: "G S" },
+  { key: "analytics", label: "Insights", icon: LineChart, kbd: "G I" },
+  { key: "settings", label: "Settings", icon: Settings, kbd: "G ," },
+] as const;
+
+function OrderingLinkBanner({ tenantSlug }: { tenantSlug: string }) {
+  const orderingUrl =
+    typeof window !== "undefined"
+      ? `${window.location.origin}/c/${tenantSlug}/menu`
+      : `/c/${tenantSlug}/menu`;
+
+  function copyLink() {
+    const url =
+      typeof window !== "undefined"
+        ? `${window.location.origin}/c/${tenantSlug}/menu`
+        : `/c/${tenantSlug}/menu`;
+    navigator.clipboard.writeText(url).catch(() => {});
+  }
+
+  return (
+    <div className="mx-2 mb-2 rounded-lg border border-lime/20 bg-lime/[0.06] px-3 py-2.5">
+      <div className="text-[10px] font-mono uppercase tracking-[0.12em] text-lime/70 mb-1.5">
+        Student ordering link
+      </div>
+      <div className="flex items-center gap-1.5">
+        <a
+          href={`/c/${tenantSlug}/menu`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex-1 min-w-0 text-[11px] font-mono text-graphite-300 hover:text-lime truncate transition-colors"
+        >
+          /c/{tenantSlug}/menu
+        </a>
+        <button
+          type="button"
+          onClick={copyLink}
+          title="Copy link"
+          className="shrink-0 h-6 w-6 inline-flex items-center justify-center rounded text-graphite-400 hover:text-lime hover:bg-lime/10 transition-colors"
+        >
+          <Copy size={11} />
+        </button>
+        <a
+          href={`/c/${tenantSlug}/menu`}
+          target="_blank"
+          rel="noopener noreferrer"
+          title="Open in new tab"
+          className="shrink-0 h-6 w-6 inline-flex items-center justify-center rounded text-graphite-400 hover:text-lime hover:bg-lime/10 transition-colors"
+        >
+          <ExternalLink size={11} />
+        </a>
+      </div>
+    </div>
+  );
+}
 
 export function AdminShell({
   tenantName,
@@ -28,6 +78,17 @@ export function AdminShell({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+
+  function navHref(key: string) {
+    return `/c/${tenantSlug}/admin/${key}`;
+  }
+  function isActive(key: string) {
+    const match = `/admin/${key}`;
+    return pathname === match || pathname?.startsWith(match + "/") ||
+      pathname === `/c/${tenantSlug}/admin/${key}` ||
+      pathname?.startsWith(`/c/${tenantSlug}/admin/${key}/`);
+  }
+
   return (
     <div className="relative z-10 flex">
       <aside className="hidden lg:flex w-[220px] shrink-0 border-r border-graphite-200/10 sticky top-0 self-start h-screen flex-col">
@@ -41,25 +102,25 @@ export function AdminShell({
           </div>
         </div>
         <nav className="flex-1 px-2 flex flex-col gap-0.5 text-[13px]">
-          {NAV.map((n, i) =>
+          {NAV_ITEMS.map((n, i) =>
             "group" in n ? (
               <div key={i} className="px-2 pt-4 pb-1 text-[10px] font-mono uppercase tracking-[0.14em] text-graphite-400 font-semibold">
                 {n.group}
               </div>
             ) : (
               <Link
-                key={n.href}
-                href={n.href}
+                key={n.key}
+                href={navHref(n.key)}
                 className={cn(
                   "group flex items-center gap-2.5 px-2 h-8 rounded-md transition-colors",
-                  pathname === n.href || pathname?.startsWith(n.href + "/")
+                  isActive(n.key)
                     ? "bg-lime/10 text-lime"
                     : "text-graphite-300 hover:bg-graphite-200/[0.06] hover:text-graphite-200"
                 )}
               >
                 <n.icon size={14} strokeWidth={1.6} className="opacity-80" />
                 <span className="font-medium">{n.label}</span>
-                {n.kbd && (
+                {"kbd" in n && n.kbd && (
                   <span className="ml-auto px-1 py-0.5 text-[9px] font-mono rounded border border-graphite-200/15 text-graphite-400">
                     {n.kbd}
                   </span>
@@ -68,6 +129,7 @@ export function AdminShell({
             )
           )}
         </nav>
+        <OrderingLinkBanner tenantSlug={tenantSlug} />
         <div className="p-3 border-t border-graphite-200/10 flex items-center gap-2">
           <div className="h-8 w-8 rounded-full bg-lime/15 text-lime inline-flex items-center justify-center text-[12px] font-mono font-semibold">
             {(userEmail ?? "A").slice(0, 1).toUpperCase()}

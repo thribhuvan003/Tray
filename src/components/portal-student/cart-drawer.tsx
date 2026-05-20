@@ -72,9 +72,12 @@ export function CartDrawer({ tenantSlug, tenantUpi }: { tenantSlug: string; tena
         orderType === "dine_in" ? tableLabel.trim().toUpperCase() : null
       );
       if (!res.ok) {
-        toast.error(res.error ?? "Could not place order");
         if (res.code === "AUTH_REQUIRED") {
+          // Don't show an error toast — just redirect to login silently.
+          // The cart persists in localStorage so items are safe.
           router.push(`/c/${tenantSlug}/login?next=/c/${tenantSlug}/menu`);
+        } else {
+          toast.error(res.error ?? "Could not place order");
         }
         return;
       }

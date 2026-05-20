@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { collegeCanteens, type CollegeCanteen } from "@/lib/tenant";
 import { LiveTimestamp } from "./live-timestamp";
+import { ShareQR } from "./share-qr";
 
 export const revalidate = 30;
 
@@ -388,6 +389,7 @@ export default async function CollegePortalPage({
   const { slug } = await params;
   const rawCanteens = await collegeCanteens(slug);
   if (!rawCanteens || rawCanteens.length === 0) notFound();
+  const portalUrl = `https://trayy.vercel.app/college/${slug}`;
 
   const canteens = sortCanteens(rawCanteens);
   const openCount = canteens.filter((c) => c.is_open && !c.paused_until).length;
@@ -448,6 +450,10 @@ export default async function CollegePortalPage({
             </span>
             <span className="tcp-hero-sub-sep" aria-hidden="true" />
             <span>live status · 30 s refresh</span>
+          </div>
+
+          <div style={{ marginTop: 20 }}>
+            <ShareQR portalUrl={portalUrl} />
           </div>
         </section>
 
