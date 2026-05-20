@@ -121,6 +121,13 @@ pm run typecheck passes. Restart dev if port 3000 hangs: NODE_OPTIONS=--max-old-
 - **Fix (commit `b755f14`):** Sync `pnpm-lock.yaml`; `vercel.json` → `pnpm install --frozen-lockfile` + `pnpm run build`; remove stale `package-lock.json`.
 - **Production:** https://trayy.vercel.app — deployment **Ready** (`dpl_4njrZ4e6S4AkVrd1ebDEQWrUGY1r`); `/demo/student.html` + `demo-canteens.js` serve dish data.
 
+### 2026-05-20 — Framer-inspired landing interactions (GSAP)
+
+- **Shipped:** Hero `expo.out` + CTA scale-in; nav deep blur + sliding spy pill; portal shine/lift + kitchen `#ef5749` rim; sync diagram sequential pulse/line draw; pull quote opacity/`translateY` (no blur); closing magnetic primary CTA (8px cap); desktop orb parallax via `.tl-ambient-shift`.
+- **Files:** `landing-motion.tsx`, `landing-page.tsx` (CSS/classes only — copy/nav unchanged).
+- **Docs:** `docs/research/motion-patterns.md` — Framer-inspired pass table.
+- **Verify:** `pnpm run build`, `npm run demo:verify` pass.
+
 ### 2026-05-20 — Landing animation stack decision (senior-dev / architect)
 
 - **Doc:** `docs/research/senior-dev-animation-decision.md` — **hybrid:** keep GSAP+ScrollTrigger in `landing-motion.tsx` (dynamic import, single context, kill on unmount); CSS for ticker/ambient; **no** `framer-motion` on landing; ≤55 KB gzip deferred animation chunk; per-section tool table; palette/visual changes still blocked on `landing-design-options.md` (not in repo yet).

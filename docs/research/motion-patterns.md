@@ -257,3 +257,21 @@ ScrollTrigger.refresh();
 ---
 
 *Generated for Tray landing motion work (`landing-motion.tsx`, `docs/design-system-figma.md`). Re-validate browser support for CSS scroll-driven features before replacing GSAP on simple reveals.*
+
+---
+
+## Framer-inspired pass (2026-05-20)
+
+Implemented in `landing-motion.tsx` + scoped CSS hooks in `landing-page.tsx` (no `framer-motion` on `/`).
+
+| Interaction | Technique |
+|-------------|-----------|
+| Hero word/CTA reveal | `expo.out` timeline; CTA `scale: 0.92→1`; count-up `expo.out` |
+| Nav scroll | `is-scrolled` + `is-scrolled-deep` (stronger blur/backdrop) |
+| Nav section spy | Sliding `.tl-nav-pill` via GSAP `x`/`width` (fine pointer) |
+| Portal cards | `quickTo` lift + `.is-shine` sweep + `.is-lift` glow; kitchen rim `#ef5749` |
+| Sync diagram | Sequential node + line `scaleX` + dot pulse timeline on enter |
+| Pull quote | `opacity` + `y` (+ light `scale` desktop only; no blur) |
+| Closing CTA | Magnetic `.tl-btn-pri` max **8px** offset (fine pointer) |
+| Ambient | Mouse parallax on `.tl-ambient-shift`; orb scroll scrub unchanged |
+| Guards | `prefers-reduced-motion` early exit; coarse: no tilt/magnet/scrub; CSS `:active` scale |
