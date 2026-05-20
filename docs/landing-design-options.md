@@ -331,11 +331,11 @@ Landing tokens stay scoped to `.tray-landing` until an ADR approves app-wide mer
 
 | Field | Choice |
 |-------|--------|
-| Palette | _pending_ |
-| Font | _pending_ |
-| Motion | _pending_ |
-| Date | _pending_ |
-| Notes | _pending_ |
+| Palette | **E — Monsoon Paper** |
+| Font | **2 — Newsreader + Manrope + JetBrains Mono** |
+| Motion | **Medium+** |
+| Date | 2026-05-20 |
+| Notes | Light landing; portal chrome mocks stay dark |
 
 ---
 
@@ -346,15 +346,15 @@ Landing tokens stay scoped to `.tray-landing` until an ADR approves app-wide mer
 
 | Dimension | Choice | Shipped in |
 |-----------|--------|------------|
-| **Palette** | **C — Slate Ember** | `landing-page.tsx` `--tl-*` |
+| **Palette** | **E — Monsoon Paper** | `landing-page.tsx` `--tl-*` |
 | **Fonts** | **2 — Newsreader + Manrope + JetBrains Mono** | `layout.tsx` + `landing-page.tsx` |
 | **Motion** | **Medium+ (tasteful bold)** | `landing-motion.tsx` |
 
 ### Why this direction
 
-**Painter / concept lens:** Slate Ember treats the page as a **warm stone ground at night**—umber-brown neutrals with ember-orange light pools and a cool service-lane rim (student sky). It reads like canteen heat after sunset: appetite, trust, and the glow of a line still moving—not cold SaaS blue or purple-gradient slop. Portal accents stay **demo-true** (`#5cb1ff` / `#d52821` / `#cdfa50`) so the three cards remain legible genre shifts.
+**Painter / concept lens:** Monsoon Paper is a **daylight editorial sheet**—warm paper neutrals with coral monsoon wash and sky-blue service lanes. It reads like a canteen menu board at opening hour: readable, human, and distinct from dark-gradient SaaS landings. Portal accents stay **demo-true** (`#5cb1ff` / `#d52821` / `#cdfa50`) with **dark browser chrome** inside previews so the three products still read as real night/cream/graphite apps.
 
-**UX lens:** Palette A was credible but emotionally cool; **C** lands campus-food context in the first second without going light-mode (E) or admin-first (D). **Font 2** bridges the **kitchen** demo (Newsreader) while Manrope keeps UI density for stats and CTAs; JetBrains Mono matches kitchen operational labels. **Medium+** motion adds confidence on hero words, portal fan-in, and pull-quote dissolve while **coarse pointer / narrow viewport** still skip scrub orbs and 3D tilt; `prefers-reduced-motion` unchanged.
+**UX lens:** Palette E is a strategic brand break—memorable in admin and college circles tired of black heroes. **Font 2** (Newsreader + Manrope + JetBrains Mono) bridges the kitchen demo while keeping landing density. **Medium+** motion is unchanged; light surfaces use softer portal shadows and coral/sky section glows. `prefers-reduced-motion` and coarse-pointer guards unchanged.
 
 ### Portal preview tokens (landing only)
 
