@@ -170,6 +170,13 @@ pm run typecheck passes. Restart dev if port 3000 hangs: NODE_OPTIONS=--max-old-
 - **Student portal follow-up (not this pass):** Retokenize `public/demo/student.html` Midnight Sky vars from landing pick; add 5-line token comment block pointing at `--tl-*` source; optional `--portal-*` alias on demo hub only.
 - **Verify:** `pnpm install --frozen-lockfile`, `pnpm run typecheck`, `pnpm run build`, `npm run demo:verify`; push `main` → Vercel production.
 
+### 2026-05-20 — ui-ux-pro-max landing audit (a11y + MASTER)
+
+- **Docs:** `design-system/MASTER.md` — Slate Ember summary, UX checklist, Figma cross-links (`ui-ux-pro-max` CLI script missing locally; manual merge from skill + `design-system-figma.md`).
+- **Shipped:** `landing-page.tsx` — 44px touch targets (nav links, buttons, portal-open), `touch-action: manipulation`, extended `:focus-visible`, skip link focus-visible, hero `min-height` CLS reserve, `--tl-ink-3` contrast bump (0.52→0.58), live-dot pulse off under reduced-motion.
+- **Skipped:** View Transitions on `/` → `/college` (risky); mobile nav hash row unchanged (user-loved layout).
+- **Verify:** `pnpm run build`, `npm run demo:verify` — pass.
+
 ### 2026-05-19 — Team harness activated (earlier)
 
 - GSAP on `landing-page.tsx`; student.html rebuild; parallel PM/research agents launched.
