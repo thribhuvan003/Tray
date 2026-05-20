@@ -170,7 +170,14 @@ export function LandingMotion() {
             .from(".tray-landing .tl-hero-top", { y: 18, opacity: 0, duration: 0.65 })
             .from(
               ".tray-landing .tl-h1 .tl-word",
-              { y: 48, opacity: 0, stagger: 0.055, duration: 0.95 },
+              {
+                y: 40,
+                opacity: 0,
+                clipPath: "inset(100% 0% 0% 0%)",
+                stagger: { each: 0.05, from: "start" },
+                duration: 0.88,
+                ease: "power3.out",
+              },
               "-=0.38",
             )
             .from(".tray-landing .tl-hero-lede", { y: 22, opacity: 0, duration: 0.78 }, "-=0.52")
@@ -209,27 +216,48 @@ export function LandingMotion() {
             const glow = root.querySelector(".tl-hero-glow");
             if (glow) {
               gsap.to(glow, {
-                y: 100,
+                y: 72,
                 ease: "none",
                 scrollTrigger: {
                   trigger: ".tray-landing .tl-hero",
                   start: "top top",
                   end: "bottom top",
-                  scrub: 1.2,
+                  scrub: 0.95,
                 },
               });
             }
 
+            const heroRibbon = root.querySelector<HTMLElement>(".tl-hero-ribbon");
+            const syncRibbon = root.querySelector<HTMLElement>(".tl-queue-ribbon");
+            [heroRibbon, syncRibbon].forEach((ribbon) => {
+              if (!ribbon) return;
+              gsap.fromTo(
+                ribbon,
+                { x: -28, opacity: 0.35 },
+                {
+                  x: 24,
+                  opacity: 0.75,
+                  ease: "none",
+                  scrollTrigger: {
+                    trigger: ribbon.closest(".tl-hero, .tl-sync") ?? ribbon,
+                    start: "top 90%",
+                    end: "bottom 20%",
+                    scrub: 1,
+                  },
+                },
+              );
+            });
+
             root.querySelectorAll<HTMLElement>(".tl-orb").forEach((orb, i) => {
               gsap.to(orb, {
-                y: i % 2 === 0 ? 120 : -90,
-                x: i % 2 === 0 ? 40 : -30,
+                y: i % 2 === 0 ? 72 : -56,
+                x: i % 2 === 0 ? 28 : -22,
                 ease: "none",
                 scrollTrigger: {
                   trigger: root,
                   start: "top top",
                   end: "bottom bottom",
-                  scrub: 1.4 + i * 0.2,
+                  scrub: 1.1 + i * 0.15,
                 },
               });
             });
@@ -301,15 +329,39 @@ export function LandingMotion() {
             "#system .tl-portal",
             {
               opacity: 0,
-              y: 82,
-              rotateX: 14,
+              y: 64,
+              rotateX: 10,
               transformOrigin: "50% 100%",
-              stagger: 0.16,
-              duration: 1.05,
+              stagger: 0.14,
+              duration: 0.95,
               ease: HERO_EASE,
             },
             "top 80%",
           );
+
+          root.querySelectorAll<HTMLElement>("#system .tl-portal").forEach((portal) => {
+            const chrome = portal.querySelector<HTMLElement>(".tl-browser-chrome");
+            const bar = portal.querySelector<HTMLElement>(".tl-browser-bar");
+            const viewport = portal.querySelector<HTMLElement>(".tl-browser-viewport");
+            if (!chrome) return;
+            gsap.set([bar, viewport].filter(Boolean), { opacity: 0, y: 10 });
+            ScrollTrigger.create({
+              trigger: portal,
+              start: "top 82%",
+              once: true,
+              onEnter: () => {
+                gsap.to(chrome, { opacity: 1, y: 0, duration: 0.55, ease: HERO_EASE });
+                gsap.to([bar, viewport].filter(Boolean), {
+                  opacity: 1,
+                  y: 0,
+                  stagger: 0.08,
+                  duration: 0.5,
+                  ease: "power2.out",
+                  delay: 0.12,
+                });
+              },
+            });
+          });
           sectionEnter(
             "#system",
             "#system .tl-feat-tag",
@@ -416,24 +468,40 @@ export function LandingMotion() {
             "top 80%",
           );
 
-          const pullP = root.querySelector(".tl-pull p");
-          if (pullP) {
-            const pullVars = narrowViewport
-              ? { opacity: 0, y: 32 }
-              : { opacity: 0, y: 36, scale: 0.98 };
-            gsap.set(pullP, pullVars);
+          const pullLines = root.querySelectorAll<HTMLElement>(".tl-pull .tl-pull-line");
+          if (pullLines.length) {
+            gsap.set(pullLines, {
+              opacity: 0,
+              y: 28,
+              clipPath: "inset(100% 0% 0% 0%)",
+            });
             ScrollTrigger.create({
-              trigger: pullP,
-              start: "top 80%",
+              trigger: ".tl-pull",
+              start: "top 78%",
               once: true,
               onEnter: () => {
-                gsap.to(pullP, {
+                gsap.to(pullLines, {
                   opacity: 1,
                   y: 0,
-                  scale: 1,
-                  duration: 1,
-                  ease: HERO_EASE,
+                  clipPath: "inset(0% 0% 0% 0%)",
+                  stagger: 0.12,
+                  duration: 0.85,
+                  ease: "power3.out",
                 });
+              },
+            });
+          }
+
+          const flowAccent = root.querySelector<HTMLElement>(".tl-flow-accent");
+          if (flowAccent && !lightMotion) {
+            gsap.set(flowAccent, { scaleX: 0, transformOrigin: "0% 50%" });
+            ScrollTrigger.create({
+              trigger: flowAccent,
+              start: "top 92%",
+              end: "top 40%",
+              scrub: 1.05,
+              onUpdate: (self) => {
+                gsap.set(flowAccent, { scaleX: self.progress });
               },
             });
           }
@@ -477,11 +545,11 @@ export function LandingMotion() {
             "#stack .tl-stack-card",
             {
               opacity: 0,
-              scale: 0.82,
-              y: 24,
-              stagger: { amount: 0.38, from: "center" },
-              duration: 0.7,
-              ease: "back.out(1.45)",
+              scale: 0.86,
+              y: 20,
+              stagger: { amount: 0.34, from: "center" },
+              duration: 0.68,
+              ease: "back.out(1.35)",
             },
             "top 82%",
           );

@@ -4,28 +4,31 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Tray — Student Order</title>
-  <meta name="theme-color" content="#060A14" />
+  <meta name="theme-color" content="#f7f3ea" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Manrope:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;1,6..72,400&display=swap" rel="stylesheet" />
+  <!-- Palette E (Monsoon Paper) — aligned with design-system/MASTER.md -->
   <style>
     :root {
-      --bg: #060A14;
-      --text: #E8F0FF;
-      --muted: rgba(232, 240, 255, 0.45);
-      --muted-2: rgba(232, 240, 255, 0.28);
-      --accent: #FFD87A;
-      --accent-dim: rgba(255, 216, 122, 0.15);
-      --accent-glow: rgba(255, 216, 122, 0.35);
-      --surface: rgba(232, 240, 255, 0.06);
-      --surface-2: rgba(232, 240, 255, 0.09);
-      --border: rgba(232, 240, 255, 0.1);
-      --veg: #5ee08a;
-      --nv: #ff7b6b;
-      --ok: #5ee08a;
-      --serif: "Instrument Serif", Georgia, serif;
-      --sans: "Inter", system-ui, sans-serif;
-      --mono: "Space Mono", ui-monospace, monospace;
+      --bg: #f7f3ea;
+      --bg-2: #fffaf0;
+      --text: #1a140e;
+      --muted: rgba(26, 20, 14, 0.58);
+      --muted-2: rgba(26, 20, 14, 0.38);
+      --accent: #5cb1ff;
+      --accent-dim: rgba(92, 177, 255, 0.14);
+      --accent-glow: rgba(92, 177, 255, 0.28);
+      --warm: #c43d2f;
+      --surface: rgba(26, 20, 14, 0.04);
+      --surface-2: rgba(26, 20, 14, 0.07);
+      --border: rgba(26, 20, 14, 0.12);
+      --veg: #3d9a62;
+      --nv: #c43d2f;
+      --ok: #3d9a62;
+      --serif: "Newsreader", Georgia, serif;
+      --sans: "Manrope", system-ui, sans-serif;
+      --mono: "JetBrains Mono", ui-monospace, monospace;
       --topbar-h: 64px;
       --cart-w: 320px;
       --nav-w: 200px;
@@ -42,8 +45,8 @@
       background: var(--bg);
       color: var(--text);
       font-family: var(--sans);
-      font-size: 15px;
-      line-height: 1.5;
+      font-size: 16px;
+      line-height: 1.55;
       -webkit-font-smoothing: antialiased;
     }
 
@@ -54,17 +57,9 @@
       pointer-events: none;
       z-index: 0;
       background:
-        radial-gradient(1px 1px at 12% 18%, rgba(255,255,255,0.55) 0, transparent 100%),
-        radial-gradient(1px 1px at 28% 72%, rgba(255,255,255,0.35) 0, transparent 100%),
-        radial-gradient(1.5px 1.5px at 45% 32%, rgba(255,255,255,0.4) 0, transparent 100%),
-        radial-gradient(1px 1px at 62% 8%, rgba(255,255,255,0.5) 0, transparent 100%),
-        radial-gradient(1px 1px at 78% 58%, rgba(255,255,255,0.3) 0, transparent 100%),
-        radial-gradient(1.2px 1.2px at 88% 24%, rgba(255,255,255,0.45) 0, transparent 100%),
-        radial-gradient(1px 1px at 6% 48%, rgba(255,255,255,0.25) 0, transparent 100%),
-        radial-gradient(1px 1px at 92% 82%, rgba(255,255,255,0.35) 0, transparent 100%),
-        radial-gradient(1px 1px at 35% 92%, rgba(255,255,255,0.28) 0, transparent 100%),
-        radial-gradient(ellipse 120% 55% at 50% -15%, rgba(120, 160, 255, 0.22) 0%, transparent 55%),
-        radial-gradient(ellipse 80% 40% at 80% 0%, rgba(255, 216, 122, 0.08) 0%, transparent 50%);
+        radial-gradient(ellipse 90% 50% at 12% -8%, rgba(92, 177, 255, 0.12) 0%, transparent 55%),
+        radial-gradient(ellipse 70% 45% at 88% 0%, rgba(196, 61, 47, 0.06) 0%, transparent 50%),
+        linear-gradient(165deg, var(--bg) 0%, var(--bg-2) 42%, #f0e8d8 100%);
     }
 
     button { font: inherit; cursor: pointer; border: none; background: none; color: inherit; }
@@ -88,7 +83,7 @@
       justify-content: space-between;
       gap: 16px;
       border-bottom: 1px solid var(--border);
-      background: rgba(6, 10, 20, 0.72);
+      background: rgba(247, 243, 234, 0.88);
       backdrop-filter: blur(16px);
       position: sticky;
       top: 0;
@@ -152,7 +147,7 @@
 
     .pill-status.is-live {
       color: var(--accent);
-      border-color: rgba(255, 216, 122, 0.35);
+      border-color: rgba(92, 177, 255, 0.35);
       background: var(--accent-dim);
     }
 
@@ -211,7 +206,7 @@
     .cat-btn.is-active {
       color: var(--text);
       background: var(--accent-dim);
-      box-shadow: inset 0 0 0 1px rgba(255, 216, 122, 0.25);
+      box-shadow: inset 0 0 0 1px rgba(92, 177, 255, 0.25);
     }
 
     .cat-btn span { display: block; font-family: var(--mono); font-size: 10px; color: var(--muted-2); margin-top: 2px; font-weight: 400; }
@@ -294,7 +289,7 @@
 
     .search::placeholder { color: var(--muted-2); }
     .search:focus {
-      border-color: rgba(255, 216, 122, 0.4);
+      border-color: rgba(92, 177, 255, 0.4);
       box-shadow: 0 0 0 3px var(--accent-dim);
     }
 
@@ -417,7 +412,7 @@
       border-radius: 10px;
       border: 1px solid var(--border);
       overflow: hidden;
-      background: rgba(6, 10, 20, 0.5);
+      background: rgba(247, 243, 234, 0.72);
     }
 
     .qty-control.is-empty .qty-val { display: none; }
@@ -452,11 +447,11 @@
       font-weight: 600;
       background: var(--accent-dim);
       color: var(--accent);
-      border: 1px solid rgba(255, 216, 122, 0.3);
+      border: 1px solid rgba(92, 177, 255, 0.3);
       transition: background 0.2s, transform 0.15s;
     }
 
-    .btn-add-initial:hover { background: rgba(255, 216, 122, 0.22); }
+    .btn-add-initial:hover { background: rgba(92, 177, 255, 0.22); }
     .btn-add-initial:active { transform: scale(0.97); }
 
     .menu-card.has-qty .btn-add-initial { display: none; }
@@ -469,7 +464,7 @@
       width: var(--cart-w);
       flex-shrink: 0;
       border-left: 1px solid var(--border);
-      background: rgba(6, 10, 20, 0.85);
+      background: rgba(247, 243, 234, 0.94);
       backdrop-filter: blur(12px);
       flex-direction: column;
       position: sticky;
@@ -611,7 +606,7 @@
       padding: 14px 16px;
       border-radius: var(--radius);
       background: rgba(12, 18, 32, 0.94);
-      border: 1px solid rgba(255, 216, 122, 0.25);
+      border: 1px solid rgba(92, 177, 255, 0.25);
       box-shadow: 0 16px 48px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(232,240,255,0.06);
       backdrop-filter: blur(20px);
       align-items: center;
@@ -820,7 +815,7 @@
     .track-step.is-current .track-dot {
       border-color: var(--accent);
       background: var(--accent-dim);
-      box-shadow: 0 0 0 4px rgba(255, 216, 122, 0.12);
+      box-shadow: 0 0 0 4px rgba(92, 177, 255, 0.12);
     }
 
     .track-step.is-pending .track-dot { opacity: 0.5; }
@@ -860,7 +855,7 @@
       text-align: center;
       padding: 40px 24px;
       border-radius: var(--radius);
-      border: 1px solid rgba(255, 216, 122, 0.3);
+      border: 1px solid rgba(92, 177, 255, 0.3);
       background: linear-gradient(180deg, var(--accent-dim) 0%, transparent 100%);
       margin-bottom: 24px;
     }
@@ -968,15 +963,15 @@
       padding: 14px 14px 12px;
       border-radius: var(--radius-sm);
       border: 1px solid var(--border);
-      background: rgba(6, 10, 20, 0.35);
+      background: rgba(26, 20, 14, 0.35);
       transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s var(--ease);
     }
 
-    .service-mode:hover { border-color: rgba(232, 240, 255, 0.22); }
+    .service-mode:hover { border-color: rgba(26, 20, 14, 0.18); }
 
     .service-mode.is-active {
-      border-color: rgba(255, 216, 122, 0.55);
-      box-shadow: 0 0 0 1px rgba(255, 216, 122, 0.2), 0 12px 32px rgba(0, 0, 0, 0.35);
+      border-color: rgba(92, 177, 255, 0.55);
+      box-shadow: 0 0 0 1px rgba(92, 177, 255, 0.2), 0 12px 32px rgba(0, 0, 0, 0.35);
     }
 
     .service-mode__icon { font-size: 1.35rem; display: block; margin-bottom: 6px; }
@@ -1091,12 +1086,12 @@
       padding: 10px 12px;
       border-radius: var(--radius-sm);
       border: 1px solid var(--border);
-      background: rgba(6, 10, 20, 0.5);
+      background: rgba(247, 243, 234, 0.72);
     }
 
     .table-field input:focus {
       outline: none;
-      border-color: rgba(255, 216, 122, 0.45);
+      border-color: rgba(92, 177, 255, 0.45);
     }
 
     .pickup-ribbon {
@@ -1106,7 +1101,7 @@
       padding: 14px 16px;
       margin-bottom: 18px;
       border-radius: var(--radius-sm);
-      border: 1px solid rgba(255, 216, 122, 0.35);
+      border: 1px solid rgba(92, 177, 255, 0.35);
       background: var(--accent-dim);
     }
 
@@ -1330,7 +1325,7 @@
     var g = document.getElementById("menuGrid");
     if (g) {
       g.innerHTML =
-        '<p style="color:#ff7b6b;text-align:center;padding:48px 20px">Demo menu failed to load. Open <a href="http://localhost:3000/demo/student.html" style="color:#FFD87A">localhost:3000/demo/student.html</a> (run <strong>npm run dev</strong>) and hard-refresh Ctrl+Shift+R.</p>';
+        '<p style="color:#c43d2f;text-align:center;padding:48px 20px">Demo menu failed to load. Open <a href="http://localhost:3000/demo/student.html" style="color:#2a5db8">localhost:3000/demo/student.html</a> (run <strong>npm run dev</strong>) and hard-refresh Ctrl+Shift+R.</p>';
     }
     return;
   }

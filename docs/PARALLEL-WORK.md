@@ -39,7 +39,7 @@ Read AGENTS.md, docs/DEMO-SPEC.md, docs/PARALLEL-WORK.md. One file owner per lan
 | Surface | Direction |
 |---------|-----------|
 | Landing (Next) | **Monsoon Paper** (palette E) + Newsreader/Manrope/JetBrains (font 2) + motion medium+ |
-| Student demo | Midnight Sky, desktop sidebar |
+| Student demo | **Monsoon Paper light** (palette E) + same font stack; student rim `#5cb1ff`; desktop sidebar |
 | Kitchen | DO NOT TOUCH |
 
 ---
@@ -145,6 +145,11 @@ pm run typecheck passes. Restart dev if port 3000 hangs: NODE_OPTIONS=--max-old-
 - **Blocked on user:** Reply `I pick palette [A–E] + font [1–4] + motion [subtle|medium|bold]` before retokenizing `landing-page.tsx`.
 - **Default recommendation:** Palette **A** + font **1** + motion **medium** (current ship).
 
+### 2026-05-20 — Reference sites browser exploration (8 URLs)
+
+- **Added:** `docs/research/reference-sites-exploration-2026.md` — live browser pass on Zajno, Dribbble (both tags + 2 shots), Tubik, UX Planet, Figma anatomy; cross-links Capital One + Designlab via `external-design-corpus-2026.md`. Top-10 motion + typography synthesis for **Palette E Monsoon Paper**; P0 GSAP/CSS ideas mapped to `landing-motion.tsx`. No landing code changes.
+- **Updated:** `external-design-corpus-2026.md`, `zajno-motion-notes.md` — cross-links; Dribbble note marked browser-verified.
+
 ### 2026-05-20 — Landing scroll motion research (external)
 
 - **Added:** `docs/research/motion-patterns.md` — 10 premium B2B/SaaS scroll/micro patterns (Awwwards/Godly/GSAP sources), per-section recommendations (hero→footer + Tray section map), performance (`transform`/`opacity`, `will-change`, `ScrollTrigger.batch()`). No code changes.
@@ -224,10 +229,19 @@ pm run typecheck passes. Restart dev if port 3000 hangs: NODE_OPTIONS=--max-old-
 - **Sources:** council 01–04, `05-implementation-brief-palette-e.md`, `external-design-corpus-2026.md`, `zajno-motion-notes.md`.
 - **Verify:** `pnpm run build`, `npm run demo:verify` — pass.
 
+### 2026-05-20 — Palette E full pass (landing motion + student demo)
+
+- **Shipped:** `landing-page.tsx` — hero ribbon, council pull-quote (3 masked lines), flow accent bar, typography measure tokens, Monsoon hero/closing copy.
+- **Shipped:** `landing-motion.tsx` — H1 word clip-path reveal, portal chrome stagger, pull-line mask, ribbon + flow-accent scrub, reduced orb/glow parallax for paper.
+- **Shipped:** `public/demo/student.html` — light Monsoon tokens, Manrope 16px / lh 1.55, student blue `#5cb1ff`, paper gradient (no starfield); `TRAY_DEMO` / cart / service mode JS untouched.
+- **Docs:** `design-system/MASTER.md` (student scope + measure/motifs); locked design table above.
+- **Sources:** council 01–05, `brand-research-landing.md`, `reference-sites-exploration-2026.md`, `zajno-motion-notes.md`, `external-design-corpus-2026.md`.
+- **Verify:** `pnpm run build`, `npm run demo:verify` — (run at commit time).
+
 ### 2026-05-20 — Zajno Motion browser research
 
 - **Added:** `docs/research/zajno-motion-notes.md` — live review of https://motion.zajno.com/ (GSAP + ScrollTrigger, stagger/mask/easing patterns); five Palette E–adaptable patterns + technical ranges + avoid list (WebGL, scroll hijack, dark showcase).
-- **Not changed:** landing code.
+- **Not changed:** landing code (superseded by full pass above).
 
 ### 2026-05-19 — Team harness activated (earlier)
 

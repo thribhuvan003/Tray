@@ -1,7 +1,7 @@
 # Tray — Design system (MASTER)
 
 **Product:** B2B2C campus canteen ordering (student / kitchen / admin portals)  
-**Scope:** Marketing landing (`.tray-landing`) — Monsoon Paper council pick (2026-05-20)  
+**Scope:** Marketing landing (`.tray-landing`) + **student static demo** (`public/demo/student.html`) — Monsoon Paper palette E (2026-05-20, shipped)  
 **Stack:** Next.js 15 · React 19 · Tailwind v4 (app) · scoped CSS in `landing-page.tsx`  
 **Motion:** GSAP + ScrollTrigger in `landing-motion.tsx` only — no Framer Motion on landing
 
@@ -50,6 +50,12 @@
 | Mono / labels | **JetBrains Mono** | Section nums, ticker, meta, chips |
 
 **Scale (landing):** base 18px (`--tl-size-base`); labels `--tl-size-2xs` (13px) — use sparingly, never for long body copy.
+
+**Measure tokens (landing, shipped):** `--tl-measure-lede` 62ch · `--tl-measure-pull` 42ch · `--tl-lh-body` 1.62 · `--tl-lh-display` 1.02 · `--tl-lh-h2` 1.
+
+**Motifs (landing):** queue ribbon (hero + sync), kitchen steam halo, ticket perforation (dashed edges), sync→flow accent scrub (GSAP).
+
+**Student demo:** Manrope 16px / lh 1.55+; student rim `#5cb1ff`; paper base `#f7f3ea` — mirrors portal preview, not dark chrome.
 
 **Pairing rationale:** Editorial serif headlines + humanist sans body = distinctive food/campus editorial without generic Inter-only SaaS.
 
