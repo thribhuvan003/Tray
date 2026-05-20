@@ -507,9 +507,11 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
       <style dangerouslySetInnerHTML={{ __html: SCOPED_CSS }} />
       <div className="tl-grain" />
       <div className="tl-ambient" aria-hidden>
-        <span className="tl-orb tl-orb-a" />
-        <span className="tl-orb tl-orb-b" />
-        <span className="tl-orb tl-orb-c" />
+        <div className="tl-ambient-shift">
+          <span className="tl-orb tl-orb-a" />
+          <span className="tl-orb tl-orb-b" />
+          <span className="tl-orb tl-orb-c" />
+        </div>
       </div>
       <div className="tl-scroll-progress" aria-hidden />
       <LandingMotion />
@@ -521,6 +523,7 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
         <div className="tl-nav-inner">
           <BrandMark />
           <div className="tl-nav-links">
+            <span className="tl-nav-pill" aria-hidden />
             <a href="#system">System</a>
             <a href="#flow">How it works</a>
           </div>
