@@ -238,6 +238,37 @@ export function PortalDotPulse() {
   return null;
 }
 
+// ─── Scroll-reveal IntersectionObserver ───────────────────────────────────
+//
+// Adds "is-visible" to any .tl-reveal element when it enters the viewport.
+// CSS defines the opacity/transform transition — this only toggles the class.
+
+export function ScrollReveal() {
+  useEffect(() => {
+    const reduced =
+      typeof window !== "undefined" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduced) return;
+
+    const els = Array.from(
+      document.querySelectorAll<HTMLElement>(".tray-landing .tl-reveal"),
+    );
+    if (!els.length) return;
+
+    const obs = new IntersectionObserver(
+      (entries) =>
+        entries.forEach((e) => {
+          if (e.isIntersecting) e.target.classList.add("is-visible");
+        }),
+      { threshold: 0.12, rootMargin: "-40px 0px" },
+    );
+    els.forEach((el) => obs.observe(el));
+    return () => obs.disconnect();
+  }, []);
+
+  return null;
+}
+
 // ─── Root export: mount all animation controllers ──────────────────────────
 
 export function LandingAnimations() {
@@ -247,6 +278,7 @@ export function LandingAnimations() {
       <ClosingSkew />
       <CtaShimmer />
       <PortalDotPulse />
+      <ScrollReveal />
     </>
   );
 }
