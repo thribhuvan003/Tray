@@ -121,6 +121,34 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
 
       {/* ── PAGE SECTIONS ────────────────────────────────────────────── */}
       <main id="main">
+        {/* Problem statement strip — hooks any visitor in 3 seconds */}
+        <div
+          className="border-b border-[var(--tray-border)] px-5 py-2.5 sm:px-8 lg:px-10"
+          style={{ background: "var(--tray-ink)", color: "var(--tray-cream, #EDE5D2)" }}
+        >
+          <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 overflow-hidden">
+            <p
+              className="text-[0.65rem] uppercase tracking-[0.22em] opacity-55 hidden sm:block"
+              style={{ fontFamily: "var(--font-dm-mono)" }}
+            >
+              Campus Edition
+            </p>
+            <p
+              className="text-[0.65rem] uppercase tracking-[0.22em] opacity-55"
+              style={{ fontFamily: "var(--font-dm-mono)" }}
+            >
+              12 min saved per lunch · UPI native · OTP verified · live queue
+            </p>
+            <span
+              className="hidden items-center gap-1.5 text-[0.65rem] uppercase tracking-[0.22em] lg:flex"
+              style={{ fontFamily: "var(--font-dm-mono)", color: "var(--tray-clay, #B8531A)" }}
+            >
+              <span className="h-1.5 w-1.5 rounded-full bg-current animate-pulse" />
+              Kitchen open
+            </span>
+          </div>
+        </div>
+
         <TrayHero />
         <MetricsStrip />
         <CampusTicker />
@@ -352,10 +380,11 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
             </em>
           </h2>
           <p
-            className="mx-auto mt-7 max-w-xl text-[1.05rem] leading-8 opacity-70"
+            className="mx-auto mt-7 max-w-2xl text-[1.05rem] leading-8 opacity-70"
             style={{ fontFamily: "var(--font-geist)" }}
           >
-            Three screens. One lunch service. Built for campus canteens tired of printed tokens.
+            Three screens. Zero printed tokens. Every order tracked, every payment confirmed,
+            every handover verified. Deploy on a free tier and go live today.
           </p>
           <div className="mt-10 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
             <a href="#try-demo" className="rounded-full bg-[var(--tray-ink)] px-8 py-4 text-sm font-semibold text-[var(--tray-cream)] transition hover:opacity-85">
@@ -366,27 +395,38 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
             </Link>
           </div>
 
-          {/* Ghost TRAY watermark */}
-          <div
-            className="tray-ghost-word pointer-events-none mt-16 select-none text-[clamp(8rem,28vw,28rem)]"
-            aria-hidden
-          >
-            TRAY
-          </div>
         </section>
       </main>
 
       {/* ── FOOTER ────────────────────────────────────────────────────── */}
       <footer
-        className="border-t border-[var(--tray-border)] px-5 pb-8 pt-12 sm:px-8 lg:px-10"
+        className="relative overflow-hidden border-t border-[var(--tray-border)] px-5 pb-8 pt-12 sm:px-8 lg:px-10"
         style={{ paddingBottom: "max(2rem, env(safe-area-inset-bottom))" }}
       >
+        {/* Ghost TRAY watermark — bottom-right corner with gap */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute bottom-0 right-6 select-none leading-[0.80] tracking-[-0.07em] sm:right-10"
+          style={{
+            fontFamily: "var(--font-barlow)",
+            fontWeight: 900,
+            fontSize: "clamp(5rem, 18vw, 18rem)",
+            textTransform: "uppercase",
+            color: "var(--tray-muted)",
+            opacity: 0.07,
+          }}
+        >
+          TRAY
+        </div>
         <div className="mx-auto max-w-7xl">
-          <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-[2fr_1fr_1fr_1fr]">
+          <div className="relative z-10 grid gap-10 sm:grid-cols-2 lg:grid-cols-[2fr_1fr_1fr_1fr]">
             {/* Brand */}
             <div>
               <BrandMark />
-              <p className="mt-4 max-w-xs text-sm leading-7 opacity-60">
+              <p
+                className="mt-4 max-w-xs text-[0.9rem] leading-7 opacity-60"
+                style={{ fontFamily: "var(--font-geist)" }}
+              >
                 A campus canteen ordering system. Multi-tenant, source-available, built for India.
               </p>
             </div>
@@ -439,11 +479,17 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
           </div>
 
           {/* Bottom bar */}
-          <div className="mt-12 flex flex-wrap items-center justify-between gap-4 border-t border-[var(--tray-border)] pt-6">
-            <p className="font-code text-[0.62rem] uppercase tracking-[0.2em] opacity-45">
+          <div className="relative z-10 mt-12 flex flex-wrap items-center justify-between gap-4 border-t border-[var(--tray-border)] pt-6">
+            <p
+              className="text-[0.62rem] uppercase tracking-[0.2em] opacity-45"
+              style={{ fontFamily: "var(--font-dm-mono)" }}
+            >
               Built for campus canteens · Made in India
             </p>
-            <p className="font-code text-[0.62rem] uppercase tracking-[0.2em] opacity-45">
+            <p
+              className="text-[0.62rem] uppercase tracking-[0.2em] opacity-45"
+              style={{ fontFamily: "var(--font-dm-mono)" }}
+            >
               v3.0 · 2026
             </p>
           </div>

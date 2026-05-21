@@ -72,7 +72,7 @@ export function TryDemoSection() {
 
     gsap
       .timeline({ onComplete: () => router.push(href) })
-      .set(overlay, { display: "grid" })
+      .set(overlay, { display: "flex" })
       .fromTo(overlay, { yPercent: 100 }, { yPercent: 0, duration: 0.65, ease: "power4.inOut" })
       .fromTo(
         "[data-entry-word]",
@@ -262,35 +262,51 @@ export function TryDemoSection() {
         </div>
       </div>
 
-      {/* La Revoltosa entry overlay */}
+      {/* La Revoltosa fullscreen wipe — large, perfectly centered */}
       <div
         ref={overlayRef}
-        className="fixed inset-0 z-[9999] hidden place-items-center"
-        style={{ background: "var(--tray-bg)", color: "var(--tray-ink)" }}
+        className="fixed inset-0 z-[9999] hidden"
+        style={{
+          background: "var(--tray-bg, #D8C9AE)",
+          color: "var(--tray-ink, #1A1614)",
+          alignItems: "center",
+          justifyContent: "center",
+          flexDirection: "column",
+          gap: "1.5rem",
+        }}
       >
-        <div className="text-center">
-          <div className="overflow-hidden">
-            <div
-              data-entry-word
-              className="leading-none tracking-[-0.07em]"
-              style={{
-                fontFamily: "var(--font-barlow)",
-                fontWeight: 900,
-                fontSize: "clamp(6rem, 18vw, 17rem)",
-                textTransform: "uppercase",
-              }}
-            >
-              Tray
-            </div>
-          </div>
-          <p
-            data-entry-label
-            className="mt-4 text-xs uppercase tracking-[0.32em]"
-            style={{ fontFamily: "var(--font-dm-mono)", color: "var(--tray-muted)" }}
+        {/* Tray — fills viewport for maximum drama */}
+        <div style={{ overflow: "hidden" }}>
+          <div
+            data-entry-word
+            style={{
+              fontFamily: "var(--font-barlow, system-ui)",
+              fontWeight: 900,
+              fontSize: "clamp(9rem, 26vw, 24rem)",
+              lineHeight: 0.80,
+              letterSpacing: "-0.05em",
+              textTransform: "uppercase",
+              color: "var(--tray-ink, #1A1614)",
+              padding: "0 clamp(1rem, 4vw, 4rem)",
+            }}
           >
-            Opening {roleLabel}
-          </p>
+            Tray
+          </div>
         </div>
+        {/* Role hint */}
+        <p
+          data-entry-label
+          style={{
+            fontFamily: "var(--font-dm-mono, monospace)",
+            fontSize: "0.7rem",
+            letterSpacing: "0.36em",
+            textTransform: "uppercase",
+            color: "var(--tray-muted, #575757)",
+            opacity: 0.65,
+          }}
+        >
+          Opening {roleLabel}
+        </p>
       </div>
     </section>
   );

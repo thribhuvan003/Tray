@@ -171,7 +171,9 @@ export function PiranhaPortalsSection() {
             className="mt-7 max-w-2xl text-[1.1rem] leading-8 opacity-58"
             style={{ fontFamily: "var(--font-geist)" }}
           >
-            Student, kitchen, and admin screens all run from the same live order state.
+            One database, three purpose-built views. What a student orders is what the
+            kitchen prepares, which is what the admin monitors. No lag, no re-sync,
+            no mystery. Open any portal below — fully live, no sign-up.
           </p>
 
           {/* Scrub progress bar */}

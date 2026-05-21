@@ -63,9 +63,10 @@ export function CampusModelSection({ campusName }: { campusName?: string | null 
           <h2 className="font-editorial text-[clamp(3.5rem,8vw,8rem)] font-black leading-[0.86] tracking-[-0.075em]">
             One campus. Many counters.
           </h2>
-          <p className="mt-6 max-w-xl text-lg leading-8 opacity-70">
-            Tray is campus-scoped for students and canteen-scoped for staff.
-            Everyone sees exactly what they need.
+          <p className="mt-6 max-w-xl text-[1.05rem] leading-8 opacity-70">
+            Students see every active canteen on campus. Kitchen staff see only
+            their assigned queue. Admins manage one canteen. No cross-contamination,
+            no wrong orders, no confusion about which screen to look at.
           </p>
         </div>
 

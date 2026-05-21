@@ -127,14 +127,15 @@ export function TrayHero() {
             </em>
           </h1>
 
-          {/* Geist body */}
+          {/* Geist body — direct, CEO-level clarity */}
           <p
             data-hero-copy
-            className="mt-7 max-w-2xl text-[1.125rem] leading-[1.75] opacity-70 sm:text-[1.2rem]"
+            className="mt-7 max-w-2xl text-[1.15rem] leading-[1.75] opacity-70 sm:text-[1.2rem]"
             style={{ fontFamily: "var(--font-geist)" }}
           >
-            Students order from any canteen in their campus. Kitchens run live
-            queues. Admins see orders, revenue, and handovers in real time.
+            Every campus lunch hour loses 12 minutes per student to a token queue.
+            Tray replaces it — mobile ordering, UPI checkout, 4-digit OTP pickup,
+            live kitchen board. One system for students, kitchen staff, and admins.
           </p>
 
           {/* CTAs — Geist Semibold */}

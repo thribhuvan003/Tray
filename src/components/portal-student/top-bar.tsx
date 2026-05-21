@@ -63,13 +63,20 @@ export function StudentTopBar({ tenant, siblings = [] }: Props) {
       style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
     >
       <div className="mx-auto max-w-5xl px-4 sm:px-6 h-14 flex items-center justify-between gap-3">
-        {/* Left: brand */}
+        {/* Left: Tray logo → always goes to landing page */}
         <Link
-          href={`/c/${tenant.slug}/menu`}
-          className="flex-shrink-0 inline-flex items-center gap-2 text-[17px] tracking-tight"
+          href="/"
+          className="flex-shrink-0 inline-flex items-center gap-2 group"
+          aria-label="Back to Tray home"
         >
-          <span className="inline-flex h-6 w-6 items-center justify-center rounded-md bg-ocean-500 text-white font-mono text-[11px] font-bold">T</span>
-          <span className="font-semibold hidden sm:inline">Tray<span className="italic text-ocean-500">.</span></span>
+          <span
+            className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-ocean-500 text-white text-[12px] transition group-hover:scale-105"
+            style={{ fontFamily: "var(--font-barlow, var(--font-geist))", fontWeight: 900 }}
+          >T</span>
+          <span
+            className="hidden tracking-[-0.05em] sm:inline"
+            style={{ fontFamily: "var(--font-fraunces, var(--font-geist))", fontWeight: 700, fontSize: "1.05rem" }}
+          >Tray<em className="not-italic text-ocean-500" style={{ fontStyle: "italic" }}>.</em></span>
         </Link>
 
         {/* Center: canteen switcher (if campus has siblings) or static name */}
