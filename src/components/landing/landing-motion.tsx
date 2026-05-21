@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { triggerDemoEntry } from "@/components/landing/demo-entry-transition";
 
 export function LandingMotion() {
   useEffect(() => {
@@ -316,9 +317,32 @@ export function LandingMotion() {
 
     })();
 
+    // ── Demo role card entry transitions ─────────────────────────────
+    const ROLE_LABELS: Record<string, string> = {
+      student: "Student portal",
+      kitchen: "Kitchen view",
+      admin: "Admin console",
+    };
+    const roleCardHandlers: Array<[HTMLElement, (e: MouseEvent) => void]> = [];
+    document.querySelectorAll<HTMLAnchorElement>(".tl-role-card[data-r]").forEach((card) => {
+      const r = card.dataset.r ?? "";
+      const label = ROLE_LABELS[r];
+      if (!label || !card.href || card.tagName !== "A") return;
+      const href = card.href;
+      const handler = (e: MouseEvent) => {
+        e.preventDefault();
+        triggerDemoEntry(href, label);
+      };
+      card.addEventListener("click", handler as EventListener);
+      roleCardHandlers.push([card as HTMLElement, handler as (e: MouseEvent) => void]);
+    });
+
     return () => {
       killed = true;
       document.removeEventListener("mousemove", onMouseMove);
+      roleCardHandlers.forEach(([el, fn]) => {
+        el.removeEventListener("click", fn as EventListener);
+      });
       cancelAnimationFrame(rafCursorId);
       hoverTargets.forEach((el) => {
         el.removeEventListener("mouseenter", onEnterHover);

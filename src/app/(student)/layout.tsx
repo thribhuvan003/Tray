@@ -1,6 +1,6 @@
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
-import { resolveTenant } from "@/lib/tenant";
+import { resolveTenant, collegeCanteens } from "@/lib/tenant";
 import { StudentTopBar } from "@/components/portal-student/top-bar";
 import { CartDrawer } from "@/components/portal-student/cart-drawer";
 import { CartTenantSync } from "@/components/portal-student/cart-tenant-sync";
@@ -10,14 +10,28 @@ export default async function StudentLayout({ children }: { children: React.Reac
   const slug = h.get("x-tenant-slug") ?? "aditya";
   const tenant = await resolveTenant(slug);
   if (!tenant) notFound();
+
+  // Fetch sibling canteens from the same college so the CanteenSwitcher can
+  // list them. Falls back to empty array if college_slug is unavailable or the
+  // query fails — the switcher hides itself when there's only one canteen.
+  const siblings = tenant.college_slug
+    ? await collegeCanteens(tenant.college_slug).catch(() => [])
+    : [];
+
   return (
-    <div data-portal="student" className="min-h-screen bg-[color:var(--color-paper)] text-[color:var(--color-ink)] antialiased">
+    <div
+      data-portal="student"
+      className="min-h-screen bg-[color:var(--color-paper)] text-[color:var(--color-ink)] antialiased"
+    >
       <CartTenantSync slug={tenant.slug} />
-      <StudentTopBar tenant={tenant} />
+      <StudentTopBar tenant={tenant} siblings={siblings} />
       {/* Desktop reserves a 20rem right column for the sticky cart sidebar.
           Mobile stays single-column; the CartDrawer self-promotes to a
           floating button + Vaul drawer below the lg breakpoint. */}
-      <main className="pb-32 sm:pb-20 lg:pb-12 lg:grid lg:grid-cols-[1fr,20rem] lg:gap-6 lg:max-w-7xl lg:mx-auto lg:px-6">
+      <main
+        className="pb-32 sm:pb-20 lg:pb-12 lg:grid lg:grid-cols-[1fr,20rem] lg:gap-6 lg:max-w-7xl lg:mx-auto lg:px-6"
+        style={{ paddingBottom: "calc(5rem + env(safe-area-inset-bottom, 0px))" }}
+      >
         <div className="min-w-0">{children}</div>
         <CartDrawer tenantSlug={tenant.slug} tenantName={tenant.name} />
       </main>

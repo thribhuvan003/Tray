@@ -4,13 +4,13 @@ import Link from "next/link";
 import { ArrowLeft, Clock, History, User } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import type { ResolvedTenant } from "@/lib/tenant";
+import type { ResolvedTenant, CollegeCanteen } from "@/lib/tenant";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { CanteenSwitcher } from "@/components/portal-student/canteen-switcher";
 
 function currentServiceLabel(): string {
-  // Extract the current IST hour directly from a UTC offset calculation.
   const nowUtcMs = Date.now();
-  const istOffsetMs = 5.5 * 60 * 60 * 1000; // UTC+5:30
+  const istOffsetMs = 5.5 * 60 * 60 * 1000;
   const h = new Date(nowUtcMs + istOffsetMs).getUTCHours();
   if (h < 11) return "Breakfast";
   if (h < 15) return "Lunch";
@@ -18,10 +18,16 @@ function currentServiceLabel(): string {
   return "Dinner";
 }
 
-export function StudentTopBar({ tenant }: { tenant: ResolvedTenant }) {
+type Props = {
+  tenant: ResolvedTenant;
+  siblings?: CollegeCanteen[];
+};
+
+export function StudentTopBar({ tenant, siblings = [] }: Props) {
   const [t, setT] = useState<string>("");
   const [serviceLabel, setServiceLabel] = useState<string>(() => currentServiceLabel());
   const router = useRouter();
+
   useEffect(() => {
     const tick = () =>
       setT(
@@ -39,10 +45,17 @@ export function StudentTopBar({ tenant }: { tenant: ResolvedTenant }) {
     }, 60_000);
     return () => clearInterval(id);
   }, []);
+
+  const hasMultipleCanteens = siblings.length > 1;
+
   return (
-    <header className="sticky top-0 z-40 bg-[color:var(--color-paper)]/85 backdrop-blur-xl border-b border-[color:var(--color-line)]">
+    <header
+      className="sticky top-0 z-40 bg-[color:var(--color-paper)]/85 backdrop-blur-xl border-b border-[color:var(--color-line)]"
+      style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
+    >
       <div className="mx-auto max-w-5xl px-4 sm:px-6 h-14 flex items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
+        {/* Left: back + brand */}
+        <div className="flex items-center gap-3 flex-shrink-0">
           <button
             aria-label="Go back"
             onClick={() => router.back()}
@@ -50,34 +63,50 @@ export function StudentTopBar({ tenant }: { tenant: ResolvedTenant }) {
           >
             <ArrowLeft size={13} /> Back
           </button>
-          <Link href={`/c/${tenant.slug}/menu`} className="inline-flex items-center gap-2 font-display text-[17px] tracking-tight">
-            <span className="inline-flex h-6 w-6 items-center justify-center rounded-md bg-ocean-500 text-white font-mono text-[11px] font-bold">T</span>
-            <span className="font-medium">Tray<span className="italic text-ocean-500">.</span></span>
+          <Link
+            href={`/c/${tenant.slug}/menu`}
+            className="inline-flex items-center gap-2 font-display text-[17px] tracking-tight"
+          >
+            <span className="inline-flex h-6 w-6 items-center justify-center rounded-md bg-ocean-500 text-white font-mono text-[11px] font-bold">
+              T
+            </span>
+            <span className="font-medium hidden sm:inline">
+              Tray<span className="italic text-ocean-500">.</span>
+            </span>
           </Link>
         </div>
-        <div className="flex flex-col items-center text-center flex-1">
-          <div
-            className="text-[13px] font-semibold tracking-tight text-[color:var(--color-ink)] truncate max-w-[180px] sm:max-w-none"
-            style={{ fontFamily: "var(--font-jakarta, var(--font-manrope))" }}
-          >
-            {tenant.name}
-          </div>
-          <div
-            className="hidden sm:flex text-[10px] uppercase tracking-[0.16em] text-[color:var(--color-ink)]/50 truncate max-w-[220px]"
-            style={{ fontFamily: "var(--font-barlow, var(--font-manrope))" }}
-          >
-            {tenant.college_name}
-          </div>
-          <div className="text-[10px] font-mono tabular text-[color:var(--color-ink)]/45 flex items-center gap-1.5 sm:hidden">
-            <Clock size={10} />
-            {t || "--:--"} IST
-          </div>
-          <div className="hidden sm:flex text-[11px] font-mono tabular text-[color:var(--color-ink)]/45 items-center gap-1.5">
-            <Clock size={10} />
-            {serviceLabel} · {t || "--:--"} IST
+
+        {/* Center: canteen switcher or static name */}
+        <div className="flex flex-col items-center flex-1 min-w-0 px-2">
+          {hasMultipleCanteens ? (
+            <CanteenSwitcher
+              currentSlug={tenant.slug}
+              currentName={tenant.name}
+              currentBuilding={tenant.building ?? null}
+              currentZone={tenant.zone ?? null}
+              currentIsOpen={tenant.is_open ?? true}
+              collegeName={tenant.college_name}
+              collegeSlug={tenant.college_slug}
+              siblings={siblings}
+            />
+          ) : (
+            <>
+              <div className="text-[13px] font-semibold tracking-tight text-[color:var(--color-ink)] truncate max-w-[180px] sm:max-w-none">
+                {tenant.name}
+              </div>
+              <div className="hidden sm:flex text-[10px] font-mono uppercase tracking-[0.14em] text-[color:var(--color-ink)]/45">
+                {tenant.college_name}
+              </div>
+            </>
+          )}
+          <div className="text-[10px] font-mono tabular text-[color:var(--color-ink)]/40 flex items-center gap-1.5 mt-0.5">
+            <Clock size={9} />
+            <span>{serviceLabel} · {t || "--:--"} IST</span>
           </div>
         </div>
-        <div className="flex items-center gap-1.5">
+
+        {/* Right: actions */}
+        <div className="flex items-center gap-1.5 flex-shrink-0">
           <ThemeToggle />
           <Link
             href={`/c/${tenant.slug}/orders`}

@@ -10,10 +10,15 @@ export type ResolvedTenant = {
   slug: string;
   name: string;
   college_name: string;
+  college_slug: string | null;
   hero_tagline: string | null;
   logo_url: string | null;
   allowed_domain: string | null;
   upi_vpa: string | null;
+  building: string | null;
+  zone: string | null;
+  is_open: boolean;
+  pending_orders_count?: number;
 };
 
 export type CollegeCanteen = {
@@ -33,9 +38,6 @@ export type CollegeCanteen = {
 
 const RESERVED_SUBDOMAINS = new Set(["www", "app", "admin", "api", "auth", "static"]);
 
-// Hosts that look subdomain-y but aren't tenant subdomains. *.vercel.app
-// is a preview/prod alias, not a college; we treat it as "no tenant" so the
-// caller falls back to DEFAULT_TENANT_SLUG.
 const NON_TENANT_HOST_SUFFIXES = [".vercel.app", ".vercel.sh"];
 
 export function tenantSlugFromHost(host: string | null | undefined): string | null {
@@ -56,16 +58,11 @@ export function tenantSlugFromHost(host: string | null | undefined): string | nu
   return null;
 }
 
-// Anon-key client that bypasses cookies — used purely to resolve the public
-// tenant record from the slug. Cached per request by React.
 const _resolverClient = () =>
   createClient<Database>(env.NEXT_PUBLIC_SUPABASE_URL, env.NEXT_PUBLIC_SUPABASE_ANON_KEY, {
     auth: { persistSession: false, autoRefreshToken: false },
   });
 
-// Edge-cached tenant lookup: 500 concurrent students hitting /c/iitb-h9/menu within
-// a minute trigger ONE Supabase call, not 500. React.cache() is still wrapped on top
-// so within a single request the same slug resolves once.
 const fetchTenantUncached = async (slug: string): Promise<ResolvedTenant | null> => {
   const client = _resolverClient();
   const { data, error } = await client.rpc("resolve_tenant", { p_slug: slug });
@@ -81,15 +78,45 @@ const fetchTenantUncached = async (slug: string): Promise<ResolvedTenant | null>
     upi_vpa: string | null;
   };
   if (!row) return null;
+
+  // Fetch college_slug via tenants→colleges join (cached separately).
+  // Uses anon key so college table must have public SELECT.
+  let college_slug: string | null = null;
+  let building: string | null = null;
+  let zone: string | null = null;
+  let is_open = true;
+
+  try {
+    const { data: tenantRow } = await client
+      .from("tenants")
+      .select("college_id, building, zone, is_open, colleges(slug)")
+      .eq("slug", slug)
+      .single();
+
+    if (tenantRow) {
+      building = tenantRow.building ?? null;
+      zone = tenantRow.zone ?? null;
+      is_open = tenantRow.is_open ?? true;
+      const colleges = tenantRow.colleges as unknown as { slug: string } | null;
+      college_slug = colleges?.slug ?? null;
+    }
+  } catch {
+    // Graceful degradation — college switcher won't show if this fails
+  }
+
   return {
     id: row.id,
     slug: row.slug,
     name: row.name,
     college_name: row.college_name,
+    college_slug,
     hero_tagline: row.hero_tagline,
     logo_url: row.logo_url,
     allowed_domain: row.allowed_domain ?? null,
     upi_vpa: row.upi_vpa ?? null,
+    building,
+    zone,
+    is_open,
   };
 };
 
