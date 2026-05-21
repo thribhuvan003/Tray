@@ -56,10 +56,16 @@ export function StudentTopBar({ tenant }: { tenant: ResolvedTenant }) {
           </Link>
         </div>
         <div className="flex flex-col items-center text-center flex-1">
-          <div className="text-[12px] font-semibold tracking-tight text-[color:var(--color-ink)] truncate max-w-[180px] sm:max-w-none">
+          <div
+            className="text-[13px] font-semibold tracking-tight text-[color:var(--color-ink)] truncate max-w-[180px] sm:max-w-none"
+            style={{ fontFamily: "var(--font-jakarta, var(--font-manrope))" }}
+          >
             {tenant.name}
           </div>
-          <div className="hidden sm:flex text-[11px] font-mono uppercase tracking-wider text-[color:var(--color-ink)]/55 truncate max-w-[220px]">
+          <div
+            className="hidden sm:flex text-[10px] uppercase tracking-[0.16em] text-[color:var(--color-ink)]/50 truncate max-w-[220px]"
+            style={{ fontFamily: "var(--font-barlow, var(--font-manrope))" }}
+          >
             {tenant.college_name}
           </div>
           <div className="text-[10px] font-mono tabular text-[color:var(--color-ink)]/45 flex items-center gap-1.5 sm:hidden">
