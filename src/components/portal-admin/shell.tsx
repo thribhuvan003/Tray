@@ -166,7 +166,7 @@ export function AdminShell({
                 <span>{n.label}</span>
                 {"kbd" in n && n.kbd && (
                   <span
-                    className="ml-auto font-mono font-medium"
+                    className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity font-mono font-medium"
                     style={{
                       fontSize: 10,
                       padding: "1px 5px",
@@ -273,14 +273,11 @@ export function AdminShell({
             borderBottom: "1px solid rgba(255,255,255,0.07)",
           }}
         >
-          {/* Left: live indicator */}
+          {/* Left: tenant context */}
           <div
             className="flex items-center gap-2 font-mono"
             style={{ fontSize: 11, color: "#6d7689" }}
           >
-            <div className="inline-flex h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-            WS connected
-            <span className="hidden sm:inline">·</span>
             <span className="hidden sm:inline">
               <span style={{ color: "#cdfa50" }}>{tenantSlug}</span>.tray.app/admin
             </span>

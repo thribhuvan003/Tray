@@ -92,7 +92,7 @@ export function TrackPanel({ tenantSlug, tenantName, order: initial, lines }: { 
   const [now, setNow] = useState<number>(() => Date.now());
   useEffect(() => {
     if (order.status !== "placed") return;
-    const t = window.setInterval(() => setNow(Date.now()), 15_000);
+    const t = window.setInterval(() => setNow(Date.now()), 5_000);
     return () => window.clearInterval(t);
   }, [order.status]);
   const cancelWindowOpen = order.status === "placed" && now - placedAtMs < FIVE_MIN_MS;
@@ -120,7 +120,11 @@ export function TrackPanel({ tenantSlug, tenantName, order: initial, lines }: { 
   }
 
   const isCancelled = order.status === "cancelled_by_kitchen" || order.status === "refunded";
-  const currentIdx = Math.max(0, STEPS.findIndex((s) => s.v === order.status));
+  const isPartiallyReady = order.status === "partially_ready";
+  // Map partially_ready onto the "preparing" step so the progress stepper
+  // renders correctly; it will also show a dedicated banner below.
+  const effectiveStatus: Status = isPartiallyReady ? "preparing" : order.status;
+  const currentIdx = Math.max(0, STEPS.findIndex((s) => s.v === effectiveStatus));
   const isReady = order.status === "ready";
   const isCollected = order.status === "collected";
 
@@ -192,7 +196,11 @@ export function TrackPanel({ tenantSlug, tenantName, order: initial, lines }: { 
             <div className="text-[11px] font-mono uppercase tracking-wider text-white/75 mb-2">
               Your pickup code · show at counter
             </div>
-            <div className="font-display tabular font-medium leading-none text-[clamp(72px,14vw,128px)] tracking-[-0.045em]">
+            <div
+              className="font-display tabular font-medium leading-none text-[clamp(72px,14vw,128px)] tracking-[-0.045em] cursor-pointer select-all"
+              title="Tap to copy"
+              onClick={() => navigator.clipboard.writeText(otp).catch(() => null)}
+            >
               {otp.split("").join(" ")}
             </div>
             <p className="text-[13px] text-white/80 mt-3">
@@ -205,6 +213,18 @@ export function TrackPanel({ tenantSlug, tenantName, order: initial, lines }: { 
         <div className="mb-6 rounded-3xl border border-amber-500/30 bg-amber-500/5 p-5 text-[13px] text-[color:var(--color-ink)]/70 flex items-center gap-3">
           <span className="animate-spin inline-block h-4 w-4 border-2 border-amber-500 border-t-transparent rounded-full shrink-0" />
           <span>Your order is ready — fetching your pickup code…</span>
+        </div>
+      )}
+
+      {isPartiallyReady && (
+        <div className="mb-4 rounded-2xl border border-amber-500/40 bg-amber-500/10 p-4 flex items-start gap-3">
+          <AlertTriangle size={18} className="text-amber-600 shrink-0 mt-0.5" />
+          <div>
+            <div className="text-[13.5px] font-medium text-[color:var(--color-ink)]">Some items still preparing</div>
+            <p className="text-[12px] text-[color:var(--color-ink)]/65 mt-0.5">
+              Part of your order is almost ready — the kitchen will call you when everything&rsquo;s done.
+            </p>
+          </div>
         </div>
       )}
 

@@ -6,11 +6,30 @@ import { Mail, KeyRound, ArrowRight } from "lucide-react";
 import { getBrowserClient } from "@/lib/supabase/browser";
 import { cn } from "@/lib/utils";
 
-export function LoginForm({ next }: { next: string }) {
+// NOTE: Google OAuth requires "Google" provider enabled in Supabase Dashboard →
+// Authentication → Providers → Google, with a valid Client ID and Secret.
+
+export function LoginForm({ next, slug = "" }: { next: string; slug?: string }) {
   const [mode, setMode] = useState<"magic" | "password">("magic");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [pending, start] = useTransition();
+
+  const onGoogleSignIn = () => {
+    start(async () => {
+      const sb = getBrowserClient();
+      const { error } = await sb.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: new URL(
+            `/auth/callback?next=${encodeURIComponent(next)}&tenant=${encodeURIComponent(slug)}`,
+            window.location.origin
+          ).toString(),
+        },
+      });
+      if (error) toast.error(error.message);
+    });
+  };
   const [sent, setSent] = useState(false);
   const [otpVisible, setOtpVisible] = useState(true);
   const [otpCountdown, setOtpCountdown] = useState(0);
@@ -111,8 +130,8 @@ export function LoginForm({ next }: { next: string }) {
             </form>
           </div>
         </div>
-        <p className="text-[11.5px] text-[color:var(--color-ink)]/45 mt-3">
-          Or type the 6-digit code from the same email instead of clicking the link.
+        <p className="text-[12px] text-amber-600 bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30 rounded-lg p-3 mt-3">
+          If the email doesn&apos;t arrive in 60s, type the 6-digit code from the email above — or use Google sign-in.
         </p>
       </div>
     );
@@ -120,6 +139,29 @@ export function LoginForm({ next }: { next: string }) {
 
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-3">
+      {/* Google OAuth — primary sign-in option */}
+      <div className="flex flex-col gap-3 mb-4">
+        <button
+          type="button"
+          onClick={onGoogleSignIn}
+          disabled={pending}
+          className="w-full h-12 rounded-xl border border-[color:var(--color-line)] bg-[color:var(--color-paper)] text-[14px] font-medium inline-flex items-center justify-center gap-2.5 hover:border-ocean-500/50 hover:bg-ocean-500/5 transition-colors"
+        >
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+            <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z" fill="#4285F4"/>
+            <path d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z" fill="#34A853"/>
+            <path d="M3.964 10.706A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.706V4.962H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.038l3.007-2.332z" fill="#FBBC05"/>
+            <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.962L3.964 6.294C4.672 4.167 6.656 3.58 9 3.58z" fill="#EA4335"/>
+          </svg>
+          Continue with Google
+        </button>
+        <div className="flex items-center gap-3">
+          <div className="flex-1 h-px bg-[color:var(--color-line)]" />
+          <span className="text-[12px] text-[color:var(--color-ink)]/45 font-mono">or</span>
+          <div className="flex-1 h-px bg-[color:var(--color-line)]" />
+        </div>
+      </div>
+
       <div className="grid grid-cols-2 gap-1 p-1 rounded-full border border-[color:var(--color-line)] bg-[color:var(--color-paper-dim)] text-[12.5px] font-medium">
         <button
           type="button"
@@ -139,7 +181,7 @@ export function LoginForm({ next }: { next: string }) {
             mode === "password" ? "bg-ocean-500 text-white" : "text-[color:var(--color-ink)]/65"
           )}
         >
-          <KeyRound size={13} /> Password
+          <KeyRound size={13} /> Use password
         </button>
       </div>
       <label>

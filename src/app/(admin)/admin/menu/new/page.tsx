@@ -159,7 +159,7 @@ export default async function NewMenuItemPage() {
         {/* Image URL */}
         <div>
           <label className="block text-[13px] font-medium text-graphite-700 mb-1" htmlFor="image_url">
-            Image URL (optional)
+            Image URL
           </label>
           <input
             id="image_url"
@@ -168,21 +168,12 @@ export default async function NewMenuItemPage() {
             className="w-full rounded-lg border border-graphite-200 bg-white px-3 py-2 text-[14px] text-graphite-900 placeholder:text-graphite-400 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary"
             placeholder="https://..."
           />
+          <p className="mt-1 text-[12px] text-graphite-400">
+            Optional — paste an image URL or skip for now
+          </p>
         </div>
 
-        {/* Sort order */}
-        <div>
-          <label className="block text-[13px] font-medium text-graphite-700 mb-1" htmlFor="sort_order">
-            Sort order
-          </label>
-          <input
-            id="sort_order"
-            name="sort_order"
-            type="number"
-            defaultValue={0}
-            className="w-full rounded-lg border border-graphite-200 bg-white px-3 py-2 text-[14px] text-graphite-900 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary"
-          />
-        </div>
+        {/* sort_order is sent as default 0 via server action — no user-facing field needed */}
 
         {/* Publish note */}
         <div className="rounded-lg border border-lime/30 bg-lime/5 px-4 py-3">

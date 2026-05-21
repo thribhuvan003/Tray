@@ -1,6 +1,7 @@
 "use client";
 
 import { Drawer } from "vaul";
+import Link from "next/link";
 import { Minus, Plus, ShoppingBag, ShoppingCart, Trash2, UtensilsCrossed, X } from "lucide-react";
 import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
@@ -30,7 +31,7 @@ function useMediaQuery(query: string): boolean {
   return matches;
 }
 
-export function CartDrawer({ tenantSlug, tenantName, tenantUpi }: { tenantSlug: string; tenantName: string; tenantUpi: string }) {
+export function CartDrawer({ tenantSlug, tenantName }: { tenantSlug: string; tenantName: string }) {
   const lines = useCart((s) => s.lines);
   const note = useCart((s) => s.note);
   const setNote = useCart((s) => s.setNote);
@@ -112,7 +113,10 @@ export function CartDrawer({ tenantSlug, tenantName, tenantUpi }: { tenantSlug: 
       <ul className="flex-1 overflow-y-auto px-5 sm:px-6 py-4 flex flex-col gap-3">
         {empty ? (
           <li className="text-[13px] text-[color:var(--color-ink)]/55 italic text-center py-8">
-            Your tray is empty. Pick something from the menu →
+            Your tray is empty.{" "}
+            <Link href={`/c/${tenantSlug}/menu`} className="text-ocean-500 hover:underline">
+              Pick something from the menu →
+            </Link>
           </li>
         ) : (
           lines.map((l) => (
@@ -231,7 +235,7 @@ export function CartDrawer({ tenantSlug, tenantName, tenantUpi }: { tenantSlug: 
           <div className="flex items-center justify-between gap-3 flex-wrap">
             <div>
               <div className="text-[11px] font-mono uppercase tracking-wider text-[color:var(--color-ink)]/55">
-                Total · UPI
+                Total · pays to {tenantName}
               </div>
               <div className="font-display text-[28px] font-medium tabular tracking-tight">{formatRupees(total)}</div>
             </div>
