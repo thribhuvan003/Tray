@@ -56,7 +56,7 @@ export default async function KitchenHistoryPage() {
   if (!tenant) return null;
 
   const user = await requireRole(["kitchen_staff", "canteen_admin", "super_admin"]);
-  if (!user) redirect(`/login?next=/kitchen/history`);
+  if (!user) redirect(`/c/${tenant.slug}/login?next=/c/${tenant.slug}/kitchen/history`);
 
   const admin = getAdminClient(tenant.id);
 

@@ -21,7 +21,7 @@ export default async function StaffSelectPage() {
   if (!tenant) return null;
 
   const user = await requireRole(["kitchen_staff", "canteen_admin", "super_admin"]);
-  if (!user) redirect(`/login?next=/kitchen/staff-select`);
+  if (!user) redirect(`/c/${tenant.slug}/login?next=/c/${tenant.slug}/kitchen/staff-select`);
 
   const admin = getAdminClient(tenant.id);
   const { data: profiles } = await admin
