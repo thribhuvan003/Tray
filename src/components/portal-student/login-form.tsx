@@ -67,7 +67,10 @@ export function LoginForm({ next, slug = "" }: { next: string; slug?: string }) 
     e.preventDefault();
     start(async () => {
       const sb = getBrowserClient();
-      const redirectTo = new URL(`/auth/callback?next=${encodeURIComponent(next)}`, window.location.origin).toString();
+      const redirectTo = new URL(
+          `/auth/callback?next=${encodeURIComponent(next)}&tenant=${encodeURIComponent(slug)}`,
+          window.location.origin
+        ).toString();
       if (mode === "magic") {
         const { error } = await sb.auth.signInWithOtp({
           email,

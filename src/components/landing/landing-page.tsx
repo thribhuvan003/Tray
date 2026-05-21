@@ -11,26 +11,26 @@ import { LandingAnimations } from "@/components/landing/landing-animations";
 
 const SCOPED_CSS = `
 .tray-landing {
-  --tl-bg: #0d0c0a;
-  --tl-bg-2: #16140f;
-  --tl-bg-3: #1f1c16;
-  --tl-bg-4: #2a261e;
-  --tl-line: rgba(242, 235, 227, 0.1);
-  --tl-line-2: rgba(242, 235, 227, 0.18);
-  --tl-ink: #f2ebe3;
-  --tl-ink-2: rgba(242, 235, 227, 0.78);
-  --tl-ink-3: rgba(242, 235, 227, 0.58);
-  --tl-ink-4: rgba(242, 235, 227, 0.38);
-  --tl-accent: #e8a86a;
-  --tl-accent-cool: #9ec4ff;
-  --tl-persimmon: #e8a86a;
-  /* Portal rims — demo token audit (student / kitchen / admin) */
-  --tl-student: #5cb1ff;
-  --tl-kitchen: #d52821;
-  --tl-kitchen-bright: #ef5749;
-  --tl-admin: #cdfa50;
-  --tl-good: #6dd4a0;
-  --tl-section-glow: rgba(232, 168, 106, 0.12);
+  --tl-bg: #FAFAF7;
+  --tl-bg-2: #F2EFE7;
+  --tl-bg-3: #E9E6DC;
+  --tl-bg-4: #DDD9CE;
+  --tl-line: rgba(28, 25, 18, 0.09);
+  --tl-line-2: rgba(28, 25, 18, 0.17);
+  --tl-ink: #0C0B08;
+  --tl-ink-2: rgba(12, 11, 8, 0.72);
+  --tl-ink-3: rgba(12, 11, 8, 0.50);
+  --tl-ink-4: rgba(12, 11, 8, 0.34);
+  --tl-accent: #B45309;
+  --tl-accent-cool: #1D4ED8;
+  --tl-persimmon: #B45309;
+  /* Portal rims — readable on warm-paper bg */
+  --tl-student: #1D4ED8;
+  --tl-kitchen: #DC2626;
+  --tl-kitchen-bright: #EF4444;
+  --tl-admin: #16A34A;
+  --tl-good: #16A34A;
+  --tl-section-glow: rgba(180, 83, 9, 0.06);
   /* Editorial card shell — §02 diagram (tl-diagram) + portal preview row */
   --tl-editorial-card-bg: var(--tl-bg-3);
   --tl-editorial-card-border: var(--tl-line);
@@ -94,17 +94,17 @@ const SCOPED_CSS = `
 .tray-landing .tl-orb-a {
   width: min(52vw, 520px); height: min(52vw, 520px);
   left: -12%; top: 8%;
-  background: radial-gradient(circle, rgba(232, 168, 106, 0.22) 0%, transparent 68%);
+  background: radial-gradient(circle, rgba(180, 83, 9, 0.13) 0%, transparent 68%);
 }
 .tray-landing .tl-orb-b {
   width: min(44vw, 440px); height: min(44vw, 440px);
   right: -8%; top: 42%;
-  background: radial-gradient(circle, rgba(158, 196, 255, 0.18) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(29, 78, 216, 0.09) 0%, transparent 70%);
 }
 .tray-landing .tl-orb-c {
   width: min(36vw, 360px); height: min(36vw, 360px);
   left: 38%; bottom: -8%;
-  background: radial-gradient(circle, rgba(109, 212, 160, 0.14) 0%, transparent 72%);
+  background: radial-gradient(circle, rgba(22, 163, 74, 0.08) 0%, transparent 72%);
   opacity: 0.45;
 }
 
@@ -115,11 +115,11 @@ const SCOPED_CSS = `
   position: sticky; top: 0; z-index: 50;
   backdrop-filter: blur(20px) saturate(1.35);
   -webkit-backdrop-filter: blur(20px) saturate(1.35);
-  background: color-mix(in srgb, var(--tl-bg) 72%, transparent);
+  background: color-mix(in srgb, var(--tl-bg) 80%, transparent);
   border-bottom: 1px solid var(--tl-line);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.06),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.35);
+    0 1px 0 rgba(28, 25, 18, 0.08),
+    0 2px 8px rgba(28, 25, 18, 0.04);
   transition: background .25s ease, box-shadow .25s ease, border-color .25s ease;
 }
 .tray-landing .tl-nav-inner {
@@ -135,19 +135,19 @@ const SCOPED_CSS = `
 }
 .tray-landing .tl-scroll-progress { position: fixed; top: 0; left: 0; right: 0; height: 2px; z-index: 60; background: linear-gradient(90deg, var(--tl-student) 0%, var(--tl-accent) 55%, var(--tl-kitchen) 100%); transform: scaleX(0); transform-origin: 0% 50%; pointer-events: none; }
 .tray-landing .tl-nav.is-scrolled {
-  background: color-mix(in srgb, var(--tl-bg-2) 88%, transparent);
+  background: color-mix(in srgb, var(--tl-bg-2) 92%, transparent);
   border-bottom-color: var(--tl-line-2);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.08),
-    0 8px 32px rgba(0, 0, 0, 0.45);
+    0 1px 0 rgba(28, 25, 18, 0.12),
+    0 8px 24px rgba(28, 25, 18, 0.07);
 }
 .tray-landing .tl-nav.is-scrolled-deep {
   backdrop-filter: blur(32px) saturate(1.65);
   -webkit-backdrop-filter: blur(32px) saturate(1.65);
-  background: color-mix(in srgb, var(--tl-bg-3) 92%, transparent);
+  background: color-mix(in srgb, var(--tl-bg-3) 95%, transparent);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.1),
-    0 12px 40px rgba(0, 0, 0, 0.5);
+    0 1px 0 rgba(28, 25, 18, 0.14),
+    0 12px 32px rgba(28, 25, 18, 0.09);
 }
 .tray-landing .tl-nav.is-scrolled .tl-nav-inner { padding-top: 8px; padding-bottom: 8px; min-height: 52px; }
 .tray-landing .tl-brand { font-family: var(--tl-display); font-size: clamp(1.5rem, 4vw, 1.75rem); letter-spacing: -0.03em; font-weight: 400; color: var(--tl-ink); text-decoration: none; white-space: nowrap; justify-self: start; line-height: 1; }
@@ -162,7 +162,7 @@ const SCOPED_CSS = `
   color: var(--tl-ink-2); padding: 8px; border-radius: 8px; flex-shrink: 0;
   transition: color .15s, background .15s; touch-action: manipulation;
 }
-.tray-landing .tl-hamburger:hover { color: var(--tl-ink); background: rgba(255,255,255,.06); }
+.tray-landing .tl-hamburger:hover { color: var(--tl-ink); background: rgba(12,11,8,.07); }
 .tray-landing .tl-hamburger:focus-visible { outline: 2px solid var(--tl-accent); outline-offset: 3px; }
 .tray-landing .tl-hamburger .tl-bar-a,
 .tray-landing .tl-hamburger .tl-bar-b,
@@ -233,19 +233,19 @@ const SCOPED_CSS = `
 
 .tray-landing .tl-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 11px 20px; border-radius: 999px; font-size: var(--tl-size-sm); font-weight: 600; border: 1px solid transparent; transition: background .15s, color .15s, border-color .15s, box-shadow .2s; line-height: 1.2; font-family: inherit; cursor: pointer; touch-action: manipulation; will-change: transform; }
 .tray-landing .tl-btn-pri {
-  background: #f2ebe3;
-  color: #0d0c0a;
-  border-color: rgba(242, 235, 227, 0.35);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 0 0 0 rgba(232, 168, 106, 0);
+  background: #0C0B08;
+  color: #FAFAF7;
+  border-color: transparent;
+  box-shadow: 0 2px 8px rgba(12, 11, 8, 0.18);
   position: relative;
 }
 .tray-landing .tl-btn-pri:hover {
-  background: #faf6ef;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45), 0 12px 32px rgba(0, 0, 0, 0.45), 0 0 28px rgba(232, 168, 106, 0.22);
+  background: #1F1C16;
+  box-shadow: 0 4px 20px rgba(12, 11, 8, 0.28), 0 0 24px rgba(180, 83, 9, 0.16);
 }
 .tray-landing .tl-btn-pri[data-magnetic] { will-change: transform; }
-.tray-landing .tl-btn-ghost { color: var(--tl-ink); background: rgba(255, 255, 255, 0.06); border-color: var(--tl-line-2); }
-.tray-landing .tl-btn-ghost:hover { background: rgba(255, 255, 255, 0.1); border-color: var(--tl-accent-cool); color: var(--tl-ink); }
+.tray-landing .tl-btn-ghost { color: var(--tl-ink); background: rgba(12, 11, 8, 0.04); border-color: var(--tl-line-2); }
+.tray-landing .tl-btn-ghost:hover { background: rgba(12, 11, 8, 0.08); border-color: var(--tl-accent); color: var(--tl-ink); }
 .tray-landing .tl-btn-lg { padding: 15px 26px; font-size: var(--tl-size-base); }
 
 .tray-landing a:focus { outline: none; }
@@ -262,8 +262,8 @@ const SCOPED_CSS = `
   top: 12px;
   z-index: 100;
   padding: 10px 16px;
-  background: #f2ebe3;
-  color: #0d0c0a;
+  background: #0C0B08;
+  color: #FAFAF7;
   border-radius: 8px;
   font-size: var(--tl-size-sm);
   font-weight: 600;
@@ -795,7 +795,7 @@ const SCOPED_CSS = `
 .tray-landing .tl-stack { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
 @media (min-width: 720px) { .tray-landing .tl-stack { grid-template-columns: repeat(4, 1fr); } }
 .tray-landing .tl-stack-card { padding: 20px; background: var(--tl-bg-2); border: 1px solid var(--tl-line); border-radius: 12px; display: flex; flex-direction: column; gap: 8px; transition: border-color .2s, background .2s, transform .25s ease, box-shadow .25s ease; }
-.tray-landing .tl-stack-card:hover { border-color: var(--tl-line-2); background: var(--tl-bg-3); transform: translateY(-4px); box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35); }
+.tray-landing .tl-stack-card:hover { border-color: var(--tl-line-2); background: var(--tl-bg-3); transform: translateY(-4px); box-shadow: 0 16px 40px rgba(28, 25, 18, 0.12); }
 .tray-landing .tl-portal-frame { perspective: 1200px; }
 .tray-landing .tl-browser-chrome { transform-style: preserve-3d; will-change: transform; }
 .tray-landing .tl-stack-card .tl-n { font-weight: 600; font-size: var(--tl-size-sm); color: var(--tl-ink); }
@@ -1201,7 +1201,7 @@ export function LandingPage({ tenant, msg }: { tenant: ResolvedTenant | null; ms
           </div>
           <div className="tl-nav-cta">
             <Link href="/login" className="tl-btn tl-btn-ghost tl-nav-signin">Sign in</Link>
-            <a href="https://trayy.vercel.app/demo/index.html" className="tl-btn tl-btn-pri">Live demo</a>
+            <a href="/demo/student.html" className="tl-btn tl-btn-pri">Live demo</a>
             <LandingHamburger />
           </div>
         </div>
@@ -1232,7 +1232,7 @@ export function LandingPage({ tenant, msg }: { tenant: ResolvedTenant | null; ms
           </p>
           <div className="tl-hero-cta">
             <div className="tl-row">
-              <a href="https://trayy.vercel.app/c/aditya/menu" className="tl-btn tl-btn-pri tl-btn-lg" data-magnetic>
+              <a href="/demo/student.html" className="tl-btn tl-btn-pri tl-btn-lg" data-magnetic>
                 Try the student app →
               </a>
               <Link href="/get-started" className="tl-btn tl-btn-ghost tl-btn-lg">Set up my canteen — free</Link>
@@ -1521,11 +1521,11 @@ export function LandingPage({ tenant, msg }: { tenant: ResolvedTenant | null; ms
           <h2>Skip the<br /><span className="tl-it">queue.</span></h2>
           <p>Three screens. One lunch service. Built for college canteens that are tired of printed tokens.</p>
           <div className="tl-cta-row">
-            <a href="https://trayy.vercel.app/c/aditya/menu" className="tl-btn tl-btn-pri tl-btn-lg" data-magnetic>
+            <a href="/demo/student.html" className="tl-btn tl-btn-pri tl-btn-lg" data-magnetic>
               Try the student app →
             </a>
-            <a href="https://trayy.vercel.app/c/aditya/kitchen" className="tl-btn tl-btn-ghost tl-btn-lg">Kitchen view</a>
-            <a href="https://trayy.vercel.app/c/aditya/admin/dashboard" className="tl-btn tl-btn-ghost tl-btn-lg">Admin dashboard</a>
+            <a href="/demo/kitchen.html" className="tl-btn tl-btn-ghost tl-btn-lg">Kitchen view</a>
+            <a href="/demo/admin.html" className="tl-btn tl-btn-ghost tl-btn-lg">Admin dashboard</a>
           </div>
         </div>
       </section>
@@ -1540,9 +1540,9 @@ export function LandingPage({ tenant, msg }: { tenant: ResolvedTenant | null; ms
           <div>
             <h4>Product</h4>
             <div className="tl-links">
-              <a href="https://trayy.vercel.app/c/aditya/menu">Student app</a>
-              <a href="https://trayy.vercel.app/c/aditya/kitchen">Kitchen view</a>
-              <a href="https://trayy.vercel.app/c/aditya/admin/dashboard">Admin console</a>
+              <a href="/demo/student.html">Student app</a>
+              <a href="/demo/kitchen.html">Kitchen view</a>
+              <a href="/demo/admin.html">Admin console</a>
               <Link href="/get-started">Get started</Link>
             </div>
           </div>
