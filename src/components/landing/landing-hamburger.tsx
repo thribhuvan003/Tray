@@ -55,7 +55,7 @@ export function LandingHamburger() {
         <span className="tl-mobile-divider" aria-hidden />
         <div className="tl-mobile-cta-row">
           <Link href="/login" className="tl-btn tl-btn-ghost" onClick={close}>Sign in</Link>
-          <a href="https://trayy.vercel.app/demo/index.html" className="tl-btn tl-btn-pri" onClick={close}>Live demo</a>
+          <a href="/demo/student.html" className="tl-btn tl-btn-pri" onClick={close}>Live demo</a>
         </div>
       </div>
     </>
