@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8"/>
-<meta name="viewport" content="width=1440"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>Tray Kitchen — Aditya Engineering Canteen</title>
 <link rel="icon" href="/icon.svg" type="image/svg+xml"/>
 <link rel="apple-touch-icon" href="/apple-icon.svg"/>
@@ -60,7 +60,8 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
 
 /* SIDEBAR */
 .sb{background:var(--paper);border-right:1px solid var(--line);padding:18px 16px;display:flex;flex-direction:column;gap:4px;position:sticky;top:0;height:100vh}
-.brand{display:flex;align-items:center;gap:9px;font-family:var(--display);font-weight:500;font-size:22px;letter-spacing:-0.02em;padding:6px 8px 18px;border-bottom:1px solid var(--line);margin-bottom:14px}
+.brand{display:flex;align-items:center;gap:9px;font-family:var(--display);font-weight:500;font-size:22px;letter-spacing:-0.02em;padding:6px 8px 18px;border-bottom:1px solid var(--line);margin-bottom:14px;text-decoration:none;color:inherit;transition:color .12s}
+.brand:hover{color:var(--tomato)}
 .brand .dot{font-style:italic;color:var(--tomato);margin-left:-3px}
 .brand-mark{width:30px;height:30px;border-radius:8px;background:var(--tomato);display:inline-flex;align-items:center;justify-content:center;color:var(--cream);font-family:var(--display);font-style:italic;font-weight:500;font-size:18px;box-shadow:inset 0 -3px 0 rgba(0,0,0,.14)}
 .sb-group{font-family:var(--mono);font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:var(--ink-3);padding:12px 8px 6px;font-weight:600}
@@ -122,7 +123,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
 .queue-shell{display:grid;grid-template-columns:1fr 320px;gap:16px;align-items:flex-start}
 .queue-board{background:var(--paper);border:1px solid var(--ink);border-radius:14px;overflow:hidden;box-shadow:5px 5px 0 var(--ink)}
 .queue-cols{display:grid;grid-template-columns:repeat(4,1fr);min-height:520px}
-.col{border-right:1px solid var(--line);display:flex;flex-direction:column;background:var(--cream-4)}
+.col{border-right:1px solid var(--line);display:flex;flex-direction:column;background:var(--cream-4);min-height:0}
 .col:last-child{border-right:none}
 .col-head{padding:12px 16px;border-bottom:1px solid var(--line);background:var(--paper);display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:2}
 .col-head .name{font-family:var(--mono);font-size:11px;letter-spacing:0.14em;text-transform:uppercase;font-weight:700;color:var(--ink)}
@@ -131,7 +132,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
 .col[data-status="preparing"] .col-head .name::before{content:"◐ ";color:var(--tomato)}
 .col[data-status="ready"] .col-head .name::before{content:"✓ ";color:var(--olive)}
 .col[data-status="collected"] .col-head .name::before{content:"▪ ";color:var(--ink-3)}
-.col-body{flex:1;padding:10px;display:flex;flex-direction:column;gap:8px;overflow-y:auto;max-height:600px;scrollbar-width:thin;scrollbar-color:var(--line-2) transparent}
+.col-body{flex:1;min-height:0;padding:10px;display:flex;flex-direction:column;gap:8px;overflow-y:auto;max-height:min(600px,52vh);scrollbar-width:thin;scrollbar-color:var(--line-2) transparent;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
 
 /* TICKET */
 .ticket{background:var(--paper);border:1px solid var(--line);border-radius:7px;padding:11px 13px;display:flex;flex-direction:column;gap:7px;position:relative;cursor:pointer;transition:transform .12s,box-shadow .12s,border-color .15s;animation:ticketIn .35s cubic-bezier(.34,1.26,.64,1) backwards}
@@ -236,6 +237,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
    HISTORY + INSIGHTS VIEWS
    ===================================================== */
 .view-pane{display:flex;flex-direction:column;gap:14px;animation:liveIn .3s ease both}
+.view-pane[hidden],.queue-shell[hidden],.queue-page-chrome[hidden]{display:none!important}
 .hist-table{width:100%;border-collapse:collapse;font-family:var(--sans)}
 .hist-table thead th{text-align:left;font-family:var(--mono);font-size:10.5px;letter-spacing:0.08em;text-transform:uppercase;color:var(--ink-3);padding:11px 16px;border-bottom:1px solid var(--line);font-weight:600;background:var(--cream-2)}
 .hist-table thead th.r,.hist-table td.r{text-align:right}
@@ -275,7 +277,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
 <div class="app">
   <!-- SIDEBAR -->
   <aside class="sb">
-    <div class="brand"><span class="brand-mark">T</span>Tray<span class="dot">.</span></div>
+    <a href="/" class="brand" title="Tray home"><span class="brand-mark">T</span>Tray<span class="dot">.</span></a>
     <div class="sb-group">Kitchen</div>
     <div class="sb-link active" data-nav="queue">
       <svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 4h12M2 8h12M2 12h8"/></svg>
@@ -307,9 +309,9 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
     <div class="sb-bottom">
       <div class="sb-group" style="padding-top:0">Other portals</div>
       <div class="sb-portals">
-        <a href="student.html">Student app · phone <span>→</span></a>
+        <a href="student.html">Student app · laptop <span>→</span></a>
         <a href="admin.html">Admin dashboard <span>→</span></a>
-        <a href="index.html">Marketing site <span>→</span></a>
+        <a href="/">Marketing site <span>→</span></a>
       </div>
       <div class="sb-user">
         <div class="av">M</div>
@@ -320,24 +322,25 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
 
   <!-- MAIN -->
   <main class="main">
-    <div class="page-head">
+    <div class="page-head queue-page-chrome">
       <div class="l">
-        <span class="eyebrow">Tuesday, 7 May 2026 · Lunch service</span>
-        <h1>Kitchen <span class="it">queue.</span></h1>
+        <span class="eyebrow" id="kitchenEyebrow">Tuesday, 7 May 2026 · Lunch service</span>
+        <h1 id="pageTitle">Kitchen <span class="it">queue.</span></h1>
         <div class="sub">
           <span class="clk" id="clock">11:42:36</span>
           <span class="live"><span class="d"></span>Connected · WS</span>
         </div>
       </div>
       <div class="r">
-        <button class="btn btn-ghost btn-sm" onclick="toast('Sounds enabled','ok')">🔔 Sounds</button>
+        <select id="kitchenCanteen" class="btn btn-ghost btn-sm" aria-label="Kitchen canteen" title="Switch canteen queue"></select>
+        <button class="btn btn-ghost btn-sm" type="button" id="btnSounds">🔔 Sounds</button>
         <button class="btn btn-ghost btn-sm" onclick="manualPush()">+ Walk-in order</button>
-        <button class="btn btn-pri btn-sm">⟳ Refresh</button>
+        <button type="button" class="btn btn-pri btn-sm" id="btnRefresh">⟳ Refresh</button>
       </div>
     </div>
 
     <!-- KPI BAR -->
-    <div class="kpi-bar">
+    <div class="kpi-bar queue-page-chrome">
       <div class="kpi"><div class="lbl">Incoming</div><div class="val" id="kIn">02</div><div class="delta">+1 last 5 min</div></div>
       <div class="kpi"><div class="lbl">Preparing</div><div class="val"><span class="acc serif-it" id="kPrep">03</span></div><div class="delta">avg 6:40</div></div>
       <div class="kpi"><div class="lbl">Ready</div><div class="val" id="kReady">02</div><div class="delta">awaiting pickup</div></div>
@@ -432,7 +435,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
       <input maxlength="1" inputmode="numeric"/>
       <input maxlength="1" inputmode="numeric"/>
     </div>
-    <div class="hint">HINT FOR DEMO: <span class="v" id="otpHint">8421</span></div>
+    <div class="hint" style="background:rgba(227,160,42,0.12);border:1px solid rgba(227,160,42,0.35);border-radius:6px;padding:6px 10px;display:flex;align-items:center;gap:8px"><span style="font-family:var(--mono);font-size:10px;letter-spacing:0.12em;font-weight:700;background:var(--mustard);color:var(--ink);padding:2px 6px;border-radius:4px;text-transform:uppercase">DEMO OTP</span> Code for this session: <span class="v" id="otpHint" style="font-size:15px;letter-spacing:0.12em">8421</span></div>
     <div class="actions">
       <button class="btn btn-ghost btn-sm" onclick="closeOtp()">Cancel</button>
       <button class="btn btn-tomato btn-sm" onclick="confirmOtp()">Verify &amp; Hand over</button>
@@ -440,34 +443,149 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
   </div>
 </div>
 
+<script src="demo-canteens.js"></script>
 <script>
 /* =====================================================
-   STATE
+   STATE (per-canteen via TRAY_DEMO)
    ===================================================== */
-const SPECIALS_KEY = 'tray_specials';
-const QUEUE_KEY = 'tray_queue_state';
+if (!window.TRAY_DEMO) {
+  document.body.insertAdjacentHTML(
+    "afterbegin",
+    '<div style="position:fixed;top:0;left:0;right:0;z-index:99999;padding:12px;background:#7f1d1d;color:#fff;text-align:center;font:600 14px system-ui">Demo data failed to load — <a href="https://trayy.vercel.app/demo/kitchen.html" style="color:#fff;text-decoration:underline">reload the demo</a> or try a hard-refresh (Ctrl+Shift+R)</div>'
+  );
+  throw new Error("TRAY_DEMO not loaded");
+}
+const TD = window.TRAY_DEMO;
+TD.migrateLegacySpecials();
+const INBOX_KEY = TD.INBOX_KEY;
+let currentCanteenId = TD.getSelectedCanteenId();
+let specials = [];
+let DISH = [];
+let STUDENTS = [];
+let PRICE = {};
 
-// Today's specials (synced to student app via localStorage)
-let specials = JSON.parse(localStorage.getItem(SPECIALS_KEY) || 'null') || [
-  {id:'sp1', name:'Hyderabadi Dum Biryani', desc:'Slow-cooked, sealed in dum', price:240, prep:8, diet:'nonveg', icon:'B', addedAt: Date.now() - 6*60*1000},
-  {id:'sp2', name:'Mushroom Manchurian', desc:'Indo-Chinese, dry', price:120, prep:5, diet:'veg', icon:'M', addedAt: Date.now() - 18*60*1000},
-];
-function saveSpecials(){
-  localStorage.setItem(SPECIALS_KEY, JSON.stringify(specials));
+function saveSpecials() {
+  TD.setSpecials(currentCanteenId, specials);
 }
 
-// Queue: simulated, but interactive
-const DISH = [
-  {name:'Chicken Biryani', diet:'nonveg', tgt:8},
-  {name:'Paneer Butter Masala', diet:'veg', tgt:6},
-  {name:'Masala Dosa', diet:'veg', tgt:4},
-  {name:'Mutton Curry', diet:'nonveg', tgt:9},
-  {name:'Filter Coffee', diet:'veg', tgt:2},
-  {name:'Veg Thali', diet:'veg', tgt:7},
-];
-const STUDENTS = ['Ananya R.','Karthik V.','Rohit S.','Priya M.','Devansh K.','Sneha P.','Vikram T.','Lakshmi N.','Anil K.','Tara P.'];
-const PRICE = {Biryani:180, Masala:160, Dosa:90, Curry:220, Coffee:30, Thali:140};
-const priceOf = (n) => Object.entries(PRICE).find(([k]) => n.includes(k))?.[1] || 100;
+function loadSpecialsFromStore() {
+  let s = TD.getSpecials(currentCanteenId);
+  if (!s.length) {
+    s = TD.getCanteen(currentCanteenId).defaultSpecials.map(function (x) {
+      return Object.assign({}, x);
+    });
+    TD.setSpecials(currentCanteenId, s);
+  }
+  specials = s;
+}
+
+function applyCanteen(id) {
+  currentCanteenId = id;
+  TD.setSelectedCanteenId(id);
+  const c = TD.getCanteen(id);
+  DISH = c.kitchenDishes.slice();
+  STUDENTS = c.students.slice();
+  PRICE = Object.assign({}, c.priceHints);
+  const eyebrow = document.getElementById('kitchenEyebrow');
+  if (eyebrow) eyebrow.textContent = c.kitchenTag;
+  const title = document.getElementById('pageTitle');
+  if (title) title.innerHTML = c.short + ' <span class="it">queue.</span>';
+  document.title = 'Tray Kitchen · ' + c.name;
+  const sel = document.getElementById('kitchenCanteen');
+  if (sel) sel.value = id;
+  loadSpecialsFromStore();
+  const d = c.spDefaults;
+  if (document.getElementById('spName')) {
+    document.getElementById('spName').value = d.name;
+    document.getElementById('spDesc').value = d.desc;
+    document.getElementById('spPrice').value = d.price;
+    document.getElementById('spPrep').value = d.prep;
+    document.getElementById('spDiet').value = d.diet;
+  }
+  counter = c.counterBase != null ? c.counterBase : 2420;
+  seed();
+  renderLiveSpecials();
+  renderQueue();
+}
+
+function initKitchenCanteenSelect() {
+  const sel = document.getElementById('kitchenCanteen');
+  if (!sel) return;
+  sel.innerHTML = TD.listCanteens()
+    .map(function (c) {
+      return '<option value="' + c.id + '"' + (c.id === currentCanteenId ? ' selected' : '') + '>' + c.name + '</option>';
+    })
+    .join('');
+  sel.addEventListener('change', function () {
+    applyCanteen(sel.value);
+  });
+}
+const priceOf = (n) => {
+  const hit = Object.entries(PRICE).find(([k]) => n.toLowerCase().includes(k.toLowerCase()));
+  if (hit) return hit[1];
+  const sp = specials.find(s => s.name === n);
+  return sp ? sp.price : 100;
+};
+
+function orderFromInbox(msg){
+  const items = (msg.items || []).map(it => ({
+    name: it.name,
+    diet: it.diet || 'veg',
+    tgt: it.tgt || it.prep || 6,
+    q: it.q || 1,
+    special: !!it.special,
+  }));
+  const total = msg.total != null ? msg.total : items.reduce((a, it) => {
+    const unit = it.special ? (specials.find(s => s.name === it.name)?.price || 200) : priceOf(it.name);
+    return a + unit * it.q;
+  }, 0);
+  const id = msg.id || `T-${++counter}`;
+  return {
+    id,
+    items,
+    total,
+    otp: String(msg.otp || (1000 + Math.floor(Math.random() * 9000))),
+    status: 'incoming',
+    placedAt: msg.placedAt || Date.now(),
+    target: items.reduce((a, it) => Math.max(a, it.tgt), 0) * 60,
+    student: msg.student || 'Student order',
+  };
+}
+
+function orderFromSpecial(s){
+  const items = [{ name: s.name, diet: s.diet, tgt: s.prep, q: 1, special: true }];
+  return {
+    id: `T-${++counter}`,
+    items,
+    total: s.price,
+    otp: String(1000 + Math.floor(Math.random() * 9000)),
+    status: 'incoming',
+    placedAt: Date.now(),
+    target: (s.prep || 6) * 60,
+    student: 'Walk-in · counter',
+  };
+}
+
+function ingestInbox(){
+  let inbox = [];
+  try { inbox = JSON.parse(localStorage.getItem(INBOX_KEY) || '[]'); } catch (_) { inbox = []; }
+  if (!inbox.length) return false;
+  let changed = false;
+  const remaining = [];
+  inbox.forEach(msg => {
+    if (msg.canteenId && msg.canteenId !== currentCanteenId) {
+      remaining.push(msg);
+      return;
+    }
+    const o = orderFromInbox(msg);
+    if (!orders.some(x => x.id === o.id)) {
+      orders.unshift(o);
+      changed = true;
+    }
+  });
+  localStorage.setItem(INBOX_KEY, JSON.stringify(remaining));
+  return changed;
+}
 
 let counter = 2420;
 let orders = [];
@@ -489,14 +607,22 @@ function makeOrder(status='incoming'){
 }
 
 function seed(){
+  const c = TD.getCanteen(currentCanteenId);
+  const preset = TD.buildKitchenTickets(currentCanteenId);
+  if (preset.length) {
+    orders = preset;
+    const over = orders.find(o => o.status === 'preparing');
+    if (over) over.placedAt = Date.now() - 600000;
+    return;
+  }
   orders = [
     makeOrder('incoming'), makeOrder('incoming'),
     makeOrder('preparing'), makeOrder('preparing'), makeOrder('preparing'),
     makeOrder('ready'), makeOrder('ready'),
     makeOrder('collected'),
   ];
-  // Make one preparing be over-time
-  orders.find(o => o.status === 'preparing').placedAt = Date.now() - 600000;
+  const fallbackOver = orders.find(o => o.status === 'preparing');
+  if (fallbackOver) fallbackOver.placedAt = Date.now() - 600000;
 }
 
 const $ = (q) => document.querySelector(q);
@@ -515,8 +641,11 @@ const fmtElapsed = (ms) => {
    RENDER QUEUE
    ===================================================== */
 function renderQueue(){
+  const scrollTops = {};
   ['incoming','preparing','ready','collected'].forEach(st => {
     const wrap = $(`[data-col="${st}"]`);
+    if (!wrap) return;
+    scrollTops[st] = wrap.scrollTop;
     wrap.innerHTML = '';
     const list = orders.filter(o => o.status === st);
     list.forEach((o,i) => {
@@ -548,6 +677,7 @@ function renderQueue(){
       // wire
       tk.addEventListener('click', (e) => {
         if (e.target.closest('.tkt-action')) return;
+        if (o.status === 'ready') { openOtp(o); return; }
         advance(o.id);
       });
       const actBtn = tk.querySelector('.tkt-action');
@@ -558,6 +688,7 @@ function renderQueue(){
       });
       wrap.appendChild(tk);
     });
+    wrap.scrollTop = scrollTops[st] || 0;
     $('#cnt'+({incoming:'In',preparing:'Prep',ready:'Ready',collected:'Coll'})[st]).textContent = String(list.length).padStart(2,'0');
   });
   // KPIs
@@ -602,8 +733,12 @@ function openOtp(o){
 }
 function closeOtp(){ $('#otpModal').classList.remove('open'); pendingOtp = null; }
 function confirmOtp(){
-  const entered = Array.from($$('.otp-in input')).map(i => i.value).join('');
+  const entered = Array.from($$('.otp-in input')).map(i => i.value.replace(/\D/g, '')).join('');
   if (!pendingOtp) return closeOtp();
+  if (entered.length < 4) {
+    toast('Enter all 4 digits');
+    return;
+  }
   if (entered === pendingOtp.otp){
     advance(pendingOtp.id);
     closeOtp();
@@ -614,12 +749,26 @@ function confirmOtp(){
     $$('.otp-in input')[0].focus();
   }
 }
+function fillOtpInputs(raw){
+  const digits = String(raw).replace(/\D/g, '').slice(0, 4);
+  const inputs = $$('.otp-in input');
+  inputs.forEach((inp, i) => { inp.value = digits[i] || ''; });
+  if (digits.length === 4) confirmOtp();
+  else if (digits.length) inputs[Math.min(digits.length, inputs.length - 1)].focus();
+}
 // auto-advance inputs
 document.addEventListener('input', (e) => {
   if (!e.target.closest('.otp-in')) return;
+  const val = e.target.value.replace(/\D/g, '');
+  if (val.length > 1) {
+    fillOtpInputs(val);
+    return;
+  }
+  e.target.value = val.slice(-1);
   if (e.target.value.length === 1){
     const next = e.target.nextElementSibling;
     if (next) next.focus();
+    else if ($$('.otp-in input').every(i => i.value)) confirmOtp();
   }
 });
 document.addEventListener('keydown', (e) => {
@@ -630,7 +779,16 @@ document.addEventListener('keydown', (e) => {
   }
   if (e.key === 'Enter') confirmOtp();
 });
-$('#otpModal').addEventListener('click', closeOtp);
+document.addEventListener('paste', (e) => {
+  if (!e.target.closest('.otp-in')) return;
+  e.preventDefault();
+  const text = (e.clipboardData || window.clipboardData).getData('text');
+  fillOtpInputs(text);
+});
+const otpModalEl = $('#otpModal');
+otpModalEl.addEventListener('click', (e) => {
+  if (e.target === otpModalEl) closeOtp();
+});
 
 /* =====================================================
    SPECIALS
@@ -679,11 +837,17 @@ $('#spPush').addEventListener('click', () => {
   const prep = Number($('#spPrep').value) || 5;
   const icon = name.split(' ').map(w => w[0]).join('').slice(0,1).toUpperCase() || 'S';
   const id = 'sp_' + Date.now();
-  specials.unshift({id, name, desc, price, prep, diet: formDiet, icon, addedAt: Date.now()});
+  const spec = {id, name, desc, price, prep, diet: formDiet, icon, addedAt: Date.now()};
+  specials.unshift(spec);
   saveSpecials();
   renderLiveSpecials();
-  $('#spPush').animate([{transform:'scale(1)'},{transform:'scale(.92)'},{transform:'scale(1)'}],{duration:280});
-  toast(`✓ Pushed live · "${name}"`);
+  orders.unshift(orderFromSpecial(spec));
+  renderQueue();
+  const spBtn = $('#spPush');
+  if (spBtn && typeof spBtn.animate === 'function') {
+    spBtn.animate([{ transform: 'scale(1)' }, { transform: 'scale(.92)' }, { transform: 'scale(1)' }], { duration: 280 });
+  }
+  toast(`✓ Pushed live · "${name}" · ticket in Incoming`);
 
   // Cycle to a new sample
   const s = SAMPLES[sampleIdx % SAMPLES.length]; sampleIdx++;
@@ -715,9 +879,28 @@ function tickClock(){
 }
 setInterval(tickClock, 1000); tickClock();
 
-seed();
-renderQueue();
-renderLiveSpecials();
+let soundsOn = true;
+const btnSounds = document.getElementById('btnSounds');
+if (btnSounds) {
+  btnSounds.addEventListener('click', () => {
+    soundsOn = !soundsOn;
+    btnSounds.textContent = soundsOn ? '🔔 Sounds' : '🔕 Muted';
+    btnSounds.style.color = soundsOn ? '' : 'var(--ink-3)';
+    toast(soundsOn ? '🔔 Sounds enabled' : '🔕 Sounds muted');
+  });
+}
+
+$('#btnRefresh').addEventListener('click', () => {
+  renderQueue();
+  renderLiveSpecials();
+  if (!historyView.hidden) renderHistory();
+  if (!insightsView.hidden) renderInsights();
+  toast('Queue refreshed');
+});
+
+initKitchenCanteenSelect();
+applyCanteen(currentCanteenId);
+if (ingestInbox()) toast('Student order synced to Incoming');
 
 // Auto-advance one preparing order every ~6s
 setInterval(() => {
@@ -725,7 +908,7 @@ setInterval(() => {
   if (prep.length) advance(prep[0].id);
   // trim collected
   const coll = orders.filter(o => o.status === 'collected');
-  if (coll.length > 4) orders = orders.filter(o => o !== coll[0]);
+  if (coll.length > 12) orders = orders.filter(o => o !== coll[0]);
 }, 6800);
 
 // New incoming every ~13s
@@ -741,19 +924,40 @@ setInterval(() => {
 // Tick timers
 setInterval(renderQueue, 1000);
 
-// Listen for cross-tab spec changes (in case admin or another kitchen adds)
+// Listen for cross-tab spec + student orders
 window.addEventListener('storage', (e) => {
-  if (e.key === SPECIALS_KEY){
-    specials = JSON.parse(e.newValue || '[]');
+  if (e.key === TD.specialsKey(currentCanteenId)){
+    loadSpecialsFromStore();
     renderLiveSpecials();
   }
+  if (e.key === TD.STORAGE_CANTEEN && e.newValue && TD.CANTEENS[e.newValue]) {
+    applyCanteen(e.newValue);
+    return;
+  }
+  if (e.key === INBOX_KEY && ingestInbox()){
+    renderQueue();
+    toast('New student order · Incoming');
+    if (queueShell.hidden) {
+      $$('.sb-link[data-nav]').forEach(x => x.classList.remove('active'));
+      document.querySelector('.sb-link[data-nav="queue"]')?.classList.add('active');
+      showView('queue');
+    }
+  }
 });
+setInterval(() => {
+  if (ingestInbox()) {
+    renderQueue();
+    toast('New student order · Incoming');
+  }
+}, 2000);
 
 /* =====================================================
    HISTORY + INSIGHTS VIEWS
    ===================================================== */
 const mainEl = document.querySelector('.main');
 const queueShell = document.querySelector('.queue-shell');
+const queuePageHead = mainEl.querySelector('.queue-page-chrome.page-head');
+const queueKpiBar = mainEl.querySelector('.queue-page-chrome.kpi-bar');
 
 const historyView = document.createElement('div');
 historyView.id = 'historyView';
@@ -873,21 +1077,57 @@ function renderInsights(){
     </div>`;
 }
 
+const VIEW_TITLES = {
+  queue: 'Kitchen <span class="it">queue.</span>',
+  specials: 'Kitchen <span class="it">queue.</span>',
+  history: 'Order <span class="it">history.</span>',
+  insights: 'Kitchen <span class="it">insights.</span>',
+};
+
 function showView(name){
-  queueShell.hidden  = !(name === 'queue' || name === 'specials');
+  const showQueue = name === 'queue' || name === 'specials';
+  queueShell.hidden = showQueue ? false : true;
+  if (queuePageHead) queuePageHead.hidden = showQueue ? false : true;
+  if (queueKpiBar) queueKpiBar.hidden = showQueue ? false : true;
   historyView.hidden = name !== 'history';
   insightsView.hidden = name !== 'insights';
-  if (name === 'history')  renderHistory();
-  if (name === 'insights') renderInsights();
-  if (name === 'specials') document.querySelector('.right-panel')?.scrollIntoView({behavior:'smooth', block:'nearest'});
+  const titleEl = $('#pageTitle');
+  if (titleEl && VIEW_TITLES[name]) titleEl.innerHTML = VIEW_TITLES[name];
+  if (name === 'history') {
+    renderHistory();
+    historyView.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    toast('Order history');
+  }
+  if (name === 'insights') {
+    renderInsights();
+    insightsView.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    toast('Kitchen insights');
+  }
+  if (name === 'specials') {
+    document.querySelector('.right-panel')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    toast("Today's specials");
+  }
+  if (name === 'queue') toast('Live queue');
+  mainEl.scrollTop = 0;
 }
 
 // Sidebar nav
-$$('.sb-link[data-nav]').forEach(l => l.addEventListener('click', () => {
-  $$('.sb-link[data-nav]').forEach(x => x.classList.remove('active'));
-  l.classList.add('active');
-  showView(l.dataset.nav);
-}));
+$$('.sb-link[data-nav]').forEach(l => {
+  const go = () => {
+    $$('.sb-link[data-nav]').forEach(x => x.classList.remove('active'));
+    l.classList.add('active');
+    showView(l.dataset.nav);
+  };
+  l.addEventListener('click', go);
+  l.setAttribute('role', 'button');
+  l.setAttribute('tabindex', '0');
+  l.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      go();
+    }
+  });
+});
 
 // Bottom-group sidebar links (Counter, Print queue) — no data-nav
 $$('.sb-link:not([data-nav])').forEach(l => {

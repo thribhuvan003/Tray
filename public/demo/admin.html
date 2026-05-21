@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8"/>
-<meta name="viewport" content="width=1440"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>Tray — Admin · Aditya Engineering Canteen</title>
 <link rel="icon" href="/icon.svg" type="image/svg+xml"/>
 <link rel="apple-touch-icon" href="/apple-icon.svg"/>
@@ -62,12 +62,42 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
 
 /* SIDEBAR */
 .sb{background:var(--bg-2);border-right:1px solid var(--line);padding:18px 14px;display:flex;flex-direction:column;gap:2px;position:sticky;top:0;height:100vh;overflow-y:auto}
-.sb-brand{display:flex;align-items:center;gap:9px;font-weight:600;font-size:18px;letter-spacing:-0.025em;padding:6px 10px 18px;border-bottom:1px solid var(--line);margin-bottom:14px;color:var(--ink)}
+.sb-brand{display:flex;align-items:center;gap:9px;font-weight:600;font-size:18px;letter-spacing:-0.025em;padding:6px 10px 18px;border-bottom:1px solid var(--line);margin-bottom:14px;color:var(--ink);text-decoration:none}
+.sb-brand:hover{color:var(--lime)}
 .sb-brand .dot{font-style:italic;color:var(--lime);margin-left:-2px;font-weight:500}
 .sb-brand-mark{width:28px;height:28px;border-radius:7px;background:var(--lime);display:inline-flex;align-items:center;justify-content:center;color:var(--bg);font-weight:700;font-size:13px;font-family:var(--mono);box-shadow:0 0 20px rgba(205,250,80,0.32)}
 
 .sb-tenant{padding:10px 12px;background:var(--bg-3);border:1px solid var(--line);border-radius:8px;margin-bottom:14px;display:flex;align-items:center;gap:10px;cursor:pointer;transition:border-color .12s,background .12s}
 .sb-tenant:hover{border-color:var(--line-2);background:var(--bg-4)}
+.sb-tenant.open{border-color:rgba(205,250,80,0.35);background:var(--bg-4)}
+.sb-tenant-menu{display:none;flex-direction:column;gap:2px;margin:-6px 0 10px;padding:6px;background:var(--bg-3);border:1px solid var(--line);border-radius:8px}
+.sb-tenant-menu.show{display:flex}
+.sb-tenant-opt{padding:7px 10px;border-radius:6px;font-size:12.5px;color:var(--ink-2);cursor:pointer;transition:background .12s,color .12s}
+.sb-tenant-opt:hover{background:var(--bg-4);color:var(--ink)}
+.sb-tenant-opt.active{color:var(--lime);background:var(--lime-soft);font-weight:600}
+
+.view-pane{display:block}
+.view-pane[hidden]{display:none !important}
+.dash-block[hidden]{display:none !important}
+
+.students-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
+.student-card{padding:14px 16px;background:var(--bg-3);border:1px solid var(--line);border-radius:10px;display:flex;flex-direction:column;gap:4px}
+.student-card .nm{font-weight:600;font-size:13.5px}
+.student-card .meta{font-family:var(--mono);font-size:10.5px;color:var(--ink-3);letter-spacing:0.04em}
+.student-card .spend{font-family:var(--mono);font-size:12px;color:var(--lime);margin-top:4px}
+
+.settings-list{display:flex;flex-direction:column;gap:0}
+.settings-row{display:flex;justify-content:space-between;align-items:center;padding:14px 0;border-bottom:1px solid var(--line);gap:16px}
+.settings-row:last-child{border-bottom:none}
+.settings-row .lbl{font-size:13.5px;font-weight:500}
+.settings-row .hint{font-family:var(--mono);font-size:11px;color:var(--ink-3);margin-top:3px}
+.settings-row .val{font-family:var(--mono);font-size:11px;color:var(--ink-2)}
+
+.table tr{cursor:pointer}
+.table tr.row-hidden{display:none}
+.table-foot button{background:none;border:none;color:var(--ink-2);cursor:pointer;padding:4px 8px;font-family:inherit;font-size:inherit}
+.table-foot button:disabled{opacity:.35;cursor:not-allowed}
+.table-foot button:not(:disabled):hover{color:var(--lime)}
 .sb-tenant .av{width:28px;height:28px;border-radius:6px;background:linear-gradient(135deg,var(--amber),var(--lime));color:var(--bg);font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .sb-tenant .info{flex:1;min-width:0}
 .sb-tenant .info .n{font-size:13px;font-weight:600;color:var(--ink);line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -312,51 +342,53 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
 
   <!-- SIDEBAR -->
   <aside class="sb">
-    <div class="sb-brand">
+    <a href="/" class="sb-brand" title="Tray home">
       <span class="sb-brand-mark">T</span>Tray<span class="dot">.</span>
-    </div>
+    </a>
 
-    <div class="sb-tenant">
-      <div class="av">A</div>
+    <div class="sb-tenant" id="tenantToggle" role="button" tabindex="0" aria-expanded="false" aria-haspopup="listbox">
+      <div class="av" id="tenantAv">H</div>
       <div class="info">
-        <div class="n">Aditya Eng. Canteen</div>
-        <div class="r">aditya · admin</div>
+        <div class="n" id="tenantName">Hostel B Mess</div>
+        <div class="r" id="tenantSlug">hostel-b · admin</div>
       </div>
       <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 5l3 3 3-3"/></svg>
     </div>
+    <div class="sb-tenant-menu" id="tenantMenu" role="listbox">
+</div>
 
     <div class="sb-group">Operations</div>
-    <div class="sb-link active">
+    <div class="sb-link active" data-view="overview" role="button" tabindex="0">
       <svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2" y="2" width="5.5" height="5.5" rx="1"/><rect x="8.5" y="2" width="5.5" height="5.5" rx="1"/><rect x="2" y="8.5" width="5.5" height="5.5" rx="1"/><rect x="8.5" y="8.5" width="5.5" height="5.5" rx="1"/></svg>
       Overview<span class="kbd">G O</span>
     </div>
-    <div class="sb-link" data-toast="Orders · coming soon">
+    <div class="sb-link" data-view="orders" role="button" tabindex="0">
       <svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 4h12M2 8h12M2 12h8"/></svg>
       Orders<span class="kbd">G R</span>
     </div>
-    <div class="sb-link" data-toast="Menu manager · coming soon">
+    <div class="sb-link" data-view="menu" role="button" tabindex="0">
       <svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2" y="3" width="12" height="4" rx="0.5"/><rect x="2" y="9" width="12" height="4" rx="0.5"/></svg>
       Menu manager<span class="kbd">G M</span>
     </div>
-    <div class="sb-link" data-toast="Students · coming soon">
+    <div class="sb-link" data-view="students" role="button" tabindex="0">
       <svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="8" cy="6" r="2.5"/><path d="M3 14 c1-3 4-4 5-4 c1 0 4 1 5 4"/></svg>
       Students<span class="kbd">G S</span>
     </div>
-    <div class="sb-link" data-toast="Insights · coming soon">
+    <div class="sb-link" data-view="insights" role="button" tabindex="0">
       <svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 13L7 7L10 10L14 4"/></svg>
       Insights<span class="kbd">G I</span>
     </div>
 
     <div class="sb-group">Settings</div>
-    <div class="sb-link" data-toast="Tenant settings · coming soon">
+    <div class="sb-link" data-view="tenant" role="button" tabindex="0">
       <svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="8" cy="8" r="2"/><path d="M8 1v3M8 12v3M15 8h-3M4 8H1M13.07 2.93l-2.12 2.12M5.05 10.95l-2.12 2.12M13.07 13.07l-2.12-2.12M5.05 5.05L2.93 2.93"/></svg>
       Tenant
     </div>
-    <div class="sb-link" data-toast="API keys · coming soon">
+    <div class="sb-link" data-view="api" role="button" tabindex="0">
       <svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2" y="6" width="12" height="8" rx="1"/><path d="M5 6V4a3 3 0 0 1 6 0v2"/></svg>
       API keys
     </div>
-    <div class="sb-link" data-toast="Audit log · coming soon">
+    <div class="sb-link" data-view="audit" role="button" tabindex="0">
       <svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 3l10 10M13 3L3 13"/></svg>
       Audit log
     </div>
@@ -365,7 +397,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
       <div class="sb-group" style="padding-top:0">Other portals</div>
       <a class="sb-portal-link" href="student.html">Student app <span>→</span></a>
       <a class="sb-portal-link" href="kitchen.html">Kitchen view <span>→</span></a>
-      <a class="sb-portal-link" href="index.html">Marketing site <span>→</span></a>
+      <a class="sb-portal-link" href="/">Marketing site <span>→</span></a>
       <div class="sb-user">
         <div class="av">A</div>
         <div class="info"><div class="n">Aditya M.</div><div class="r">OWNER · ADMIN</div></div>
@@ -382,15 +414,15 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
         <div class="crumb">
           <span>Operations</span>
           <span class="sep">/</span>
-          <span style="color:var(--ink-2)">Overview</span>
+          <span id="crumbView" style="color:var(--ink-2)">Overview</span>
           <span class="live"><span class="d"></span>Live</span>
         </div>
-        <h1>Today's overview</h1>
+        <h1 id="pageTitle">Today's overview</h1>
       </div>
       <div class="topbar-r">
         <div class="search">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-          <input placeholder="Search orders, students, items…"/>
+          <input id="searchInput" placeholder="Search orders, students, items…" aria-label="Search"/>
           <span class="kbd">⌘K</span>
         </div>
         <div class="range-toggle" id="rangeToggle">
@@ -405,7 +437,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
     </div>
 
     <!-- KPI GRID -->
-    <div class="kpi-grid">
+    <div class="kpi-grid dash-block" data-blocks="overview,insights">
       <div class="kpi-card">
         <div class="top"><span class="lbl">Revenue today</span><span class="delta up">▲ 12.4%</span></div>
         <div class="val">₹<span class="counter" data-to="38420">0</span></div>
@@ -438,10 +470,10 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
     </div>
 
     <!-- TODAY'S LIVE SPECIALS strip -->
-    <div id="specialsStrip"></div>
+    <div id="specialsStrip" class="dash-block" data-blocks="overview"></div>
 
     <!-- ROW 1: revenue + heatmap -->
-    <div class="dash-row r1">
+    <div class="dash-row r1 dash-block" data-blocks="overview,insights">
       <div class="panel">
         <div class="panel-head">
           <div><h3>Revenue this week</h3><div class="sub">DAILY TOTAL · ₹ THOUSANDS</div></div>
@@ -508,7 +540,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
     </div>
 
     <!-- ROW 2: top items + activity -->
-    <div class="dash-row r2">
+    <div class="dash-row r2 dash-block" data-blocks="overview">
       <div class="panel">
         <div class="panel-head">
           <div><h3>Top items today</h3><div class="sub">BY UNITS SOLD</div></div>
@@ -534,7 +566,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
     </div>
 
     <!-- ROW 3: Orders table -->
-    <div class="dash-row r3">
+    <div class="dash-row r3 dash-block" data-blocks="overview,orders">
       <div class="panel" style="padding:0">
         <div class="panel-head" style="padding:20px 22px 8px">
           <div><h3>Recent orders</h3><div class="sub">LAST 50 · UPDATED LIVE</div></div>
@@ -549,25 +581,51 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
           <thead>
             <tr><th>Order</th><th>Student</th><th>Items</th><th style="text-align:right">Total</th><th>Status</th><th>Time</th></tr>
           </thead>
-          <tbody id="ordersBody">
-            <tr><td class="oid">T-2425</td><td class="name">Ananya R.</td><td class="items">Chicken Biryani × 1, Filter Coffee × 1</td><td class="tot">₹210</td><td><span class="status-pill incoming"><span class="d"></span>Incoming</span></td><td class="time">11:42</td></tr>
-            <tr><td class="oid">T-2424</td><td class="name">Karthik V.</td><td class="items">Paneer Butter Masala × 1, Sweet Lassi × 1</td><td class="tot">₹210</td><td><span class="status-pill preparing"><span class="d"></span>Preparing</span></td><td class="time">11:41</td></tr>
-            <tr><td class="oid">T-2423</td><td class="name">Priya M.</td><td class="items">Veg Thali × 1, Masala Chai × 2</td><td class="tot">₹180</td><td><span class="status-pill preparing"><span class="d"></span>Preparing</span></td><td class="time">11:40</td></tr>
-            <tr><td class="oid">T-2422</td><td class="name">Rohit S.</td><td class="items">Mutton Curry × 1, Masala Dosa × 1</td><td class="tot">₹310</td><td><span class="status-pill ready"><span class="d"></span>Ready</span></td><td class="time">11:37</td></tr>
-            <tr><td class="oid">T-2421</td><td class="name">Devansh K.</td><td class="items">Idli + Sambar × 1, Filter Coffee × 1</td><td class="tot">₹90</td><td><span class="status-pill ready"><span class="d"></span>Ready</span></td><td class="time">11:35</td></tr>
-            <tr><td class="oid">T-2420</td><td class="name">Sneha P.</td><td class="items">Chicken Biryani × 1</td><td class="tot">₹180</td><td><span class="status-pill collected"><span class="d"></span>Collected</span></td><td class="time">11:32</td></tr>
-            <tr><td class="oid">T-2419</td><td class="name">Vikram T.</td><td class="items">Uttapam × 1, Filter Coffee × 2</td><td class="tot">₹140</td><td><span class="status-pill collected"><span class="d"></span>Collected</span></td><td class="time">11:30</td></tr>
-            <tr><td class="oid">T-2418</td><td class="name">Lakshmi N.</td><td class="items">Veg Cutlet × 2, Masala Chai × 1</td><td class="tot">₹140</td><td><span class="status-pill collected"><span class="d"></span>Collected</span></td><td class="time">11:28</td></tr>
-          </tbody>
+          <tbody id="ordersBody"></tbody>
         </table>
         <div class="table-foot">
-          <span>SHOWING 8 OF 248 ORDERS TODAY</span>
-          <span style="display:flex;gap:8px"><span style="color:var(--ink-2)">←</span>1 / 31<span style="color:var(--ink-2)">→</span></span>
+          <span id="ordersCountLabel">SHOWING 8 OF 248 ORDERS TODAY</span>
+          <span style="display:flex;gap:8px;align-items:center"><button type="button" id="ordersPrev" disabled aria-label="Previous page">←</button><span id="ordersPageLabel">1 / 4</span><button type="button" id="ordersNext" aria-label="Next page">→</button></span>
         </div>
       </div>
     </div>
 
+    <section class="view-pane" id="view-students" hidden>
+      <div class="panel" style="min-height:360px">
+        <div class="panel-head">
+          <div><h3>Students</h3><div class="sub" id="studentsPaneSub">TOP SPENDERS · THIS WEEK</div></div>
+          <button class="btn btn-ghost" type="button" id="studentsExport">Export list</button>
+        </div>
+        <div class="students-grid" id="studentsGrid"></div>
+        <table class="table">
+          <thead><tr><th>Student</th><th>Roll</th><th>Orders</th><th style="text-align:right">Spend</th><th>Last order</th></tr></thead>
+          <tbody id="studentsBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="view-pane" id="view-tenant-settings" hidden>
+      <div class="panel">
+        <div class="panel-head"><div><h3>Tenant settings</h3><div class="sub" id="tenantSettingsSub">ADITYA · CANTEEN PROFILE</div></div></div>
+        <div class="settings-list" id="tenantSettingsList"></div>
+      </div>
+    </section>
+
+    <section class="view-pane" id="view-api" hidden>
+      <div class="panel">
+        <div class="panel-head"><div><h3>API keys</h3><div class="sub">ROTATE · SCOPED · LOGGED</div></div></div>
+        <div class="settings-list" id="apiKeysList"></div>
+      </div>
+    </section>
+
+    <section class="view-pane" id="view-audit" hidden>
+      <div class="panel">
+        <div class="panel-head"><div><h3>Audit log</h3><div class="sub" id="auditPaneSub">LAST 24H · IMMUTABLE</div></div></div>
+        <div class="feed" id="auditFeed" style="max-height:480px"></div>
+      </div>
+    </section>
   </main>
+
 </div>
 
 <!-- Toast -->
@@ -577,21 +635,34 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
 <div class="modal-mask" id="menuModal" role="dialog" aria-modal="true" aria-labelledby="menuModalTitle">
   <div class="modal-card">
     <h3 id="menuModalTitle">Menu manager</h3>
-    <div class="sub">12 ACTIVE · 3 HIDDEN · LIVE SYNC</div>
-    <div class="modal-row"><span class="nm">Chicken Biryani</span><span class="px">₹180</span><button class="toggle on" data-on="1">LIVE</button></div>
-    <div class="modal-row"><span class="nm">Paneer Butter Masala</span><span class="px">₹160</span><button class="toggle on" data-on="1">LIVE</button></div>
-    <div class="modal-row"><span class="nm">Veg Thali</span><span class="px">₹120</span><button class="toggle on" data-on="1">LIVE</button></div>
-    <div class="modal-row"><span class="nm">Masala Dosa</span><span class="px">₹70</span><button class="toggle on" data-on="1">LIVE</button></div>
-    <div class="modal-row"><span class="nm">Filter Coffee</span><span class="px">₹30</span><button class="toggle on" data-on="1">LIVE</button></div>
-    <div class="modal-row"><span class="nm">Mutton Curry</span><span class="px">₹220</span><button class="toggle" data-on="0">HIDDEN</button></div>
-    <div class="modal-foot">
+    <div class="sub" id="menuModalSub">12 ACTIVE · LIVE SYNC</div>
+    <div id="menuModalRows"></div>
+<div class="modal-foot">
       <button class="btn btn-ghost" id="menuModalClose">Close</button>
       <button class="btn btn-pri" id="menuModalSave">Save changes</button>
     </div>
   </div>
 </div>
 
+<script src="demo-canteens.js"></script>
 <script>
+if (!window.TRAY_DEMO) {
+  document.body.insertAdjacentHTML(
+    "afterbegin",
+    '<div style="position:fixed;top:0;left:0;right:0;z-index:99999;padding:12px;background:#7f1d1d;color:#fff;text-align:center;font:600 14px system-ui">Demo data failed to load — <a href="https://trayy.vercel.app/demo/admin.html" style="color:#fff;text-decoration:underline">reload the demo</a> or try a hard-refresh (Ctrl+Shift+R)</div>'
+  );
+  throw new Error("TRAY_DEMO not loaded");
+}
+const TD = window.TRAY_DEMO;
+TD.migrateLegacySpecials();
+let currentTenantId = TD.getSelectedCanteenId();
+let ORDERS = [];
+let STUDENT_ROWS = [];
+let feedItems = [];
+let feedStudents = [];
+let auditEvents = [];
+let orderCounter = 2425;
+
 const $ = (q) => document.querySelector(q);
 const $$ = (q) => document.querySelectorAll(q);
 
@@ -688,7 +759,7 @@ $$('.heat-legend .sw').forEach((el,i) => {
 
 /* Specials live strip (synced from kitchen via localStorage) */
 function renderSpecials(){
-  const specs = JSON.parse(localStorage.getItem('tray_specials') || '[]');
+  const specs = TD.getSpecials(currentTenantId);
   const host = $('#specialsStrip');
   host.innerHTML = '';
   if (!specs.length) return;
@@ -720,17 +791,14 @@ renderSpecials();
 
 /* Live feed */
 const feed = $('#feed');
-const STUDENTS = ['Ananya R.','Karthik V.','Rohit S.','Priya M.','Devansh K.','Sneha P.','Vikram T.','Lakshmi N.','Anil K.','Tara P.'];
-const ITEMS = ['Chicken Biryani','Paneer B.M.','Masala Dosa','Veg Thali','Filter Coffee','Mutton Curry','Idli Sambar','Sweet Lassi'];
 const EVENTS = [
-  () => ({type:'order',  msg:`<b>T-${nextId()}</b> · new order from ${pick(STUDENTS)}`, amt:`+₹${pick([120,160,180,210,240])}`}),
+  () => ({type:'order',  msg:`<b>T-${nextId()}</b> · new order from ${pick(feedStudents)}`, amt:`+₹${pick([120,160,180,210,240])}`}),
   () => ({type:'pay',    msg:`<b>T-${prevId()}</b> · UPI payment captured`,            amt:`+₹${pick([160,180,220,260])}`}),
   () => ({type:'prep',   msg:`<b>T-${prevId(2)}</b> · status → preparing`,             amt:`lane ${pick(['01','02'])}`}),
   () => ({type:'ready',  msg:`<b>T-${prevId(3)}</b> · status → ready · OTP issued`,    amt:`pickup ${pick(['8421','2916','5734','1027'])}`}),
   () => ({type:'handover', msg:`<b>T-${prevId(5)}</b> · OTP verified · handed over`,   amt:`done`}),
-  () => ({type:'reject', msg:`<b>${pick(ITEMS)}</b> · low stock alert · 4 left`,       amt:'menu'}),
+  () => ({type:'reject', msg:`<b>${pick(feedItems)}</b> · low stock alert · 4 left`,       amt:'menu'}),
 ];
-let orderCounter = 2425;
 function nextId(){ return ++orderCounter; }
 function prevId(n=1){ return orderCounter - n; }
 function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
@@ -754,7 +822,12 @@ function addFeed(forceType){
 }
 for (let i=0;i<8;i++) addFeed();
 feed.dataset.initDone = '1';
-setInterval(addFeed, 3000);
+// New events every 7-9 seconds — realistic, not spammy
+function scheduleFeed(){
+  const delay = 7000 + Math.random() * 2000;
+  setTimeout(function(){ addFeed(); scheduleFeed(); }, delay);
+}
+scheduleFeed();
 
 /* Cross-tab sync — when kitchen pushes a special, refresh the strip + feed */
 window.addEventListener('storage', (e) => {
@@ -792,17 +865,40 @@ function renderRev(range){
   if (sub) sub.textContent = cfg.sub;
 }
 
+let currentRange = 'day';
+var PERIOD_MULT = { hour: 0.12, day: 1, week: 7, month: 30 };
+function applyKpiPeriod(range) {
+  var c = TD.getCanteen(currentTenantId);
+  var k = c.kpis;
+  var mult = PERIOD_MULT[range] || 1;
+  var scaled = {
+    revenue:      Math.round(k.revenue * mult),
+    orders:       Math.round(k.orders * mult),
+    avgTicket:    k.avgTicket, // average doesn't scale with period
+    avgPickupSec: k.avgPickupSec,
+    avgPickupMin: k.avgPickupMin,
+    revenueDelta: k.revenueDelta,
+    ordersDelta:  k.ordersDelta,
+    avgTicketDelta: k.avgTicketDelta,
+    avgPickupDelta: k.avgPickupDelta,
+  };
+  resetKpiCounters(scaled);
+}
 $$('#rangeToggle button').forEach(b => b.addEventListener('click', () => {
   $$('#rangeToggle button').forEach(x => x.classList.remove('active'));
   b.classList.add('active');
+  currentRange = b.dataset.r;
   renderHeat(b.dataset.r);
-  renderRev(b.dataset.r);
+  // Range toggle updates heatmap sub + re-animates the chart via applyRevMetric
+  applyRevMetric(currentRevMetric);
+  applyKpiPeriod(currentRange);
   staggerTopBars();
-  toast('Range: ' + b.textContent);
 }));
 
-/* Panel-tab active toggle (generic — works for every .panel-tab group) */
+/* Panel-tab active toggle (generic — skips revenue panel which has its own handler) */
 $$('.panel-head .actions').forEach(group => {
+  // Skip the revenue chart group — handled by applyRevMetric above
+  if (group.closest('.dash-row.r1')) return;
   const tabs = group.querySelectorAll('.panel-tab');
   if (tabs.length < 2) return;
   tabs.forEach(tab => tab.addEventListener('click', () => {
@@ -816,32 +912,82 @@ const ordersFilterGroup = document.querySelector('.dash-row.r3 .panel-head .acti
 if (ordersFilterGroup){
   ordersFilterGroup.querySelectorAll('.panel-tab').forEach(tab => {
     tab.addEventListener('click', () => {
-      const want = tab.textContent.trim().toLowerCase();
-      let shown = 0;
-      $$('#ordersBody tr').forEach(tr => {
-        const pill = tr.querySelector('.status-pill');
-        const match = want === 'all' || (pill && pill.classList.contains(want)) || (want === 'preparing' && pill && pill.classList.contains('incoming'));
-        tr.style.display = match ? '' : 'none';
-        if (match) shown++;
-      });
-      toast(`${shown} order${shown===1?'':'s'} · ${tab.textContent}`);
+      ordersFilter = tab.textContent.trim().toLowerCase();
+      ordersPage = 0;
+      renderOrdersTable();
+      toast(`Filter · ${tab.textContent}`);
     });
   });
 }
 
-/* Revenue panel-tabs swap demo data labels */
+/* Revenue panel-tabs: swap chart line + y-axis labels + subtitle */
 const revGroup = document.querySelector('.dash-row.r1 .panel-head .actions');
-if (revGroup){
-  const REV_MODE = {
-    revenue:    'DAILY TOTAL · ₹ THOUSANDS',
-    orders:     'ORDERS PER DAY · COUNT',
-    'avg ticket': 'AVG TICKET · ₹ PER ORDER'
-  };
+let currentRevMetric = 'revenue';
+const REV_METRICS = {
+  revenue: {
+    sub: 'DAILY TOTAL · ₹ THOUSANDS',
+    hl: '₹38.4K · today',
+    hlSub: '↑ 12.4% vs yest.',
+    line: 'M0,160 L88,140 L175,148 L263,110 L350,118 L438,84 L525,96 L613,56 L700,42',
+    fill: 'M0,160 L88,140 L175,148 L263,110 L350,118 L438,84 L525,96 L613,56 L700,42 L700,220 L0,220 Z',
+    y1: '40K', y2: '25K', y3: '10K',
+  },
+  orders: {
+    sub: 'ORDERS PER DAY · COUNT',
+    hl: '248 orders · today',
+    hlSub: '↑ 8.1% vs yest.',
+    line: 'M0,175 L88,165 L175,170 L263,145 L350,150 L438,120 L525,130 L613,85 L700,70',
+    fill: 'M0,175 L88,165 L175,170 L263,145 L350,150 L438,120 L525,130 L613,85 L700,70 L700,220 L0,220 Z',
+    y1: '300', y2: '180', y3: '80',
+  },
+  'avg ticket': {
+    sub: 'AVG TICKET · ₹ PER ORDER',
+    hl: '₹155 · avg today',
+    hlSub: '↑ ₹6 vs yest.',
+    line: 'M0,140 L88,145 L175,138 L263,132 L350,140 L438,125 L525,135 L613,115 L700,108',
+    fill: 'M0,140 L88,145 L175,138 L263,132 L350,140 L438,125 L525,135 L613,115 L700,108 L700,220 L0,220 Z',
+    y1: '₹200', y2: '₹150', y3: '₹100',
+  },
+};
+function applyRevMetric(key) {
+  currentRevMetric = key;
+  const cfg = REV_METRICS[key] || REV_METRICS.revenue;
+  const svg = document.querySelector('.rev-chart svg');
+  if (!svg) return;
+  const area = svg.querySelector('path.area');
+  const line = svg.querySelector('path.line');
+  if (area) { area.setAttribute('d', cfg.fill); }
+  if (line) {
+    // Re-trigger draw animation
+    line.style.animation = 'none';
+    line.setAttribute('d', cfg.line);
+    line.style.strokeDasharray = '1200';
+    line.style.strokeDashoffset = '1200';
+    void line.getBoundingClientRect();
+    line.style.animation = 'drawIn 1.8s cubic-bezier(.2,.7,.3,1) forwards';
+  }
+  const sub = svg.closest('.panel').querySelector('.panel-head .sub');
+  if (sub) sub.textContent = cfg.sub;
+  // Update y-axis labels
+  const yLabels = svg.querySelectorAll('.y-label:not([fill])');
+  const yAll = [...svg.querySelectorAll('text.y-label')].filter(t => !t.hasAttribute('fill') || t.getAttribute('fill') === '');
+  const yTexts = svg.querySelectorAll('text.y-label');
+  yTexts.forEach((t, i) => {
+    if (i === 0) t.textContent = cfg.y1;
+    else if (i === 1) t.textContent = cfg.y2;
+    else if (i === 2) t.textContent = cfg.y3;
+  });
+  const hl = svg.querySelector('.label-hl');
+  const hlSub = svg.querySelector('.label-hl-sub');
+  if (hl) hl.textContent = cfg.hl;
+  if (hlSub) hlSub.textContent = cfg.hlSub;
+}
+if (revGroup) {
   revGroup.querySelectorAll('.panel-tab').forEach(tab => {
     tab.addEventListener('click', () => {
-      const sub = revGroup.closest('.panel').querySelector('.panel-head .sub');
-      const key = tab.textContent.trim().toLowerCase();
-      if (sub && REV_MODE[key]) sub.textContent = REV_MODE[key];
+      revGroup.querySelectorAll('.panel-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      applyRevMetric(tab.textContent.trim().toLowerCase());
     });
   });
 }
@@ -850,7 +996,7 @@ if (revGroup){
 const topPanel = document.getElementById('topList');
 if (topPanel){
   const viewAll = topPanel.closest('.panel').querySelector('.panel-tab');
-  if (viewAll) viewAll.addEventListener('click', () => toast('Full menu breakdown · coming in v1.1'));
+  if (viewAll) viewAll.addEventListener('click', () => setView('students'));
 }
 
 /* Heatmap cell clicks (delegated, survives re-renders) */
@@ -890,7 +1036,7 @@ const menuClose = document.getElementById('menuModalClose');
 const menuSave = document.getElementById('menuModalSave');
 function openMenuModal(){ menuModal.classList.add('show'); document.body.style.overflow = 'hidden'; }
 function closeMenuModal(){ menuModal.classList.remove('show'); document.body.style.overflow = ''; }
-if (manageBtn) manageBtn.addEventListener('click', openMenuModal);
+/* manage menu: router setView('menu') */
 if (menuClose) menuClose.addEventListener('click', closeMenuModal);
 if (menuSave) menuSave.addEventListener('click', () => { closeMenuModal(); toast('Menu changes pushed live'); });
 if (menuModal){
@@ -905,19 +1051,395 @@ if (menuModal){
 }
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && menuModal.classList.contains('show')) closeMenuModal(); });
 
-/* Sidebar placeholder routes */
-$$('.sb-link[data-toast]').forEach(l => l.addEventListener('click', () => {
-  toast(l.dataset.toast);
-}));
+/* View router — every sidebar touch navigates */
+const VIEW_META = {
+  overview: { title: "Today's overview", crumb: 'Overview', blocks: ['overview', 'insights', 'orders'], group: 'Operations' },
+  orders: { title: 'Orders', crumb: 'Orders', blocks: ['orders'], group: 'Operations' },
+  menu: { title: 'Menu manager', crumb: 'Menu', blocks: [], group: 'Operations', openMenu: true },
+  students: { title: 'Students', crumb: 'Students', blocks: [], group: 'Operations', pane: 'view-students' },
+  insights: { title: 'Insights', crumb: 'Insights', blocks: ['insights'], group: 'Operations' },
+  tenant: { title: 'Tenant settings', crumb: 'Tenant', blocks: [], group: 'Settings', pane: 'view-tenant-settings' },
+  api: { title: 'API keys', crumb: 'API keys', blocks: [], group: 'Settings', pane: 'view-api' },
+  audit: { title: 'Audit log', crumb: 'Audit', blocks: [], group: 'Settings', pane: 'view-audit' },
+};
+let currentView = 'overview';
+
+function setView(view) {
+  if (!VIEW_META[view]) return;
+  currentView = view;
+  const meta = VIEW_META[view];
+  $$('.sb-link[data-view]').forEach((l) => l.classList.toggle('active', l.dataset.view === view));
+  const crumb = $('#crumbView');
+  const title = $('#pageTitle');
+  if (crumb) crumb.textContent = meta.crumb;
+  if (title) title.textContent = meta.title;
+  const crumbGroup = document.querySelector('.topbar .crumb > span:first-child');
+  if (crumbGroup) crumbGroup.textContent = meta.group;
+  $$('.dash-block').forEach((el) => {
+    const allowed = (el.dataset.blocks || '').split(',').filter(Boolean);
+    const show = !allowed.length || allowed.some((b) => meta.blocks.includes(b));
+    el.hidden = !show;
+  });
+  $$('.view-pane').forEach((p) => {
+    p.hidden = true;
+  });
+  if (meta.pane) {
+    const pane = document.getElementById(meta.pane);
+    if (pane) pane.hidden = false;
+  }
+  if (meta.openMenu) openMenuModal();
+  if (view === 'students') renderStudents();
+  if (view === 'tenant') renderTenantSettings();
+  if (view === 'api') renderApiKeys();
+  if (view === 'audit') renderAuditLog();
+  toast(meta.crumb + ' · live demo');
+}
+
+$$('.sb-link[data-view]').forEach((link) => {
+  link.addEventListener('click', () => setView(link.dataset.view));
+  link.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      setView(link.dataset.view);
+    }
+  });
+});
+
+const tenantToggle = document.getElementById('tenantToggle');
+const tenantMenu = document.getElementById('tenantMenu');
+if (tenantToggle && tenantMenu) {
+  tenantToggle.addEventListener('click', () => {
+    tenantMenu.classList.toggle('show');
+    tenantToggle.classList.toggle('open');
+    tenantToggle.setAttribute('aria-expanded', tenantMenu.classList.contains('show') ? 'true' : 'false');
+  });
+  document.addEventListener('click', (e) => {
+    if (!tenantToggle.contains(e.target) && !tenantMenu.contains(e.target)) {
+      tenantMenu.classList.remove('show');
+      tenantToggle.classList.remove('open');
+    }
+  });
+}
+
+function initAdminCanteenSelect() {
+  const menu = document.getElementById('tenantMenu');
+  if (!menu) return;
+  menu.innerHTML = TD.listCanteens().map(function (c) {
+    return '<div class="sb-tenant-opt' + (c.id === TD.getSelectedCanteenId() ? ' active' : '') + '" data-cid="' + c.id + '">' + c.name + '<br><span style="font-size:10px;opacity:0.6">' + (c.block || '') + '</span></div>';
+  }).join('');
+  menu.querySelectorAll('.sb-tenant-opt').forEach(function (opt) {
+    opt.addEventListener('click', function (e) {
+      e.stopPropagation();
+      TD.setSelectedCanteenId(opt.dataset.cid);
+      window.location.reload();
+    });
+  });
+}
+initAdminCanteenSelect();
+
+function renderTopItems(items) {
+  const host = $('#topList');
+  if (!host) return;
+  host.innerHTML = items
+    .map(function (it, i) {
+      const diet = it.diet === 'nv' ? 'nv' : '';
+      const rk = String(i + 1).padStart(2, '0');
+      return (
+        '<div class="top-row"><span class="rk">' + rk +
+        '</span><div class="info"><div class="n"><span class="veg-dot ' + diet +
+        '"></span>' + it.name +
+        '</div><div class="bar"><i data-w="' + it.pct +
+        '%"></i></div></div><div class="v">' + it.orders +
+        ' <small>orders</small></div></div>'
+      );
+    })
+    .join('');
+}
+
+function resetKpiCounters(k) {
+  const cards = document.querySelectorAll('.kpi-grid .kpi-card');
+  const vals = [k.revenue, k.orders, k.avgTicket, k.avgPickupSec];
+  const deltas = [k.revenueDelta, k.ordersDelta, k.avgTicketDelta, k.avgPickupDelta];
+  cards.forEach(function (card, i) {
+    const delta = card.querySelector('.delta');
+    const counter = card.querySelector('.counter');
+    if (delta) {
+      delta.textContent = deltas[i];
+      delta.classList.toggle('up', String(deltas[i]).indexOf('▲') >= 0 || String(deltas[i]).indexOf('▼') === -1);
+      delta.classList.toggle('down', String(deltas[i]).indexOf('▼') >= 0);
+    }
+    if (counter) {
+      counter.dataset.to = vals[i];
+      counter.dataset.animated = '0';
+      counter.textContent = '0';
+      animateCounter(counter);
+    }
+  });
+  const pickupCard = cards[3];
+  if (pickupCard) {
+    const valEl = pickupCard.querySelector('.val');
+    if (valEl) valEl.innerHTML = k.avgPickupMin + ':<span class="counter" data-to="' + k.avgPickupSec + '">0</span>';
+    const sec = valEl.querySelector('.counter');
+    if (sec) animateCounter(sec);
+  }
+  const revHl = document.querySelector('.label-hl');
+  if (revHl) revHl.textContent = '₹' + (k.revenue / 1000).toFixed(1) + 'K · today';
+}
+
+function renderMenuModalRows(rows) {
+  const host = $('#menuModalRows');
+  if (!host) return;
+  const live = rows.filter(function (r) {
+    return r.live;
+  }).length;
+  const sub = $('#menuModalSub');
+  if (sub) sub.textContent = live + ' LIVE · ' + (rows.length - live) + ' HIDDEN · ' + TD.getCanteen(currentTenantId).short;
+  host.innerHTML = rows
+    .map(function (r) {
+      return (
+        '<div class="modal-row"><span class="nm">' +
+        r.name +
+        '</span><span class="px">₹' +
+        r.price +
+        '</span><button class="toggle ' +
+        (r.live ? 'on' : '') +
+        '" data-on="' +
+        (r.live ? '1' : '0') +
+        '">' +
+        (r.live ? 'LIVE' : 'HIDDEN') +
+        '</button></div>'
+      );
+    })
+    .join('');
+  host.querySelectorAll('.toggle').forEach(function (t) {
+    t.addEventListener('click', function () {
+      const on = t.classList.toggle('on');
+      t.textContent = on ? 'LIVE' : 'HIDDEN';
+      t.dataset.on = on ? '1' : '0';
+    });
+  });
+}
+
+function applyTenantData(tenantId) {
+  currentTenantId = tenantId;
+  TD.setSelectedCanteenId(tenantId);
+  const c = TD.getCanteen(tenantId);
+  ORDERS = c.orders.map(function (o) {
+    return Object.assign({}, o);
+  });
+  STUDENT_ROWS = c.studentRows.map(function (s) {
+    return Object.assign({}, s);
+  });
+  feedItems = c.feedItems.slice();
+  feedStudents = STUDENT_ROWS.map(function (s) {
+    return s.name;
+  });
+  auditEvents = c.audit.map(function (a) {
+    return Object.assign({}, a);
+  });
+  orderCounter = c.counterBase || 2425;
+  document.title = 'Tray Admin · ' + c.name;
+  resetKpiCounters(c.kpis);
+  renderTopItems(c.topItems);
+  renderMenuModalRows(c.menuModal);
+  ordersPage = 0;
+  renderOrdersTable();
+  renderSpecials();
+  if (currentView === 'students') renderStudents();
+  if (currentView === 'audit') renderAuditLog();
+  const studentsSub = document.getElementById('studentsPaneSub');
+  if (studentsSub) studentsSub.textContent = 'TOP SPENDERS · ' + c.short.toUpperCase();
+  const tenantSub = document.getElementById('tenantSettingsSub');
+  if (tenantSub) tenantSub.textContent = c.short.toUpperCase() + ' · CANTEEN PROFILE';
+  const auditSub = document.getElementById('auditPaneSub');
+  if (auditSub) auditSub.textContent = 'LAST 24H · ' + c.short.toUpperCase();
+  staggerTopBars();
+  renderHeat('day');
+  const menu = document.getElementById('tenantMenu');
+  if (menu) {
+    menu.querySelectorAll('.sb-tenant-opt').forEach(function (o) {
+      o.classList.toggle('active', o.dataset.cid === tenantId);
+    });
+  }
+}
+let ordersFilter = 'all';
+let ordersSearch = '';
+let ordersPage = 0;
+const ORDERS_PAGE = 8;
+
+function statusPill(status) {
+  const label = status === 'incoming' ? 'Incoming' : status.charAt(0).toUpperCase() + status.slice(1);
+  return `<span class="status-pill ${status}"><span class="d"></span>${label}</span>`;
+}
+
+function orderMatchesFilter(o) {
+  if (ordersFilter === 'all') return true;
+  if (ordersFilter === 'preparing') return o.status === 'preparing' || o.status === 'incoming';
+  return o.status === ordersFilter;
+}
+
+function orderMatchesSearch(o) {
+  if (!ordersSearch) return true;
+  const q = ordersSearch.toLowerCase();
+  return [o.id, o.student, o.items, String(o.total), o.status].some((v) => v.toLowerCase().includes(q));
+}
+
+function renderOrdersTable() {
+  const filtered = ORDERS.filter((o) => orderMatchesFilter(o) && orderMatchesSearch(o));
+  const pages = Math.max(1, Math.ceil(filtered.length / ORDERS_PAGE));
+  if (ordersPage >= pages) ordersPage = pages - 1;
+  const slice = filtered.slice(ordersPage * ORDERS_PAGE, ordersPage * ORDERS_PAGE + ORDERS_PAGE);
+  const body = $('#ordersBody');
+  if (!body) return;
+  body.innerHTML = slice
+    .map(
+      (o) => `<tr data-order="${o.id}">
+      <td class="oid">${o.id}</td>
+      <td class="name">${o.student}</td>
+      <td class="items">${o.items}</td>
+      <td class="tot">₹${o.total}</td>
+      <td>${statusPill(o.status)}</td>
+      <td class="time">${o.time}</td>
+    </tr>`
+    )
+    .join('');
+  const count = $('#ordersCountLabel');
+  const pageLabel = $('#ordersPageLabel');
+  if (count) count.textContent = `SHOWING ${slice.length} OF ${filtered.length} MATCHING · ${ORDERS.length} TODAY`;
+  if (pageLabel) pageLabel.textContent = `${ordersPage + 1} / ${pages}`;
+  const prev = $('#ordersPrev');
+  const next = $('#ordersNext');
+  if (prev) prev.disabled = ordersPage <= 0;
+  if (next) next.disabled = ordersPage >= pages - 1;
+  body.querySelectorAll('tr').forEach((tr) => {
+    tr.addEventListener('click', () => {
+      const o = ORDERS.find((x) => x.id === tr.dataset.order);
+      if (o) toast(`${o.id} · ${o.student} · ₹${o.total} · ${o.status}`);
+    });
+  });
+}
+const ordersPrev = document.getElementById('ordersPrev');
+const ordersNext = document.getElementById('ordersNext');
+if (ordersPrev) ordersPrev.addEventListener('click', () => { ordersPage--; renderOrdersTable(); });
+if (ordersNext) ordersNext.addEventListener('click', () => { ordersPage++; renderOrdersTable(); });
+
+const searchInput = document.getElementById('searchInput');
+if (searchInput) {
+  searchInput.addEventListener('input', () => {
+    ordersSearch = searchInput.value.trim();
+    ordersPage = 0;
+    renderOrdersTable();
+    $$('.feed-item').forEach((row) => {
+      const t = row.textContent.toLowerCase();
+      row.style.display = !ordersSearch || t.includes(ordersSearch.toLowerCase()) ? '' : 'none';
+    });
+    // Filter student cards and table rows when in students view
+    const q = ordersSearch.toLowerCase();
+    $$('#studentsGrid .student-card').forEach((card) => {
+      const t = card.textContent.toLowerCase();
+      card.style.display = !q || t.includes(q) ? '' : 'none';
+    });
+    $$('#studentsBody tr').forEach((row) => {
+      const t = row.textContent.toLowerCase();
+      row.style.display = !q || t.includes(q) ? '' : 'none';
+    });
+  });
+}
+
+
+function renderStudents() {
+  const grid = $('#studentsGrid');
+  const body = $('#studentsBody');
+  if (!grid || !body) return;
+  grid.innerHTML = STUDENT_ROWS.slice(0, 6)
+    .map(
+      (s) =>
+        `<div class="student-card"><div class="nm">${s.name}</div><div class="meta">${s.roll}</div><div class="spend">₹${s.spend} · ${s.orders} orders</div></div>`
+    )
+    .join('');
+  body.innerHTML = STUDENT_ROWS.map(
+    (s) =>
+      `<tr><td class="name">${s.name}</td><td class="mono">${s.roll}</td><td>${s.orders}</td><td class="tot">₹${s.spend}</td><td class="time">${s.last}</td></tr>`
+  ).join('');
+}
+
+const studentsExport = document.getElementById('studentsExport');
+if (studentsExport) studentsExport.addEventListener('click', () => toast('Student list exported · CSV'));
+
+function settingsToggleRow(label, hint, on) {
+  return `<div class="settings-row"><div><div class="lbl">${label}</div><div class="hint">${hint}</div></div><button class="toggle ${on ? 'on' : ''}" type="button">${on ? 'ON' : 'OFF'}</button></div>`;
+}
+
+function renderTenantSettings() {
+  const list = $('#tenantSettingsList');
+  if (!list) return;
+  list.innerHTML = [
+    settingsToggleRow('UPI payouts enabled', 'Razorpay · verified', true),
+    settingsToggleRow('Kitchen auto-sync', 'Push specials to student app', true),
+    settingsToggleRow('OTP on pickup', '4-digit handover code', true),
+    settingsToggleRow('Rush mode', 'Throttle orders at peak', false),
+  ].join('');
+  list.querySelectorAll('.toggle').forEach((t) =>
+    t.addEventListener('click', () => {
+      const on = t.classList.toggle('on');
+      t.textContent = on ? 'ON' : 'OFF';
+      toast(on ? 'Setting enabled' : 'Setting disabled');
+    })
+  );
+}
+
+function renderApiKeys() {
+  const list = $('#apiKeysList');
+  if (!list) return;
+  list.innerHTML = `
+    <div class="settings-row"><div><div class="lbl">Live key</div><div class="hint">tray_live_••••8f2a</div></div><button class="btn btn-ghost" type="button" data-copy="1">Copy</button></div>
+    <div class="settings-row"><div><div class="lbl">Webhook secret</div><div class="hint">whsec_••••c41b · kitchen events</div></div><button class="btn btn-ghost" type="button" data-rotate="1">Rotate</button></div>
+  `;
+  list.querySelector('[data-copy]')?.addEventListener('click', () => toast('API key copied'));
+  list.querySelector('[data-rotate]')?.addEventListener('click', () => toast('New secret issued · logged in audit'));
+}
+
+function renderAuditLog() {
+  const feedEl = $('#auditFeed');
+  if (!feedEl) return;
+  feedEl.innerHTML = auditEvents
+    .map(
+      (ev) =>
+        `<div class="feed-item"><span class="t">${ev.t}</span><span class="ic ${ev.type}">LOG</span><span class="msg">${ev.msg}</span><span class="amt">audit</span></div>`
+    )
+    .join('');
+}
+
+let gChord = false;
+let gTimer = null;
+window.addEventListener('keydown', (e) => {
+  if (e.target.matches('input, textarea')) return;
+  if (e.key === 'g' && !gChord) {
+    gChord = true;
+    clearTimeout(gTimer);
+    gTimer = setTimeout(() => { gChord = false; }, 900);
+    return;
+  }
+  if (gChord) {
+    const map = { o: 'overview', r: 'orders', m: 'menu', s: 'students', i: 'insights' };
+    const v = map[e.key.toLowerCase()];
+    if (v) { e.preventDefault(); setView(v); }
+    gChord = false;
+  }
+});
+
+if (manageBtn) {
+  manageBtn.addEventListener('click', () => setView('menu'));
+}
 
 /* ⌘K */
-$$('.search input').forEach(i => i.addEventListener('keydown', e => {
-  if (e.key === 'Enter') toast('Searching for "' + e.target.value + '"…');
+$$('#searchInput, .search input').forEach(i => i.addEventListener('keydown', e => {
+  if (e.key === 'Enter') { ordersSearch = e.target.value.trim(); ordersPage = 0; renderOrdersTable(); toast('Search · ' + (ordersSearch || 'cleared')); }
 }));
 window.addEventListener('keydown', e => {
   if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k'){
     e.preventDefault();
-    $('.search input').focus();
+    (document.getElementById('searchInput') || $('.search input')).focus();
   }
 });
 
@@ -929,6 +1451,22 @@ function toast(msg){
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => $('#toast').classList.remove('show'), 2200);
 }
+
+applyTenantData(currentTenantId);
+const boot = TD.getCanteen(currentTenantId);
+$('#tenantName').textContent = boot.name;
+$('#tenantSlug').textContent = boot.id + ' · admin';
+$('#tenantAv').textContent = boot.av;
+
+window.addEventListener('storage', function (e) {
+  if (e.key && e.key.indexOf('tray_specials_') === 0) renderSpecials();
+  if (e.key === TD.STORAGE_CANTEEN && e.newValue && TD.CANTEENS[e.newValue]) {
+    applyTenantData(e.newValue);
+    $('#tenantName').textContent = TD.getCanteen(e.newValue).name;
+    $('#tenantSlug').textContent = e.newValue + ' · admin';
+    $('#tenantAv').textContent = TD.getCanteen(e.newValue).av;
+  }
+});
 </script>
 </body>
 </html>

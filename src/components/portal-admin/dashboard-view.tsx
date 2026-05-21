@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowDown, ArrowUp, Download, IndianRupee, ListOrdered, Receipt, Timer } from "lucide-react";
+import { ArrowDown, ArrowRight, ArrowUp, Copy, Download, IndianRupee, ListOrdered, Receipt, Timer } from "lucide-react";
 import dayjs from "dayjs";
 import { formatRupees, formatTimeIST, fmtElapsed } from "@/lib/utils";
 import { getBrowserClient } from "@/lib/supabase/browser";
@@ -42,6 +42,8 @@ type ItemRow = {
 
 export function DashboardView({
   tenantName,
+  tenantSlug,
+  tenantId,
   ordersWeek,
   todayOrders,
   lastWeekToday,
@@ -49,6 +51,8 @@ export function DashboardView({
   todayItems,
 }: {
   tenantName: string;
+  tenantSlug: string;
+  tenantId: string;
   ordersWeek: OrderRow[];
   todayOrders: OrderRow[];
   lastWeekToday: OrderRow[];
@@ -63,7 +67,7 @@ export function DashboardView({
       .channel("admin-feed")
       .on(
         "postgres_changes",
-        { event: "INSERT", schema: "public", table: "order_status_logs" },
+        { event: "INSERT", schema: "public", table: "order_status_logs", filter: `tenant_id=eq.${tenantId}` },
         (payload) => {
           setLogs((prev) => [(payload.new as StatusLog), ...prev].slice(0, 40));
         }
@@ -72,7 +76,7 @@ export function DashboardView({
     return () => {
       sb.removeChannel(ch);
     };
-  }, []);
+  }, [tenantId]);
 
   const kpis = useMemo(() => {
     const paid = (rows: OrderRow[]) =>
@@ -161,32 +165,202 @@ export function DashboardView({
     return [...m.values()].sort((a, b) => b.qty - a.qty).slice(0, 6);
   }, [todayItems]);
 
+  const isFirstDay = ordersWeek.length === 0;
+
   return (
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
-      <div className="flex flex-wrap items-end justify-between gap-3 mb-5">
+      {/* ── First-run onboarding checklist ───────────────────────────── */}
+      {isFirstDay && (
+        <div
+          className="mb-5 rounded-xl p-5"
+          style={{ border: "1px solid rgba(205,250,80,0.25)", background: "rgba(205,250,80,0.05)" }}
+        >
+          <div className="text-[13px] font-semibold mb-3" style={{ color: "#cdfa50" }}>
+            Welcome! Here&rsquo;s how to get your first order in 3 steps:
+          </div>
+          <ol className="flex flex-col gap-2.5">
+            {[
+              {
+                n: "1",
+                text: "Add your menu items",
+                href: `/c/${tenantSlug}/admin/menu/new`,
+                cta: "Go to Menu →",
+              },
+              {
+                n: "2",
+                text: "Set your UPI ID so students can pay you",
+                href: `/c/${tenantSlug}/admin/settings`,
+                cta: "Go to Settings →",
+              },
+              {
+                n: "3",
+                text: "Share your ordering link with students",
+                href: null,
+                cta: null,
+                copyStudentLink: true,
+              },
+            ].map((step) => (
+              <li key={step.n} className="flex items-start gap-3">
+                <span
+                  className="mt-0.5 shrink-0 h-5 w-5 rounded-full text-[11px] font-bold inline-flex items-center justify-center"
+                  style={{ background: "rgba(205,250,80,0.20)", color: "#cdfa50" }}
+                >
+                  {step.n}
+                </span>
+                <div className="flex flex-col gap-1.5 flex-1 text-[13px]" style={{ color: "#aab3c5" }}>
+                  <span>{step.text}</span>
+                  {"copyStudentLink" in step && step.copyStudentLink && (
+                    <button
+                      onClick={() => {
+                        const origin = typeof window !== "undefined" ? window.location.origin : "";
+                        navigator.clipboard.writeText(`${origin}/c/${tenantSlug}/menu`).catch(() => undefined);
+                      }}
+                      className="inline-flex items-center gap-1.5 text-[12px] font-mono bg-lime/10 border border-lime/20 text-lime px-3 py-1.5 rounded-lg hover:bg-lime/20 transition-colors w-fit"
+                    >
+                      <Copy size={11} /> Copy student link
+                    </button>
+                  )}
+                  {step.href && step.cta && (
+                    <a
+                      href={step.href}
+                      className="ml-2 text-[12px] font-medium hover:underline inline-flex items-center gap-0.5"
+                      style={{ color: "#cdfa50" }}
+                    >
+                      {step.cta} <ArrowRight size={11} />
+                    </a>
+                  )}
+                </div>
+              </li>
+            ))}
+          </ol>
+        </div>
+      )}
+
+      {/* ── Page heading + topbar-style row ─────────────────────────── */}
+      <div
+        className="flex flex-wrap items-end justify-between gap-3 mb-6 pb-5"
+        style={{ borderBottom: "1px solid rgba(255,255,255,0.07)" }}
+      >
         <div>
-          <h1 className="font-display text-[26px] sm:text-[30px] font-semibold tracking-tight">
+          <h1
+            className="font-semibold leading-tight"
+            style={{ fontSize: 24, letterSpacing: "-0.025em", color: "#eef1f7" }}
+          >
             Today&rsquo;s overview
           </h1>
-          <div className="text-[11px] font-mono uppercase tracking-[0.12em] text-graphite-400 mt-0.5">
+          <div
+            className="font-mono uppercase mt-1"
+            style={{ fontSize: 11, letterSpacing: "0.06em", color: "#6d7689" }}
+          >
             {dayjs().format("ddd · D MMM YYYY").toUpperCase()} · {tenantName.toUpperCase()} · COUNTER 01
           </div>
         </div>
         <div className="flex items-center gap-2">
           <a
             href="/api/admin/export/orders"
-            className="inline-flex items-center gap-1.5 h-9 px-3 rounded-md border border-graphite-200/15 text-[11px] font-mono uppercase tracking-wider text-graphite-300 hover:border-lime hover:text-lime transition-colors"
+            className="inline-flex items-center gap-1.5 font-mono uppercase tracking-wider transition-colors"
+            style={{
+              height: 36,
+              padding: "0 12px",
+              borderRadius: 7,
+              border: "1px solid rgba(255,255,255,0.13)",
+              fontSize: 11,
+              color: "#aab3c5",
+            }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "#cdfa50"; (e.currentTarget as HTMLElement).style.color = "#cdfa50"; }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.13)"; (e.currentTarget as HTMLElement).style.color = "#aab3c5"; }}
           >
             <Download size={11} /> Export CSV
           </a>
         </div>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 mb-3">
-        <KpiCard label="Revenue today" value={formatRupees(kpis.revenue)} delta={dRev.text} deltaUp={dRev.up} icon={IndianRupee} />
-        <KpiCard label="Orders" value={String(kpis.count)} delta={dCount.text} deltaUp={dCount.up} icon={ListOrdered} />
-        <KpiCard label="Avg ticket" value={formatRupees(kpis.avgTicket)} delta={dAvg.text} deltaUp={dAvg.up} icon={Receipt} tone="amber" />
-        <KpiCard label="Avg pickup" value={kpis.avgPickup ? fmtElapsed(kpis.avgPickup) : "—"} delta={dPickup.text} deltaUp={dPickup.up} icon={Timer} tone="rose" />
+      {/* ── KPI cards ────────────────────────────────────────────────── */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-3">
+        {isFirstDay ? (
+          <>
+            {/* First-day setup prompts replace numeric KPIs */}
+            {(
+              [
+                {
+                  icon: IndianRupee,
+                  label: "Revenue today",
+                  prompt: "Set up your UPI ID to receive payments",
+                  href: `/c/${tenantSlug}/admin/settings`,
+                  cta: "Go to Settings →",
+                },
+                {
+                  icon: ListOrdered,
+                  label: "Orders",
+                  prompt: "Share your student link to get first orders",
+                  href: `/c/${tenantSlug}/admin/settings`,
+                  cta: "Copy link →",
+                },
+                {
+                  icon: Receipt,
+                  label: "Avg ticket",
+                  prompt: "Coming soon after your first order",
+                  href: null,
+                  cta: null,
+                },
+                {
+                  icon: Timer,
+                  label: "Avg pickup",
+                  prompt: "Coming soon after your first order",
+                  href: null,
+                  cta: null,
+                },
+              ] as const
+            ).map((card) => (
+              <div
+                key={card.label}
+                className="relative overflow-hidden flex flex-col gap-3 transition-colors"
+                style={{
+                  padding: "18px 20px",
+                  background: "#0f131b",
+                  border: "1px solid rgba(255,255,255,0.07)",
+                  borderRadius: 12,
+                  boxShadow: "3px 3px 0 rgba(238,241,247,0.08)",
+                }}
+              >
+                <div
+                  className="inline-flex items-center justify-center rounded-md"
+                  style={{ height: 28, width: 28, background: "rgba(255,255,255,0.05)" }}
+                >
+                  <card.icon size={13} strokeWidth={1.6} style={{ color: "#6d7689" }} />
+                </div>
+                <div
+                  className="font-mono uppercase font-medium"
+                  style={{ fontSize: 11, letterSpacing: "0.12em", color: "#6d7689" }}
+                >
+                  {card.label}
+                </div>
+                <p
+                  className="leading-snug"
+                  style={{ fontSize: 13, color: "#aab3c5", margin: 0 }}
+                >
+                  {card.prompt}
+                </p>
+                {card.href && card.cta && (
+                  <a
+                    href={card.href}
+                    className="font-mono font-medium hover:underline"
+                    style={{ fontSize: 11, color: "#cdfa50", letterSpacing: "0.04em" }}
+                  >
+                    {card.cta}
+                  </a>
+                )}
+              </div>
+            ))}
+          </>
+        ) : (
+          <>
+            <KpiCard label="Revenue today" value={formatRupees(kpis.revenue)} delta={dRev.text} deltaUp={dRev.up} icon={IndianRupee} />
+            <KpiCard label="Orders" value={String(kpis.count)} delta={dCount.text} deltaUp={dCount.up} icon={ListOrdered} />
+            <KpiCard label="Avg ticket" value={formatRupees(kpis.avgTicket)} delta={dAvg.text} deltaUp={dAvg.up} icon={Receipt} tone="amber" />
+            <KpiCard label="Avg pickup" value={kpis.avgPickup ? fmtElapsed(kpis.avgPickup) : "—"} delta={dPickup.text} deltaUp={dPickup.up} icon={Timer} tone="rose" />
+          </>
+        )}
       </div>
 
       <div className="grid lg:grid-cols-[1.4fr_1fr] gap-2 mb-3">

@@ -1,5 +1,10 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, Fraunces, Manrope, JetBrains_Mono, Instrument_Serif, Geist, Geist_Mono, DM_Mono } from "next/font/google";
+import {
+  Inter, Fraunces, Manrope, JetBrains_Mono, Instrument_Serif,
+  Newsreader, Geist, Geist_Mono, Space_Grotesk,
+  Bebas_Neue, Cormorant_Garamond, Plus_Jakarta_Sans, Barlow_Condensed, DM_Serif_Display,
+  DM_Mono,
+} from "next/font/google";
 import { headers } from "next/headers";
 import { Toaster } from "sonner";
 import { resolveTenant } from "@/lib/tenant";
@@ -32,6 +37,50 @@ const instrumentSerif = Instrument_Serif({
   weight: "400",
   style: ["normal", "italic"],
   variable: "--font-instrument-serif",
+  display: "swap",
+});
+const newsreader = Newsreader({
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
+  style: ["normal", "italic"],
+  variable: "--font-newsreader",
+  display: "swap",
+});
+const spaceGrotesk = Space_Grotesk({
+  subsets: ["latin"],
+  variable: "--font-space-grotesk",
+  display: "swap",
+});
+// Expressive typography — landing + student portal art direction
+const bebasNeue = Bebas_Neue({
+  subsets: ["latin"],
+  weight: "400",
+  variable: "--font-bebas",
+  display: "swap",
+});
+const cormorant = Cormorant_Garamond({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  style: ["normal", "italic"],
+  variable: "--font-cormorant",
+  display: "swap",
+});
+const plusJakarta = Plus_Jakarta_Sans({
+  subsets: ["latin"],
+  variable: "--font-jakarta",
+  display: "swap",
+});
+const barlowCondensed = Barlow_Condensed({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-barlow",
+  display: "swap",
+});
+const dmSerif = DM_Serif_Display({
+  subsets: ["latin"],
+  weight: "400",
+  style: ["normal", "italic"],
+  variable: "--font-dm-serif",
   display: "swap",
 });
 const geist = Geist({
@@ -68,7 +117,7 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   themeColor: [
     { media: "(prefers-color-scheme: light)", color: "#ffffff" },
-    { media: "(prefers-color-scheme: dark)", color: "#0a0d12" },
+    { media: "(prefers-color-scheme: dark)", color: "#0d0c0a" },
   ],
   width: "device-width",
   initialScale: 1,
@@ -89,7 +138,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       lang="en"
       data-tenant-id={tenant?.id ?? ""}
       data-tenant-slug={tenant?.slug ?? ""}
-      className={`${inter.variable} ${fraunces.variable} ${manrope.variable} ${jetbrains.variable} ${instrumentSerif.variable} ${geist.variable} ${geistMono.variable} ${dmMono.variable}`}
+      className={`${inter.variable} ${fraunces.variable} ${manrope.variable} ${jetbrains.variable} ${instrumentSerif.variable} ${newsreader.variable} ${spaceGrotesk.variable} ${geist.variable} ${geistMono.variable} ${bebasNeue.variable} ${cormorant.variable} ${plusJakarta.variable} ${barlowCondensed.variable} ${dmSerif.variable} ${dmMono.variable}`}
       suppressHydrationWarning
     >
       <head>

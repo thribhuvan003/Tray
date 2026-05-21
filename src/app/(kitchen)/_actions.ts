@@ -1,12 +1,13 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { headers } from "next/headers";
+import { cookies, headers } from "next/headers";
 import bcrypt from "bcryptjs";
 import { resolveTenant } from "@/lib/tenant";
 import { getAdminClient } from "@/lib/supabase/admin";
 import { requireRole } from "@/lib/auth/get-user";
 import { randomOtp } from "@/lib/utils";
+import { initiateRefundForOrder } from "@/app/(student)/_actions";
 
 type Outcome = { ok: true } | { ok: false; error: string };
 
@@ -73,7 +74,7 @@ export async function markPreparing(orderId: string): Promise<Outcome> {
     event_type: "preparing",
     payload: { actor: "kitchen" },
   });
-  revalidatePath("/kitchen");
+  revalidatePath(`/c/${ctx.tenant.slug}/kitchen`);
   return { ok: true };
 }
 
@@ -127,7 +128,7 @@ export async function markReady(orderId: string): Promise<Outcome> {
     event_type: "ready",
     payload: { actor: "kitchen" },
   });
-  revalidatePath("/kitchen");
+  revalidatePath(`/c/${ctx.tenant.slug}/kitchen`);
   return { ok: true };
 }
 
@@ -186,7 +187,155 @@ export async function verifyAndCollect(
     event_type: "collected",
     payload: { actor: "kitchen" },
   });
-  revalidatePath("/kitchen");
+  revalidatePath(`/c/${ctx.tenant.slug}/kitchen`);
+  return { ok: true };
+}
+
+// Mark a menu item sold out (86) or back in stock from kitchen board.
+// Looks up the item by name within this tenant — name_snapshot matches menu_items.name.
+export async function markItemSoldOut(
+  itemName: string,
+  inStock: boolean
+): Promise<{ ok: boolean; error?: string; itemId?: string }> {
+  const ctx = await staffContext();
+  if (!ctx.ok) return ctx;
+
+  const admin = getAdminClient(ctx.tenant.id);
+
+  // Resolve menu item by name within this tenant (live items only).
+  const { data: item } = await admin
+    .from("menu_items")
+    .select("id")
+    .eq("tenant_id", ctx.tenant.id)
+    .eq("name", itemName)
+    .eq("status", "live")
+    .maybeSingle<{ id: string }>();
+
+  if (!item) return { ok: false, error: "Item not found — check the name" };
+
+  const { error: updateErr } = await admin
+    .from("menu_items")
+    .update({ in_stock: inStock })
+    .eq("id", item.id);
+
+  if (updateErr) return { ok: false, error: updateErr.message };
+
+  await admin.from("audit_logs").insert({
+    tenant_id: ctx.tenant.id,
+    actor_user_id: ctx.user.id,
+    action: inStock ? "menu.86_undo" : "menu.86",
+    target_type: "menu_item",
+    target_id: item.id,
+    meta: { name: itemName },
+  });
+
+  // Emit a menu_item_86 event so kitchen Realtime subscribers pick it up.
+  // Prefer the oldest active order as the anchor; fall back to a dummy UUID
+  // when the board is empty (menu ops can happen between service periods).
+  const DUMMY_ORDER_ID = "00000000-0000-0000-0000-000000000000";
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const { data: activeOrder } = await admin
+    .from("orders")
+    .select("id")
+    .eq("tenant_id", ctx.tenant.id)
+    .in("status", ["placed", "preparing", "ready"])
+    .gte("placed_at", today.toISOString())
+    .order("placed_at", { ascending: true })
+    .limit(1)
+    .maybeSingle<{ id: string }>();
+
+  await emitOrderEvent(admin, {
+    order_id: activeOrder?.id ?? DUMMY_ORDER_ID,
+    tenant_id: ctx.tenant.id,
+    event_type: "menu_item_86",
+    payload: { name: itemName, in_stock: inStock },
+  });
+
+  revalidatePath(`/c/${ctx.tenant.slug}/menu`);
+  revalidatePath(`/c/${ctx.tenant.slug}/kitchen`);
+  return { ok: true, itemId: item.id };
+}
+
+// ── Staff PIN login ───────────────────────────────────────────────────────────
+// Called from the PIN kiosk (staff-select page). Uses the RPC which is
+// SECURITY DEFINER — bcrypt compare + lockout happen in Postgres, not here.
+// On success a signed cookie is written; on failure the error is returned to
+// the client so it can show attempts remaining or the lockout countdown.
+export async function verifyStaffPinAction(
+  p_user_id: string,
+  p_pin: string
+): Promise<{ ok: boolean; error?: string; locked?: boolean; lockedUntil?: string }> {
+  const h = await headers();
+  const slug = h.get("x-tenant-slug") ?? "aditya";
+  const tenant = await resolveTenant(slug);
+  if (!tenant) return { ok: false, error: "Tenant not found" };
+
+  // requireRole is skipped here — staff-select is accessed before PIN auth.
+  // We use the admin client so the RPC call succeeds regardless of the calling
+  // user's session (shared-tablet scenario where the device has a service session).
+  const admin = getAdminClient(tenant.id);
+
+  // Fetch lockout state before calling RPC so we can return a lockedUntil
+  // timestamp for the countdown UI.
+  const { data: profile } = await admin
+    .from("staff_profiles")
+    .select("locked_until, is_active")
+    .eq("user_id", p_user_id)
+    .eq("tenant_id", tenant.id)
+    .eq("is_active", true)
+    .maybeSingle<{ locked_until: string | null; is_active: boolean }>();
+
+  if (!profile) return { ok: false, error: "Staff member not found" };
+
+  if (profile.locked_until && new Date(profile.locked_until) > new Date()) {
+    return { ok: false, locked: true, lockedUntil: profile.locked_until, error: "Account locked" };
+  }
+
+  const { data: verified, error: rpcError } = await admin.rpc("verify_staff_pin", {
+    p_tenant_id: tenant.id,
+    p_user_id,
+    p_pin,
+  });
+
+  if (rpcError) return { ok: false, error: rpcError.message };
+
+  if (!verified) {
+    // Re-fetch to get updated locked_until after the failed attempt.
+    const { data: refreshed } = await admin
+      .from("staff_profiles")
+      .select("locked_until, pin_attempt_count")
+      .eq("user_id", p_user_id)
+      .eq("tenant_id", tenant.id)
+      .maybeSingle<{ locked_until: string | null; pin_attempt_count: number }>();
+
+    if (refreshed?.locked_until && new Date(refreshed.locked_until) > new Date()) {
+      return {
+        ok: false,
+        locked: true,
+        lockedUntil: refreshed.locked_until,
+        error: "Too many wrong PINs — locked for 10 minutes",
+      };
+    }
+
+    const attemptsUsed = refreshed?.pin_attempt_count ?? 1;
+    const attemptsLeft = Math.max(0, 5 - attemptsUsed);
+    return {
+      ok: false,
+      error: attemptsLeft > 0 ? `Wrong PIN — ${attemptsLeft} attempt${attemptsLeft !== 1 ? "s" : ""} left` : "Wrong PIN",
+    };
+  }
+
+  // Success — write the 8-hour staff session cookie.
+  const cookieStore = await cookies();
+  cookieStore.set("kitchen_staff_id", p_user_id, {
+    httpOnly: true,
+    sameSite: "lax",
+    path: "/",
+    maxAge: 8 * 60 * 60, // 8 hours in seconds
+    secure: process.env.NODE_ENV === "production",
+  });
+
   return { ok: true };
 }
 
@@ -206,7 +355,8 @@ export async function rejectOrder(orderId: string, reason: string): Promise<Outc
   }
 
   await admin.from("orders").update({ status: "rejected" }).eq("id", orderId);
-  await admin.from("payments").update({ status: "refunded" }).eq("order_id", orderId);
+  await admin.from("payments").update({ status: "refunded" }).eq("order_id", orderId).eq("status", "captured");
+  void initiateRefundForOrder(orderId, ctx.tenant.id).catch(() => {});
   await admin.from("order_status_logs").insert({
     tenant_id: ctx.tenant.id,
     order_id: orderId,
@@ -229,6 +379,6 @@ export async function rejectOrder(orderId: string, reason: string): Promise<Outc
     event_type: "rejected",
     payload: { actor: "kitchen", reason: reason.slice(0, 200) },
   });
-  revalidatePath("/kitchen");
+  revalidatePath(`/c/${ctx.tenant.slug}/kitchen`);
   return { ok: true };
 }

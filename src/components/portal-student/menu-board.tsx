@@ -68,7 +68,11 @@ export function MenuBoard({ categories, items }: Props) {
       {filtered.length === 0 ? (
         <div className="py-16 text-center text-[color:var(--color-ink)]/55">
           <div className="font-display italic text-[24px] text-ocean-500">Nothing found.</div>
-          <p className="text-[14px] mt-2">Try a different filter or come back at lunchtime.</p>
+          <p className="text-[14px] mt-2">
+            {q || filter !== "all"
+              ? "Clear the filter to see more dishes."
+              : "Check back at lunchtime."}
+          </p>
         </div>
       ) : (
         <div className="mt-6 sm:mt-8 flex flex-col gap-8">
@@ -91,6 +95,28 @@ export function MenuBoard({ categories, items }: Props) {
               </section>
             );
           })}
+          {/* Render items that have no category (category_id === null) last */}
+          {(() => {
+            const uncategorised = byCat.get(null) ?? [];
+            if (uncategorised.length === 0) return null;
+            return (
+              <section key="__uncategorised">
+                {categories.length > 0 && (
+                  <div className="flex items-end justify-between mb-3">
+                    <h2 className="font-display text-[22px] sm:text-[26px] font-medium tracking-tight">Other</h2>
+                    <span className="text-[11px] font-mono uppercase tracking-wider text-[color:var(--color-ink)]/45">
+                      {uncategorised.length} item{uncategorised.length === 1 ? "" : "s"}
+                    </span>
+                  </div>
+                )}
+                <div className={cn("grid gap-3", "grid-cols-2 md:grid-cols-3 lg:grid-cols-3")}>
+                  {uncategorised.map((it) => (
+                    <MenuItemCard key={it.id} item={it} />
+                  ))}
+                </div>
+              </section>
+            );
+          })()}
         </div>
       )}
     </div>

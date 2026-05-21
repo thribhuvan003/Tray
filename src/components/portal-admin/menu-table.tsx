@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import Link from "next/link";
 import { CheckCircle2, CircleDot, EyeOff, Power, PowerOff } from "lucide-react";
 import { toast } from "sonner";
 import { formatRupees, cn, fmtElapsed } from "@/lib/utils";
@@ -149,6 +150,12 @@ export function MenuTable({ items, categories }: { items: Row[]; categories: { i
                         Archive
                       </button>
                     )}
+                    <Link
+                      href={`/admin/menu/${it.id}/edit`}
+                      className="text-[10px] font-mono uppercase tracking-wider px-2 py-1 rounded border border-graphite-200/15 text-graphite-400 hover:bg-graphite-200/[0.06] hover:text-graphite-200 transition-colors"
+                    >
+                      Edit
+                    </Link>
                   </div>
                 </td>
               </tr>

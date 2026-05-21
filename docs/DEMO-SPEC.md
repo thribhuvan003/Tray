@@ -1,6 +1,6 @@
 # Tray demo & landing spec (F1 bar)
 
-**Read before any demo/landing edit.** Kitchen: `public/demo/kitchen.html` is **frozen**.
+**Read before any demo/landing edit.** Kitchen: `public/demo/kitchen.html` — keep in sync with student specials (`tray_specials` localStorage) and index nav.
 
 ## Success bar (user-locked)
 
@@ -32,7 +32,7 @@
 | `public/demo/index.html` | demo-index | Static marketing; align copy with Next where possible |
 | `public/demo/student.html` | demo-student | Full order flow prototype |
 | `public/demo/admin.html` | demo-admin | Tabs, export, modals |
-| `public/demo/kitchen.html` | **nobody** | Do not edit |
+| `public/demo/kitchen.html` | demo-kitchen | Queue, specials push, OTP, history/insights nav |
 
 ## Student demo — required flow
 
@@ -60,6 +60,13 @@
 - [ ] Line leave or equivalent “where are you” strip (interactive)
 - [ ] Portal iframes load; open links work
 - [ ] Reduced motion: no required motion to understand page
+
+## Verify demos (no MCP)
+
+```bash
+npm run demo:verify        # static checks on HTML/JS — offline, no Playwright MCP
+npm run demo:verify:e2e    # optional real clicks (needs devDependency playwright)
+```
 
 ## QA lanes (F1)
 

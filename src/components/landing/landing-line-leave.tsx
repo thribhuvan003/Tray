@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 
 const OPTIONS = [
   {
@@ -11,7 +11,7 @@ const OPTIONS = [
   {
     id: "queue",
     label: "Stuck in line",
-    hint: "Skip the crowd — pay on your phone, walk to the handover window.",
+    hint: "Skip the crowd: pay on your phone, walk to the handover window.",
   },
   {
     id: "counter",
@@ -22,11 +22,21 @@ const OPTIONS = [
 
 export function LandingLineLeave() {
   const [active, setActive] = useState<(typeof OPTIONS)[number]["id"]>("queue");
+  const [hintFading, setHintFading] = useState(false);
 
   const copy = OPTIONS.find((o) => o.id === active) ?? OPTIONS[1];
 
+  const pick = useCallback((id: (typeof OPTIONS)[number]["id"]) => {
+    if (id === active) return;
+    setHintFading(true);
+    window.setTimeout(() => {
+      setActive(id);
+      setHintFading(false);
+    }, 200);
+  }, [active]);
+
   return (
-    <section className="tl-line-leave tl-wrap" id="where" data-reveal>
+    <section className="tl-line-leave tl-wrap tl-arrival-host" id="where">
       <div className="tl-section-num">
         <span className="tl-bar" />
         <span className="tl-num">02b</span> / Where are you right now?
@@ -34,7 +44,7 @@ export function LandingLineLeave() {
       <div className="tl-line-leave-grid">
         <div>
           <h2 className="tl-line-leave-title">
-            Dine in or takeaway —<br />
+            Dine in or takeaway<br />
             <span className="tl-it">before you order.</span>
           </h2>
           <p className="tl-line-leave-lede">
@@ -49,12 +59,12 @@ export function LandingLineLeave() {
               type="button"
               className={`tl-line-chip${active === opt.id ? " is-on" : ""}`}
               aria-pressed={active === opt.id}
-              onClick={() => setActive(opt.id)}
+              onClick={() => pick(opt.id)}
             >
               {opt.label}
             </button>
           ))}
-          <p className="tl-line-hint" aria-live="polite">
+          <p className={`tl-line-hint${hintFading ? " is-fading" : ""}`} aria-live="polite">
             {copy.hint}
           </p>
         </div>

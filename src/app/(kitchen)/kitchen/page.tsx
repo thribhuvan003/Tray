@@ -35,7 +35,7 @@ export default async function KitchenPage() {
   if (!tenant) return null;
 
   const user = await requireRole(["kitchen_staff", "canteen_admin", "super_admin"]);
-  if (!user) redirect(`/login?next=/kitchen`);
+  if (!user) redirect(`/c/${tenant.slug}/login?next=/c/${tenant.slug}/kitchen`);
 
   const supabase = await getServerClient(tenant.id);
   const today = new Date();
@@ -80,6 +80,7 @@ export default async function KitchenPage() {
     <KitchenBoard
       tenantId={tenant.id}
       tenantName={tenant.name}
+      tenantSlug={tenant.slug}
       orders={orders ?? []}
       lines={filteredLines}
       marquee={marquee ?? []}

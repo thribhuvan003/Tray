@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { headers } from "next/headers";
 import crypto from "node:crypto";
 import dayjs from "dayjs";
@@ -33,8 +33,8 @@ export async function setMenuItemStatus(
     .eq("id", id)
     .eq("tenant_id", c.tenant.id);
   if (error) return { ok: false, error: error.message };
-  revalidatePath("/admin/menu");
-  revalidatePath("/menu");
+  revalidatePath(`/c/${c.tenant.slug}/admin/menu`);
+  revalidatePath(`/c/${c.tenant.slug}/menu`);
   return { ok: true };
 }
 
@@ -48,8 +48,8 @@ export async function setMenuItemStock(id: string, inStock: boolean): Promise<{ 
     .eq("id", id)
     .eq("tenant_id", c.tenant.id);
   if (error) return { ok: false, error: error.message };
-  revalidatePath("/admin/menu");
-  revalidatePath("/menu");
+  revalidatePath(`/c/${c.tenant.slug}/admin/menu`);
+  revalidatePath(`/c/${c.tenant.slug}/menu`);
   return { ok: true };
 }
 
@@ -84,7 +84,7 @@ export async function inviteStaff(
     target_type: "invite",
     meta: { email, role },
   });
-  revalidatePath("/admin/staff");
+  revalidatePath(`/c/${c.tenant.slug}/admin/staff`);
   return { ok: true, url };
 }
 
@@ -105,6 +105,158 @@ export async function revokeStaff(membershipId: string): Promise<{ ok: boolean; 
     target_type: "membership",
     target_id: membershipId,
   });
-  revalidatePath("/admin/staff");
+  revalidatePath(`/c/${c.tenant.slug}/admin/staff`);
+  return { ok: true };
+}
+
+// ── Canteen Settings ─────────────────────────────────────────────────────────
+
+export async function updateCanteenHours(opts: {
+  isOpen: boolean;
+  opensAt: string | null; // "HH:MM" or null
+  closesAt: string | null; // "HH:MM" or null
+}): Promise<{ ok: boolean; error?: string }> {
+  const c = await ctx();
+  if (!c.ok) return { ok: false, error: c.error };
+  const admin = getAdminClient(c.tenant.id);
+  const { error } = await admin
+    .from("tenants")
+    .update({
+      is_open: opts.isOpen,
+      opens_at: opts.opensAt,
+      closes_at: opts.closesAt,
+    })
+    .eq("id", c.tenant.id);
+  if (error) return { ok: false, error: error.message };
+  revalidatePath(`/c/${c.tenant.slug}/admin/settings`);
+  revalidatePath(`/c/${c.tenant.slug}/menu`);
+  revalidateTag("tenant");
+  return { ok: true };
+}
+
+export async function pauseCanteen(minutes: number): Promise<{ ok: boolean; error?: string }> {
+  const c = await ctx();
+  if (!c.ok) return { ok: false, error: c.error };
+  const admin = getAdminClient(c.tenant.id);
+  const pausedUntil =
+    minutes > 0 ? dayjs().add(minutes, "minute").toISOString() : null;
+  const { error } = await admin
+    .from("tenants")
+    .update({ paused_until: pausedUntil })
+    .eq("id", c.tenant.id);
+  if (error) return { ok: false, error: error.message };
+  revalidatePath(`/c/${c.tenant.slug}/admin/settings`);
+  revalidatePath(`/c/${c.tenant.slug}/menu`);
+  revalidateTag("tenant");
+  return { ok: true };
+}
+
+export async function updateCanteenSettings(opts: {
+  guestOrdersEnabled: boolean;
+  upiVpa: string | null;
+}): Promise<{ ok: boolean; error?: string }> {
+  const c = await ctx();
+  if (!c.ok) return { ok: false, error: c.error };
+  const admin = getAdminClient(c.tenant.id);
+  const { error } = await admin
+    .from("tenants")
+    .update({
+      guest_orders_enabled: opts.guestOrdersEnabled,
+      upi_vpa: opts.upiVpa,
+    })
+    .eq("id", c.tenant.id);
+  if (error) return { ok: false, error: error.message };
+  revalidatePath(`/c/${c.tenant.slug}/admin/settings`);
+  revalidatePath(`/c/${c.tenant.slug}/menu`);
+  revalidateTag("tenant");
+  return { ok: true };
+}
+
+// ── Menu Item CRUD ────────────────────────────────────────────────────────────
+
+export async function createMenuItem(form: {
+  name: string;
+  description: string | null;
+  price_paise: number;
+  diet: "veg" | "nonveg" | "egg";
+  category_id: string | null;
+  image_url: string | null;
+  sort_order: number;
+}): Promise<{ ok: boolean; error?: string; id?: string }> {
+  const c = await ctx();
+  if (!c.ok) return { ok: false, error: c.error };
+  const admin = getAdminClient(c.tenant.id);
+  const { data, error } = await admin
+    .from("menu_items")
+    .insert({
+      tenant_id: c.tenant.id,
+      name: form.name,
+      description: form.description,
+      price_paise: form.price_paise,
+      diet: form.diet,
+      category_id: form.category_id,
+      image_url: form.image_url,
+      sort_order: form.sort_order,
+      status: "live",
+      in_stock: true,
+    })
+    .select("id")
+    .single();
+  if (error) return { ok: false, error: error.message };
+  revalidatePath(`/c/${c.tenant.slug}/admin/menu`);
+  revalidatePath(`/c/${c.tenant.slug}/menu`);
+  return { ok: true, id: data.id };
+}
+
+export async function updateMenuItem(
+  id: string,
+  form: {
+    name: string;
+    description: string | null;
+    price_paise: number;
+    diet: "veg" | "nonveg" | "egg";
+    category_id: string | null;
+    image_url: string | null;
+    sort_order: number;
+    status: "draft" | "live" | "archived";
+    in_stock: boolean;
+  }
+): Promise<{ ok: boolean; error?: string }> {
+  const c = await ctx();
+  if (!c.ok) return { ok: false, error: c.error };
+  const admin = getAdminClient(c.tenant.id);
+  const { error } = await admin
+    .from("menu_items")
+    .update({
+      name: form.name,
+      description: form.description,
+      price_paise: form.price_paise,
+      diet: form.diet,
+      category_id: form.category_id,
+      image_url: form.image_url,
+      sort_order: form.sort_order,
+      status: form.status,
+      in_stock: form.in_stock,
+    })
+    .eq("id", id)
+    .eq("tenant_id", c.tenant.id);
+  if (error) return { ok: false, error: error.message };
+  revalidatePath(`/c/${c.tenant.slug}/admin/menu`);
+  revalidatePath(`/c/${c.tenant.slug}/menu`);
+  return { ok: true };
+}
+
+export async function deleteMenuItem(id: string): Promise<{ ok: boolean; error?: string }> {
+  const c = await ctx();
+  if (!c.ok) return { ok: false, error: c.error };
+  const admin = getAdminClient(c.tenant.id);
+  const { error } = await admin
+    .from("menu_items")
+    .update({ status: "archived" })
+    .eq("id", id)
+    .eq("tenant_id", c.tenant.id);
+  if (error) return { ok: false, error: error.message };
+  revalidatePath(`/c/${c.tenant.slug}/admin/menu`);
+  revalidatePath(`/c/${c.tenant.slug}/menu`);
   return { ok: true };
 }

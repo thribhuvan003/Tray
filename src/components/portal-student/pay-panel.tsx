@@ -4,7 +4,7 @@ import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import QRCode from "react-qr-code";
 import Link from "next/link";
-import { ArrowLeft, Loader2, Smartphone, Sparkles } from "lucide-react";
+import { ArrowLeft, Loader2, Smartphone, Sparkles, X as XIcon } from "lucide-react";
 import { toast } from "sonner";
 import { formatRupees, cn } from "@/lib/utils";
 import { upiQrPayload } from "@/lib/payments/upi";
@@ -28,11 +28,13 @@ type Line = {
 };
 
 export function PayPanel({
+  tenantSlug,
   tenantName,
   tenantUpi,
   order,
   lines,
 }: {
+  tenantSlug: string;
   tenantName: string;
   tenantUpi: string;
   order: Order;
@@ -42,7 +44,12 @@ export function PayPanel({
   const [pending, start] = useTransition();
   const [verifying, startVerify] = useTransition();
   const [stillWaiting, setStillWaiting] = useState(false);
-  const [remaining, setRemaining] = useState(0);
+  const [remaining, setRemaining] = useState(() => {
+    if (!order.payment_expires_at) return 900;
+    return Math.max(0, Math.floor((new Date(order.payment_expires_at).getTime() - Date.now()) / 1000));
+  });
+  const [demoDismissed, setDemoDismissed] = useState(false);
+  const isSimMode = !process.env.NEXT_PUBLIC_RAZORPAY_LIVE;
 
   useEffect(() => {
     if (!order.payment_expires_at) return;
@@ -63,7 +70,7 @@ export function PayPanel({
         (payload) => {
           const next = (payload.new as { status: string }).status;
           if (next === "placed" || next === "preparing" || next === "ready") {
-            router.push(`/track/${order.id}`);
+            router.push(`/c/${tenantSlug}/track/${order.id}`);
           }
         }
       )
@@ -71,7 +78,7 @@ export function PayPanel({
     return () => {
       sb.removeChannel(channel);
     };
-  }, [order.id, router]);
+  }, [order.id, router, tenantSlug]);
 
   useEffect(() => {
     const id = setInterval(async () => {
@@ -82,11 +89,11 @@ export function PayPanel({
         .eq("id", order.id)
         .maybeSingle<{ status: string }>();
       if (data && data.status !== "pending_payment") {
-        router.push(`/track/${order.id}`);
+        router.push(`/c/${tenantSlug}/track/${order.id}`);
       }
     }, 4000);
     return () => clearInterval(id);
-  }, [order.id, router]);
+  }, [order.id, router, tenantSlug]);
 
   const mins = Math.floor(remaining / 60);
   const secs = remaining % 60;
@@ -105,17 +112,19 @@ export function PayPanel({
       if (!r.ok) toast.error(r.error ?? "Could not simulate payment");
       else {
         toast.success("Payment captured");
-        router.push(`/track/${order.id}`);
+        router.push(`/c/${tenantSlug}/track/${order.id}`);
       }
     });
 
   const onIvePaid = () =>
     startVerify(async () => {
       setStillWaiting(false);
+      // Show a brief "Confirming…" state before the server round-trip resolves
+      await new Promise((r) => setTimeout(r, 700));
       const r = await verifyPaymentNow(order.id);
       if (r.status === "paid") {
-        toast.success("Payment confirmed");
-        router.push(`/track/${order.id}`);
+        toast.success("Order placed — kitchen has it!");
+        router.push(`/c/${tenantSlug}/track/${order.id}`);
       } else if (r.status === "failed") {
         toast.error("Payment failed — try the QR again");
       } else {
@@ -126,11 +135,27 @@ export function PayPanel({
   return (
     <div className="mx-auto max-w-3xl px-4 sm:px-6 pt-6 pb-12">
       <Link
-        href="/menu"
+        href={`/c/${tenantSlug}/menu`}
         className="inline-flex items-center gap-1.5 text-[13px] text-[color:var(--color-ink)]/60 hover:text-ocean-500 mb-4"
       >
         <ArrowLeft size={14} /> Back to menu
       </Link>
+
+      {isSimMode && !demoDismissed && (
+        <div className="mb-4 flex items-center justify-between gap-3 rounded-xl bg-amber-50 border border-amber-200 dark:bg-amber-500/10 dark:border-amber-500/30 px-4 py-2.5">
+          <p className="text-[12.5px] text-amber-800 dark:text-amber-300 leading-snug">
+            <span className="font-semibold">Demo mode</span> — scan the QR with any UPI app, then tap &ldquo;I&rsquo;ve paid&rdquo; to send your order to the kitchen.
+          </p>
+          <button
+            aria-label="Dismiss demo banner"
+            onClick={() => setDemoDismissed(true)}
+            className="shrink-0 text-amber-600 hover:text-amber-800 dark:text-amber-400 transition-colors"
+          >
+            <XIcon size={14} />
+          </button>
+        </div>
+      )}
+
       <div className="mb-6">
         <div className="text-[11px] font-mono uppercase tracking-wider text-[color:var(--color-ink)]/55">
           Order {order.short_code}
@@ -142,18 +167,41 @@ export function PayPanel({
 
       <div className="grid md:grid-cols-[1.1fr_1fr] gap-5">
         <div className="rounded-2xl bg-[color:var(--color-paper)] border border-[color:var(--color-line)] p-6 flex flex-col items-center text-center">
-          <div className="text-[11px] font-mono uppercase tracking-wider text-[color:var(--color-ink)]/55 mb-3">
+          {/* Mobile: "Open UPI app" is the hero CTA */}
+          <a
+            href={upiUri}
+            className="md:hidden w-full h-14 text-[15px] inline-flex items-center justify-center gap-2 rounded-full border-2 border-ocean-500 text-ocean-500 bg-transparent font-medium hover:bg-ocean-50 dark:hover:bg-ocean-500/10 transition-colors mb-1"
+          >
+            <Smartphone size={16} /> Open UPI app
+          </a>
+          <p className="md:hidden text-[11px] text-center opacity-60 mt-1 mb-4">Opens GPay, PhonePe, or any UPI app</p>
+
+          {/* Desktop: QR is prominent */}
+          <div className="hidden md:block text-[11px] font-mono uppercase tracking-wider text-[color:var(--color-ink)]/55 mb-3">
             Scan with any UPI app
           </div>
-          <div className="p-4 bg-white rounded-2xl shadow-[inset_0_0_0_1px_rgba(10,22,40,0.06)]">
+          <div className="hidden md:block p-4 bg-white rounded-2xl shadow-[inset_0_0_0_1px_rgba(10,22,40,0.06)]">
             <QRCode value={upiUri} size={208} bgColor="#ffffff" fgColor="#0a1628" />
           </div>
           <a
             href={upiUri}
-            className="mt-5 inline-flex items-center gap-2 h-11 px-5 rounded-full bg-ocean-500 text-white text-[13px] font-medium hover:bg-ocean-600 transition-colors"
+            className="hidden md:inline-flex mt-5 items-center gap-2 h-11 px-5 rounded-full bg-ocean-500 text-white text-[13px] font-medium hover:bg-ocean-600 transition-colors"
           >
             <Smartphone size={14} /> Open UPI app
           </a>
+
+          {/* Mobile: QR in a collapsed details section */}
+          <details className="md:hidden w-full text-left mt-2">
+            <summary className="text-[12px] font-mono text-center cursor-pointer text-[color:var(--color-ink)]/55 hover:text-[color:var(--color-ink)] transition-colors">
+              On desktop? Scan this QR
+            </summary>
+            <div className="mt-3 flex flex-col items-center gap-2">
+              <div className="p-4 bg-white rounded-2xl shadow-[inset_0_0_0_1px_rgba(10,22,40,0.06)]">
+                <QRCode value={upiUri} size={180} bgColor="#ffffff" fgColor="#0a1628" />
+              </div>
+            </div>
+          </details>
+
           <div className="mt-4 text-[12px] text-[color:var(--color-ink)]/55">
             Paying <span className="font-semibold text-[color:var(--color-ink)]">{tenantName}</span> · {tenantUpi}
           </div>
@@ -176,11 +224,11 @@ export function PayPanel({
             </div>
             {expired ? (
               <p className="mt-2 text-[12.5px] text-rose-500">
-                Payment window closed. <Link href="/menu" className="underline">Start a new order</Link>.
+                Payment window closed. <Link href={`/c/${tenantSlug}/menu`} className="underline">Start a new order</Link>.
               </p>
             ) : (
               <p className="mt-2 text-[12.5px] text-[color:var(--color-ink)]/55">
-                We&rsquo;ll auto-cancel after the timer hits zero.
+                You have 15 min to pay — after that, we&rsquo;ll cancel and refund automatically.
               </p>
             )}
           </div>
@@ -223,8 +271,8 @@ export function PayPanel({
               ))}
             </ul>
             <div className="mt-4 pt-4 border-t border-[color:var(--color-line)] flex justify-between items-baseline">
-              <span className="text-[12px] font-mono uppercase tracking-wider text-[color:var(--color-ink)]/55">Total</span>
-              <span className="font-display text-[22px] font-medium tabular">
+              <span className="text-[10px] uppercase tracking-[0.18em] text-[color:var(--color-ink)]/50" style={{ fontFamily: "var(--font-barlow, var(--font-manrope))" }}>Total</span>
+              <span className="text-[32px] leading-none tabular text-ocean-600 dark:text-ocean-400" style={{ fontFamily: "var(--font-bebas, Impact, sans-serif)" }}>
                 {formatRupees(order.total_paise)}
               </span>
             </div>
@@ -233,19 +281,19 @@ export function PayPanel({
           <button
             onClick={onIvePaid}
             disabled={verifying || Boolean(expired)}
-            className="inline-flex items-center justify-center gap-2 h-12 rounded-xl bg-[color:var(--color-ink)] text-[color:var(--color-paper)] text-[14px] font-medium hover:opacity-90 disabled:opacity-50 transition-opacity"
+            className="inline-flex items-center justify-center gap-2 h-12 rounded-xl bg-ocean-500 text-white text-[14px] font-medium hover:bg-ocean-600 disabled:opacity-50 transition-colors"
           >
             {verifying ? (
               <>
-                <Loader2 size={14} className="animate-spin" /> Checking with Razorpay…
+                <Loader2 size={14} className="animate-spin" /> Confirming…
               </>
             ) : (
-              <>I&rsquo;ve paid · verify now</>
+              <>I&rsquo;ve paid &mdash; confirm my order</>
             )}
           </button>
           {stillWaiting && !verifying && (
             <p className="text-[12.5px] text-amber-600 text-center -mt-2">
-              Still waiting on Razorpay. UPI confirmation can lag 30–60 seconds — leave this page open and we&rsquo;ll flip it the moment it lands.
+              Still confirming your payment — UPI can take 30–60 seconds. Keep this page open.
             </p>
           )}
 
@@ -259,7 +307,7 @@ export function PayPanel({
                 <Sparkles size={14} /> DEV · simulate paid
               </button>
               <p className="text-[11px] text-[color:var(--color-ink)]/45 text-center -mt-2">
-                Razorpay test-mode hasn&rsquo;t been wired yet — this stand-in flips the order to <b>placed</b>.
+                Dev-only shortcut — flips the order to <b>placed</b> without a real payment.
               </p>
             </>
           )}

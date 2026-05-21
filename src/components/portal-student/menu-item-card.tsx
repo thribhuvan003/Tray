@@ -33,8 +33,8 @@ export function MenuItemCard({ item }: { item: MenuItem }) {
           // eslint-disable-next-line @next/next/no-img-element
           <img src={item.image_url} alt={item.name} className="absolute inset-0 h-full w-full object-cover" />
         ) : (
-          <div className="absolute inset-0 flex items-center justify-center font-display text-[44px] text-ocean-500/30 select-none">
-            {item.name.charAt(0)}
+          <div className="absolute inset-0 flex items-center justify-center font-display text-[44px] text-ocean-500/25 select-none leading-none">
+            {item.name.charAt(0).toUpperCase()}
           </div>
         )}
         <span
@@ -53,14 +53,19 @@ export function MenuItemCard({ item }: { item: MenuItem }) {
         )}
       </div>
       <div className="p-3.5 flex flex-col flex-1 gap-1.5">
-        <h3 className="text-[14.5px] font-medium leading-tight">{item.name}</h3>
+        <h3 className="text-[15px] font-medium leading-tight" style={{ fontFamily: "var(--font-jakarta, var(--font-manrope))" }}>{item.name}</h3>
         {item.description && (
           <p className="text-[12px] leading-[1.4] text-[color:var(--color-ink)]/55 line-clamp-2">
             {item.description}
           </p>
         )}
         <div className="mt-auto pt-2 flex items-center justify-between">
-          <div className="text-[15px] font-semibold tabular">{formatRupees(item.price_paise)}</div>
+          <div
+            className="text-[22px] leading-none tracking-[0.01em] text-ocean-600 dark:text-ocean-400 tabular"
+            style={{ fontFamily: "var(--font-bebas, Impact, sans-serif)" }}
+          >
+            {formatRupees(item.price_paise)}
+          </div>
           {line ? (
             <div className="inline-flex items-center rounded-full bg-ocean-500 text-white">
               <button

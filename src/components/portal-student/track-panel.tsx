@@ -38,15 +38,15 @@ type Line = {
 };
 
 const STEPS: { v: Status; label: string; icon: typeof Check; copy: string }[] = [
-  { v: "placed", label: "Placed", icon: Check, copy: "We've got it." },
+  { v: "placed", label: "Placed", icon: Check, copy: "We've got your order!" },
   { v: "preparing", label: "Preparing", icon: ChefHat, copy: "The kitchen is on it." },
-  { v: "ready", label: "Ready", icon: BellRing, copy: "Walk over — your code's below." },
+  { v: "ready", label: "Ready", icon: BellRing, copy: "Your order is ready!" },
   { v: "collected", label: "Collected", icon: HandPlatter, copy: "Enjoy. ☕" },
 ];
 
 const FIVE_MIN_MS = 5 * 60 * 1000;
 
-export function TrackPanel({ tenantName, order: initial, lines }: { tenantName: string; order: Order; lines: Line[] }) {
+export function TrackPanel({ tenantSlug, tenantName, order: initial, lines }: { tenantSlug: string; tenantName: string; order: Order; lines: Line[] }) {
   const [order, setOrder] = useState(initial);
   const [otp, setOtp] = useState<string | null>(null);
   const [cancelPending, startCancel] = useTransition();
@@ -92,7 +92,7 @@ export function TrackPanel({ tenantName, order: initial, lines }: { tenantName: 
   const [now, setNow] = useState<number>(() => Date.now());
   useEffect(() => {
     if (order.status !== "placed") return;
-    const t = window.setInterval(() => setNow(Date.now()), 15_000);
+    const t = window.setInterval(() => setNow(Date.now()), 5_000);
     return () => window.clearInterval(t);
   }, [order.status]);
   const cancelWindowOpen = order.status === "placed" && now - placedAtMs < FIVE_MIN_MS;
@@ -110,7 +110,7 @@ export function TrackPanel({ tenantName, order: initial, lines }: { tenantName: 
             : "The canteen couldn't accept this order. If you paid, a refund is on its way."}
         </p>
         <Link
-          href="/menu"
+          href={`/c/${tenantSlug}/menu`}
           className="mt-6 inline-flex items-center gap-1.5 h-11 px-5 rounded-full bg-ocean-500 text-white text-[13px] font-medium hover:bg-ocean-600 transition-colors"
         >
           Try another order
@@ -120,18 +120,31 @@ export function TrackPanel({ tenantName, order: initial, lines }: { tenantName: 
   }
 
   const isCancelled = order.status === "cancelled_by_kitchen" || order.status === "refunded";
-  const currentIdx = Math.max(0, STEPS.findIndex((s) => s.v === order.status));
+  const isPartiallyReady = order.status === "partially_ready";
+  // Map partially_ready onto the "preparing" step so the progress stepper
+  // renders correctly; it will also show a dedicated banner below.
+  const effectiveStatus: Status = isPartiallyReady ? "preparing" : order.status;
+  const currentIdx = Math.max(0, STEPS.findIndex((s) => s.v === effectiveStatus));
   const isReady = order.status === "ready";
   const isCollected = order.status === "collected";
 
   return (
     <div className="mx-auto max-w-3xl px-4 sm:px-6 pt-6 pb-12">
-      <Link
-        href="/orders"
-        className="inline-flex items-center gap-1.5 text-[13px] text-[color:var(--color-ink)]/60 hover:text-ocean-500 mb-4"
-      >
-        <ArrowLeft size={14} /> Orders
-      </Link>
+      <div className="flex items-center gap-3 mb-4">
+        <Link
+          href={`/c/${tenantSlug}/menu`}
+          className="inline-flex items-center gap-1.5 text-[13px] text-[color:var(--color-ink)]/60 hover:text-ocean-500"
+        >
+          <ArrowLeft size={14} /> Menu
+        </Link>
+        <span className="text-[color:var(--color-line-strong)]">·</span>
+        <Link
+          href={`/c/${tenantSlug}/orders`}
+          className="inline-flex items-center gap-1.5 text-[13px] text-[color:var(--color-ink)]/60 hover:text-ocean-500"
+        >
+          All orders
+        </Link>
+      </div>
 
       <div className="mb-6 flex items-start justify-between flex-wrap gap-3">
         <div>
@@ -183,18 +196,36 @@ export function TrackPanel({ tenantName, order: initial, lines }: { tenantName: 
             <div className="text-[11px] font-mono uppercase tracking-wider text-white/75 mb-2">
               Your pickup code · show at counter
             </div>
-            <div className="font-display tabular font-medium leading-none text-[clamp(72px,14vw,128px)] tracking-[-0.045em]">
+            <div
+              className="tabular leading-none text-[clamp(80px,16vw,140px)] tracking-[0.06em] cursor-pointer select-all"
+              style={{ fontFamily: "var(--font-bebas, Impact, sans-serif)" }}
+              title="Tap to copy"
+              onClick={() => navigator.clipboard.writeText(otp).catch(() => null)}
+            >
               {otp.split("").join(" ")}
             </div>
             <p className="text-[13px] text-white/80 mt-3">
-              Valid for the next 15 minutes. Three attempts at the counter, then the order locks for staff review.
+              Show this code at the counter. You have 3 tries — if it doesn&rsquo;t work, show your order number #{order.short_code} to the staff.
             </p>
           </div>
         </div>
       )}
       {!isCancelled && isReady && !otp && (
-        <div className="mb-6 rounded-3xl border border-amber-500/30 bg-amber-500/5 p-5 text-[13px] text-[color:var(--color-ink)]/70">
-          Your order is ready. Reload to fetch the pickup code.
+        <div className="mb-6 rounded-3xl border border-amber-500/30 bg-amber-500/5 p-5 text-[13px] text-[color:var(--color-ink)]/70 flex items-center gap-3">
+          <span className="animate-spin inline-block h-4 w-4 border-2 border-amber-500 border-t-transparent rounded-full shrink-0" />
+          <span>Your order is ready — fetching your pickup code…</span>
+        </div>
+      )}
+
+      {isPartiallyReady && (
+        <div className="mb-4 rounded-2xl border border-amber-500/40 bg-amber-500/10 p-4 flex items-start gap-3">
+          <AlertTriangle size={18} className="text-amber-600 shrink-0 mt-0.5" />
+          <div>
+            <div className="text-[13.5px] font-medium text-[color:var(--color-ink)]">Some items still preparing</div>
+            <p className="text-[12px] text-[color:var(--color-ink)]/65 mt-0.5">
+              Part of your order is almost ready — the kitchen will call you when everything&rsquo;s done.
+            </p>
+          </div>
         </div>
       )}
 
@@ -227,9 +258,6 @@ export function TrackPanel({ tenantName, order: initial, lines }: { tenantName: 
                   )}
                 >
                   <Icon size={13} />
-                </div>
-                <div className="text-[11px] font-mono uppercase tracking-wider text-[color:var(--color-ink)]/55">
-                  Step {i + 1}
                 </div>
                 <div className="text-[13.5px] font-medium">{s.label}</div>
               </li>

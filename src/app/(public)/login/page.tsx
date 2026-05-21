@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { headers } from "next/headers";
 import { LoginForm } from "@/components/portal-student/login-form";
 
 export const metadata = { title: "Sign in — Tray" };
@@ -6,10 +7,13 @@ export const metadata = { title: "Sign in — Tray" };
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ next?: string; error?: string }>;
+  searchParams: Promise<{ next?: string; tenant?: string; error?: string }>;
 }) {
   const sp = await searchParams;
-  const next = sp.next ?? "/menu";
+  const h = await headers();
+  // ?tenant= explicit override, then x-tenant-slug from middleware (set when /c/[slug]/login rewrites here)
+  const slug = sp.tenant ?? h.get("x-tenant-slug") ?? "";
+  const next = sp.next ?? (slug ? `/c/${slug}/menu` : "/");
   return (
     <div
       data-portal="student"
@@ -34,7 +38,7 @@ export default async function LoginPage({
             </div>
           )}
           <div className="mt-7">
-            <LoginForm next={next} />
+            <LoginForm next={next} slug={slug} />
           </div>
           <p className="mt-8 text-[12.5px] text-[color:var(--color-ink)]/55">
             New to Tray?{" "}

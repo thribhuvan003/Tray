@@ -8,7 +8,7 @@ import { getServerClient } from "@/lib/supabase/server";
 import { getAdminClient } from "@/lib/supabase/admin";
 import { getCurrentUser } from "@/lib/auth/get-user";
 import { rateLimit } from "@/lib/rate-limit";
-import { createRazorpayOrder } from "@/lib/payments/razorpay";
+import { createRazorpayOrder, initiateRazorpayRefund } from "@/lib/payments/razorpay";
 import type { Diet, OrderType } from "@/lib/db/types";
 
 // ── Student-initiated cancel (Phase 8) ─────────────────────────────────
@@ -110,8 +110,11 @@ export async function cancelOrderByStudent(orderId: string): Promise<CancelResul
     meta: { elapsed_ms: elapsedMs },
   });
 
-  revalidatePath(`/track/${orderId}`);
-  revalidatePath("/orders");
+  // Best-effort refund — don't block the cancellation on refund success.
+  void initiateRefundForOrder(orderId, tenant.id).catch(() => {});
+
+  revalidatePath(`/c/${tenant.slug}/track/${orderId}`);
+  revalidatePath(`/c/${tenant.slug}/orders`);
   return { ok: true };
 }
 
@@ -151,6 +154,21 @@ export async function placeOrder(
   if (!rl.success) return { ok: false, error: "Too many orders — slow down a moment", code: "RATE_LIMITED" };
 
   const supabase = await getServerClient(tenant.id);
+
+  // Verify canteen is accepting orders
+  const { data: tenantStatus } = await supabase
+    .from("tenants")
+    .select("is_open, paused_until")
+    .eq("id", tenant.id)
+    .maybeSingle<{ is_open: boolean; paused_until: string | null }>();
+
+  if (tenantStatus) {
+    const isPaused = tenantStatus.paused_until && new Date(tenantStatus.paused_until) > new Date();
+    if (!tenantStatus.is_open || isPaused) {
+      return { ok: false, error: isPaused ? "Orders are paused — please try again shortly" : "This canteen is currently closed" };
+    }
+  }
+
   const ids = lines.map((l) => l.menuItemId);
   const { data: itemsRaw, error: itemsErr } = await supabase
     .from("menu_items")
@@ -246,7 +264,7 @@ export async function placeOrder(
     status: "initiated",
   });
 
-  revalidatePath("/menu");
+  revalidatePath(`/c/${tenant.slug}/menu`);
   return { ok: true, orderId: order.id, razorpayOrderId: rzp.id, simulated: rzp.simulated };
 }
 
@@ -319,14 +337,17 @@ export async function getMyOrderOtp(orderId: string): Promise<{ otp: string | nu
 type VerifyResult = { status: "paid" | "pending" | "failed" };
 
 /**
- * Manual verification fallback. The webhook is the source of truth, but India
- * sees ~2-3% webhook drops; "I've paid" calls this to bridge the gap by
- * polling Razorpay's REST API directly. Idempotent — repeated calls cannot
+ * "I've paid" handler. In UPI-direct mode (no live Razorpay keys) we trust the
+ * student's tap immediately — money went straight to the canteen's bank account
+ * and there is nothing to verify on our side. In live mode we poll Razorpay's
+ * REST API as a webhook-drop fallback. Idempotent — repeated calls cannot
  * double-place an order because the order update is gated on status =
  * 'pending_payment' and the payments insert is gated on a unique
  * raw_event_id ('manual_verify_<razorpay_order_id>').
  */
 export async function verifyPaymentNow(orderId: string): Promise<VerifyResult> {
+  const { featureFlags } = await import("@/lib/env");
+
   const h = await headers();
   const slug = h.get("x-tenant-slug") ?? "aditya";
   const tenant = await resolveTenant(slug);
@@ -338,15 +359,86 @@ export async function verifyPaymentNow(orderId: string): Promise<VerifyResult> {
   const admin = getAdminClient(tenant.id);
   const { data: orderRow } = await admin
     .from("orders")
-    .select("id, user_id, status")
+    .select("id, user_id, status, payment_expires_at")
     .eq("id", orderId)
     .eq("tenant_id", tenant.id)
-    .maybeSingle<{ id: string; user_id: string | null; status: string }>();
+    .maybeSingle<{ id: string; user_id: string | null; status: string; payment_expires_at: string | null }>();
   if (!orderRow || orderRow.user_id !== user.id) return { status: "pending" };
 
-  // Already past pending_payment — webhook (or this action) already moved it.
+  // Already past pending_payment — webhook (or a previous call) already moved it.
   if (orderRow.status !== "pending_payment") return { status: "paid" };
 
+  // Server-side expiry check — client timer can be bypassed
+  if (orderRow.payment_expires_at && new Date(orderRow.payment_expires_at) < new Date()) {
+    return { status: "failed" };
+  }
+
+  // ── UPI-direct mode: trust the student's tap immediately ─────────────────────
+  // Money already went directly to the canteen's bank account via UPI. We have no
+  // Razorpay payment to verify. Mark placed, insert a captured payment record,
+  // emit the order event, and let the kitchen board pick it up.
+  if (!featureFlags.razorpayLive) {
+    const { data: payRow } = await admin
+      .from("payments")
+      .select("razorpay_order_id, amount_paise")
+      .eq("order_id", orderId)
+      .eq("tenant_id", tenant.id)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle<{ razorpay_order_id: string | null; amount_paise: number }>();
+
+    await admin.from("payments").upsert(
+      {
+        tenant_id: tenant.id,
+        order_id: orderId,
+        razorpay_order_id: payRow?.razorpay_order_id ?? null,
+        amount_paise: payRow?.amount_paise ?? 0,
+        status: "captured",
+        razorpay_payment_id: `pay_upi_${orderId.slice(0, 8)}`,
+        raw_event_id: `upi_trust_${orderId}`,
+      },
+      { onConflict: "raw_event_id", ignoreDuplicates: true }
+    );
+
+    const { data: updated } = await admin
+      .from("orders")
+      .update({ status: "placed" })
+      .eq("id", orderId)
+      .eq("tenant_id", tenant.id)
+      .eq("status", "pending_payment")
+      .select("id");
+
+    if (updated && updated.length > 0) {
+      type OrderEventInsert = {
+        tenant_id: string;
+        order_id: string;
+        event_type: string;
+        payload: Record<string, unknown>;
+      };
+      await (
+        admin.from("order_events") as unknown as {
+          insert: (row: OrderEventInsert) => Promise<unknown>;
+        }
+      ).insert({
+        tenant_id: tenant.id,
+        order_id: orderId,
+        event_type: "status_changed",
+        payload: { from: "pending_payment", to: "placed", source: "upi_trust" },
+      });
+      await admin.from("order_status_logs").insert({
+        tenant_id: tenant.id,
+        order_id: orderId,
+        from_status: "pending_payment",
+        to_status: "placed",
+        actor_user_id: user.id,
+        note: "UPI payment confirmed by student",
+      });
+    }
+
+    return { status: "paid" };
+  }
+
+  // ── Live Razorpay mode: poll the API as webhook-drop fallback ─────────────────
   const { data: paymentRow } = await admin
     .from("payments")
     .select("razorpay_order_id, amount_paise")
@@ -414,4 +506,91 @@ export async function verifyPaymentNow(orderId: string): Promise<VerifyResult> {
   }
 
   return { status: "paid" };
+}
+
+// ── Refund initiation ───────────────────────────────────────────────────────
+
+type PaymentRow = {
+  id: string;
+  razorpay_payment_id: string | null;
+  amount_paise: number;
+  status: string;
+};
+
+type OrderEventInsertUntyped = {
+  tenant_id: string;
+  order_id: string;
+  event_type: string;
+  payload: Record<string, unknown>;
+};
+
+/**
+ * Internal helper — called by cancelOrderByStudent and the reconcile cron.
+ * Looks up the captured payment for an order and initiates a Razorpay refund.
+ * Safe to call multiple times — idempotent via payment status check.
+ */
+export async function initiateRefundForOrder(
+  orderId: string,
+  tenantId: string
+): Promise<{ ok: boolean; error?: string; refundId?: string }> {
+  const admin = getAdminClient(tenantId);
+
+  const { data: payment } = await admin
+    .from("payments")
+    .select("id, razorpay_payment_id, amount_paise, status")
+    .eq("order_id", orderId)
+    .eq("tenant_id", tenantId)
+    .maybeSingle<PaymentRow>();
+
+  if (!payment || payment.status !== "captured") {
+    return { ok: false, error: "No captured payment found" };
+  }
+
+  if (!payment.razorpay_payment_id) {
+    return { ok: false, error: "No razorpay_payment_id on payment row" };
+  }
+
+  const result = await initiateRazorpayRefund({
+    razorpayPaymentId: payment.razorpay_payment_id,
+    amountPaise: payment.amount_paise,
+    notes: { order_id: orderId },
+  });
+
+  if ("error" in result) {
+    return { ok: false, error: result.error };
+  }
+
+  const { refundId } = result;
+
+  // Mark payment as refunded.
+  await admin
+    .from("payments")
+    .update({ status: "refunded" as unknown as "initiated" })
+    .eq("id", payment.id)
+    .eq("tenant_id", tenantId);
+
+  // Flip order status to refunded.
+  await admin
+    .from("orders")
+    .update({ status: "refunded" as unknown as "rejected" })
+    .eq("id", orderId)
+    .eq("tenant_id", tenantId);
+
+  // Append-only event row for Realtime listeners.
+  await (
+    admin as unknown as {
+      from: (t: string) => {
+        insert: (row: OrderEventInsertUntyped) => Promise<{ error: { message: string } | null }>;
+      };
+    }
+  )
+    .from("order_events")
+    .insert({
+      tenant_id: tenantId,
+      order_id: orderId,
+      event_type: "refunded",
+      payload: { refund_id: refundId, source: "initiateRefundForOrder" },
+    });
+
+  return { ok: true, refundId };
 }
