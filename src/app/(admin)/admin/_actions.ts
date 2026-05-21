@@ -33,8 +33,8 @@ export async function setMenuItemStatus(
     .eq("id", id)
     .eq("tenant_id", c.tenant.id);
   if (error) return { ok: false, error: error.message };
-  revalidatePath("/admin/menu");
-  revalidatePath("/menu");
+  revalidatePath(`/c/${c.tenant.slug}/admin/menu`);
+  revalidatePath(`/c/${c.tenant.slug}/menu`);
   return { ok: true };
 }
 
@@ -48,8 +48,8 @@ export async function setMenuItemStock(id: string, inStock: boolean): Promise<{ 
     .eq("id", id)
     .eq("tenant_id", c.tenant.id);
   if (error) return { ok: false, error: error.message };
-  revalidatePath("/admin/menu");
-  revalidatePath("/menu");
+  revalidatePath(`/c/${c.tenant.slug}/admin/menu`);
+  revalidatePath(`/c/${c.tenant.slug}/menu`);
   return { ok: true };
 }
 
@@ -84,7 +84,7 @@ export async function inviteStaff(
     target_type: "invite",
     meta: { email, role },
   });
-  revalidatePath("/admin/staff");
+  revalidatePath(`/c/${c.tenant.slug}/admin/staff`);
   return { ok: true, url };
 }
 
@@ -105,7 +105,7 @@ export async function revokeStaff(membershipId: string): Promise<{ ok: boolean; 
     target_type: "membership",
     target_id: membershipId,
   });
-  revalidatePath("/admin/staff");
+  revalidatePath(`/c/${c.tenant.slug}/admin/staff`);
   return { ok: true };
 }
 
@@ -128,8 +128,8 @@ export async function updateCanteenHours(opts: {
     })
     .eq("id", c.tenant.id);
   if (error) return { ok: false, error: error.message };
-  revalidatePath("/admin/settings");
-  revalidatePath("/menu");
+  revalidatePath(`/c/${c.tenant.slug}/admin/settings`);
+  revalidatePath(`/c/${c.tenant.slug}/menu`);
   revalidateTag("tenant");
   return { ok: true };
 }
@@ -145,8 +145,8 @@ export async function pauseCanteen(minutes: number): Promise<{ ok: boolean; erro
     .update({ paused_until: pausedUntil })
     .eq("id", c.tenant.id);
   if (error) return { ok: false, error: error.message };
-  revalidatePath("/admin/settings");
-  revalidatePath("/menu");
+  revalidatePath(`/c/${c.tenant.slug}/admin/settings`);
+  revalidatePath(`/c/${c.tenant.slug}/menu`);
   revalidateTag("tenant");
   return { ok: true };
 }
@@ -166,8 +166,8 @@ export async function updateCanteenSettings(opts: {
     })
     .eq("id", c.tenant.id);
   if (error) return { ok: false, error: error.message };
-  revalidatePath("/admin/settings");
-  revalidatePath("/menu");
+  revalidatePath(`/c/${c.tenant.slug}/admin/settings`);
+  revalidatePath(`/c/${c.tenant.slug}/menu`);
   revalidateTag("tenant");
   return { ok: true };
 }
@@ -203,8 +203,8 @@ export async function createMenuItem(form: {
     .select("id")
     .single();
   if (error) return { ok: false, error: error.message };
-  revalidatePath("/admin/menu");
-  revalidatePath("/menu");
+  revalidatePath(`/c/${c.tenant.slug}/admin/menu`);
+  revalidatePath(`/c/${c.tenant.slug}/menu`);
   return { ok: true, id: data.id };
 }
 
@@ -241,8 +241,8 @@ export async function updateMenuItem(
     .eq("id", id)
     .eq("tenant_id", c.tenant.id);
   if (error) return { ok: false, error: error.message };
-  revalidatePath("/admin/menu");
-  revalidatePath("/menu");
+  revalidatePath(`/c/${c.tenant.slug}/admin/menu`);
+  revalidatePath(`/c/${c.tenant.slug}/menu`);
   return { ok: true };
 }
 
@@ -256,7 +256,7 @@ export async function deleteMenuItem(id: string): Promise<{ ok: boolean; error?:
     .eq("id", id)
     .eq("tenant_id", c.tenant.id);
   if (error) return { ok: false, error: error.message };
-  revalidatePath("/admin/menu");
-  revalidatePath("/menu");
+  revalidatePath(`/c/${c.tenant.slug}/admin/menu`);
+  revalidatePath(`/c/${c.tenant.slug}/menu`);
   return { ok: true };
 }

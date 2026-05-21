@@ -74,7 +74,7 @@ export async function markPreparing(orderId: string): Promise<Outcome> {
     event_type: "preparing",
     payload: { actor: "kitchen" },
   });
-  revalidatePath("/kitchen");
+  revalidatePath(`/c/${ctx.tenant.slug}/kitchen`);
   return { ok: true };
 }
 
@@ -128,7 +128,7 @@ export async function markReady(orderId: string): Promise<Outcome> {
     event_type: "ready",
     payload: { actor: "kitchen" },
   });
-  revalidatePath("/kitchen");
+  revalidatePath(`/c/${ctx.tenant.slug}/kitchen`);
   return { ok: true };
 }
 
@@ -187,7 +187,7 @@ export async function verifyAndCollect(
     event_type: "collected",
     payload: { actor: "kitchen" },
   });
-  revalidatePath("/kitchen");
+  revalidatePath(`/c/${ctx.tenant.slug}/kitchen`);
   return { ok: true };
 }
 
@@ -252,8 +252,8 @@ export async function markItemSoldOut(
     payload: { name: itemName, in_stock: inStock },
   });
 
-  revalidatePath("/menu");
-  revalidatePath("/kitchen");
+  revalidatePath(`/c/${ctx.tenant.slug}/menu`);
+  revalidatePath(`/c/${ctx.tenant.slug}/kitchen`);
   return { ok: true, itemId: item.id };
 }
 
@@ -379,6 +379,6 @@ export async function rejectOrder(orderId: string, reason: string): Promise<Outc
     event_type: "rejected",
     payload: { actor: "kitchen", reason: reason.slice(0, 200) },
   });
-  revalidatePath("/kitchen");
+  revalidatePath(`/c/${ctx.tenant.slug}/kitchen`);
   return { ok: true };
 }
