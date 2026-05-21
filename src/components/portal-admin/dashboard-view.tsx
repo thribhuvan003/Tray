@@ -277,10 +277,90 @@ export function DashboardView({
 
       {/* ── KPI cards ────────────────────────────────────────────────── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-3">
-        <KpiCard label="Revenue today" value={formatRupees(kpis.revenue)} delta={dRev.text} deltaUp={dRev.up} icon={IndianRupee} />
-        <KpiCard label="Orders" value={String(kpis.count)} delta={dCount.text} deltaUp={dCount.up} icon={ListOrdered} />
-        <KpiCard label="Avg ticket" value={formatRupees(kpis.avgTicket)} delta={dAvg.text} deltaUp={dAvg.up} icon={Receipt} tone="amber" />
-        <KpiCard label="Avg pickup" value={kpis.avgPickup ? fmtElapsed(kpis.avgPickup) : "—"} delta={dPickup.text} deltaUp={dPickup.up} icon={Timer} tone="rose" />
+        {isFirstDay ? (
+          <>
+            {/* First-day setup prompts replace numeric KPIs */}
+            {(
+              [
+                {
+                  icon: IndianRupee,
+                  label: "Revenue today",
+                  prompt: "Set up your UPI ID to receive payments",
+                  href: `/c/${tenantSlug}/admin/settings`,
+                  cta: "Go to Settings →",
+                },
+                {
+                  icon: ListOrdered,
+                  label: "Orders",
+                  prompt: "Share your student link to get first orders",
+                  href: `/c/${tenantSlug}/admin/settings`,
+                  cta: "Copy link →",
+                },
+                {
+                  icon: Receipt,
+                  label: "Avg ticket",
+                  prompt: "Coming soon after your first order",
+                  href: null,
+                  cta: null,
+                },
+                {
+                  icon: Timer,
+                  label: "Avg pickup",
+                  prompt: "Coming soon after your first order",
+                  href: null,
+                  cta: null,
+                },
+              ] as const
+            ).map((card) => (
+              <div
+                key={card.label}
+                className="relative overflow-hidden flex flex-col gap-3 transition-colors"
+                style={{
+                  padding: "18px 20px",
+                  background: "#0f131b",
+                  border: "1px solid rgba(255,255,255,0.07)",
+                  borderRadius: 12,
+                  boxShadow: "3px 3px 0 rgba(238,241,247,0.08)",
+                }}
+              >
+                <div
+                  className="inline-flex items-center justify-center rounded-md"
+                  style={{ height: 28, width: 28, background: "rgba(255,255,255,0.05)" }}
+                >
+                  <card.icon size={13} strokeWidth={1.6} style={{ color: "#6d7689" }} />
+                </div>
+                <div
+                  className="font-mono uppercase font-medium"
+                  style={{ fontSize: 11, letterSpacing: "0.12em", color: "#6d7689" }}
+                >
+                  {card.label}
+                </div>
+                <p
+                  className="leading-snug"
+                  style={{ fontSize: 13, color: "#aab3c5", margin: 0 }}
+                >
+                  {card.prompt}
+                </p>
+                {card.href && card.cta && (
+                  <a
+                    href={card.href}
+                    className="font-mono font-medium hover:underline"
+                    style={{ fontSize: 11, color: "#cdfa50", letterSpacing: "0.04em" }}
+                  >
+                    {card.cta}
+                  </a>
+                )}
+              </div>
+            ))}
+          </>
+        ) : (
+          <>
+            <KpiCard label="Revenue today" value={formatRupees(kpis.revenue)} delta={dRev.text} deltaUp={dRev.up} icon={IndianRupee} />
+            <KpiCard label="Orders" value={String(kpis.count)} delta={dCount.text} deltaUp={dCount.up} icon={ListOrdered} />
+            <KpiCard label="Avg ticket" value={formatRupees(kpis.avgTicket)} delta={dAvg.text} deltaUp={dAvg.up} icon={Receipt} tone="amber" />
+            <KpiCard label="Avg pickup" value={kpis.avgPickup ? fmtElapsed(kpis.avgPickup) : "—"} delta={dPickup.text} deltaUp={dPickup.up} icon={Timer} tone="rose" />
+          </>
+        )}
       </div>
 
       <div className="grid lg:grid-cols-[1.4fr_1fr] gap-2 mb-3">

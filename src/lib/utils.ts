@@ -55,3 +55,13 @@ export function tenantHeaders(tenantId: string | null) {
   if (!tenantId) return {} as Record<string, string>;
   return { "x-tenant-id": tenantId };
 }
+
+/** Build a canteen-scoped URL path: /c/{slug}{path} */
+export function canteenPath(slug: string, path: string): string {
+  return `/c/${slug}${path}`;
+}
+
+/** Build a login redirect URL with next param */
+export function loginRedirect(slug: string, next: string): string {
+  return `/c/${slug}/login?next=${encodeURIComponent(next)}`;
+}

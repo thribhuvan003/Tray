@@ -68,7 +68,11 @@ export function MenuBoard({ categories, items }: Props) {
       {filtered.length === 0 ? (
         <div className="py-16 text-center text-[color:var(--color-ink)]/55">
           <div className="font-display italic text-[24px] text-ocean-500">Nothing found.</div>
-          <p className="text-[14px] mt-2">Try a different filter or come back at lunchtime.</p>
+          <p className="text-[14px] mt-2">
+            {q || filter !== "all"
+              ? "Clear the filter to see more dishes."
+              : "Check back at lunchtime."}
+          </p>
         </div>
       ) : (
         <div className="mt-6 sm:mt-8 flex flex-col gap-8">

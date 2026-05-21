@@ -33,8 +33,8 @@ export function MenuItemCard({ item }: { item: MenuItem }) {
           // eslint-disable-next-line @next/next/no-img-element
           <img src={item.image_url} alt={item.name} className="absolute inset-0 h-full w-full object-cover" />
         ) : (
-          <div className="absolute inset-0 flex items-center justify-center font-display text-[44px] text-ocean-500/30 select-none">
-            {item.name.charAt(0)}
+          <div className="absolute inset-0 flex items-center justify-center font-display text-[44px] text-ocean-500/25 select-none leading-none">
+            {item.name.charAt(0).toUpperCase()}
           </div>
         )}
         <span

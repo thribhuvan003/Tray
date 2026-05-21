@@ -7,8 +7,20 @@ import { useRouter } from "next/navigation";
 import type { ResolvedTenant } from "@/lib/tenant";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 
+function currentServiceLabel(): string {
+  // Extract the current IST hour directly from a UTC offset calculation.
+  const nowUtcMs = Date.now();
+  const istOffsetMs = 5.5 * 60 * 60 * 1000; // UTC+5:30
+  const h = new Date(nowUtcMs + istOffsetMs).getUTCHours();
+  if (h < 11) return "Breakfast";
+  if (h < 15) return "Lunch";
+  if (h < 18) return "Evening";
+  return "Dinner";
+}
+
 export function StudentTopBar({ tenant }: { tenant: ResolvedTenant }) {
   const [t, setT] = useState<string>("");
+  const [serviceLabel, setServiceLabel] = useState<string>(() => currentServiceLabel());
   const router = useRouter();
   useEffect(() => {
     const tick = () =>
@@ -21,7 +33,10 @@ export function StudentTopBar({ tenant }: { tenant: ResolvedTenant }) {
         }).format(new Date())
       );
     tick();
-    const id = setInterval(tick, 30_000);
+    const id = setInterval(() => {
+      tick();
+      setServiceLabel(currentServiceLabel());
+    }, 60_000);
     return () => clearInterval(id);
   }, []);
   return (
@@ -44,7 +59,7 @@ export function StudentTopBar({ tenant }: { tenant: ResolvedTenant }) {
           <div className="text-[12px] font-semibold tracking-tight text-[color:var(--color-ink)] truncate max-w-[180px] sm:max-w-none">
             {tenant.name}
           </div>
-          <div className="hidden sm:flex text-[11px] font-mono uppercase tracking-wider text-[color:var(--color-ink)]/55">
+          <div className="hidden sm:flex text-[11px] font-mono uppercase tracking-wider text-[color:var(--color-ink)]/55 truncate max-w-[220px]">
             {tenant.college_name}
           </div>
           <div className="text-[10px] font-mono tabular text-[color:var(--color-ink)]/45 flex items-center gap-1.5 sm:hidden">
@@ -53,7 +68,7 @@ export function StudentTopBar({ tenant }: { tenant: ResolvedTenant }) {
           </div>
           <div className="hidden sm:flex text-[11px] font-mono tabular text-[color:var(--color-ink)]/45 items-center gap-1.5">
             <Clock size={10} />
-            Lunch · {t || "--:--"} IST
+            {serviceLabel} · {t || "--:--"} IST
           </div>
         </div>
         <div className="flex items-center gap-1.5">

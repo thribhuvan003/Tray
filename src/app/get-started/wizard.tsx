@@ -60,7 +60,7 @@ function validateStep3(data: FormData): FieldErrors {
 
 function ProgressBar({ step }: { step: Step }) {
   const steps = [
-    { n: 1, label: "Institution" },
+    { n: 1, label: "College" },
     { n: 2, label: "Canteen" },
     { n: 3, label: "Admin account" },
   ];
@@ -641,7 +641,7 @@ const INITIAL_FORM: FormData = {
 };
 
 const STEP_TITLES: Record<Step, { title: string; subtitle: string }> = {
-  1: { title: "Tell us about your institution", subtitle: "We'll set up your account around it." },
+  1: { title: "Tell us about your college or institution", subtitle: "We'll set up your account around it." },
   2: { title: "Set up your first canteen", subtitle: "You can add more canteens from the admin console later." },
   3: { title: "Create your admin account", subtitle: "This is the account you'll use to manage everything." },
 };
