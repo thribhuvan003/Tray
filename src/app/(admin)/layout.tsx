@@ -10,7 +10,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const tenant = await resolveTenant(slug);
   if (!tenant) redirect("/");
   const user = await requireRole(["canteen_admin", "super_admin"]);
-  if (!user) redirect(`/login?next=/admin/dashboard`);
+  if (!user) redirect(`/c/${tenant.slug}/login?next=/c/${tenant.slug}/admin/dashboard`);
   return (
     <div
       data-portal="admin"
