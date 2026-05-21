@@ -271,8 +271,8 @@ export function PayPanel({
               ))}
             </ul>
             <div className="mt-4 pt-4 border-t border-[color:var(--color-line)] flex justify-between items-baseline">
-              <span className="text-[12px] font-mono uppercase tracking-wider text-[color:var(--color-ink)]/55">Total</span>
-              <span className="font-display text-[22px] font-medium tabular">
+              <span className="text-[10px] uppercase tracking-[0.18em] text-[color:var(--color-ink)]/50" style={{ fontFamily: "var(--font-barlow, var(--font-manrope))" }}>Total</span>
+              <span className="text-[32px] leading-none tabular text-ocean-600 dark:text-ocean-400" style={{ fontFamily: "var(--font-bebas, Impact, sans-serif)" }}>
                 {formatRupees(order.total_paise)}
               </span>
             </div>

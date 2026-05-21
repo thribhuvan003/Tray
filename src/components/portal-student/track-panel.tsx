@@ -197,7 +197,8 @@ export function TrackPanel({ tenantSlug, tenantName, order: initial, lines }: { 
               Your pickup code · show at counter
             </div>
             <div
-              className="font-display tabular font-medium leading-none text-[clamp(72px,14vw,128px)] tracking-[-0.045em] cursor-pointer select-all"
+              className="tabular leading-none text-[clamp(80px,16vw,140px)] tracking-[0.06em] cursor-pointer select-all"
+              style={{ fontFamily: "var(--font-bebas, Impact, sans-serif)" }}
               title="Tap to copy"
               onClick={() => navigator.clipboard.writeText(otp).catch(() => null)}
             >

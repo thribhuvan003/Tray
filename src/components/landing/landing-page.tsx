@@ -1057,6 +1057,95 @@ const SCOPED_CSS = `
   }
 }
 
+/* ─── Expressive typography system ───────────────────────────────────────── */
+/* Bebas Neue: condensed display — Thunder / Drunk Super Condensed vibe      */
+/* Cormorant Garamond: editorial italic serif — Genniro / Milker vibe        */
+/* Plus Jakarta Sans: modern grotesque — Neue Haas Grotesque vibe            */
+/* Barlow Condensed: tight labels — Neulis Alt / Wolker condensed vibe       */
+/* DM Serif Display: elegant high-contrast serif — Retro Monkey editorial    */
+
+/* §HERO — stats in Bebas Neue (condensed, chunky, food-menu energy) */
+.tray-landing .tl-hero-stat .tl-stat-num {
+  font-family: var(--font-bebas), "Impact", sans-serif;
+  font-size: clamp(2.8rem, 7vw, 5.5rem);
+  font-weight: 400;
+  letter-spacing: 0.015em;
+  line-height: 0.9;
+}
+.tray-landing .tl-hero-stat .tl-v {
+  font-family: var(--font-bebas), "Impact", sans-serif;
+  font-size: clamp(2.2rem, 5vw, 4rem);
+  letter-spacing: 0.02em;
+}
+
+/* §HERO — lede in Plus Jakarta Sans (Neue Haas Grotesque — clean, modern) */
+.tray-landing .tl-hero-lede {
+  font-family: var(--font-jakarta), var(--font-manrope), sans-serif;
+  font-weight: 400;
+  letter-spacing: -0.012em;
+}
+
+/* §01 SYSTEM — section h2 in Cormorant Garamond italic (elegant editorial) */
+.tray-landing #system .tl-section-head h2 {
+  font-family: var(--font-cormorant), Georgia, serif;
+  font-style: italic;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+}
+
+/* §02 SYNC — section h2 in DM Serif Display (high-contrast, Retro Monkey editorial) */
+.tray-landing #sync .tl-section-head h2 {
+  font-family: var(--font-dm-serif), Georgia, serif;
+  font-weight: 400;
+  letter-spacing: -0.025em;
+}
+
+/* §03 FLOW — step numbers in Bebas Neue (theatrical, cinematic) */
+.tray-landing .tl-flow-step .tl-num {
+  font-family: var(--font-bebas), "Impact", sans-serif !important;
+  letter-spacing: 0.02em;
+}
+
+/* §04 STACK — card names in Barlow Condensed (tight, engineering-grade) */
+.tray-landing .tl-stack-card .tl-n {
+  font-family: var(--font-barlow), var(--font-manrope), sans-serif;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+  font-size: 0.9rem;
+}
+.tray-landing .tl-stack-card .tl-r {
+  font-family: var(--font-barlow), var(--font-manrope), sans-serif;
+  font-weight: 500;
+}
+
+/* COLLEGE MARQUEE — Barlow Condensed (tight, institutional) */
+.tray-landing .tl-marquee-item {
+  font-family: var(--font-barlow), var(--font-manrope), sans-serif;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+}
+
+/* SECTION NUMBERS (01, 02...) — Plus Jakarta Sans mono-ish labels */
+.tray-landing .tl-section-num {
+  font-family: var(--font-jakarta), var(--tl-mono), sans-serif;
+  font-weight: 600;
+  font-size: 11px;
+  letter-spacing: 0.18em;
+}
+
+/* CLOSING CTA — DM Serif Display italic (cinematic finish) */
+.tray-landing .tl-closing h2 {
+  font-family: var(--font-dm-serif), Georgia, serif !important;
+}
+
+/* NAV links — Plus Jakarta Sans */
+.tray-landing .tl-nav-links a {
+  font-family: var(--font-jakarta), var(--font-manrope), sans-serif;
+  font-weight: 500;
+  letter-spacing: -0.005em;
+}
+
 /* ─── Hero h1 warm-paper depth ──────────────────────────────────────────────*/
 .tray-landing .tl-h1 { text-shadow: 0 1px 0 rgba(255,255,255,0.55); }
 .tray-landing .tl-h1 .tl-it { color: var(--tl-accent); }
