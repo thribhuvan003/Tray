@@ -9,6 +9,9 @@ import {
   tickerLoop,
 } from "@/lib/motion/tray-motion";
 
+// Metrics: Fraunces Black for impact numbers + DM Mono uppercase labels.
+// Ticker: DM Mono — two rows, opposite directions.
+
 // ── Metrics ──────────────────────────────────────────────────────────────────
 
 export function MetricsStrip() {
@@ -22,10 +25,7 @@ export function MetricsStrip() {
       rootRef.current?.querySelectorAll<HTMLElement>("[data-count]").forEach((el) => {
         numberCounter(el, Number(el.dataset.count), {
           suffix: el.dataset.suffix ?? "",
-          scrollTrigger: {
-            trigger: rootRef.current,
-            start: "top 75%",
-          },
+          scrollTrigger: { trigger: rootRef.current, start: "top 78%" },
         });
       });
     },
@@ -35,10 +35,10 @@ export function MetricsStrip() {
   return (
     <section ref={rootRef} className="px-5 py-10 sm:px-8 lg:px-10">
       <div className="mx-auto grid max-w-7xl grid-cols-2 gap-3 lg:grid-cols-4">
-        <Metric value={12} suffix="m" label="saved per lunch" />
-        <Metric value={3} label="role portals" />
-        <Metric value={4} label="digit OTP pickup" />
-        <Metric value={1} label="campus source of truth" />
+        <Metric value={12} suffix="m" label="Saved per lunch" />
+        <Metric value={3}  label="Role portals" />
+        <Metric value={4}  label="Digit OTP pickup" />
+        <Metric value={1}  label="Source of truth" />
       </div>
     </section>
   );
@@ -46,18 +46,38 @@ export function MetricsStrip() {
 
 function Metric({ value, suffix, label }: { value: number; suffix?: string; label: string }) {
   return (
-    <div className="rounded-[1.5rem] border border-[var(--tray-border)] bg-white/50 p-5">
-      <div className="font-editorial text-5xl font-black tracking-[-0.06em]">
+    <div
+      className="flex flex-col gap-3 rounded-[1.75rem] p-5 sm:p-6"
+      style={{ border: "1px solid var(--tray-border)", background: "rgba(255,255,255,0.52)" }}
+    >
+      {/* Fraunces Black for numbers */}
+      <div
+        className="leading-none tracking-[-0.06em]"
+        style={{
+          fontFamily: "var(--font-fraunces)",
+          fontWeight: 900,
+          fontSize: "clamp(2.8rem, 5vw, 4rem)",
+        }}
+      >
         <span data-count={value} data-suffix={suffix ?? ""}>0</span>
+        {suffix && (
+          <em className="not-italic" style={{ color: "var(--tray-clay)", fontStyle: "italic" }}>
+            {suffix}
+          </em>
+        )}
       </div>
-      <p className="font-code mt-3 text-[0.68rem] uppercase tracking-[0.18em] text-[var(--tray-muted)]">
+      {/* DM Mono for label */}
+      <p
+        className="text-[0.65rem] uppercase tracking-[0.2em]"
+        style={{ fontFamily: "var(--font-dm-mono)", color: "var(--tray-muted)" }}
+      >
         {label}
       </p>
     </div>
   );
 }
 
-// ── Ticker ────────────────────────────────────────────────────────────────────
+// ── Campus Ticker ─────────────────────────────────────────────────────────────
 
 export function CampusTicker() {
   const rootRef = useRef<HTMLElement>(null);
@@ -67,33 +87,22 @@ export function CampusTicker() {
       registerTrayGsap();
       if (prefersReducedMotion()) return;
 
-      rootRef.current?.querySelectorAll<HTMLElement>("[data-ticker-track]").forEach((track, index) => {
-        tickerLoop(track, index === 0 ? 36 : 42);
+      rootRef.current?.querySelectorAll<HTMLElement>("[data-ticker-track]").forEach((track, i) => {
+        tickerLoop(track, i === 0 ? 34 : 44);
       });
     },
     { scope: rootRef }
   );
 
-  const row1 = [
-    "Main Canteen",
-    "Hostel Mess",
-    "North Block Canteen",
-    "Sports Café",
-    "Library Counter",
-    "Night Canteen",
-  ];
-
-  const row2 = [
-    "Queue live",
-    "UPI confirmed",
-    "OTP verified",
-    "Specials updated",
-    "Realtime sync",
-    "Campus scoped",
-  ];
+  const row1 = ["Main Canteen", "Hostel Mess", "North Block", "Sports Café", "Library Counter", "Night Canteen"];
+  const row2 = ["Queue live", "UPI confirmed", "OTP verified", "Specials updated", "Realtime sync", "Campus scoped"];
 
   return (
-    <section ref={rootRef} className="overflow-hidden border-y border-[var(--tray-border)] py-4">
+    <section
+      ref={rootRef}
+      className="overflow-hidden py-5"
+      style={{ borderTop: "1px solid var(--tray-border)", borderBottom: "1px solid var(--tray-border)" }}
+    >
       <TickerRow items={row1} />
       <TickerRow items={row2} reverse />
     </section>
@@ -106,13 +115,23 @@ function TickerRow({ items, reverse }: { items: string[]; reverse?: boolean }) {
     <div className="tray-no-scrollbar overflow-hidden py-2">
       <div
         data-ticker-track
-        className="font-code flex w-max gap-7 whitespace-nowrap text-xs uppercase tracking-[0.22em] text-[var(--tray-muted)]"
-        style={{ direction: reverse ? "rtl" : "ltr" }}
+        className="flex w-max gap-8 whitespace-nowrap"
+        style={{
+          fontFamily: "var(--font-dm-mono)",
+          fontSize: "0.7rem",
+          letterSpacing: "0.22em",
+          textTransform: "uppercase",
+          color: "var(--tray-muted)",
+          direction: reverse ? "rtl" : "ltr",
+        }}
       >
         {content.map((item, index) => (
-          <span key={`${item}-${index}`} className="inline-flex items-center gap-7">
+          <span key={`${item}-${index}`} className="inline-flex items-center gap-8">
             {item}
-            <span className="h-1.5 w-1.5 rounded-full bg-[var(--tray-clay)]" />
+            <span
+              className="h-1.5 w-1.5 rounded-full"
+              style={{ background: "var(--tray-clay)" }}
+            />
           </span>
         ))}
       </div>

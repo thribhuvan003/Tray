@@ -3,6 +3,7 @@
 import { useRef } from "react";
 import Link from "next/link";
 import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
 import {
   fadeUp,
@@ -12,6 +13,10 @@ import {
   splitWordReveal,
 } from "@/lib/motion/tray-motion";
 
+// Hero uses Barlow Condensed Black for maximum Druk-like title impact.
+// Fraunces italic wraps the clay accent word.
+// Parallax blobs respond to scroll via GSAP scrub.
+
 export function TrayHero() {
   const rootRef = useRef<HTMLElement>(null);
 
@@ -20,20 +25,61 @@ export function TrayHero() {
       registerTrayGsap();
       if (prefersReducedMotion()) return;
 
-      const title = rootRef.current?.querySelector("[data-hero-title]") as HTMLElement;
-      const buttons = rootRef.current?.querySelectorAll("[data-magnetic]") ?? [];
+      const root = rootRef.current;
+      if (!root) return;
 
+      const title = root.querySelector("[data-hero-title]") as HTMLElement;
+      const buttons = root.querySelectorAll("[data-magnetic]");
+      const blobA = root.querySelector("[data-blob-a]") as HTMLElement;
+      const blobB = root.querySelector("[data-blob-b]") as HTMLElement;
+      const cards = root.querySelectorAll("[data-hero-visual]");
+      const eyebrow = root.querySelector("[data-hero-eyebrow]") as HTMLElement;
+
+      // Title split-word reveal
       const tl = gsap.timeline({ defaults: { ease: "power4.out" } });
-
-      tl.add(() => splitWordReveal(title, { stagger: 0.045, duration: 1.05 }))
+      tl
+        .fromTo(eyebrow, { y: -14, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6 })
+        .add(() => splitWordReveal(title, { stagger: 0.04, duration: 1.1 }), "-=0.3")
         .add(fadeUp("[data-hero-copy]", { y: 24, duration: 0.75 }), "-=0.55")
-        .add(fadeUp("[data-hero-visual]", { y: 38, stagger: 0.09, duration: 0.85 }), "-=0.45");
+        .add(fadeUp(cards, { y: 38, stagger: 0.1, duration: 0.9 }), "-=0.45");
 
-      const cleanups = Array.from(buttons).map((button) =>
-        magneticButton(button as HTMLElement)
-      );
+      // Parallax blobs (different scroll speeds)
+      if (blobA) {
+        gsap.to(blobA, {
+          y: -140,
+          scrollTrigger: { trigger: root, start: "top top", end: "bottom top", scrub: 1.4 },
+        });
+      }
+      if (blobB) {
+        gsap.to(blobB, {
+          y: -90,
+          scrollTrigger: { trigger: root, start: "top top", end: "bottom top", scrub: 0.9 },
+        });
+      }
 
-      return () => cleanups.forEach((cleanup) => cleanup());
+      // Mouse parallax on cards (desktop only)
+      if (window.matchMedia("(hover: hover)").matches) {
+        root.addEventListener("mousemove", (e: MouseEvent) => {
+          const rx = (e.clientX / window.innerWidth - 0.5) * 2;
+          const ry = (e.clientY / window.innerHeight - 0.5) * 2;
+          gsap.to(cards, {
+            rotateY: rx * 4,
+            rotateX: -ry * 3,
+            transformPerspective: 1200,
+            duration: 0.6,
+            ease: "power2.out",
+            stagger: 0.04,
+          });
+        });
+      }
+
+      // Magnetic CTAs
+      const cleanups = Array.from(buttons).map((btn) => magneticButton(btn as HTMLElement));
+
+      return () => {
+        cleanups.forEach((c) => c());
+        ScrollTrigger.getAll().forEach((t) => t.kill());
+      };
     },
     { scope: rootRef }
   );
@@ -41,91 +87,123 @@ export function TrayHero() {
   return (
     <section
       ref={rootRef}
-      className="relative isolate overflow-hidden px-5 pb-12 pt-24 sm:px-8 lg:px-10 lg:pb-20 lg:pt-32"
+      className="relative isolate overflow-hidden px-5 pb-12 pt-20 sm:px-8 sm:pt-28 lg:px-10 lg:pb-24 lg:pt-36"
     >
-      {/* Ambient blobs */}
-      <div className="pointer-events-none absolute inset-0 -z-10">
-        <div className="absolute left-[-10rem] top-20 h-80 w-80 rounded-full bg-[var(--tray-clay)]/20 blur-3xl" />
-        <div className="absolute right-[-8rem] top-24 h-96 w-96 rounded-full bg-[var(--tray-green)]/15 blur-3xl" />
-      </div>
+      {/* Parallax blobs */}
+      <div data-blob-a className="pointer-events-none absolute -left-32 top-16 h-[28rem] w-[28rem] rounded-full bg-[var(--tray-clay)]/20 blur-[5rem] will-change-transform" />
+      <div data-blob-b className="pointer-events-none absolute -right-24 top-20 h-[32rem] w-[32rem] rounded-full bg-[var(--tray-green)]/14 blur-[6rem] will-change-transform" />
 
-      <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:items-end">
+      <div className="relative mx-auto grid max-w-7xl gap-12 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
+        {/* Left: copy */}
         <div>
-          <p className="font-code mb-5 text-xs uppercase tracking-[0.28em] text-[var(--tray-muted)]">
+          <p
+            data-hero-eyebrow
+            className="mb-5 text-xs uppercase tracking-[0.3em] text-[var(--tray-muted)]"
+            style={{ fontFamily: "var(--font-dm-mono)" }}
+          >
             Campus Edition · multi-canteen · live queue
           </p>
 
+          {/* Barlow Condensed 900 — Druk-level impact */}
           <h1
             data-hero-title
-            className="font-editorial max-w-5xl text-[clamp(4.2rem,11vw,11rem)] font-black leading-[0.82] tracking-[-0.075em]"
+            className="max-w-[14ch] leading-[0.80] tracking-[-0.03em]"
+            style={{
+              fontFamily: "var(--font-barlow)",
+              fontWeight: 900,
+              fontSize: "clamp(4.8rem, 12vw, 13rem)",
+            }}
           >
-            Campus food, without the queue.
+            Campus food,{" "}
+            <em
+              className="not-italic"
+              style={{
+                fontFamily: "var(--font-fraunces)",
+                fontStyle: "italic",
+                color: "var(--tray-clay)",
+              }}
+            >
+              without the queue.
+            </em>
           </h1>
 
+          {/* Geist body */}
           <p
             data-hero-copy
-            className="mt-7 max-w-2xl text-lg leading-8 opacity-70 sm:text-xl"
+            className="mt-7 max-w-2xl text-[1.125rem] leading-[1.75] opacity-70 sm:text-[1.2rem]"
+            style={{ fontFamily: "var(--font-geist)" }}
           >
             Students order from any canteen in their campus. Kitchens run live
             queues. Admins see orders, revenue, and handovers in real time.
           </p>
 
-          <div data-hero-copy className="mt-8 flex flex-col gap-3 sm:flex-row">
+          {/* CTAs — Geist Semibold */}
+          <div data-hero-copy className="mt-9 flex flex-wrap items-center gap-3">
             <a
               data-magnetic
               href="#try-demo"
-              className="inline-flex items-center justify-center rounded-full bg-[var(--tray-ink)] px-7 py-4 text-sm font-semibold text-[var(--tray-cream,#F0E6D2)] transition hover:scale-[1.02] hover:opacity-90"
+              className="rounded-full bg-[var(--tray-ink)] px-7 py-4 text-[0.9rem] text-[var(--tray-cream)] transition hover:scale-[1.02]"
+              style={{ fontFamily: "var(--font-geist)", fontWeight: 600 }}
             >
               Try the full demo →
             </a>
-
             <Link
               data-magnetic
               href="/get-started"
-              className="inline-flex items-center justify-center rounded-full border border-[var(--tray-border)] px-7 py-4 text-sm font-semibold transition hover:bg-white/40"
+              className="rounded-full border border-[var(--tray-border)] px-7 py-4 text-[0.9rem] transition hover:bg-white/40"
+              style={{ fontFamily: "var(--font-geist)", fontWeight: 600 }}
             >
               Set up my campus — free
             </Link>
           </div>
         </div>
 
-        {/* Layered product cards */}
-        <div className="grid gap-4">
-          <HeroMockCard
-            label="Student"
-            title="Paneer roll · paid"
-            meta="OTP 4821 · ready in 06:30"
-          />
-          <HeroMockCard
-            label="Kitchen"
-            title="New queue"
-            meta="12 active · 4 ready · 3 min avg"
-          />
-          <HeroMockCard
-            label="Admin"
-            title="Lunch revenue"
-            meta="₹18,420 today · +12% vs last week"
-          />
+        {/* Right: layered product mock cards */}
+        <div className="grid gap-3.5">
+          <HeroMockCard label="Student"  title="Paneer roll · paid"    meta="OTP 4821 · ready in 06:30" accentVar="var(--color-ocean-500, #6E86AB)" />
+          <HeroMockCard label="Kitchen" title="New queue"             meta="12 active · 4 ready · 3 min avg" accentVar="#B8531A" />
+          <HeroMockCard label="Admin"   title="Lunch revenue"        meta="₹18,420 today · +12% vs last week" accentVar="var(--tray-green)" />
         </div>
       </div>
     </section>
   );
 }
 
-function HeroMockCard({ label, title, meta }: { label: string; title: string; meta: string }) {
+function HeroMockCard({
+  label, title, meta, accentVar,
+}: {
+  label: string; title: string; meta: string; accentVar: string;
+}) {
   return (
     <div
       data-hero-visual
-      className="motion-card rounded-[2rem] border border-[var(--tray-border)] bg-white/55 p-5 shadow-[0_24px_80px_rgba(17,17,17,0.08)] backdrop-blur"
+      className="motion-card rounded-[2rem] border border-[var(--tray-border)] bg-white/60 p-5 shadow-[0_20px_60px_rgba(26,22,20,0.10)] backdrop-blur-sm"
+      style={{ transformStyle: "preserve-3d" }}
     >
-      <div className="font-code mb-8 flex items-center justify-between text-xs uppercase tracking-[0.2em] text-[var(--tray-muted)]">
-        <span>{label}</span>
-        <span className="rounded-full bg-[var(--tray-green)]/10 px-3 py-1 text-[0.65rem] text-[var(--tray-green)]">
+      <div className="mb-7 flex items-center justify-between">
+        <span
+          className="text-[0.68rem] uppercase tracking-[0.22em] text-[var(--tray-muted)]"
+          style={{ fontFamily: "var(--font-dm-mono)" }}
+        >
+          {label}
+        </span>
+        <span
+          className="rounded-full px-3 py-1 text-[0.6rem] uppercase tracking-[0.16em]"
+          style={{ fontFamily: "var(--font-dm-mono)", background: `color-mix(in srgb, ${accentVar} 12%, transparent)`, color: accentVar }}
+        >
           Live
         </span>
       </div>
-      <h3 className="text-2xl font-semibold tracking-[-0.04em]">{title}</h3>
-      <p className="font-code mt-3 text-xs uppercase tracking-[0.16em] text-[var(--tray-muted)]">
+      <h3
+        className="text-[1.4rem] tracking-[-0.04em]"
+        style={{ fontFamily: "var(--font-geist)", fontWeight: 600 }}
+      >
+        {title}
+      </h3>
+      <p
+        className="mt-2.5 text-[0.65rem] uppercase tracking-[0.16em] text-[var(--tray-muted)]"
+        style={{ fontFamily: "var(--font-dm-mono)" }}
+      >
         {meta}
       </p>
     </div>

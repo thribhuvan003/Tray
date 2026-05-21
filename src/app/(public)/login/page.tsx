@@ -1,49 +1,92 @@
 import Link from "next/link";
 import { headers } from "next/headers";
-import { LoginForm } from "@/components/portal-student/login-form";
+import { RoleSelector } from "@/components/auth/RoleSelector";
 
 export const metadata = { title: "Sign in — Tray" };
 
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ next?: string; tenant?: string; error?: string }>;
+  searchParams: Promise<{ next?: string; tenant?: string; error?: string; role?: string }>;
 }) {
   const sp = await searchParams;
   const h = await headers();
-  // ?tenant= explicit override, then x-tenant-slug from middleware (set when /c/[slug]/login rewrites here)
   const slug = sp.tenant ?? h.get("x-tenant-slug") ?? "";
   const next = sp.next ?? (slug ? `/c/${slug}/menu` : "/");
+
   return (
     <div
-      data-portal="student"
-      className="min-h-screen bg-[color:var(--color-paper)] text-[color:var(--color-ink)] flex flex-col"
+      className="min-h-svh overflow-x-hidden"
+      style={{ background: "var(--tray-bg, #D8C9AE)", color: "var(--tray-ink, #1A1614)" }}
     >
-      <div className="flex-1 flex items-center justify-center px-5 py-12">
-        <div className="w-full max-w-md">
-          <Link href="/" className="inline-flex items-center gap-2.5 font-display text-[19px] tracking-tight mb-10">
-            <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-ocean-500 text-white font-mono text-[12px] font-bold">T</span>
-            <span className="font-medium">Tray<span className="italic text-ocean-500">.</span></span>
+      {/* Ambient blobs */}
+      <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
+        <div className="absolute -left-40 -top-20 h-[30rem] w-[30rem] rounded-full blur-[6rem]"
+          style={{ background: "rgba(184,83,26,0.13)" }} />
+        <div className="absolute -right-32 bottom-0 h-[28rem] w-[28rem] rounded-full blur-[6rem]"
+          style={{ background: "rgba(42,110,58,0.10)" }} />
+      </div>
+
+      <div className="flex min-h-svh flex-col items-center justify-center px-5 py-12 sm:px-8">
+        <div className="w-full max-w-lg">
+          {/* Brand */}
+          <Link href="/" className="mb-10 inline-flex items-center gap-2.5 group">
+            <span
+              className="flex h-8 w-8 items-center justify-center rounded-[0.65rem] text-[13px] transition group-hover:scale-105"
+              style={{
+                fontFamily: "var(--font-barlow)",
+                fontWeight: 900,
+                background: "var(--tray-ink)",
+                color: "var(--tray-cream, #EDE5D2)",
+              }}
+            >
+              T
+            </span>
+            <span
+              className="text-[1.25rem] tracking-[-0.05em]"
+              style={{ fontFamily: "var(--font-barlow)", fontWeight: 900, textTransform: "uppercase" }}
+            >
+              Tray
+            </span>
           </Link>
-          <h1 className="font-display text-[40px] leading-[1.05] tracking-tight font-medium">
-            Sign in.<br />
-            <span className="italic text-ocean-500">Eat sooner.</span>
+
+          {/* Headline — Fraunces editorial */}
+          <h1
+            className="mb-2 leading-[0.9] tracking-[-0.05em]"
+            style={{
+              fontFamily: "var(--font-fraunces)",
+              fontWeight: 900,
+              fontSize: "clamp(3rem, 8vw, 5.5rem)",
+            }}
+          >
+            Welcome{" "}
+            <em className="not-italic" style={{ fontStyle: "italic", color: "var(--tray-clay)" }}>
+              back.
+            </em>
           </h1>
-          <p className="text-[14px] text-[color:var(--color-ink)]/65 mt-3">
-            Use your campus email — we&rsquo;ll send a magic link, no password required.
+
+          <p
+            className="mb-8 text-[1rem] leading-[1.6] opacity-65"
+            style={{ fontFamily: "var(--font-geist)" }}
+          >
+            Tell us who you are and we&rsquo;ll take you straight to the right place.
           </p>
-          {sp.error && (
-            <div className="mt-5 rounded-xl border border-rose-500/30 bg-rose-500/5 px-4 py-3 text-[13px] text-rose-600">
-              {sp.error}
-            </div>
-          )}
-          <div className="mt-7">
-            <LoginForm next={next} slug={slug} />
-          </div>
-          <p className="mt-8 text-[12.5px] text-[color:var(--color-ink)]/55">
-            New to Tray?{" "}
-            <Link href={`/signup?next=${encodeURIComponent(next)}`} className="text-ocean-500 hover:underline">
-              Create an account
+
+          {/* Role selector → login form */}
+          <RoleSelector next={next} slug={slug} error={sp.error} />
+
+          {/* Footer links */}
+          <p
+            className="mt-8 text-center text-[0.8rem]"
+            style={{ fontFamily: "var(--font-geist)", color: "var(--tray-muted)" }}
+          >
+            New campus?{" "}
+            <Link
+              href="/get-started"
+              className="font-semibold transition hover:opacity-75"
+              style={{ color: "var(--tray-clay)" }}
+            >
+              Set up Tray for free →
             </Link>
           </p>
         </div>
