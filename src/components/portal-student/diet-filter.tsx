@@ -33,8 +33,9 @@ export function DietFilterTabs({
             role="tab"
             aria-selected={active}
             onClick={() => onChange(t.v)}
+            style={{ fontFamily: "var(--font-barlow, var(--font-manrope))" }}
             className={cn(
-              "shrink-0 inline-flex items-center gap-1.5 h-9 px-3.5 rounded-full text-[13px] font-medium border transition-colors tabular",
+              "shrink-0 inline-flex items-center gap-1.5 h-9 px-4 rounded-full text-[13px] font-semibold uppercase tracking-[0.07em] border transition-colors tabular",
               active
                 ? "bg-ocean-500 text-white border-ocean-500"
                 : "border-[color:var(--color-line)] text-[color:var(--color-ink)]/75 hover:border-ocean-500/50"
