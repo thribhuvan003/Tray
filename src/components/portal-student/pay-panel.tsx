@@ -170,7 +170,7 @@ export function PayPanel({
           {/* Mobile: "Open UPI app" is the hero CTA */}
           <a
             href={upiUri}
-            className="md:hidden w-full h-14 text-[15px] inline-flex items-center justify-center gap-2 rounded-full bg-ocean-500 text-white font-medium hover:bg-ocean-600 transition-colors mb-1"
+            className="md:hidden w-full h-14 text-[15px] inline-flex items-center justify-center gap-2 rounded-full border-2 border-ocean-500 text-ocean-500 bg-transparent font-medium hover:bg-ocean-50 dark:hover:bg-ocean-500/10 transition-colors mb-1"
           >
             <Smartphone size={16} /> Open UPI app
           </a>
@@ -281,7 +281,7 @@ export function PayPanel({
           <button
             onClick={onIvePaid}
             disabled={verifying || Boolean(expired)}
-            className="inline-flex items-center justify-center gap-2 h-12 rounded-xl bg-[color:var(--color-ink)] text-[color:var(--color-paper)] text-[14px] font-medium hover:opacity-90 disabled:opacity-50 transition-opacity"
+            className="inline-flex items-center justify-center gap-2 h-12 rounded-xl bg-ocean-500 text-white text-[14px] font-medium hover:bg-ocean-600 disabled:opacity-50 transition-colors"
           >
             {verifying ? (
               <>
