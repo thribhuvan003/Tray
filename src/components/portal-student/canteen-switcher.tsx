@@ -212,14 +212,10 @@ export function CanteenSwitcher({
   collegeName,
   siblings,
 }: Props) {
+  // All hooks must be called unconditionally before any early return.
   const router = useRouter();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [popoverOpen, setPopoverOpen] = useState(false);
-
-  // Don't render the switcher if there's only one canteen
-  if (siblings.length <= 1) return null;
-
-  const location = [currentBuilding, currentZone].filter(Boolean).join(" · ");
 
   const handleSelect = useCallback(
     (slug: string) => {
@@ -229,6 +225,11 @@ export function CanteenSwitcher({
     },
     [router]
   );
+
+  // Don't render the switcher if there's only one canteen
+  if (siblings.length <= 1) return null;
+
+  const location = [currentBuilding, currentZone].filter(Boolean).join(" · ");
 
   const triggerContent = (
     <>
