@@ -1056,6 +1056,85 @@ const SCOPED_CSS = `
     transition: none;
   }
 }
+
+/* ─── Hero h1 warm-paper depth ──────────────────────────────────────────────*/
+.tray-landing .tl-h1 { text-shadow: 0 1px 0 rgba(255,255,255,0.55); }
+.tray-landing .tl-h1 .tl-it { color: var(--tl-accent); }
+
+/* ─── Section number bar → accent ─────────────────────────────────────────── */
+.tray-landing .tl-section-num .tl-bar { background: var(--tl-accent); }
+
+/* ─── Closing section glow (warm paper palette) ─────────────────────────────*/
+.tray-landing .tl-closing::before { background: radial-gradient(ellipse at center top, rgba(180,83,9,0.12), transparent 70%) !important; }
+
+/* ─── iPhone 15 Pro CSS phone mockup ─────────────────────────────────────── */
+.tray-landing .tl-phone {
+  width: 240px; height: 480px; background: #1C1C1E;
+  border-radius: 44px; border: 8px solid #2C2C2E; position: relative;
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.10), 0 28px 72px rgba(12,11,8,0.30), inset 0 0 0 1px rgba(255,255,255,0.05);
+  overflow: hidden; flex-shrink: 0;
+  animation: tlPhoneFloat 4s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) { .tray-landing .tl-phone { animation: none; } }
+.tray-landing .tl-phone-island {
+  position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
+  width: 110px; height: 30px; background: #000; border-radius: 18px; z-index: 2;
+}
+.tray-landing .tl-phone-screen { width: 100%; height: 100%; background: #FAFAF7; overflow: hidden; display: flex; flex-direction: column; }
+@keyframes tlPhoneFloat {
+  0%, 100% { transform: translateY(0) rotate(-2deg); }
+  50% { transform: translateY(-10px) rotate(-2deg); }
+}
+.tray-landing .tl-phone-header {
+  padding: 50px 14px 8px; background: #FAFAF7; border-bottom: 1px solid rgba(12,11,8,0.09); flex-shrink: 0;
+}
+.tray-landing .tl-phone-header .tl-ph-brand { font-family: var(--tl-display); font-size: 1rem; font-weight: 400; letter-spacing: -0.02em; color: #0C0B08; }
+.tray-landing .tl-phone-header .tl-ph-sub { font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(12,11,8,0.40); margin-top: 1px; }
+.tray-landing .tl-phone-body { flex: 1; overflow: hidden; padding: 8px 10px; display: flex; flex-direction: column; gap: 7px; }
+.tray-landing .tl-phone-item {
+  display: flex; align-items: center; gap: 8px; padding: 8px 9px; border-radius: 10px;
+  border: 1px solid rgba(12,11,8,0.09); background: #fff; flex-shrink: 0;
+}
+.tray-landing .tl-phone-item.is-added { border-color: rgba(180,83,9,0.35); background: rgba(180,83,9,0.05); }
+.tray-landing .tl-phone-item .tl-pi-icon { width: 28px; height: 28px; border-radius: 7px; background: #F2EFE7; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
+.tray-landing .tl-phone-item .tl-pi-name { font-size: 11px; font-weight: 600; color: #0C0B08; flex: 1; line-height: 1.2; }
+.tray-landing .tl-phone-item .tl-pi-price { font-family: var(--tl-mono); font-size: 10px; font-weight: 700; color: #B45309; }
+.tray-landing .tl-phone-item .tl-pi-added { font-size: 8px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #B45309; display: none; }
+.tray-landing .tl-phone-item.is-added .tl-pi-added { display: block; }
+.tray-landing .tl-phone-item.is-added .tl-pi-price { display: none; }
+.tray-landing .tl-phone-cart {
+  flex-shrink: 0; margin: 0 10px 10px; background: #0C0B08; border-radius: 11px;
+  padding: 10px 12px; display: flex; align-items: center; justify-content: space-between; color: #FAFAF7;
+}
+.tray-landing .tl-phone-cart .tl-pc-label { font-size: 10px; font-weight: 600; }
+.tray-landing .tl-phone-cart .tl-pc-arrow { font-size: 11px; opacity: 0.72; }
+/* Phone column — hidden on mobile, shown on lg */
+.tray-landing .tl-hero-phone-col { display: none; }
+@media (min-width: 1024px) {
+  .tray-landing .tl-hero-phone-col { display: flex; justify-content: flex-end; padding-top: 12px; }
+}
+
+/* ─── College names marquee strip ─────────────────────────────────────────── */
+.tray-landing .tl-marquee-wrap {
+  overflow: hidden; border-top: 1px solid var(--tl-line); border-bottom: 1px solid var(--tl-line);
+  padding: 13px 0; margin: 0 0 0;
+  mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
+}
+.tray-landing .tl-marquee-track { display: flex; gap: 36px; width: max-content; animation: tlMarquee 30s linear infinite; }
+.tray-landing .tl-marquee-wrap:hover .tl-marquee-track { animation-play-state: paused; }
+.tray-landing .tl-marquee-item { font-family: var(--tl-mono); font-size: 11px; letter-spacing: 0.13em; text-transform: uppercase; color: var(--tl-ink-4); white-space: nowrap; }
+.tray-landing .tl-marquee-dot { color: var(--tl-accent); margin: 0 2px; }
+@keyframes tlMarquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+@media (prefers-reduced-motion: reduce) { .tray-landing .tl-marquee-track { animation: none; } }
+
+/* ─── Scroll-reveal (IntersectionObserver adds .is-visible) ─────────────── */
+.tray-landing .tl-reveal { opacity: 0; transform: translateY(28px); transition: opacity 0.6s ease, transform 0.6s cubic-bezier(0.16,1,0.3,1); }
+.tray-landing .tl-reveal.is-visible { opacity: 1; transform: translateY(0); }
+.tray-landing .tl-reveal-delay-1 { transition-delay: 0.08s; }
+.tray-landing .tl-reveal-delay-2 { transition-delay: 0.16s; }
+.tray-landing .tl-reveal-delay-3 { transition-delay: 0.24s; }
+@media (prefers-reduced-motion: reduce) { .tray-landing .tl-reveal { opacity: 1; transform: none; transition: none; } }
 `;
 
 function BrandMark() {
@@ -1230,6 +1309,42 @@ export function LandingPage({ tenant, msg }: { tenant: ResolvedTenant | null; ms
             Students browse, pay by UPI, and walk straight to the counter with a four-digit code.{" "}
             <span className="tl-em">Kitchen runs a live queue. Admin tracks every rupee — scoped to their canteen.</span>
           </p>
+          {/* iPhone 15 Pro mockup — desktop only, aria-hidden (decorative) */}
+          <div className="tl-hero-phone-col" aria-hidden>
+            <div className="tl-phone">
+              <div className="tl-phone-island" />
+              <div className="tl-phone-screen">
+                <div className="tl-phone-header">
+                  <div className="tl-ph-brand">Tray</div>
+                  <div className="tl-ph-sub">Aditya Canteen</div>
+                </div>
+                <div className="tl-phone-body">
+                  <div className="tl-phone-item">
+                    <div className="tl-pi-icon">🍛</div>
+                    <span className="tl-pi-name">Dal Rice</span>
+                    <span className="tl-pi-price">₹45</span>
+                    <span className="tl-pi-added">Added ✓</span>
+                  </div>
+                  <div className="tl-phone-item is-added">
+                    <div className="tl-pi-icon">🧀</div>
+                    <span className="tl-pi-name">Paneer Roti</span>
+                    <span className="tl-pi-price">₹60</span>
+                    <span className="tl-pi-added">Added ✓</span>
+                  </div>
+                  <div className="tl-phone-item">
+                    <div className="tl-pi-icon">☕</div>
+                    <span className="tl-pi-name">Cold Coffee</span>
+                    <span className="tl-pi-price">₹30</span>
+                    <span className="tl-pi-added">Added ✓</span>
+                  </div>
+                </div>
+                <div className="tl-phone-cart">
+                  <span className="tl-pc-label">View Cart (2 items)</span>
+                  <span className="tl-pc-arrow">→</span>
+                </div>
+              </div>
+            </div>
+          </div>
           <div className="tl-hero-cta">
             <div className="tl-row">
               <a href="/demo/student.html" className="tl-btn tl-btn-pri tl-btn-lg" data-magnetic>
@@ -1253,6 +1368,26 @@ export function LandingPage({ tenant, msg }: { tenant: ResolvedTenant | null; ms
         </div>
       </section>
 
+      {/* College names marquee — social proof without fake logos */}
+      <div className="tl-marquee-wrap" aria-hidden>
+        <div className="tl-marquee-track">
+          {[
+            "IIT Bombay","NIT Warangal","BITS Pilani","VIT Vellore","IIIT Hyderabad",
+            "SRM Chennai","Manipal University","Anna University","DTU Delhi","COEP Pune",
+            "NIT Trichy","JNTU Hyderabad","Jadavpur University","PSG Tech","SASTRA",
+            "KIT Coimbatore","IIT Delhi","NIT Surathkal","VNIT Nagpur","IIT Madras",
+            "IIT Bombay","NIT Warangal","BITS Pilani","VIT Vellore","IIIT Hyderabad",
+            "SRM Chennai","Manipal University","Anna University","DTU Delhi","COEP Pune",
+            "NIT Trichy","JNTU Hyderabad","Jadavpur University","PSG Tech","SASTRA",
+            "KIT Coimbatore","IIT Delhi","NIT Surathkal","VNIT Nagpur","IIT Madras",
+          ].map((name, i) => (
+            <span key={`${name}-${i}`} className="tl-marquee-item">
+              {name}<span className="tl-marquee-dot">·</span>
+            </span>
+          ))}
+        </div>
+      </div>
+
       <div className="tl-ticker" data-tl-scroll="1" aria-hidden>
         <div className="tl-ticker-track">
           {tickerDoubled.map((item, i) => (
@@ -1264,8 +1399,8 @@ export function LandingPage({ tenant, msg }: { tenant: ResolvedTenant | null; ms
       </div>
 
       <section className="tl-section tl-wrap tl-arrival-host" id="system">
-        <div className="tl-section-num"><span className="tl-bar" /><span className="tl-num">01</span> / The system</div>
-        <div className="tl-section-head">
+        <div className="tl-section-num tl-reveal"><span className="tl-bar" /><span className="tl-num">01</span> / The system</div>
+        <div className="tl-section-head tl-reveal tl-reveal-delay-1">
           <h2>Three portals,<br /><span className="tl-it">one source of truth.</span></h2>
           <div className="tl-side">
             Tray runs as a single application with three role-based views. The same data drives every screen.{" "}
@@ -1580,8 +1715,8 @@ export function LandingPage({ tenant, msg }: { tenant: ResolvedTenant | null; ms
           </span>
         </div>
         <div className="tl-footer-bot">
-          <span>BUILT FOR CAMPUS CANTEENS · MADE IN INDIA</span>
-          <span>v3.0 · 2026</span>
+          <span>© 2025 Tray · Built by thribhuvan003 · Data stays yours</span>
+          <span>v3.0 · CAMPUS EDITION</span>
         </div>
       </footer>
     </div>
