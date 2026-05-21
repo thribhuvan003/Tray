@@ -113,8 +113,8 @@ export async function cancelOrderByStudent(orderId: string): Promise<CancelResul
   // Best-effort refund — don't block the cancellation on refund success.
   void initiateRefundForOrder(orderId, tenant.id).catch(() => {});
 
-  revalidatePath(`/track/${orderId}`);
-  revalidatePath("/orders");
+  revalidatePath(`/c/${tenant.slug}/track/${orderId}`);
+  revalidatePath(`/c/${tenant.slug}/orders`);
   return { ok: true };
 }
 
