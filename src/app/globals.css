@@ -295,3 +295,95 @@ html.dark [data-portal="kitchen"] {
 }
 
 /* ─── No-fancy spinning rings, no scanlines, no cursor glow — per design call. ─── */
+
+/* ════════════════════════════════════════════════════════════════════
+   TRAY LANDING + MOTION SYSTEM
+   Sand (#D8C9AE) + Charcoal (#575757) palette — landing page only.
+   Student: Amber (#E9D9C9) + Blue Mirage (#6E86AB).
+   ════════════════════════════════════════════════════════════════════ */
+
+:root {
+  /* Landing palette */
+  --tray-bg:      #D8C9AE;
+  --tray-surface: #CAB99C;
+  --tray-ink:     #1A1614;
+  --tray-muted:   #575757;
+  --tray-clay:    #B8531A;
+  --tray-green:   #2A6E3A;
+  --tray-border:  rgba(87, 87, 87, 0.14);
+  --tray-cream:   #EDE5D2;   /* used in overlays / ghost bg */
+  --tray-shadow:  rgba(26, 22, 20, 0.10);
+
+  /* Condensed display (Druk-like) — Barlow Condensed Black */
+  --font-display-cond: var(--font-barlow), system-ui, sans-serif;
+
+  /* Semantic font shortcuts (landing + app) */
+  --font-editorial: var(--font-fraunces), var(--font-cormorant), Georgia, serif;
+  --font-ui:        var(--font-geist), var(--font-inter), system-ui, sans-serif;
+  --font-code:      var(--font-dm-mono), var(--font-jetbrains), ui-monospace, monospace;
+}
+
+/* Student portal — Amber + Blue Mirage */
+[data-portal="student"] {
+  --color-paper:     #E9D9C9;
+  --color-paper-dim: #DCCDB9;
+  --color-ink:       #2A1F18;
+  --color-ocean-50:  #EEF2F8;
+  --color-ocean-100: #D6DFEE;
+  --color-ocean-200: #ADC0DF;
+  --color-ocean-300: #8AA3CC;
+  --color-ocean-400: #7A95C0;
+  --color-ocean-500: #6E86AB;   /* Blue Mirage primary */
+  --color-ocean-600: #5B7199;
+  --color-ocean-700: #485D82;
+  --color-ocean-900: #1E2E48;
+}
+
+/* ── Landing page ambient background ─────────────────────────────── */
+.tray-page {
+  min-height: 100svh;
+  background:
+    radial-gradient(circle at 15% 10%, rgba(184, 83, 26, 0.12), transparent 30rem),
+    radial-gradient(circle at 85% 20%, rgba(42, 110, 58, 0.09), transparent 28rem),
+    var(--tray-bg);
+  color: var(--tray-ink);
+}
+
+/* ── Utility classes ─────────────────────────────────────────────── */
+.font-editorial { font-family: var(--font-editorial); }
+.font-cond      { font-family: var(--font-display-cond); }
+.font-ui        { font-family: var(--font-ui); }
+.font-code      { font-family: var(--font-code); }
+
+.tray-safe-bottom {
+  padding-bottom: max(1.25rem, env(safe-area-inset-bottom));
+}
+
+.tray-no-scrollbar::-webkit-scrollbar { display: none; }
+.tray-no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* Split-word masking for GSAP word-reveal */
+.split-word {
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: top;
+}
+.split-word > span {
+  display: inline-block;
+  will-change: transform, opacity;
+}
+
+/* GPU hint for animated elements */
+.motion-card { will-change: transform, opacity; }
+
+/* Ghost "TRAY" watermark used in footer */
+.tray-ghost-word {
+  font-family: var(--font-editorial);
+  font-weight: 900;
+  color: var(--tray-muted);
+  opacity: 0.08;
+  user-select: none;
+  pointer-events: none;
+  letter-spacing: -0.07em;
+  line-height: 0.84;
+}

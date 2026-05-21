@@ -102,9 +102,9 @@ const dmMono = DM_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Tray — Skip the line. Eat sooner.",
+  title: "Tray — Campus food, without the queue.",
   description:
-    "A canteen ordering system for college campuses. Order on your phone, pay by UPI, collect with a 4-digit code.",
+    "Students order from any canteen in their campus. Kitchens run live queues. Admins see orders, revenue, and handovers in real time.",
   metadataBase: new URL(process.env.APP_URL ?? "http://localhost:3000"),
   openGraph: {
     title: "Tray",

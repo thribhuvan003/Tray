@@ -1,17 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowLeft, Clock, History, User } from "lucide-react";
-import { useEffect, useState } from "react";
+import { Clock, History, User } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { ResolvedTenant, CollegeCanteen } from "@/lib/tenant";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
-import { CanteenSwitcher } from "@/components/portal-student/canteen-switcher";
+import { CanteenSwitcher, type CanteenOption } from "@/components/portal-student/canteen-switcher";
 
 function currentServiceLabel(): string {
-  const nowUtcMs = Date.now();
-  const istOffsetMs = 5.5 * 60 * 60 * 1000;
-  const h = new Date(nowUtcMs + istOffsetMs).getUTCHours();
+  const h = new Date(Date.now() + 5.5 * 3600000).getUTCHours();
   if (h < 11) return "Breakfast";
   if (h < 15) return "Lunch";
   if (h < 18) return "Evening";
@@ -24,29 +22,40 @@ type Props = {
 };
 
 export function StudentTopBar({ tenant, siblings = [] }: Props) {
-  const [t, setT] = useState<string>("");
-  const [serviceLabel, setServiceLabel] = useState<string>(() => currentServiceLabel());
+  const [t, setT] = useState("");
+  const [serviceLabel, setServiceLabel] = useState(() => currentServiceLabel());
   const router = useRouter();
 
   useEffect(() => {
     const tick = () =>
-      setT(
-        new Intl.DateTimeFormat("en-IN", {
-          hour: "2-digit",
-          minute: "2-digit",
-          hour12: false,
-          timeZone: "Asia/Kolkata",
-        }).format(new Date())
-      );
+      setT(new Intl.DateTimeFormat("en-IN", {
+        hour: "2-digit", minute: "2-digit", hour12: false, timeZone: "Asia/Kolkata",
+      }).format(new Date()));
     tick();
-    const id = setInterval(() => {
-      tick();
-      setServiceLabel(currentServiceLabel());
-    }, 60_000);
+    const id = setInterval(() => { tick(); setServiceLabel(currentServiceLabel()); }, 60_000);
     return () => clearInterval(id);
   }, []);
 
-  const hasMultipleCanteens = siblings.length > 1;
+  // Convert CollegeCanteen[] to CanteenOption[] for the switcher
+  const canteenOptions = useMemo<CanteenOption[]>(() => {
+    if (siblings.length === 0) return [];
+    return siblings.map((c) => ({
+      id: c.slug,
+      name: c.name,
+      location: [c.building, c.zone].filter(Boolean).join(" · ") || null,
+      isOpen: c.is_open,
+      dishCount: undefined,
+      queueMinutes: c.is_open
+        ? Math.min(20, Math.max(3, 3 + c.pending_orders_count))
+        : undefined,
+    }));
+  }, [siblings]);
+
+  function handleCanteenSelect(canteen: CanteenOption) {
+    if (canteen.id !== tenant.slug) {
+      router.push(`/c/${canteen.id}/menu`);
+    }
+  }
 
   return (
     <header
@@ -54,52 +63,34 @@ export function StudentTopBar({ tenant, siblings = [] }: Props) {
       style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
     >
       <div className="mx-auto max-w-5xl px-4 sm:px-6 h-14 flex items-center justify-between gap-3">
-        {/* Left: back + brand */}
-        <div className="flex items-center gap-3 flex-shrink-0">
-          <button
-            aria-label="Go back"
-            onClick={() => router.back()}
-            className="inline-flex items-center gap-1 text-[12px] font-mono text-[color:var(--color-ink)]/50 hover:text-[color:var(--color-ink)] transition-colors"
-          >
-            <ArrowLeft size={13} /> Back
-          </button>
-          <Link
-            href={`/c/${tenant.slug}/menu`}
-            className="inline-flex items-center gap-2 font-display text-[17px] tracking-tight"
-          >
-            <span className="inline-flex h-6 w-6 items-center justify-center rounded-md bg-ocean-500 text-white font-mono text-[11px] font-bold">
-              T
-            </span>
-            <span className="font-medium hidden sm:inline">
-              Tray<span className="italic text-ocean-500">.</span>
-            </span>
-          </Link>
-        </div>
+        {/* Left: brand */}
+        <Link
+          href={`/c/${tenant.slug}/menu`}
+          className="flex-shrink-0 inline-flex items-center gap-2 text-[17px] tracking-tight"
+        >
+          <span className="inline-flex h-6 w-6 items-center justify-center rounded-md bg-ocean-500 text-white font-mono text-[11px] font-bold">T</span>
+          <span className="font-semibold hidden sm:inline">Tray<span className="italic text-ocean-500">.</span></span>
+        </Link>
 
-        {/* Center: canteen switcher or static name */}
+        {/* Center: canteen switcher (if campus has siblings) or static name */}
         <div className="flex flex-col items-center flex-1 min-w-0 px-2">
-          {hasMultipleCanteens ? (
+          {canteenOptions.length > 1 ? (
             <CanteenSwitcher
-              currentSlug={tenant.slug}
-              currentName={tenant.name}
-              currentBuilding={tenant.building ?? null}
-              currentZone={tenant.zone ?? null}
-              currentIsOpen={tenant.is_open ?? true}
-              collegeName={tenant.college_name}
-              collegeSlug={tenant.college_slug}
-              siblings={siblings}
+              canteens={canteenOptions}
+              selectedCanteenId={tenant.slug}
+              onSelect={handleCanteenSelect}
             />
           ) : (
-            <>
+            <div className="text-center">
               <div className="text-[13px] font-semibold tracking-tight text-[color:var(--color-ink)] truncate max-w-[180px] sm:max-w-none">
                 {tenant.name}
               </div>
-              <div className="hidden sm:flex text-[10px] font-mono uppercase tracking-[0.14em] text-[color:var(--color-ink)]/45">
+              <div className="text-[10px] font-mono uppercase tracking-[0.14em] text-[color:var(--color-ink)]/45">
                 {tenant.college_name}
               </div>
-            </>
+            </div>
           )}
-          <div className="text-[10px] font-mono tabular text-[color:var(--color-ink)]/40 flex items-center gap-1.5 mt-0.5">
+          <div className="text-[10px] font-mono tabular text-[color:var(--color-ink)]/40 flex items-center gap-1 mt-0.5">
             <Clock size={9} />
             <span>{serviceLabel} · {t || "--:--"} IST</span>
           </div>
@@ -116,7 +107,7 @@ export function StudentTopBar({ tenant, siblings = [] }: Props) {
             <History size={15} />
           </Link>
           <Link
-            href={`/c/${tenant.slug}/login`}
+            href="/login"
             aria-label="Account"
             className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[color:var(--color-line)] hover:border-ocean-500 hover:text-ocean-500 transition-colors"
           >
