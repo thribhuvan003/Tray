@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, Fraunces, Manrope, JetBrains_Mono, Instrument_Serif, Geist, Geist_Mono } from "next/font/google";
+import { Inter, Fraunces, Manrope, JetBrains_Mono, Instrument_Serif, Geist, Geist_Mono, DM_Mono } from "next/font/google";
 import { headers } from "next/headers";
 import { Toaster } from "sonner";
 import { resolveTenant } from "@/lib/tenant";
@@ -44,6 +44,13 @@ const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   display: "swap",
 });
+const dmMono = DM_Mono({
+  subsets: ["latin"],
+  weight: ["300", "400", "500"],
+  style: ["normal", "italic"],
+  variable: "--font-dm-mono",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "Tray — Skip the line. Eat sooner.",
@@ -82,7 +89,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       lang="en"
       data-tenant-id={tenant?.id ?? ""}
       data-tenant-slug={tenant?.slug ?? ""}
-      className={`${inter.variable} ${fraunces.variable} ${manrope.variable} ${jetbrains.variable} ${instrumentSerif.variable} ${geist.variable} ${geistMono.variable}`}
+      className={`${inter.variable} ${fraunces.variable} ${manrope.variable} ${jetbrains.variable} ${instrumentSerif.variable} ${geist.variable} ${geistMono.variable} ${dmMono.variable}`}
       suppressHydrationWarning
     >
       <head>
