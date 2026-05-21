@@ -391,7 +391,7 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
               Try full demo →
             </a>
             <Link href="/get-started" className="rounded-full border border-[var(--tray-border)] px-8 py-4 text-sm font-semibold transition hover:bg-white/30">
-              Set up my campus — free
+              I have a canteen →
             </Link>
           </div>
 
@@ -403,21 +403,6 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
         className="relative overflow-hidden border-t border-[var(--tray-border)] px-5 pb-8 pt-12 sm:px-8 lg:px-10"
         style={{ paddingBottom: "max(2rem, env(safe-area-inset-bottom))" }}
       >
-        {/* Ghost TRAY watermark — bottom-right corner with gap */}
-        <div
-          aria-hidden
-          className="pointer-events-none absolute bottom-0 right-6 select-none leading-[0.80] tracking-[-0.07em] sm:right-10"
-          style={{
-            fontFamily: "var(--font-barlow)",
-            fontWeight: 900,
-            fontSize: "clamp(5rem, 18vw, 18rem)",
-            textTransform: "uppercase",
-            color: "var(--tray-muted)",
-            opacity: 0.07,
-          }}
-        >
-          TRAY
-        </div>
         <div className="mx-auto max-w-7xl">
           <div className="relative z-10 grid gap-10 sm:grid-cols-2 lg:grid-cols-[2fr_1fr_1fr_1fr]">
             {/* Brand */}

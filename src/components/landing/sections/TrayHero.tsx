@@ -154,7 +154,7 @@ export function TrayHero() {
               className="rounded-full border border-[var(--tray-border)] px-7 py-4 text-[0.9rem] transition hover:bg-white/40"
               style={{ fontFamily: "var(--font-geist)", fontWeight: 600 }}
             >
-              Set up my campus — free
+              I have a canteen →
             </Link>
           </div>
         </div>

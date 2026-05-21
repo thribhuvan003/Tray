@@ -86,7 +86,7 @@ export default async function LoginPage({
               className="font-semibold transition hover:opacity-75"
               style={{ color: "var(--tray-clay)" }}
             >
-              Set up Tray for free →
+              I have a canteen — set it up free →
             </Link>
           </p>
         </div>
