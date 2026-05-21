@@ -28,3 +28,32 @@ Read **`docs/PARALLEL-WORK.md`** and **`docs/DEMO-SPEC.md`** before planning or 
 - RLS / migrations — all roles: student, kitchen_staff, canteen_admin, super_admin
 - Razorpay webhooks — HMAC + idempotency
 - Money / order status transitions
+
+## Cursor Cloud specific instructions
+
+### Services
+
+| Service | How to run | Notes |
+| ------- | ---------- | ----- |
+| Next.js dev server | `pnpm dev` | Serves all portals on `localhost:3000` |
+
+Use `?tenant=aditya` query param for local subdomain simulation (e.g. `http://localhost:3000/menu?tenant=aditya`).
+
+### Verification commands
+
+See `package.json` scripts — the key ones:
+- `pnpm lint` — ESLint via Next.js
+- `pnpm typecheck` — `tsc --noEmit`
+- `pnpm build` — full production build
+
+### Environment
+
+- **Node 22 + pnpm 10** are required (matches CI).
+- `.env.local` must exist with at minimum `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`. These are injected as Cloud Agent secrets.
+- Optional services (Razorpay, Resend, Upstash Redis, QStash) degrade gracefully when their env vars are blank.
+- The `pnpm install` warning about ignored build scripts for `sharp` and `unrs-resolver` is harmless — no action needed.
+
+### Gotchas
+
+- Kitchen (`/kitchen`) and Admin (`/admin/*`) routes require authentication — they redirect to login when not logged in. This is expected behavior, not an error.
+- The default branch is `main`. Always work from `main` unless told otherwise.
