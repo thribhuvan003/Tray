@@ -76,47 +76,27 @@ const fetchTenantUncached = async (slug: string): Promise<ResolvedTenant | null>
     logo_url: string | null;
     allowed_domain: string | null;
     upi_vpa: string | null;
+    // Extended fields returned by the updated SECURITY DEFINER RPC
+    college_slug: string | null;
+    building: string | null;
+    zone: string | null;
+    is_open: boolean;
   };
   if (!row) return null;
-
-  // Fetch college_slug via tenants→colleges join (cached separately).
-  // Uses anon key so college table must have public SELECT.
-  let college_slug: string | null = null;
-  let building: string | null = null;
-  let zone: string | null = null;
-  let is_open = true;
-
-  try {
-    const { data: tenantRow } = await client
-      .from("tenants")
-      .select("college_id, building, zone, is_open, colleges(slug)")
-      .eq("slug", slug)
-      .single();
-
-    if (tenantRow) {
-      building = tenantRow.building ?? null;
-      zone = tenantRow.zone ?? null;
-      is_open = tenantRow.is_open ?? true;
-      const colleges = tenantRow.colleges as unknown as { slug: string } | null;
-      college_slug = colleges?.slug ?? null;
-    }
-  } catch {
-    // Graceful degradation — college switcher won't show if this fails
-  }
 
   return {
     id: row.id,
     slug: row.slug,
     name: row.name,
     college_name: row.college_name,
-    college_slug,
+    college_slug: row.college_slug ?? null,
     hero_tagline: row.hero_tagline,
     logo_url: row.logo_url,
     allowed_domain: row.allowed_domain ?? null,
     upi_vpa: row.upi_vpa ?? null,
-    building,
-    zone,
-    is_open,
+    building: row.building ?? null,
+    zone: row.zone ?? null,
+    is_open: row.is_open ?? true,
   };
 };
 
