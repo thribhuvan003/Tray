@@ -96,6 +96,27 @@ async function waitAndClick(page, selector, label, timeout = 15000) {
   info(`Clicked: ${label}`);
 }
 
+async function clickUntilVisible(page, clickSelector, targetSelector, label, maxRetries = 5) {
+  const clickLoc = page.locator(clickSelector).first();
+  const targetLoc = page.locator(targetSelector).first();
+  
+  await clickLoc.waitFor({ state: "visible", timeout: 15000 });
+  
+  for (let i = 1; i <= maxRetries; i++) {
+    info(`Attempting to click "${label}" (try ${i}/${maxRetries})…`);
+    await clickLoc.click();
+    try {
+      await targetLoc.waitFor({ state: "visible", timeout: 3000 });
+      info(`Success! Target selector "${targetSelector}" is now visible.`);
+      return;
+    } catch {
+      info(`Target selector "${targetSelector}" not visible yet, retrying…`);
+      await page.waitForTimeout(1000);
+    }
+  }
+  throw new Error(`Failed to make "${targetSelector}" visible after clicking "${label}" ${maxRetries} times.`);
+}
+
 /* ─── Main test ─────────────────────────────────────────────────────────────── */
 async function main() {
   console.log("\n🧪 Tray QA Verification — New Features E2E Test");
