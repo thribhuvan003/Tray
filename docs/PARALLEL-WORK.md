@@ -589,3 +589,16 @@ pm run typecheck passes. Restart dev if port 3000 hangs: NODE_OPTIONS=--max-old-
 - **Verified**: Confirmed all 12 Awwwards-tier section scroll animations are running beautifully via the central orchestrator `landing-motion.tsx`.
 - **Status**: All quality gates remain at 100% green status with zero TypeScript compile, ESLint, or static verification errors.
 
+### 2026-05-23 — Visual & Layout Polish Final Verification (resume)
+
+- **Verified**: Audited all 7 implementation plan tasks against live codebase — all completed by prior sessions:
+  1. Checkout blue leakage fixed — QR `fgColor="#1A1A19"`, shadows `rgba(26,26,25,0.06)`, dark-mode `--color-ocean-*` overrides in `globals.css`.
+  2. Demo defaults synced — `DEFAULT_ID="aditya"`, admin sidebar shows "Aditya Eng. Canteen".
+  3. Admin graphs — `--lime: #cdfa50` (lime green confirmed).
+  4. Portal preview cards — `TryDemoSection` above `PiranhaPortalsSection`; `rounded-[3rem]`, `p-8 sm:p-10`, 420px iframe, no borders, no fade.
+  5. Steps polished — Step 5 tag "READY", kinetic hover transitions.
+  6. Footer — no border-t, no meta-bar, watermark `clamp(14rem, 24vw, 24rem)`, bold sizes.
+  7. "Active network counters" and VEG badge removed from MetricsAndTicker.
+- **Cleanup**: Removed unused `FSSAIBadge` import from `MetricsAndTicker.tsx`.
+- **Verified**: `npm run typecheck` → 0 errors. `npm run lint` → 0 warnings. `npm run demo:verify` → all 4 pages pass.
+
