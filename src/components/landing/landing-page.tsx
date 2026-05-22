@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { ResolvedTenant } from "@/lib/tenant";
 import { LandingLineLeave } from "@/components/landing/landing-line-leave";
 import { LandingMotion } from "@/components/landing/landing-motion";
+import { LandingSplash } from "@/components/landing/landing-splash";
 
 // Pre-Monsoon Dusk — sky slate + bone + amber accent. Instrument Serif headlines.
 // Scoped to .tray-landing only; student/kitchen/admin portals stay separate.
@@ -52,7 +53,7 @@ const SCOPED_CSS = `
 .tray-landing .tl-nav { position: sticky; top: 0; z-index: 50; backdrop-filter: blur(20px) saturate(1.4); background: rgba(13, 18, 32, 0.78); border-bottom: 1px solid var(--tl-line); }
 .tray-landing .tl-nav-inner { max-width: 1280px; margin: 0 auto; padding: 14px 24px; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
 @media (min-width: 768px) { .tray-landing .tl-nav-inner { padding: 14px 56px; } }
-.tray-landing .tl-brand { display: flex; align-items: center; gap: 10px; font-family: var(--font-instrument-serif), serif; font-size: 26px; letter-spacing: -0.02em; font-weight: 400; }
+.tray-landing .tl-brand { display: flex; align-items: center; gap: 0; font-family: var(--font-instrument-serif), serif; font-size: 32px; letter-spacing: -0.03em; font-weight: 400; }
 .tray-landing .tl-brand .tl-brand-dot { font-style: italic; color: var(--tl-persimmon); }
 .tray-landing .tl-brand-mark { width: 32px; height: 32px; border-radius: 7px; background: linear-gradient(135deg, var(--tl-accent), #8a7358); display: inline-flex; align-items: center; justify-content: center; font-family: var(--font-instrument-serif), serif; font-weight: 400; font-size: 18px; color: var(--tl-bg); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .12); }
 .tray-landing .tl-nav-links { display: none; gap: 32px; font-size: 14px; color: var(--tl-ink-2); }
@@ -60,12 +61,12 @@ const SCOPED_CSS = `
 .tray-landing .tl-nav-links a:hover { color: var(--tl-ink); }
 .tray-landing .tl-nav-cta { display: flex; gap: 10px; align-items: center; }
 
-.tray-landing .tl-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 10px 18px; border-radius: 999px; font-size: 14px; font-weight: 500; border: 1px solid transparent; transition: transform .12s, background .15s, color .15s, border-color .15s; line-height: 1; font-family: inherit; cursor: pointer; }
+.tray-landing .tl-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 12px 22px; border-radius: 999px; font-size: 15px; font-weight: 500; border: 1px solid transparent; transition: transform .12s, background .15s, color .15s, border-color .15s; line-height: 1; font-family: inherit; cursor: pointer; }
 .tray-landing .tl-btn-pri { background: var(--tl-ink); color: var(--tl-bg); border-color: var(--tl-ink); }
 .tray-landing .tl-btn-pri:hover { background: #fff; transform: translateY(-1px); }
 .tray-landing .tl-btn-ghost { color: var(--tl-ink); background: transparent; border-color: var(--tl-line-2); }
 .tray-landing .tl-btn-ghost:hover { background: rgba(255, 255, 255, .05); border-color: var(--tl-ink-3); }
-.tray-landing .tl-btn-lg { padding: 14px 24px; font-size: 15px; }
+.tray-landing .tl-btn-lg { padding: 16px 30px; font-size: 16px; }
 
 .tray-landing a:focus { outline: none; }
 .tray-landing a:focus-visible,
@@ -125,12 +126,11 @@ const SCOPED_CSS = `
 .tray-landing .tl-hero-cta .tl-note { font-family: var(--font-geist-mono), monospace; font-size: 11px; color: var(--tl-ink-3); letter-spacing: 0.08em; text-align: left; }
 @media (min-width: 960px) { .tray-landing .tl-hero-cta .tl-note { text-align: right; } }
 
-.tray-landing .tl-hero-stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0; padding: 24px 0 0; border-top: 1px solid var(--tl-line); }
-@media (min-width: 768px) { .tray-landing .tl-hero-stats { grid-template-columns: repeat(4, 1fr); padding-top: 32px; } }
+.tray-landing .tl-hero-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; padding: 24px 0 0; border-top: 1px solid var(--tl-line); }
+@media (min-width: 768px) { .tray-landing .tl-hero-stats { grid-template-columns: repeat(3, 1fr); padding-top: 32px; } }
 .tray-landing .tl-hero-stat { padding: 16px 16px 16px 0; border-right: 1px solid var(--tl-line); display: flex; flex-direction: column; gap: 4px; }
 @media (min-width: 768px) { .tray-landing .tl-hero-stat { padding: 0 24px 0 0; } .tray-landing .tl-hero-stat:not(:first-child) { padding-left: 24px; } }
-.tray-landing .tl-hero-stat:nth-child(2n) { border-right: 0; }
-@media (min-width: 768px) { .tray-landing .tl-hero-stat:nth-child(2n) { border-right: 1px solid var(--tl-line); } .tray-landing .tl-hero-stat:last-child { border-right: 0; } }
+.tray-landing .tl-hero-stat:last-child { border-right: 0; }
 .tray-landing .tl-hero-stat .tl-v { font-family: var(--font-instrument-serif), serif; font-size: clamp(32px, 5vw, 48px); letter-spacing: -0.025em; line-height: 1; font-weight: 400; }
 .tray-landing .tl-hero-stat .tl-v .tl-it { font-style: italic; color: var(--tl-persimmon); }
 .tray-landing .tl-hero-stat .tl-l { font-family: var(--font-geist-mono), monospace; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--tl-ink-3); font-weight: 500; }
@@ -280,7 +280,7 @@ const SCOPED_CSS = `
 function BrandMark() {
   return (
     <Link href="/" className="tl-brand">
-      <span className="tl-brand-mark">T</span>Tray<span className="tl-brand-dot">.</span>
+      Tray<span className="tl-brand-dot">.</span>
     </Link>
   );
 }
@@ -329,6 +329,7 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
   const tickerDoubled = [...TICKER_ITEMS, ...TICKER_ITEMS];
   return (
     <div className="tray-landing">
+      <LandingSplash />
       <style dangerouslySetInnerHTML={{ __html: SCOPED_CSS }} />
       <div className="tl-grain" />
       <LandingMotion />
@@ -355,291 +356,290 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
       </nav>
 
       <main id="main">
-      <section className="tl-hero tl-wrap">
-        <div className="tl-hero-top">
-          <div className="tl-l">
-            <span>TRAY · v3.0</span>
-            <span style={{ color: "var(--tl-ink-4)" }}>/</span>
-            <span>CAMPUS EDITION</span>
-          </div>
-          <div className="tl-r">
-            <span className="tl-live"><span className="tl-d" />Kitchen open</span>
-          </div>
-        </div>
-        <h1 className="tl-h1">
-          <HeroWords text="A canteen system" />
-          <br />
-          <HeroWords text="for the whole campus." italicFrom={2} />
-        </h1>
-        <div className="tl-hero-meta">
-          <p className="tl-hero-lede">
-            Tray replaces the printed-token queue with a phone-first ordering system.{" "}
-            <span className="tl-em">Students choose dine-in or takeaway, pay on phone, then walk to handover.</span>{" "}
-            The kitchen sees a live queue. Pickup is verified with a four-digit code. One system, three portals, every metric in real time.
-          </p>
-          <div className="tl-hero-cta">
-            <div className="tl-row">
-              <a href="/demo/index.html" className="tl-btn tl-btn-pri tl-btn-lg">Try the live demo →</a>
-              <a href="#system" className="tl-btn tl-btn-ghost tl-btn-lg">See the system</a>
+        <section className="tl-hero tl-wrap">
+          <div className="tl-hero-top">
+            <div className="tl-l">
+              <span>TRAY · v3.0</span>
+              <span style={{ color: "var(--tl-ink-4)" }}>/</span>
+              <span>CAMPUS EDITION</span>
             </div>
-            <div className="tl-note">DEMO IS LIVE · NO SIGN-UP · 90-SECOND TOUR</div>
+            <div className="tl-r">
+              <span className="tl-live"><span className="tl-d" />Kitchen open</span>
+            </div>
+          </div>
+          <h1 className="tl-h1">
+            <HeroWords text="A canteen system" />
+            <br />
+            <HeroWords text="for the whole campus." italicFrom={2} />
+          </h1>
+          <div className="tl-hero-meta">
+            <p className="tl-hero-lede">
+              Tray replaces the printed-token queue with a phone-first ordering system.{" "}
+              <span className="tl-em">Students choose dine-in or takeaway, pay on phone, then walk to handover.</span>{" "}
+              The kitchen sees a live queue. Pickup is verified with a four-digit code. One system, three portals, every metric in real time.
+            </p>
+            <div className="tl-hero-cta">
+              <div className="tl-row">
+                <a href="/demo/index.html" className="tl-btn tl-btn-pri tl-btn-lg">Try the live demo →</a>
+                <a href="#system" className="tl-btn tl-btn-ghost tl-btn-lg">See the system</a>
+              </div>
+              <div className="tl-note">DEMO IS LIVE · NO SIGN-UP · 90-SECOND TOUR</div>
+            </div>
+          </div>
+          <div className="tl-hero-stats">
+            <div className="tl-hero-stat"><div className="tl-v">12<span className="tl-it">min</span></div><div className="tl-l">Saved per lunch</div></div>
+            <div className="tl-hero-stat"><div className="tl-v">240<span className="tl-it">ms</span></div><div className="tl-l">Realtime sync</div></div>
+            <div className="tl-hero-stat"><div className="tl-v">0<span className="tl-it">%</span></div><div className="tl-l">Tray commission</div></div>
+          </div>
+        </section>
+
+        <div className="tl-ticker" aria-hidden>
+          <div className="tl-ticker-track">
+            {tickerDoubled.map((item, i) => (
+              <span key={`${item}-${i}`} className="tl-ticker-item">
+                <em>●</em> {item}
+              </span>
+            ))}
           </div>
         </div>
-        <div className="tl-hero-stats">
-          <div className="tl-hero-stat"><div className="tl-v">12<span className="tl-it">min</span></div><div className="tl-l">Saved per lunch</div></div>
-          <div className="tl-hero-stat"><div className="tl-v">3</div><div className="tl-l">Role-based portals</div></div>
-          <div className="tl-hero-stat"><div className="tl-v">UPI</div><div className="tl-l">Native payments</div></div>
-          <div className="tl-hero-stat"><div className="tl-v">OTP</div><div className="tl-l">Verified handover</div></div>
-        </div>
-      </section>
 
-      <div className="tl-ticker" aria-hidden>
-        <div className="tl-ticker-track">
-          {tickerDoubled.map((item, i) => (
-            <span key={`${item}-${i}`} className="tl-ticker-item">
-              <em>●</em> {item}
-            </span>
-          ))}
-        </div>
-      </div>
-
-      <section className="tl-section tl-wrap" id="system" data-reveal>
-        <div className="tl-section-num"><span className="tl-bar" /><span className="tl-num">01</span> / The system</div>
-        <div className="tl-section-head">
-          <h2>Three portals,<br /><span className="tl-it">one source of truth.</span></h2>
-          <div className="tl-side">
-            Tray runs as a single application with three role-based views. The same data drives every screen.{" "}
-            <strong style={{ color: "var(--tl-ink)" }}>Open any portal below</strong> — they're fully functional, no install required.
+        <section className="tl-section tl-wrap" id="system" data-reveal>
+          <div className="tl-section-num"><span className="tl-bar" /><span className="tl-num">01</span> / The system</div>
+          <div className="tl-section-head">
+            <h2>Three portals,<br /><span className="tl-it">one source of truth.</span></h2>
+            <div className="tl-side">
+              Tray runs as a single application with three role-based views. The same data drives every screen.{" "}
+              <strong style={{ color: "var(--tl-ink)" }}>Open any portal below</strong> — they're fully functional, no install required.
+            </div>
           </div>
-        </div>
 
-        <div className="tl-portals">
-          <article className="tl-portal" data-c="student">
-            <div className="tl-portal-head">
+          <div className="tl-portals">
+            <article className="tl-portal" data-c="student">
+              <div className="tl-portal-head">
+                <div>
+                  <span className="tl-portal-ix tl-ix">01 — Student</span>
+                  <h3>Order &<br /><span className="tl-it">collect.</span></h3>
+                </div>
+                <span className="tl-portal-dot" />
+              </div>
+              <div className="tl-portal-frame">
+                <span className="tl-device-tag">💻 Laptop · sidebar cart</span>
+                <PortalPreview src="/demo/student.html" title="Student app preview" />
+              </div>
+              <div className="tl-portal-body">
+                <p>
+                  Dine-in or takeaway up front (QSR-style), veg lane, UPI checkout, pickup-window ETA, and OTP handover —
+                  full laptop layout with sidebar cart on wide screens.
+                </p>
+                <div className="tl-feat-tags">
+                  <span className="tl-feat-tag">Dine · Takeaway</span>
+                  <span className="tl-feat-tag">UPI · QR</span>
+                  <span className="tl-feat-tag">Pickup window</span>
+                  <span className="tl-feat-tag">Veg lane</span>
+                </div>
+                <a href="/demo/student.html" className="tl-portal-open">
+                  <span>Open the student app</span>
+                  <span className="tl-arrow">→</span>
+                </a>
+              </div>
+            </article>
+
+            <article className="tl-portal" data-c="kitchen">
+              <div className="tl-portal-head">
+                <div>
+                  <span className="tl-portal-ix tl-ix">02 — Kitchen</span>
+                  <h3>Prepare &<br /><span className="tl-it">hand over.</span></h3>
+                </div>
+                <span className="tl-portal-dot" />
+              </div>
+              <div className="tl-portal-frame">
+                <span className="tl-device-tag">🖥 Desktop / tablet · 1440×</span>
+                <PortalPreview src="/demo/kitchen.html" title="Kitchen view preview" />
+              </div>
+              <div className="tl-portal-body">
+                <p>Live queue with preparation timers, status updates, and OTP verification on every handover. Add today's specials → push to every student instantly.</p>
+                <div className="tl-feat-tags">
+                  <span className="tl-feat-tag">Live queue</span>
+                  <span className="tl-feat-tag">SLA timers</span>
+                  <span className="tl-feat-tag">Add specials</span>
+                  <span className="tl-feat-tag">OTP verify</span>
+                </div>
+                <a href="/demo/kitchen.html" className="tl-portal-open">
+                  <span>Open the kitchen view</span>
+                  <span className="tl-arrow">→</span>
+                </a>
+              </div>
+            </article>
+
+            <article className="tl-portal" data-c="admin">
+              <div className="tl-portal-head">
+                <div>
+                  <span className="tl-portal-ix tl-ix">03 — Admin</span>
+                  <h3>Run the<br /><span className="tl-it">operation.</span></h3>
+                </div>
+                <span className="tl-portal-dot" />
+              </div>
+              <div className="tl-portal-frame">
+                <span className="tl-device-tag">🖥 Desktop · 1440×</span>
+                <PortalPreview src="/demo/admin.html" title="Admin console preview" />
+              </div>
+              <div className="tl-portal-body">
+                <p>Daily revenue, peak hours, top items, full order history, and menu management — in one polished web console. Every event from every portal, live.</p>
+                <div className="tl-feat-tags">
+                  <span className="tl-feat-tag">Revenue · live</span>
+                  <span className="tl-feat-tag">Peak heatmap</span>
+                  <span className="tl-feat-tag">Audit log</span>
+                  <span className="tl-feat-tag">⌘K search</span>
+                </div>
+                <a href="/demo/admin.html" className="tl-portal-open">
+                  <span>Open the admin console</span>
+                  <span className="tl-arrow">→</span>
+                </a>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <section className="tl-sync" id="sync" data-reveal>
+          <div className="tl-wrap">
+            <div className="tl-section-num"><span className="tl-bar" /><span className="tl-num">02</span> / The connected canteen</div>
+            <div className="tl-sync-grid">
               <div>
-                <span className="tl-portal-ix tl-ix">01 — Student</span>
-                <h3>Order &<br /><span className="tl-it">collect.</span></h3>
-              </div>
-              <span className="tl-portal-dot" />
-            </div>
-            <div className="tl-portal-frame">
-              <span className="tl-device-tag">💻 Laptop · sidebar cart</span>
-              <PortalPreview src="/demo/student.html" title="Student app preview" />
-            </div>
-            <div className="tl-portal-body">
-              <p>
-                Dine-in or takeaway up front (QSR-style), veg lane, UPI checkout, pickup-window ETA, and OTP handover —
-                full laptop layout with sidebar cart on wide screens.
-              </p>
-              <div className="tl-feat-tags">
-                <span className="tl-feat-tag">Dine · Takeaway</span>
-                <span className="tl-feat-tag">UPI · QR</span>
-                <span className="tl-feat-tag">Pickup window</span>
-                <span className="tl-feat-tag">Veg lane</span>
-              </div>
-              <a href="/demo/student.html" className="tl-portal-open">
-                <span>Open the student app</span>
-                <span className="tl-arrow">→</span>
-              </a>
-            </div>
-          </article>
-
-          <article className="tl-portal" data-c="kitchen">
-            <div className="tl-portal-head">
-              <div>
-                <span className="tl-portal-ix tl-ix">02 — Kitchen</span>
-                <h3>Prepare &<br /><span className="tl-it">hand over.</span></h3>
-              </div>
-              <span className="tl-portal-dot" />
-            </div>
-            <div className="tl-portal-frame">
-              <span className="tl-device-tag">🖥 Desktop / tablet · 1440×</span>
-              <PortalPreview src="/demo/kitchen.html" title="Kitchen view preview" />
-            </div>
-            <div className="tl-portal-body">
-              <p>Live queue with preparation timers, status updates, and OTP verification on every handover. Add today's specials → push to every student instantly.</p>
-              <div className="tl-feat-tags">
-                <span className="tl-feat-tag">Live queue</span>
-                <span className="tl-feat-tag">SLA timers</span>
-                <span className="tl-feat-tag">Add specials</span>
-                <span className="tl-feat-tag">OTP verify</span>
-              </div>
-              <a href="/demo/kitchen.html" className="tl-portal-open">
-                <span>Open the kitchen view</span>
-                <span className="tl-arrow">→</span>
-              </a>
-            </div>
-          </article>
-
-          <article className="tl-portal" data-c="admin">
-            <div className="tl-portal-head">
-              <div>
-                <span className="tl-portal-ix tl-ix">03 — Admin</span>
-                <h3>Run the<br /><span className="tl-it">operation.</span></h3>
-              </div>
-              <span className="tl-portal-dot" />
-            </div>
-            <div className="tl-portal-frame">
-              <span className="tl-device-tag">🖥 Desktop · 1440×</span>
-              <PortalPreview src="/demo/admin.html" title="Admin console preview" />
-            </div>
-            <div className="tl-portal-body">
-              <p>Daily revenue, peak hours, top items, full order history, and menu management — in one polished web console. Every event from every portal, live.</p>
-              <div className="tl-feat-tags">
-                <span className="tl-feat-tag">Revenue · live</span>
-                <span className="tl-feat-tag">Peak heatmap</span>
-                <span className="tl-feat-tag">Audit log</span>
-                <span className="tl-feat-tag">⌘K search</span>
-              </div>
-              <a href="/demo/admin.html" className="tl-portal-open">
-                <span>Open the admin console</span>
-                <span className="tl-arrow">→</span>
-              </a>
-            </div>
-          </article>
-        </div>
-      </section>
-
-      <section className="tl-sync" id="sync" data-reveal>
-        <div className="tl-wrap">
-          <div className="tl-section-num"><span className="tl-bar" /><span className="tl-num">02</span> / The connected canteen</div>
-          <div className="tl-sync-grid">
-            <div>
-              <h2>Add a special.<br /><span className="tl-it">Watch it land everywhere.</span></h2>
-              <p className="tl-lede">
-                The kitchen adds a dish today — it appears on every student phone in under 300 ms, and an audit-log entry lands in the admin console.
-                One source of truth, three windows, no refresh.
-              </p>
-              <div className="tl-sync-meta">
-                <div className="tl-row"><span className="tl-k">CHANNEL</span><span>Postgres logical replication → Supabase Realtime</span></div>
-                <div className="tl-row"><span className="tl-k">LATENCY</span><span>~240 ms p95 · 12 hops</span></div>
-                <div className="tl-row"><span className="tl-k">FALLBACK</span><span>HTTP long-poll on degraded networks</span></div>
-              </div>
-            </div>
-            <div className="tl-diagram">
-              <div className="tl-node" data-c="kitchen">
-                <div className="tl-ic">K</div>
-                <div className="tl-info">
-                  <div className="tl-n">Kitchen pushes a special</div>
-                  <div className="tl-d">POST /api/menu/special</div>
+                <h2>Add a special.<br /><span className="tl-it">Watch it land everywhere.</span></h2>
+                <p className="tl-lede">
+                  The kitchen adds a dish today — it appears on every student phone in under 300 ms, and an audit-log entry lands in the admin console.
+                  One source of truth, three windows, no refresh.
+                </p>
+                <div className="tl-sync-meta">
+                  <div className="tl-row"><span className="tl-k">CHANNEL</span><span>Postgres logical replication → Supabase Realtime</span></div>
+                  <div className="tl-row"><span className="tl-k">LATENCY</span><span>~240 ms p95 · 12 hops</span></div>
+                  <div className="tl-row"><span className="tl-k">FALLBACK</span><span>HTTP long-poll on degraded networks</span></div>
                 </div>
-                <span className="tl-role">SOURCE</span>
               </div>
-              <div className="tl-arr"><div className="tl-line" /><span className="tl-dot" /><span>WRITE · RLS-enforced</span><div className="tl-line" /></div>
-              <div className="tl-node" data-c="db">
-                <div className="tl-ic">DB</div>
-                <div className="tl-info">
-                  <div className="tl-n">Postgres · menu_items table</div>
-                  <div className="tl-d">tenant_id scoped · row inserted</div>
+              <div className="tl-diagram">
+                <div className="tl-node" data-c="kitchen">
+                  <div className="tl-ic">K</div>
+                  <div className="tl-info">
+                    <div className="tl-n">Kitchen pushes a special</div>
+                    <div className="tl-d">POST /api/menu/special</div>
+                  </div>
+                  <span className="tl-role">SOURCE</span>
                 </div>
-                <span className="tl-role">SOURCE OF TRUTH</span>
-              </div>
-              <div className="tl-arr"><div className="tl-line" /><span className="tl-dot" style={{ animationDelay: ".4s" }} /><span>FAN OUT · WebSocket</span><div className="tl-line" /></div>
-              <div className="tl-node" data-c="student">
-                <div className="tl-ic">S</div>
-                <div className="tl-info">
-                  <div className="tl-n">Student phones receive update</div>
-                  <div className="tl-d">~240 ms · subscribed devices</div>
+                <div className="tl-arr"><div className="tl-line" /><span className="tl-dot" /><span>WRITE · RLS-enforced</span><div className="tl-line" /></div>
+                <div className="tl-node" data-c="db">
+                  <div className="tl-ic">DB</div>
+                  <div className="tl-info">
+                    <div className="tl-n">Postgres · menu_items table</div>
+                    <div className="tl-d">tenant_id scoped · row inserted</div>
+                  </div>
+                  <span className="tl-role">SOURCE OF TRUTH</span>
                 </div>
-                <span className="tl-role">CLIENT</span>
-              </div>
-              <div className="tl-node" data-c="admin">
-                <div className="tl-ic">A</div>
-                <div className="tl-info">
-                  <div className="tl-n">Admin audit-log row</div>
-                  <div className="tl-d">menu.add · audit logged</div>
+                <div className="tl-arr"><div className="tl-line" /><span className="tl-dot" style={{ animationDelay: ".4s" }} /><span>FAN OUT · WebSocket</span><div className="tl-line" /></div>
+                <div className="tl-node" data-c="student">
+                  <div className="tl-ic">S</div>
+                  <div className="tl-info">
+                    <div className="tl-n">Student phones receive update</div>
+                    <div className="tl-d">~240 ms · subscribed devices</div>
+                  </div>
+                  <span className="tl-role">CLIENT</span>
                 </div>
-                <span className="tl-role">CLIENT</span>
+                <div className="tl-node" data-c="admin">
+                  <div className="tl-ic">A</div>
+                  <div className="tl-info">
+                    <div className="tl-n">Admin audit-log row</div>
+                    <div className="tl-d">menu.add · audit logged</div>
+                  </div>
+                  <span className="tl-role">CLIENT</span>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      <LandingLineLeave />
+        <LandingLineLeave />
 
-      <section className="tl-pull tl-wrap" data-reveal>
-        <p>Lunch is thirty minutes. Students currently spend <span className="tl-it">twelve of them</span> standing in line.</p>
-        <div className="tl-cite">CAMPUS CANTEEN AUDIT · 2025</div>
-      </section>
+        <section className="tl-pull tl-wrap" data-reveal>
+          <p>Lunch is thirty minutes. Students currently spend <span className="tl-it">twelve of them</span> standing in line.</p>
+          <div className="tl-cite">CAMPUS CANTEEN AUDIT · 2025</div>
+        </section>
 
-      <section className="tl-section tl-wrap" id="flow" data-reveal>
-        <div className="tl-section-num"><span className="tl-bar" /><span className="tl-num">03</span> / How it works</div>
-        <div className="tl-section-head">
-          <h2>Phone to plate,<br /><span className="tl-it">in eleven minutes.</span></h2>
-          <div className="tl-side">Four touchpoints. The student walks straight to the counter. The kitchen never repeats a name. Everyone gets their hour back.</div>
-        </div>
-        <div className="tl-flow">
-          <div className="tl-flow-step">
-            <div className="tl-ix">01 — 11:42</div>
-            <div className="tl-num">01</div>
-            <h3>Browse the <span className="tl-it">menu.</span></h3>
-            <p>Live availability, prep times, veg/non-veg filters. Add to cart with one tap.</p>
-            <div className="tl-tag">→ STATUS: CART</div>
+        <section className="tl-section tl-wrap" id="flow" data-reveal>
+          <div className="tl-section-num"><span className="tl-bar" /><span className="tl-num">03</span> / How it works</div>
+          <div className="tl-section-head">
+            <h2>Phone to plate,<br /><span className="tl-it">in eleven minutes.</span></h2>
+            <div className="tl-side">Four touchpoints. The student walks straight to the counter. The kitchen never repeats a name. Everyone gets their hour back.</div>
           </div>
-          <div className="tl-flow-step">
-            <div className="tl-ix">02 — 11:43</div>
-            <div className="tl-num">02</div>
-            <h3>Pay by <span className="tl-it">UPI.</span></h3>
-            <p>Single-use QR with exact amount. Webhook confirms automatically.</p>
-            <div className="tl-tag">→ STATUS: PAID</div>
-          </div>
-          <div className="tl-flow-step">
-            <div className="tl-ix">03 — 11:46</div>
-            <div className="tl-num">03</div>
-            <h3>Track <span className="tl-it">live.</span></h3>
-            <p>Queued → preparing → ready, updated by the kitchen in under 250 ms.</p>
-            <div className="tl-tag">→ STATUS: PREPARING</div>
-          </div>
-          <div className="tl-flow-step">
-            <div className="tl-ix">04 — 11:53</div>
-            <div className="tl-num">04</div>
-            <h3>Collect with <span className="tl-it">OTP.</span></h3>
-            <p>Read the four-digit code at the counter. Staff verifies, marks complete.</p>
-            <div className="tl-tag">✓ ORDER CLOSED</div>
-          </div>
-        </div>
-      </section>
-
-      <section className="tl-section tl-wrap" id="stack" data-reveal>
-        <div className="tl-section-num"><span className="tl-bar" /><span className="tl-num">04</span> / Built with</div>
-        <div className="tl-section-head">
-          <h2>A boring stack,<br /><span className="tl-it">on purpose.</span></h2>
-          <div className="tl-side">Everything is on a free tier until you have real users. No exotic infrastructure. No vendor lock-in surprises.</div>
-        </div>
-        <div className="tl-stack">
-          {[
-            ["Next.js 15", "FRAMEWORK · APP ROUTER + RSC"],
-            ["TypeScript", "LANGUAGE · STRICT MODE"],
-            ["Tailwind CSS", "STYLING · DESIGN TOKENS"],
-            ["Supabase", "DB · AUTH · STORAGE"],
-            ["Postgres + RLS", "DATA · MULTI-TENANT"],
-            ["Supabase Realtime", "LIVE · WEBSOCKETS"],
-            ["Razorpay", "PAYMENTS · UPI"],
-            ["Vercel · Edge", "HOSTING · CDN"],
-          ].map(([n, r]) => (
-            <div key={n} className="tl-stack-card">
-              <span className="tl-n">{n}</span>
-              <span className="tl-r">{r}</span>
+          <div className="tl-flow">
+            <div className="tl-flow-step">
+              <div className="tl-ix">01 — 11:42</div>
+              <div className="tl-num">01</div>
+              <h3>Browse the <span className="tl-it">menu.</span></h3>
+              <p>Live availability, prep times, veg/non-veg filters. Add to cart with one tap.</p>
+              <div className="tl-tag">→ STATUS: CART</div>
             </div>
-          ))}
-        </div>
-      </section>
+            <div className="tl-flow-step">
+              <div className="tl-ix">02 — 11:43</div>
+              <div className="tl-num">02</div>
+              <h3>Pay by <span className="tl-it">UPI.</span></h3>
+              <p>Single-use QR with exact amount. Webhook confirms automatically.</p>
+              <div className="tl-tag">→ STATUS: PAID</div>
+            </div>
+            <div className="tl-flow-step">
+              <div className="tl-ix">03 — 11:46</div>
+              <div className="tl-num">03</div>
+              <h3>Track <span className="tl-it">live.</span></h3>
+              <p>Queued → preparing → ready, updated by the kitchen in under 250 ms.</p>
+              <div className="tl-tag">→ STATUS: PREPARING</div>
+            </div>
+            <div className="tl-flow-step">
+              <div className="tl-ix">04 — 11:53</div>
+              <div className="tl-num">04</div>
+              <h3>Collect with <span className="tl-it">OTP.</span></h3>
+              <p>Read the four-digit code at the counter. Staff verifies, marks complete.</p>
+              <div className="tl-tag">✓ ORDER CLOSED</div>
+            </div>
+          </div>
+        </section>
 
-      <section className="tl-closing" data-reveal>
-        <div className="tl-wrap">
-          <div className="tl-section-num" style={{ justifyContent: "center", marginBottom: 24 }}>
-            <span className="tl-bar" /><span className="tl-num">DEMO</span> / Live · clickable · no sign-up
+        <section className="tl-section tl-wrap" id="stack" data-reveal>
+          <div className="tl-section-num"><span className="tl-bar" /><span className="tl-num">04</span> / Built with</div>
+          <div className="tl-section-head">
+            <h2>A boring stack,<br /><span className="tl-it">on purpose.</span></h2>
+            <div className="tl-side">Everything is on a free tier until you have real users. No exotic infrastructure. No vendor lock-in surprises.</div>
           </div>
-          <h2>Skip the<br /><span className="tl-it">line.</span></h2>
-          <p>Three portals. One platform. Built for college canteens that are tired of printed tokens.</p>
-          <div className="tl-cta-row">
-            <a href="/demo/student.html" className="tl-btn tl-btn-pri tl-btn-lg">Open the student app →</a>
-            <a href="/demo/kitchen.html" className="tl-btn tl-btn-ghost tl-btn-lg">Kitchen view</a>
-            <a href="/demo/admin.html" className="tl-btn tl-btn-ghost tl-btn-lg">Admin dashboard</a>
+          <div className="tl-stack">
+            {[
+              ["Next.js 15", "FRAMEWORK · APP ROUTER + RSC"],
+              ["TypeScript", "LANGUAGE · STRICT MODE"],
+              ["Tailwind CSS", "STYLING · DESIGN TOKENS"],
+              ["Supabase", "DB · AUTH · STORAGE"],
+              ["Postgres + RLS", "DATA · MULTI-TENANT"],
+              ["Supabase Realtime", "LIVE · WEBSOCKETS"],
+              ["Razorpay", "PAYMENTS · UPI"],
+              ["Vercel · Edge", "HOSTING · CDN"],
+            ].map(([n, r]) => (
+              <div key={n} className="tl-stack-card">
+                <span className="tl-n">{n}</span>
+                <span className="tl-r">{r}</span>
+              </div>
+            ))}
           </div>
-        </div>
-      </section>
+        </section>
+
+        <section className="tl-closing" data-reveal>
+          <div className="tl-wrap">
+            <div className="tl-section-num" style={{ justifyContent: "center", marginBottom: 24 }}>
+              <span className="tl-bar" /><span className="tl-num">DEMO</span> / Live · clickable · no sign-up
+            </div>
+            <h2>Skip the<br /><span className="tl-it">line.</span></h2>
+            <p>Three portals. One platform. Built for college canteens that are tired of printed tokens.</p>
+            <div className="tl-cta-row">
+              <a href="/demo/student.html" className="tl-btn tl-btn-pri tl-btn-lg">Open the student app →</a>
+              <a href="/demo/kitchen.html" className="tl-btn tl-btn-ghost tl-btn-lg">Kitchen view</a>
+              <a href="/demo/admin.html" className="tl-btn tl-btn-ghost tl-btn-lg">Admin dashboard</a>
+            </div>
+          </div>
+        </section>
       </main>
 
       <footer className="tl-footer tl-wrap">
