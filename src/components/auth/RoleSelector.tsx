@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import gsap from "gsap";
@@ -79,6 +79,12 @@ export function RoleSelector({
   const cardsRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
+  // Login page is always light — prevent dark mode bleed from student portal
+  useEffect(() => {
+    document.documentElement.classList.remove("dark");
+    document.documentElement.setAttribute("data-theme", "light");
+  }, []);
+
   useGSAP(() => {
     registerTrayGsap();
     if (prefersReducedMotion()) return;
@@ -93,11 +99,12 @@ export function RoleSelector({
 
   function handleRoleClick(role: Role) {
     if (role === "owner") {
-      router.push("/get-started");
-      return;
+      // Show admin login form instead of redirecting to /get-started
+      // /get-started link is shown separately in the form header
+      setSelected(role);
+    } else {
+      setSelected(role);
     }
-
-    setSelected(role);
 
     if (prefersReducedMotion()) {
       formRef.current?.scrollIntoView({ behavior: "auto", block: "center" });
@@ -223,8 +230,19 @@ export function RoleSelector({
                 >
                   {selected === "kitchen"
                     ? "Use your canteen staff account"
+                    : selected === "owner"
+                    ? "Sign in to your admin dashboard"
                     : "Use your campus email"}
                 </p>
+                {selected === "owner" && (
+                  <a
+                    href="/get-started"
+                    className="mt-1 block text-[0.75rem] transition hover:opacity-75"
+                    style={{ fontFamily: "var(--font-geist)", fontWeight: 600, color: "var(--tray-clay)" }}
+                  >
+                    New to Tray? I have a canteen — set it up free →
+                  </a>
+                )}
               </div>
               <button
                 type="button"

@@ -123,24 +123,24 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
       <main id="main">
         {/* Problem statement strip — hooks any visitor in 3 seconds */}
         <div
-          className="border-b border-[var(--tray-border)] px-5 py-2.5 sm:px-8 lg:px-10"
+          className="border-b border-[var(--tray-border)] px-5 py-3 sm:px-8 sm:py-3.5 lg:px-10"
           style={{ background: "var(--tray-ink)", color: "var(--tray-cream, #EDE5D2)" }}
         >
-          <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 overflow-hidden">
+          <div className="mx-auto flex max-w-7xl items-center justify-between gap-6 overflow-hidden">
             <p
-              className="text-[0.65rem] uppercase tracking-[0.22em] opacity-55 hidden sm:block"
+              className="text-[0.65rem] uppercase tracking-[0.22em] opacity-55 hidden sm:block shrink-0"
               style={{ fontFamily: "var(--font-dm-mono)" }}
             >
               Campus Edition
             </p>
             <p
-              className="text-[0.65rem] uppercase tracking-[0.22em] opacity-55"
+              className="text-[0.65rem] uppercase tracking-[0.22em] opacity-55 min-w-0"
               style={{ fontFamily: "var(--font-dm-mono)" }}
             >
               12 min saved per lunch · UPI native · OTP verified · live queue
             </p>
             <span
-              className="hidden items-center gap-1.5 text-[0.65rem] uppercase tracking-[0.22em] lg:flex"
+              className="hidden items-center gap-1.5 text-[0.65rem] uppercase tracking-[0.22em] lg:flex shrink-0"
               style={{ fontFamily: "var(--font-dm-mono)", color: "var(--tray-clay, #B8531A)" }}
             >
               <span className="h-1.5 w-1.5 rounded-full bg-current animate-pulse" />

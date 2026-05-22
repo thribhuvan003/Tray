@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useTransition } from "react";
+import React, { useState, useTransition, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createInstitution, type CreateInstitutionForm } from "./_actions";
@@ -82,14 +82,14 @@ function ProgressBar({ step }: { step: Step }) {
                 transition: "all 0.2s",
                 background:
                   step > s.n
-                    ? "#0066ff"
+                    ? "var(--gs-accent, #B8531A)"
                     : step === s.n
-                    ? "#0066ff"
+                    ? "var(--gs-accent, #B8531A)"
                     : "transparent",
                 color:
                   step >= s.n ? "#fff" : "var(--gs-ink-muted)",
                 border:
-                  step >= s.n ? "2px solid #0066ff" : "2px solid var(--gs-line)",
+                  step >= s.n ? "2px solid var(--gs-accent, #B8531A)" : "2px solid var(--gs-line)",
               }}
             >
               {step > s.n ? (
@@ -118,7 +118,7 @@ function ProgressBar({ step }: { step: Step }) {
               style={{
                 flex: 1,
                 height: 2,
-                background: step > s.n ? "#0066ff" : "var(--gs-line)",
+                background: step > s.n ? "var(--gs-accent, #B8531A)" : "var(--gs-line)",
                 transition: "background 0.3s",
                 marginBottom: 20,
                 marginLeft: 8,
@@ -298,6 +298,9 @@ function Step1({
               placeholder="iitb.ac.in"
               value={data.emailDomain}
               onChange={(e) => onChange("emailDomain", e.target.value)}
+              autoComplete="off"
+              autoCorrect="off"
+              autoCapitalize="off"
             />
           </div>
         </Field>
@@ -309,15 +312,15 @@ function Step1({
             gap: 10,
             padding: "12px 14px",
             borderRadius: 10,
-            background: "rgba(0,102,255,0.06)",
-            border: "1px solid rgba(0,102,255,0.15)",
+            background: "rgba(184,83,26,0.06)",
+            border: "1px solid rgba(184,83,26,0.15)",
           }}
         >
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ marginTop: 1, flexShrink: 0 }}>
-            <circle cx="8" cy="8" r="7" stroke="#0066ff" strokeWidth="1.5" />
-            <path d="M8 5v4M8 10.5v.01" stroke="#0066ff" strokeWidth="1.5" strokeLinecap="round" />
+            <circle cx="8" cy="8" r="7" stroke="var(--gs-accent, #B8531A)" strokeWidth="1.5" />
+            <path d="M8 5v4M8 10.5v.01" stroke="var(--gs-accent, #B8531A)" strokeWidth="1.5" strokeLinecap="round" />
           </svg>
-          <p style={{ margin: 0, fontSize: 13, color: "rgba(0,102,255,0.9)", lineHeight: 1.5 }}>
+          <p style={{ margin: 0, fontSize: 13, color: "rgba(184,83,26,0.9)", lineHeight: 1.5 }}>
             <strong>Open access</strong> — any signed-in user can order here. No email domain required.
           </p>
         </div>
@@ -503,7 +506,7 @@ function Step3({
 function Sidebar() {
   const portals = [
     {
-      color: "#0066ff",
+      color: "var(--gs-accent, #B8531A)",
       icon: (
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
@@ -603,8 +606,8 @@ function Sidebar() {
                 width: 18,
                 height: 18,
                 borderRadius: "50%",
-                background: "#0066ff18",
-                color: "#0066ff",
+                background: "var(--gs-accent, #B8531A)18",
+                color: "var(--gs-accent, #B8531A)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
@@ -612,7 +615,7 @@ function Sidebar() {
               }}
             >
               <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-                <path d="M2 5l2.5 2.5L8 2.5" stroke="#0066ff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                <path d="M2 5l2.5 2.5L8 2.5" stroke="var(--gs-accent, #B8531A)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </div>
             <span style={{ fontSize: 13, color: "var(--gs-ink-muted)" }}>{item}</span>
@@ -653,6 +656,12 @@ export function GetStartedWizard() {
   const [errors, setErrors] = useState<FieldErrors>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+
+  // Prevent dark mode from bleeding in from student portal
+  useEffect(() => {
+    document.documentElement.classList.remove("dark");
+    document.documentElement.setAttribute("data-theme", "light");
+  }, []);
 
   function handleChange(key: keyof FormData, value: string) {
     setFormData((prev) => ({ ...prev, [key]: value }));
@@ -699,6 +708,23 @@ export function GetStartedWizard() {
         setSubmitError(result.error ?? "Something went wrong. Please try again.");
         return;
       }
+
+      // Auto-sign-in with the new credentials so the admin reaches the dashboard
+      // without needing to log in again after account creation
+      try {
+        const { createBrowserClient } = await import("@supabase/ssr");
+        const supabase = createBrowserClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+        );
+        await supabase.auth.signInWithPassword({
+          email: formData.adminEmail,
+          password: formData.adminPassword,
+        });
+      } catch {
+        // Non-fatal — user can sign in manually if auto-login fails
+      }
+
       router.push(`/c/${result.canteenSlug}/admin/dashboard?welcome=1`);
     });
   }
@@ -709,33 +735,27 @@ export function GetStartedWizard() {
     <>
       <style>{`
         .gs-root {
-          --gs-bg: #f8f9fa;
-          --gs-surface: #ffffff;
-          --gs-line: rgba(10, 22, 40, 0.1);
-          --gs-ink: #0a1628;
-          --gs-ink-muted: rgba(10, 22, 40, 0.55);
-        }
-        @media (prefers-color-scheme: dark) {
-          .gs-root {
-            --gs-bg: #0a0d12;
-            --gs-surface: #0f131a;
-            --gs-line: rgba(255, 255, 255, 0.1);
-            --gs-ink: #e8ecf2;
-            --gs-ink-muted: rgba(232, 236, 242, 0.55);
-          }
+          --gs-bg: #D8C9AE;
+          --gs-surface: #EDE5D2;
+          --gs-line: rgba(26, 22, 20, 0.12);
+          --gs-ink: #1A1614;
+          --gs-ink-muted: rgba(26, 22, 20, 0.55);
+          --gs-accent: #B8531A;
+          --gs-accent-bg: rgba(184, 83, 26, 0.08);
+          --gs-accent-border: rgba(184, 83, 26, 0.25);
         }
         html.dark .gs-root {
-          --gs-bg: #0a0d12;
-          --gs-surface: #0f131a;
-          --gs-line: rgba(255, 255, 255, 0.1);
-          --gs-ink: #e8ecf2;
-          --gs-ink-muted: rgba(232, 236, 242, 0.55);
+          --gs-bg: #D8C9AE;
+          --gs-surface: #EDE5D2;
+          --gs-line: rgba(26, 22, 20, 0.12);
+          --gs-ink: #1A1614;
+          --gs-ink-muted: rgba(26, 22, 20, 0.55);
         }
-        .gs-input:focus { border-color: #0066ff !important; box-shadow: 0 0 0 3px rgba(0,102,255,0.12); }
+        .gs-input:focus { border-color: var(--gs-accent, #B8531A) !important; box-shadow: 0 0 0 3px rgba(184,83,26,0.12); }
         .gs-btn-primary {
           height: 48px;
           border-radius: 12px;
-          background: #0066ff;
+          background: var(--gs-accent, #B8531A);
           color: #fff;
           border: none;
           font-size: 15px;
@@ -790,7 +810,7 @@ export function GetStartedWizard() {
         }}>
           <Link href="/" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none" }}>
             <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-              <rect width="28" height="28" rx="8" fill="#0066ff" />
+              <rect width="28" height="28" rx="8" fill="var(--gs-accent, #B8531A)" />
               <rect x="6" y="10" width="16" height="2.5" rx="1.25" fill="white" />
               <rect x="8" y="14.5" width="12" height="2.5" rx="1.25" fill="white" />
               <rect x="10" y="19" width="8" height="2.5" rx="1.25" fill="white" />
@@ -798,7 +818,7 @@ export function GetStartedWizard() {
             <span style={{ fontWeight: 700, fontSize: 16, color: "var(--gs-ink)", letterSpacing: "-0.02em" }}>Tray</span>
           </Link>
           <Link href="/login" style={{ fontSize: 13, color: "var(--gs-ink-muted)", textDecoration: "none" }}>
-            Already have an account? <span style={{ color: "#0066ff", fontWeight: 600 }}>Sign in</span>
+            Already have an account? <span style={{ color: "var(--gs-accent, #B8531A)", fontWeight: 600 }}>Sign in</span>
           </Link>
         </header>
 

@@ -143,7 +143,7 @@ export function CartDrawer({ tenantSlug, tenantName }: { tenantSlug: string; ten
                 />
               </span>
               <div className="flex-1 min-w-0">
-                <div className="text-[14px] font-medium truncate">{l.name}</div>
+                <div className="text-[14px] font-medium truncate">{l.name || "Item"}</div>
                 <div className="text-[12px] text-[color:var(--color-ink)]/55 tabular">
                   {formatRupees(l.pricePaise)} ea
                 </div>
