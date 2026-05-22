@@ -6,6 +6,7 @@ import { CampusTicker }         from "@/components/landing/sections/MetricsAndTi
 import { PiranhaPortalsSection } from "@/components/landing/sections/PiranhaPortalsSection";
 import { CampusModelSection }    from "@/components/landing/sections/CampusModelSection";
 import { TryDemoSection }        from "@/components/landing/sections/TryDemoSection";
+import { LandingIntro }          from "@/components/landing/LandingIntro";
 import {
   AnimatedNav,
   SectionReveal,
@@ -14,6 +15,7 @@ import {
   SyncPipelineVisual,
   MotionCTA,
   CountUp,
+  ScrollProgress,
 } from "@/lib/motion/tray-framer";
 
 // ── Brand wordmark ────────────────────────────────────────────────────────────
@@ -36,6 +38,8 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
 
   return (
     <div className="tray-page min-h-svh overflow-x-hidden" style={{ fontFamily: "var(--font-ui)" }}>
+      <ScrollProgress />
+      <LandingIntro />
 
       {/* ── NAV ─────────────────────────────────────────────────────────── */}
       <input type="checkbox" id="tl-ham" className="sr-only peer" aria-hidden />

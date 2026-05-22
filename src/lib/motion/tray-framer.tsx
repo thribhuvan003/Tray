@@ -200,7 +200,7 @@ export function MotionCTA({
     initial: "rest",
     animate: "rest",
     whileHover: "hover",
-    whileTap: { scale: 0.975 },
+    whileTap: { scale: 0.96 },
     transition: { duration: tm.fast, ease: tm.ease },
     className: `relative overflow-hidden ${className ?? ""}`,
     style,
@@ -462,19 +462,47 @@ export function MotionTicker({
   );
 }
 
+// ── Scroll progress bar ──────────────────────────────────────────────────────
+export function ScrollProgress() {
+  const { scrollYProgress } = useScroll();
+  const scaleX = useTransform(scrollYProgress, [0, 1], [0, 1]);
+  return (
+    <motion.div
+      className="fixed inset-x-0 top-0 z-[100] h-[2px] origin-left"
+      style={{ scaleX, background: "var(--tray-clay)" }}
+    />
+  );
+}
+
 // ── Hover card wrapper ────────────────────────────────────────────────────────
 export function HoverCard({
   children,
   className,
   style,
 }: { children: ReactNode; className?: string; style?: React.CSSProperties }) {
+  const [tilt, setTilt] = useState({ rotateX: 0, rotateY: 0 });
+  const handleMouse = (e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / rect.width - 0.5;
+    const y = (e.clientY - rect.top) / rect.height - 0.5;
+    setTilt({ rotateX: -y * 7, rotateY: x * 7 });
+  };
   return (
     <motion.div
       variants={cardReveal}
-      whileHover={{ y: -6, boxShadow: "0 28px 80px rgba(26,22,20,0.14)" }}
+      whileHover={{
+        y: -8,
+        scale: 1.02,
+        boxShadow: "0 32px 80px rgba(26,22,20,0.18)",
+        transition: { duration: 0.28, ease: tm.ease },
+      }}
+      animate={{ rotateX: tilt.rotateX, rotateY: tilt.rotateY }}
+      onMouseMove={handleMouse}
+      onMouseLeave={() => setTilt({ rotateX: 0, rotateY: 0 })}
+      whileTap={{ scale: 0.98 }}
       transition={{ duration: tm.fast, ease: tm.ease }}
       className={className}
-      style={style}
+      style={{ ...style, transformStyle: "preserve-3d" }}
     >
       {children}
     </motion.div>
