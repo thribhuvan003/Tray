@@ -59,6 +59,33 @@ export function TrackPanel({ tenantSlug, tenantName, order: initial, lines }: { 
     setOrder(initial);
   }, [initial]);
 
+  // Direct Supabase database polling fallback for instant, robust status updates
+  useEffect(() => {
+    if (order.status === "collected" || order.status === "rejected" || order.status === "expired") return;
+
+    const sb = getBrowserClient();
+    const interval = setInterval(async () => {
+      const { data, error } = await sb
+        .from("orders")
+        .select("status, ready_at, collected_at")
+        .eq("id", order.id)
+        .maybeSingle();
+
+      const orderRef = data as { status: string; ready_at: string | null; collected_at: string | null } | null;
+
+      if (orderRef && orderRef.status !== order.status) {
+        setOrder((prev) => ({
+          ...prev,
+          status: orderRef.status as Status,
+          ready_at: orderRef.ready_at,
+          collected_at: orderRef.collected_at,
+        }));
+      }
+    }, 2000);
+
+    return () => clearInterval(interval);
+  }, [order.id, order.status]);
+
   useEffect(() => {
     const sb = getBrowserClient();
     const ch = sb

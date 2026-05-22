@@ -5,7 +5,8 @@ import { MenuBoard } from "@/components/portal-student/menu-board";
 import { ClosedBanner } from "@/components/portal-student/closed-banner";
 import { notFound } from "next/navigation";
 
-export const revalidate = 15;
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export default async function StudentHomePage() {
   const h = await headers();

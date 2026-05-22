@@ -484,3 +484,8 @@ pm run typecheck passes. Restart dev if port 3000 hangs: NODE_OPTIONS=--max-old-
   - Rewrote the primary `README.md` to start with a precise, high-impact CEO elevator pitch (*"Regardless of the number of canteens, one Tray is enough"*), accompanied by a comprehensive interactive directory map for junior developers, core architectural highlights, and step-by-step onboarding sequences.
 - **Verified:** All quality gates passed with 100% success—TypeScript compile check (`pnpm typecheck`), ESLint static analysis (`pnpm lint`), full Next.js production build (`pnpm build`), and offline mock verifier (`pnpm demo:verify`) all completed successfully. Committed and pushed cleanly to `main` branch under owner profile `thribhuvan003`.
 
+### May 22, 2026 - Main Domain Landing Page Routing & Supabase Typings Fix
+- **Completed:** Fixed the routing fallback in `src/middleware.ts` to cleanly rewrite root `/` requests to `/landing` if no tenant slug is resolved from the host subdomain or search overrides. This immediately ensures that direct visitors to the main domain (`trayy.vercel.app`) are shown the high-impact brand landing page and interactive customizers, while visitors on subdomains (like `aditya.trayy.vercel.app`) see the respective Student Portal.
+- **Completed:** Cast the polled result in the direct Supabase orders query in `src/components/portal-student/track-panel.tsx` to resolve a TypeScript `never` type inference error, bringing compilation errors down to zero.
+- **Verified:** Production build (`pnpm build`), typescript check (`pnpm typecheck`), and static mock verifications pass with 100% success.
+

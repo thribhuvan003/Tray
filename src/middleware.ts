@@ -65,9 +65,13 @@ export async function middleware(req: NextRequest) {
     requestHeaders.set("cookie", cookieHeader);
   }
 
-  // 3. Build the response — rewrite /c/[slug]/<rest> to internal portal routes
+  // 3. Build the response — rewrite /c/[slug]/<rest> to internal portal routes, and root to /landing if no tenant slug is found.
   let res: NextResponse;
-  if (canteenMatch && canteenMatch[2] && canteenMatch[2] !== "/") {
+  if (pathname === "/" && !tenantSlug) {
+    const rewriteUrl = url.clone();
+    rewriteUrl.pathname = "/landing";
+    res = NextResponse.rewrite(rewriteUrl, { request: { headers: requestHeaders } });
+  } else if (canteenMatch && canteenMatch[2] && canteenMatch[2] !== "/") {
     const rewriteUrl = url.clone();
     rewriteUrl.pathname = canteenMatch[2];
     res = NextResponse.rewrite(rewriteUrl, { request: { headers: requestHeaders } });

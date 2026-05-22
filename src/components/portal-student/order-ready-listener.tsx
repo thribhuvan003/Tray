@@ -95,7 +95,13 @@ export function OrderReadyListener({
             .subscribe();
         activeChannels.push(tenantsCh);
 
+        // 3. Fallback client-side polling: refreshes page data (bypassing route caching) every 2 seconds
+        const pollInterval = setInterval(() => {
+            router.refresh();
+        }, 2000);
+
         return () => {
+            clearInterval(pollInterval);
             activeChannels.forEach((ch) => {
                 sb.removeChannel(ch);
             });

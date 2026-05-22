@@ -1,6 +1,6 @@
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
-import { resolveTenant, collegeCanteens } from "@/lib/tenant";
+import { resolveTenant, collegeCanteensUncached } from "@/lib/tenant";
 import { getCurrentUser } from "@/lib/auth/get-user";
 import { getAdminClient } from "@/lib/supabase/admin";
 import { StudentTopBar } from "@/components/portal-student/top-bar";
@@ -18,7 +18,7 @@ export default async function StudentLayout({ children }: { children: React.Reac
   // list them. Falls back to empty array if college_slug is unavailable or the
   // query fails — the switcher hides itself when there's only one canteen.
   const siblings = tenant.college_slug
-    ? await collegeCanteens(tenant.college_slug).catch(() => [])
+    ? await collegeCanteensUncached(tenant.college_slug).catch(() => [])
     : [];
 
   if (siblings.length > 0) {

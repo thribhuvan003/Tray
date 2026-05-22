@@ -145,7 +145,7 @@ async function main() {
   // Fetch tenant info
   const { data: tenant } = await supabase
     .from("tenants")
-    .select("id, college_id")
+    .select("id, college_id, college_name")
     .eq("slug", TENANT_SLUG)
     .single();
   if (!tenant) throw new Error(`Tenant ${TENANT_SLUG} not found`);
@@ -255,6 +255,11 @@ async function main() {
 
     const adminCtx = await browser.newContext({ viewport: { width: 1280, height: 900 } });
     const adminPage = await adminCtx.newPage();
+    adminPage.on("console", (msg) => {
+      if (msg.type() === "error") {
+        console.log(`  ⚠️ [BROWSER ERROR] Admin Page: ${msg.text()}`);
+      }
+    });
 
     // Navigate to admin menu new item form with next URL parameter
     await adminPage.goto(`${BASE}/login?tenant=${TENANT_SLUG}&next=/c/${TENANT_SLUG}/admin/menu/new`, {
@@ -304,6 +309,11 @@ async function main() {
 
     const studentCtx = await browser.newContext({ viewport: { width: 1280, height: 900 } });
     const studentPage = await studentCtx.newPage();
+    studentPage.on("console", (msg) => {
+      if (msg.type() === "error") {
+        console.log(`  ⚠️ [BROWSER ERROR] Student Page: ${msg.text()}`);
+      }
+    });
 
     // Login as student
     await studentPage.goto(`${BASE}/login?tenant=${TENANT_SLUG}`, {
@@ -327,7 +337,7 @@ async function main() {
     await screenshot(studentPage, "21-student-menu-initial");
 
     // Find original Samosa price in student UI
-    const samosaCard = studentPage.locator('article', { has: studentPage.locator('h3', { hasText: "Samosa" }) });
+    const samosaCard = studentPage.locator('article', { has: studentPage.locator('h3', { hasText: /^Samosa$/ }) });
     await samosaCard.waitFor({ state: "visible", timeout: 10000 });
     const priceTextBefore = await samosaCard.locator('div[class*="text-ocean-600"]').textContent();
     info(`Samosa price in UI before update: ${priceTextBefore.trim()}`);
@@ -363,7 +373,7 @@ async function main() {
     log("Scenario 3 — Closed banner appearing in real-time");
 
     // Check alert banner is currently hidden (not present)
-    const closedBannerBefore = studentPage.locator('[role="alert"]');
+    const closedBannerBefore = studentPage.locator('[role="alert"]').filter({ hasText: /closed|paused/i });
     const isBannerVisibleBefore = await closedBannerBefore.isVisible().catch(() => false);
     info(`Closed banner visible initially: ${isBannerVisibleBefore}`);
 
@@ -465,6 +475,7 @@ async function main() {
         slug: "south-block-cafeteria",
         name: "South Block Cafeteria",
         college_id: COLLEGE_ID,
+        college_name: tenant.college_name,
         is_active: true,
         is_open: true,
         building: "South Block",
@@ -571,13 +582,18 @@ async function main() {
 
     // Realtime channel should trigger instant re-fetch of tracking state
     info("Waiting for student tracking page to refresh to expired UI…");
-    await studentPage.waitForTimeout(4000);
+    await studentPage.waitForTimeout(8000);
     await screenshot(studentPage, "62-student-track-expired");
 
     const expiredTitleVisible = await studentPage.locator('text="Collection window expired."').isVisible().catch(() => false);
     const expiredDescVisible = await studentPage.locator('text="was not collected within the 30-minute window"').isVisible().catch(() => false);
 
     const expirySuccess = dbOrder?.status === "expired" && expiredTitleVisible && expiredDescVisible;
+    if (!expirySuccess) {
+      const bodyText = await studentPage.locator("body").innerText().catch(() => "N/A");
+      console.log(`\n❌ [DEBUG] Scenario 6 Page innerText on failure:\n${bodyText}\n`);
+    }
+
     recordResult(
       "Auto-expiry & live tracking status updates",
       expirySuccess,

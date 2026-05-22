@@ -112,7 +112,7 @@ export const resolveTenant = cache(async (slug: string): Promise<ResolvedTenant 
 });
 
 // College portal: list all canteens at a college with live wait/open status.
-const fetchCollegeCanteensUncached = async (collegeSlug: string): Promise<CollegeCanteen[]> => {
+export const collegeCanteensUncached = async (collegeSlug: string): Promise<CollegeCanteen[]> => {
   const client = _resolverClient();
   const { data, error } = await client.rpc("college_canteens", { p_college_slug: collegeSlug });
   if (error || !data) return [];
@@ -120,7 +120,7 @@ const fetchCollegeCanteensUncached = async (collegeSlug: string): Promise<Colleg
 };
 
 const fetchCollegeCanteensCached = unstable_cache(
-  fetchCollegeCanteensUncached,
+  collegeCanteensUncached,
   ["college-canteens"],
   { revalidate: 30, tags: ["college-canteens"] }
 );
@@ -128,3 +128,4 @@ const fetchCollegeCanteensCached = unstable_cache(
 export const collegeCanteens = cache(async (slug: string): Promise<CollegeCanteen[]> => {
   return fetchCollegeCanteensCached(slug);
 });
+
