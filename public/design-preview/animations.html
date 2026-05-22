@@ -1,0 +1,2780 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Tray — Elite Awwwards-Tier Railway Motion & Micro-Interactions Sandbox</title>
+  
+  <!-- Elite Font Loading Stack -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=JetBrains+Mono:wght@400;500;700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;1,6..72,400;1,6..72,600&family=Oswald:wght@500;700&family=Outfit:wght@300;400;500;600;700&family=Instrument+Serif:ital@0;1&family=Syne:wght@700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+  <!-- GSAP CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+
+  <style>
+    /* ── CORE DESIGN TOKENS ── */
+    :root {
+      /* Theme Defaults: Quiet Luxury Editorial (Palette A) */
+      --bg: #f5f2eb;
+      --ink: #18130e;
+      --ink-rgb: 24, 19, 14;
+      --ink-muted: rgba(24, 19, 14, 0.62);
+      --accent: #c43d2f;
+      --accent-rgb: 196, 61, 47;
+      --cool: #1b4b9b;
+      --card-bg: rgba(255, 255, 255, 0.45);
+      --border-color: rgba(24, 19, 14, 0.08);
+      
+      --font-display: "Newsreader", Georgia, serif;
+      --font-sans: "Outfit", system-ui, sans-serif;
+      --font-mono: "JetBrains Mono", monospace;
+      
+      --ease-luxury: cubic-bezier(0.76, 0, 0.24, 1);
+      --ease-elastic: cubic-bezier(0.68, -0.6, 0.32, 1.6);
+      --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+      --ease-snappy: cubic-bezier(0.16, 1, 0.3, 1); /* High-velocity snap ease */
+      --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+    }
+
+    * { box-sizing: border-box; }
+    
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: var(--font-sans);
+      transition: background 0.6s var(--ease-luxury), color 0.6s var(--ease-luxury), font-family 0.4s var(--ease-out);
+      overflow-x: hidden;
+      padding: 0;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── SCROLLBAR ── */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: rgba(0, 0, 0, 0.03);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: var(--accent);
+      border-radius: 3px;
+    }
+
+    /* ── LAYOUT STRUCTURE ── */
+    .sandbox-layout {
+      display: grid;
+      grid-template-columns: 1fr;
+    }
+    @media(min-width: 960px) {
+      .sandbox-layout {
+        grid-template-columns: 360px 1fr;
+        height: 100vh;
+      }
+    }
+
+    /* ── SIDEBAR CONTROL CENTER ── */
+    .sidebar {
+      background: #0b0a09;
+      color: #edeae4;
+      padding: 28px 24px;
+      display: flex;
+      flex-direction: column;
+      border-bottom: 1px solid #1e1b18;
+      overflow-y: auto;
+      z-index: 10;
+    }
+    @media(min-width: 960px) {
+      .sidebar {
+        border-bottom: none;
+        border-right: 1px solid #1e1b18;
+        height: 100vh;
+      }
+    }
+
+    .sb-brand-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 4px;
+    }
+    .sb-logo-box {
+      height: 28px;
+      width: 28px;
+      background: var(--accent);
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: "Newsreader", Georgia, serif;
+      font-weight: 900;
+      color: #fff;
+      font-size: 15px;
+    }
+    .sb-brand {
+      font-family: "Newsreader", Georgia, serif;
+      font-size: 1.55rem;
+      font-weight: 600;
+      color: #fff;
+    }
+    .sb-tagline {
+      font-size: 0.62rem;
+      font-family: var(--font-mono);
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      color: #7a756e;
+      margin: 0 0 24px;
+    }
+
+    .sb-section-title {
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: #615c54;
+      margin: 20px 0 10px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid #1c1a17;
+    }
+
+    /* ── STYLING THEMES FOR PREVIEW ── */
+    .theme-select-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 6px;
+      margin-bottom: 15px;
+    }
+    .theme-dot-btn {
+      height: 32px;
+      border: 1px solid #222;
+      border-radius: 6px;
+      background: #111;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s var(--ease-out);
+      position: relative;
+    }
+    .theme-dot-btn::after {
+      content: "";
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--btn-color);
+    }
+    .theme-dot-btn:hover {
+      border-color: #555;
+    }
+    .theme-dot-btn.is-active {
+      border-color: var(--btn-color);
+      background: #222;
+      box-shadow: 0 0 8px var(--btn-color);
+    }
+
+    /* ── MENU CATEGORIES ── */
+    .nav-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 14px;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid #1a1917;
+      margin-bottom: 8px;
+      cursor: pointer;
+      color: #bfaea2;
+      font-size: 0.8rem;
+      font-weight: 600;
+      transition: all 0.25s var(--ease-out);
+    }
+    .nav-item:hover {
+      background: rgba(255, 255, 255, 0.05);
+      color: #fff;
+    }
+    .nav-item.is-active {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+    }
+    .nav-item-num {
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      opacity: 0.6;
+    }
+
+    /* ── SELECTION TRACKER ── */
+    .selection-box {
+      margin-top: auto;
+      background: #0f0e0d;
+      border-radius: 12px;
+      padding: 16px;
+      border: 1px solid #1e1c19;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .sel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .sel-title {
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #edeae4;
+    }
+    .sel-count {
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      background: var(--accent);
+      color: #fff;
+      padding: 2px 6px;
+      border-radius: 10px;
+    }
+    .sel-list {
+      font-size: 0.7rem;
+      color: #9c958a;
+      line-height: 1.5;
+      max-height: 120px;
+      overflow-y: auto;
+      padding-left: 14px;
+      margin: 0;
+    }
+    .sel-list li {
+      margin-bottom: 4px;
+    }
+    .sb-btn {
+      width: 100%;
+      padding: 11px;
+      font-family: var(--font-sans);
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      border-radius: 8px;
+      cursor: pointer;
+      border: none;
+      transition: all 0.25s var(--ease-out);
+    }
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+    }
+    .btn-primary:hover {
+      background: #e64b3c;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(196, 61, 47, 0.3);
+    }
+
+    /* ── LIVE PREVIEW STAGE ── */
+    .stage {
+      background: var(--bg);
+      overflow-y: auto;
+      position: relative;
+    }
+    @media(min-width: 960px) {
+      .stage {
+        height: 100vh;
+      }
+    }
+
+    .stage-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 40px 24px 80px;
+    }
+
+    .stage-header {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      margin-bottom: 40px;
+      padding-bottom: 24px;
+      border-bottom: 1px solid var(--border-color);
+    }
+    @media(min-width: 600px) {
+      .stage-header {
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: flex-end;
+      }
+    }
+    .sh-title-group h1 {
+      font-family: var(--font-display);
+      font-size: 2.2rem;
+      font-weight: 800;
+      margin: 0 0 6px;
+    }
+    .sh-title-group p {
+      font-size: 0.88rem;
+      color: var(--ink-muted);
+      margin: 0;
+      max-width: 500px;
+      line-height: 1.45;
+    }
+    .sh-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .config-pill {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      padding: 8px 16px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--ink);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+      transition: all 0.25s var(--ease-out);
+    }
+    .config-pill:hover {
+      border-color: var(--accent);
+      transform: translateY(-1px);
+    }
+
+    /* ── CARD & GRID STYLES ── */
+    .lab-section {
+      display: none;
+      flex-direction: column;
+      gap: 32px;
+      animation: sectionFade 0.5s var(--ease-luxury) forwards;
+    }
+    .lab-section.is-active {
+      display: flex;
+    }
+    @keyframes sectionFade {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .lab-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      padding: 30px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+      box-shadow: 0 4px 30px rgba(0, 0, 0, 0.015);
+      backdrop-filter: blur(12px);
+      transition: border-color 0.3s;
+    }
+    .lab-card:hover {
+      border-color: rgba(var(--accent-rgb), 0.18);
+    }
+    
+    .lab-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 20px;
+    }
+    .lch-title h2 {
+      font-family: var(--font-sans);
+      font-size: 1.15rem;
+      font-weight: 700;
+      margin: 0 0 4px;
+    }
+    .lch-title p {
+      font-size: 0.78rem;
+      color: var(--ink-muted);
+      margin: 0;
+      line-height: 1.45;
+    }
+    .lch-meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .lch-badge {
+      font-family: var(--font-mono);
+      font-size: 0.58rem;
+      text-transform: uppercase;
+      padding: 4px 8px;
+      border-radius: 6px;
+      letter-spacing: 0.05em;
+      font-weight: 700;
+    }
+    .badge-css { background: rgba(0,0,0,0.04); color: var(--ink-muted); }
+    .badge-gsap { background: rgba(196, 61, 47, 0.08); color: var(--accent); }
+    
+    .btn-replay {
+      background: none;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 0.8rem;
+      color: var(--ink);
+      transition: all 0.2s;
+    }
+    .btn-replay:hover {
+      background: var(--ink);
+      color: #fff;
+      border-color: var(--ink);
+    }
+
+    /* ── INTERACTION CONTAINERS ── */
+    .interaction-stage {
+      background: rgba(0,0,0,0.02);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      min-height: 200px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+      padding: 30px;
+    }
+
+    /* ── CHECKBOX / Hand-off row ── */
+    .checklist-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-top: 1px solid var(--border-color);
+      padding-top: 18px;
+    }
+    .checkbox-label {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      font-size: 0.78rem;
+      font-weight: 600;
+      user-select: none;
+    }
+    .anim-checker {
+      display: none;
+    }
+    .custom-checkbox {
+      width: 18px;
+      height: 18px;
+      border: 2px solid var(--border-color);
+      border-radius: 5px;
+      position: relative;
+      transition: all 0.2s var(--ease-out);
+    }
+    .anim-checker:checked + .checkbox-label .custom-checkbox {
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+    .anim-checker:checked + .checkbox-label .custom-checkbox::after {
+      content: "";
+      position: absolute;
+      left: 5px;
+      top: 1px;
+      width: 4px;
+      height: 8px;
+      border: solid white;
+      border-width: 0 2px 2px 0;
+      transform: rotate(45deg);
+    }
+    .code-toggle {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--ink-muted);
+      cursor: pointer;
+      transition: color 0.2s;
+    }
+    .code-toggle:hover {
+      color: var(--accent);
+    }
+
+    .code-pane {
+      display: none;
+      background: #0f0e0c;
+      border-radius: 10px;
+      padding: 16px;
+      position: relative;
+      border: 1px solid #1c1916;
+    }
+    .code-pane pre {
+      margin: 0;
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      color: #dfdacb;
+      overflow-x: auto;
+      white-space: pre-wrap;
+    }
+    .btn-copy-code {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      background: #25221d;
+      border: 1px solid #332f27;
+      color: #c4beaf;
+      padding: 4px 8px;
+      font-family: var(--font-sans);
+      font-size: 0.62rem;
+      font-weight: 700;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-copy-code:hover {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+    }
+
+    /* ── SPECIFIC ANIMATION ELEMENTS ── */
+    
+    /* Reveal 1: Word Mask */
+    .hero-stage-content {
+      text-align: center;
+      pointer-events: none;
+    }
+    .word-mask-line {
+      font-family: var(--font-display);
+      font-size: clamp(1.4rem, 4vw, 2.5rem);
+      font-weight: 900;
+      margin: 0;
+      line-height: 1.15;
+      overflow: hidden;
+    }
+    .word-mask-line span {
+      display: inline-block;
+      transform: translateY(115%) rotate(5deg);
+      transform-origin: 0% 100%;
+      transition: transform 0.85s var(--ease-luxury);
+    }
+    .word-mask-line.animate span {
+      transform: translateY(0) rotate(0deg);
+    }
+
+    /* Reveal 2: Glitch Stagger */
+    .glitch-reveal-title {
+      font-family: var(--font-sans);
+      font-weight: 800;
+      font-size: clamp(1.4rem, 4vw, 2.4rem);
+      margin: 0;
+      text-transform: uppercase;
+      letter-spacing: -0.02em;
+    }
+    .glitch-char {
+      display: inline-block;
+      opacity: 0;
+      transform: translateY(30px) scale(0.6);
+    }
+
+    /* Reveal 3: Gold slow focus */
+    .gold-title-line {
+      font-family: var(--font-display);
+      font-style: italic;
+      font-weight: 400;
+      font-size: clamp(1.6rem, 5vw, 2.8rem);
+      margin: 0;
+      opacity: 0;
+      color: #bfaea2;
+      transform: translateY(20px);
+      filter: blur(8px);
+      transition: all 1.2s var(--ease-out);
+    }
+    .gold-title-line.animate {
+      opacity: 1;
+      transform: translateY(0);
+      filter: blur(0px);
+    }
+    .gold-underline {
+      height: 1.5px;
+      width: 0%;
+      background: var(--accent);
+      margin: 12px auto 0;
+      box-shadow: 0 0 6px var(--accent);
+      transition: width 1.5s var(--ease-luxury) 0.4s;
+    }
+    .gold-underline.animate {
+      width: 80px;
+    }
+
+    /* Scroll Hook 1: Apple Highlight */
+    .scroll-sandbox-container {
+      width: 100%;
+      height: 300px;
+      overflow-y: scroll;
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      background: rgba(0,0,0,0.01);
+      padding: 20px;
+      position: relative;
+    }
+    .scroll-sandbox-indicator {
+      position: absolute;
+      top: 10px;
+      right: 15px;
+      font-size: 0.58rem;
+      font-family: var(--font-mono);
+      background: var(--accent);
+      color: #fff;
+      padding: 3px 6px;
+      border-radius: 4px;
+      animation: pulse 1.6s infinite alternate;
+    }
+    @keyframes pulse {
+      from { opacity: 0.5; } to { opacity: 1; }
+    }
+    .scroll-dummy-spacer {
+      height: 140px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.65rem;
+      font-family: var(--font-mono);
+      opacity: 0.35;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      border: 1px dashed var(--border-color);
+      margin: 15px 0;
+      border-radius: 6px;
+    }
+    .scroll-highlight-para {
+      font-size: 1.15rem;
+      font-weight: 600;
+      line-height: 1.5;
+      margin: 20px 0;
+      color: var(--ink-muted);
+    }
+    .scroll-highlight-para span.word {
+      opacity: 0.15;
+      color: var(--ink);
+      transition: all 0.25s var(--ease-out);
+    }
+    .scroll-highlight-para span.word.lit {
+      opacity: 1;
+      color: var(--accent);
+    }
+
+    /* Scroll Hook 2: Expansion mask */
+    .aperture-box {
+      width: 100%;
+      height: 300px;
+      overflow-y: scroll;
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      position: relative;
+    }
+    .aperture-stage-height {
+      height: 600px;
+      position: relative;
+    }
+    .aperture-frame-wrap {
+      position: sticky;
+      top: 0;
+      width: 100%;
+      height: 300px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .aperture-image-card {
+      width: 85%;
+      height: 200px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, rgba(var(--accent-rgb), 0.1), rgba(var(--accent-rgb), 0.02));
+      border: 1px solid rgba(var(--accent-rgb), 0.15);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      clip-path: circle(12% at 50% 50%);
+      transition: clip-path 0.1s linear;
+    }
+    .aperture-glass-label {
+      font-family: var(--font-display);
+      font-size: 2.2rem;
+      font-style: italic;
+      color: var(--accent);
+      font-weight: 800;
+    }
+
+    /* Scroll Hook 3: Pipeline flow */
+    .pipeline-scroller {
+      width: 100%;
+      height: 300px;
+      overflow-y: scroll;
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      position: relative;
+    }
+    .pipeline-canvas {
+      height: 700px;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 40px 0;
+    }
+    .pipeline-svg {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      height: 100%;
+      width: 140px;
+      pointer-events: none;
+    }
+    .pipeline-wire-bg {
+      stroke: var(--border-color);
+      stroke-width: 3;
+      fill: none;
+    }
+    .pipeline-wire-flow {
+      stroke: var(--accent);
+      stroke-width: 4;
+      stroke-linecap: round;
+      fill: none;
+      stroke-dasharray: 200;
+      stroke-dashoffset: 200;
+    }
+    .pipeline-node {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 14px;
+      height: 14px;
+      background: var(--bg);
+      border: 3px solid var(--accent);
+      border-radius: 50%;
+      z-index: 2;
+    }
+
+    /* ── ULTRACURVY RAILWAY SCROLLER ── */
+    .railway-scroller-box {
+      width: 100%;
+      height: 480px;
+      overflow-y: scroll;
+      border: 1px solid var(--border-color);
+      border-radius: 24px;
+      padding: 40px 10px;
+      background: rgba(0, 0, 0, 0.04);
+      position: relative;
+      /* Custom smooth scrolling behavior */
+      scroll-behavior: smooth;
+    }
+    .railway-canvas-container {
+      position: relative;
+      height: 3200px; /* Massive scroller path length for curviness hook */
+      width: 100%;
+    }
+    .railway-svg-track {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100%;
+      max-width: 460px;
+      height: 100%;
+      pointer-events: none;
+      z-index: 1;
+    }
+    .railway-track-bed {
+      stroke: rgba(24, 19, 14, 0.03);
+      stroke-width: 32;
+      stroke-linecap: round;
+      fill: none;
+    }
+    .railway-sleepers {
+      stroke: rgba(24, 19, 14, 0.09);
+      stroke-width: 22;
+      stroke-dasharray: 3, 10;
+      fill: none;
+    }
+    .railway-track-bg {
+      stroke: rgba(24, 19, 14, 0.12);
+      stroke-width: 6;
+      stroke-linecap: round;
+      fill: none;
+    }
+    .railway-track-glow {
+      stroke: var(--accent);
+      stroke-width: 6;
+      stroke-linecap: round;
+      fill: none;
+      stroke-dasharray: 3200;
+      stroke-dashoffset: 3200;
+      filter: drop-shadow(0 0 10px rgba(var(--accent-rgb), 0.7));
+      transition: stroke-dashoffset 0.08s linear;
+    }
+
+    /* Glowing Stations */
+    .railway-station {
+      pointer-events: none;
+    }
+    .station-ring-outer {
+      fill: none;
+      stroke: var(--accent);
+      stroke-width: 1;
+      opacity: 0.25;
+      transform-origin: center;
+      animation: stationPulse 2.5s infinite var(--ease-in-out);
+    }
+    .station-ring-inner {
+      fill: none;
+      stroke: var(--accent);
+      stroke-width: 1.5;
+      opacity: 0.4;
+      transform-origin: center;
+      animation: stationPulse 1.8s infinite var(--ease-in-out) 0.4s;
+    }
+    .station-dot {
+      fill: #fff;
+      stroke: var(--accent);
+      stroke-width: 3;
+      r: 6px;
+      transition: all 0.3s var(--ease-out);
+    }
+    .railway-station.is-active .station-dot {
+      fill: var(--accent);
+      filter: drop-shadow(0 0 8px var(--accent));
+      r: 8px;
+    }
+    .railway-station.is-active .station-ring-outer {
+      stroke: var(--accent);
+      opacity: 0.85;
+      animation: stationPulseActive 1.2s infinite ease-out;
+    }
+    @keyframes stationPulse {
+      0% { transform: scale(0.85); opacity: 0.2; }
+      50% { transform: scale(1.15); opacity: 0.5; }
+      100% { transform: scale(0.85); opacity: 0.2; }
+    }
+    @keyframes stationPulseActive {
+      0% { transform: scale(0.9); opacity: 0.9; }
+      100% { transform: scale(1.6); opacity: 0; }
+    }
+
+    /* Curved railway cards */
+    .railway-card {
+      position: absolute;
+      width: 260px;
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      padding: 22px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+      backdrop-filter: blur(16px);
+      z-index: 5;
+      left: 0;
+      top: 0;
+      transform: translate(-50%, -50%) scale(0.92);
+      opacity: 0.25;
+      transition: opacity 0.3s var(--ease-snappy), border-color 0.3s, box-shadow 0.3s;
+    }
+    .railway-card.is-focused {
+      opacity: 1;
+      border-color: var(--accent);
+      box-shadow: 0 16px 40px rgba(var(--accent-rgb), 0.16);
+    }
+    .railway-card-spotlight {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle 100px at 50% 50%, rgba(var(--accent-rgb), 0.08), transparent 70%);
+      pointer-events: none;
+      border-radius: 20px;
+    }
+    .railway-card-badge {
+      font-size: 0.58rem;
+      font-family: var(--font-mono);
+      text-transform: uppercase;
+      padding: 3px 6px;
+      border-radius: 4px;
+      background: rgba(0,0,0,0.04);
+      align-self: flex-start;
+      margin-bottom: 10px;
+      font-weight: 700;
+      display: inline-block;
+    }
+
+    /* ── MICRO-INTERACTIONS ── */
+    .micro-stage {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 20px;
+      width: 100%;
+    }
+    @media(min-width: 600px) {
+      .micro-stage {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    .micro-box {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      min-height: 180px;
+      position: relative;
+    }
+    .micro-label {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      font-size: 0.6rem;
+      font-family: var(--font-mono);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      opacity: 0.45;
+    }
+
+    /* Micro 1: Magnetic Floating */
+    .magnetic-btn-wrap {
+      width: 120px;
+      height: 70px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+    .magnetic-btn {
+      background: var(--ink);
+      color: #fff;
+      border: none;
+      padding: 10px 18px;
+      border-radius: 30px;
+      font-family: var(--font-sans);
+      font-size: 0.72rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+      transition: box-shadow 0.3s;
+    }
+    .magnetic-btn:hover {
+      box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+    }
+
+    /* Micro 2: Liquid Button */
+    .liquid-btn {
+      position: relative;
+      background: transparent;
+      border: 1.5px solid var(--border-color);
+      border-radius: 30px;
+      padding: 12px 28px;
+      font-family: var(--font-sans);
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--ink);
+      cursor: pointer;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: border-color 0.4s var(--ease-luxury), transform 0.3s var(--ease-out);
+      z-index: 1;
+    }
+    .liquid-btn-text, .liquid-btn-icon {
+      position: relative;
+      z-index: 3;
+      transition: color 0.4s var(--ease-luxury), transform 0.3s var(--ease-out);
+    }
+    .liquid-btn-wave {
+      position: absolute;
+      bottom: -100%;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 2;
+      pointer-events: none;
+      transition: bottom 0.65s cubic-bezier(0.76, 0, 0.24, 1);
+      display: flex;
+      flex-direction: column;
+    }
+    .liquid-wave-svg {
+      width: 100%;
+      height: 14px;
+      margin-top: -13px;
+      fill: var(--accent);
+      animation: waveFlow 1.8s infinite linear;
+    }
+    .liquid-wave-fill {
+      flex: 1;
+      width: 100%;
+    }
+    .liquid-btn:hover {
+      border-color: var(--accent);
+      transform: scale(1.03);
+    }
+    .liquid-btn:hover .liquid-btn-text {
+      color: #fff;
+    }
+    .liquid-btn:hover .liquid-btn-icon {
+      transform: scale(1.2) rotate(15deg);
+    }
+    .liquid-btn:hover .liquid-btn-wave {
+      bottom: 0%;
+    }
+    @keyframes waveFlow {
+      0% { transform: translateX(0) translateY(0); }
+      50% { transform: translateX(-10px) translateY(-1px); }
+      100% { transform: translateX(0) translateY(0); }
+    }
+
+    /* Micro 3: Arrow Slide-Swap Link */
+    .arrow-swap-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      font-family: var(--font-sans);
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--ink);
+      position: relative;
+      padding: 6px 0;
+      transition: color 0.3s var(--ease-out);
+    }
+    .as-text {
+      position: relative;
+    }
+    .as-text::after {
+      content: "";
+      position: absolute;
+      bottom: -2px;
+      left: 0;
+      width: 100%;
+      height: 1.5px;
+      background: var(--accent);
+      transform: scaleX(0);
+      transform-origin: right center;
+      transition: transform 0.4s var(--ease-luxury);
+    }
+    .arrow-swap-link:hover .as-text::after {
+      transform: scaleX(1);
+      transform-origin: left center;
+    }
+    .arrow-swap-link:hover {
+      color: var(--accent);
+    }
+    .as-arrow-container {
+      position: relative;
+      width: 14px;
+      height: 14px;
+      overflow: hidden;
+      display: inline-block;
+    }
+    .as-arrow-primary, .as-arrow-secondary {
+      position: absolute;
+      left: 0;
+      top: 0;
+      font-size: 0.85rem;
+      line-height: 1;
+      display: inline-block;
+      transition: transform 0.4s var(--ease-luxury), opacity 0.3s var(--ease-out);
+    }
+    .as-arrow-primary {
+      transform: translateX(0);
+      opacity: 1;
+    }
+    .as-arrow-secondary {
+      transform: translateX(-18px);
+      opacity: 0;
+      color: var(--accent);
+    }
+    .arrow-swap-link:hover .as-arrow-primary {
+      transform: translateX(18px);
+      opacity: 0;
+    }
+    .arrow-swap-link:hover .as-arrow-secondary {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    /* Micro 4: FSSAI Dual Pulse */
+    .fssai-pulse-wrap {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      align-items: center;
+    }
+    .fssai-card {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      transition: all 0.4s var(--ease-luxury);
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      backdrop-filter: blur(8px);
+    }
+    .fssai-card:hover {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: var(--accent);
+      transform: translateY(-3px) scale(1.02);
+      box-shadow: 0 8px 24px rgba(var(--accent-rgb), 0.06);
+    }
+    .fssai-badge-container {
+      position: relative;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .fssai-badge-veg, .fssai-badge-nonveg {
+      position: relative;
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .fssai-outer-square {
+      width: 22px;
+      height: 22px;
+      border: 2px solid var(--fssai-color);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 4px;
+      background: transparent;
+      transition: transform 0.5s var(--ease-elastic);
+    }
+    .fssai-badge-veg {
+      --fssai-color: #0c8a43;
+    }
+    .fssai-badge-nonveg {
+      --fssai-color: #b32b2b;
+    }
+    .fssai-inner-circle {
+      width: 8px;
+      height: 8px;
+      background: var(--fssai-color);
+      border-radius: 50%;
+      transition: transform 0.5s var(--ease-elastic);
+    }
+    .fssai-inner-triangle {
+      width: 0;
+      height: 0;
+      border-left: 5px solid transparent;
+      border-right: 5px solid transparent;
+      border-bottom: 9px solid var(--fssai-color);
+      transition: transform 0.5s var(--ease-elastic);
+    }
+    .fssai-card:hover .fssai-outer-square {
+      transform: rotate(180deg);
+    }
+    .fssai-card:hover .fssai-inner-circle, .fssai-card:hover .fssai-inner-triangle {
+      transform: scale(1.25);
+    }
+    .fssai-pulse-ring {
+      position: absolute;
+      inset: -5px;
+      border: 1.5px solid var(--fssai-color);
+      border-radius: 50%;
+      opacity: 0;
+      pointer-events: none;
+    }
+    .fssai-badge-veg .ring-1 {
+      animation: fssaiPulse 2.2s cubic-bezier(0.25, 1, 0.5, 1) infinite;
+    }
+    .fssai-badge-veg .ring-2 {
+      animation: fssaiPulse 2.2s cubic-bezier(0.25, 1, 0.5, 1) infinite 0.7s;
+    }
+    .fssai-badge-nonveg .ring-1 {
+      animation: fssaiPulse 2.2s cubic-bezier(0.25, 1, 0.5, 1) infinite 0.35s;
+    }
+    .fssai-badge-nonveg .ring-2 {
+      animation: fssaiPulse 2.2s cubic-bezier(0.25, 1, 0.5, 1) infinite 1.05s;
+    }
+    
+    @keyframes fssaiPulse {
+      0% { transform: scale(0.6); opacity: 0.8; }
+      100% { transform: scale(1.5); opacity: 0; }
+    }
+    
+    .fssai-info {
+      display: flex;
+      flex-direction: column;
+      text-align: left;
+    }
+    .fssai-tag {
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      color: #0c8a43;
+    }
+    .fssai-tag.nonveg {
+      color: #b32b2b;
+    }
+    .fssai-lic {
+      font-size: 0.55rem;
+      color: var(--ink-muted);
+      font-family: var(--font-mono);
+      margin-top: 1px;
+    }
+
+    /* ── FULLSCREEN CINEMATIC PRELOADER ── */
+    .preloader-overlay {
+      position: fixed;
+      inset: 0;
+      background: #0b0a09;
+      color: #edeae4;
+      z-index: 10000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      perspective: 1200px;
+    }
+    .preloader-bg-pane {
+      position: absolute;
+      left: 0;
+      width: 100%;
+      height: 50.5%;
+      background: #0d0c0a;
+      transition: transform 1.2s cubic-bezier(0.76, 0, 0.24, 1);
+    }
+    .preloader-bg-pane--top {
+      top: 0;
+      transform: translateY(0);
+      background: linear-gradient(180deg, #0d0c0a 80%, #161411 100%);
+      border-bottom: 1px solid rgba(196, 61, 47, 0.15);
+    }
+    .preloader-bg-pane--bottom {
+      bottom: 0;
+      transform: translateY(0);
+      background: linear-gradient(0deg, #0d0c0a 80%, #161411 100%);
+      border-top: 1px solid rgba(196, 61, 47, 0.15);
+    }
+    .preloader-frame {
+      position: relative;
+      z-index: 10010;
+      text-align: center;
+      transform-style: preserve-3d;
+      width: 100%;
+      max-width: 600px;
+      padding: 40px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .preloader-counter {
+      font-family: var(--font-mono);
+      font-size: 0.95rem;
+      color: var(--accent);
+      letter-spacing: 0.2em;
+      margin-bottom: 24px;
+      opacity: 0.8;
+      background: rgba(196, 61, 47, 0.08);
+      padding: 4px 10px 4px 12px;
+      border-radius: 20px;
+      border: 1px solid rgba(196, 61, 47, 0.2);
+    }
+    .preloader-logo-title {
+      font-family: var(--font-display);
+      font-size: clamp(3.5rem, 12vw, 7.5rem);
+      font-weight: 800;
+      line-height: 0.9;
+      margin: 0 0 16px;
+      color: #fff;
+      display: flex;
+      gap: clamp(10px, 3vw, 30px);
+      justify-content: center;
+    }
+    .p-char {
+      display: inline-block;
+      opacity: 0;
+      transform: translateY(60px) rotateX(-45deg);
+      transform-origin: bottom center;
+    }
+    .p-char.italic {
+      font-style: italic;
+      font-family: "Instrument Serif", "Newsreader", Georgia, serif;
+      font-weight: 400;
+      color: var(--accent);
+    }
+    .preloader-tagline {
+      font-family: var(--font-sans);
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 0.45em;
+      color: #a49e95;
+      opacity: 0;
+      transform: translateY(20px);
+      margin-top: 10px;
+    }
+    .preloader-indicator-bar-wrap {
+      width: 180px;
+      height: 1px;
+      background: rgba(255, 255, 255, 0.08);
+      margin: 32px auto 0;
+      position: relative;
+      overflow: hidden;
+      opacity: 0;
+      transform: translateY(15px);
+    }
+    .preloader-indicator-bar {
+      width: 0%;
+      height: 100%;
+      background: var(--accent);
+      box-shadow: 0 0 8px var(--accent);
+    }
+    .preloader-footer {
+      position: absolute;
+      bottom: -120px;
+      width: 100%;
+      left: 0;
+      display: flex;
+      justify-content: space-between;
+      font-family: var(--font-mono);
+      font-size: 0.58rem;
+      letter-spacing: 0.15em;
+      color: rgba(255, 255, 255, 0.25);
+      opacity: 0;
+      transform: translateY(15px);
+    }
+
+    /* ── CODE GENERATION MODAL ── */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.85);
+      backdrop-filter: blur(8px);
+      z-index: 50000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .modal-card {
+      background: #0d0c0a;
+      border: 1px solid #282520;
+      color: #edeae4;
+      border-radius: 20px;
+      max-width: 680px;
+      width: 100%;
+      padding: 32px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      position: relative;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+    }
+    .modal-close {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: none;
+      border: none;
+      color: #8c867c;
+      font-size: 1.8rem;
+      cursor: pointer;
+      transition: color 0.2s;
+      line-height: 1;
+    }
+    .modal-close:hover {
+      color: #fff;
+    }
+    .modal-header h2 {
+      font-family: var(--font-display);
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin: 0 0 6px;
+    }
+    .modal-header p {
+      font-size: 0.78rem;
+      color: #8c867c;
+      margin: 0;
+    }
+    .modal-code-area {
+      background: #060504;
+      border: 1px solid #1c1a16;
+      border-radius: 10px;
+      padding: 16px;
+      height: 240px;
+      overflow-y: auto;
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      color: #c4beaf;
+      white-space: pre-wrap;
+      user-select: all;
+    }
+  </style>
+</head>
+<body data-theme="A">
+
+  <!-- CINEMATIC PRELOADER CONTAINER -->
+  <div class="preloader-overlay" id="cinematicOverlay" style="display: flex;">
+    <div class="preloader-bg-pane preloader-bg-pane--top" id="pPaneTop"></div>
+    <div class="preloader-bg-pane preloader-bg-pane--bottom" id="pPaneBottom"></div>
+    
+    <div class="preloader-frame" id="pFrame">
+      <div class="preloader-counter" id="pCounter">000</div>
+      <h1 class="preloader-logo-title" id="pLogo">
+        <span class="p-char">T</span>
+        <span class="p-char">R</span>
+        <span class="p-char">A</span>
+        <span class="p-char italic">Y</span>
+      </h1>
+      <p class="preloader-tagline" id="pTag">fresh pipeline connections</p>
+      <div class="preloader-indicator-bar-wrap">
+        <div class="preloader-indicator-bar" id="pBar"></div>
+      </div>
+      <div class="preloader-footer" id="pFooter">
+        <span>NEXT-GEN CAMPUS KITCHEN HUD</span>
+        <span>© 2026 TRAY</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="sandbox-layout">
+    
+    <!-- SIDEBAR CONTROL CENTER -->
+    <aside class="sidebar">
+      <div class="sb-brand-row">
+        <div class="sb-logo-box">T</div>
+        <div class="sb-brand">Tray Motion Lab</div>
+      </div>
+      <div class="sb-tagline">Cinematic Landing Suite</div>
+
+      <div class="sb-section-title">Visual Themes</div>
+      <div class="theme-select-grid">
+        <button class="theme-dot-btn is-active" data-theme="A" style="--btn-color: #c43d2f" title="Quiet Luxury Editorial"></button>
+        <button class="theme-dot-btn" data-theme="B" style="--btn-color: #cdfa50" title="Swiss Tech Neo-Grotesk"></button>
+        <button class="theme-dot-btn" data-theme="C" style="--btn-color: #ef6a3a" title="Cyberpunk Kinetic"></button>
+        <button class="theme-dot-btn" data-theme="D" style="--btn-color: #C28E2A" title="Vintage Awwwards Gold"></button>
+        <button class="theme-dot-btn" data-theme="E" style="--btn-color: #FF5A1F" title="Elite Wolker Juiced"></button>
+      </div>
+
+      <div class="sb-section-title" style="margin-top: 10px;">Motion Categories</div>
+      
+      <div class="nav-item is-active" data-tab="reveals">
+        <span>Hero Reveals</span>
+        <span class="nav-item-num">01</span>
+      </div>
+      
+      <div class="nav-item" data-tab="scroll">
+        <span>Scroll Visual Hooks</span>
+        <span class="nav-item-num">02</span>
+      </div>
+      
+      <div class="nav-item" data-tab="cards">
+        <span>Curvy Cards Scroller</span>
+        <span class="nav-item-num">03</span>
+      </div>
+      
+      <div class="nav-item" data-tab="micro">
+        <span>Micro-interactions</span>
+        <span class="nav-item-num">04</span>
+      </div>
+
+      <!-- SELECTION TRACKER -->
+      <section class="selection-box">
+        <div class="sel-header">
+          <span class="sel-title">My Selections</span>
+          <span class="sel-count" id="selectionCount">0</span>
+        </div>
+        <ul class="sel-list" id="selectionList">
+          <li style="list-style:none; margin-left:-14px; font-style:italic; opacity:0.6;">No animations selected yet.</li>
+        </ul>
+        <button class="sb-btn btn-primary" id="btnHandoff">Generate Handoff Code</button>
+      </section>
+    </aside>
+
+    <!-- LIVE PREVIEW STAGE -->
+    <main class="stage" id="mainStage">
+      <div class="stage-inner">
+        
+        <!-- STICKY CONTROL HEADER -->
+        <header class="stage-header">
+          <div class="sh-title-group">
+            <h1 id="categoryTitle">Hero Entrance Reveals</h1>
+            <p id="categoryDesc">Cinematic headline reveals designed to capture attention instantly upon landing.</p>
+          </div>
+          <div class="sh-actions">
+            <button class="config-pill" id="btnRunPreloader">
+              <span>🎬</span>
+              <span>Simulate Preloader</span>
+            </button>
+          </div>
+        </header>
+
+        <!-- ── TAB 1: HERO REVEALS ── -->
+        <section class="lab-section is-active" id="section-reveals">
+          
+          <!-- Reveal 1 Card -->
+          <article class="lab-card">
+            <div class="lab-card-header">
+              <div class="lch-title">
+                <h2>Editorial Word Mask</h2>
+                <p>Perfect for serif font pairings. Elegant and clean.</p>
+              </div>
+              <div class="lch-meta">
+                <span class="lch-badge badge-css">CSS / Transform</span>
+                <button class="btn-replay" onclick="replayWordMask()">⟳</button>
+              </div>
+            </div>
+            <div class="interaction-stage">
+              <div class="hero-stage-content">
+                <h1 class="word-mask-line animate" id="maskLine1"><span>Fresh Campus Dining,</span></h1>
+                <h1 class="word-mask-line animate" id="maskLine2"><span>Right at your fingers.</span></h1>
+              </div>
+            </div>
+            <div class="checklist-row">
+              <input type="checkbox" id="check-reveal-1" class="anim-checker" data-name="Editorial Word Mask" data-cat="Hero Reveals">
+              <label for="check-reveal-1" class="checkbox-label">
+                <span class="custom-checkbox"></span>
+                <span>Select this for landing page</span>
+              </label>
+              <span class="code-toggle" onclick="toggleCode('code-reveal-1')">‹/› View Code</span>
+            </div>
+            <div class="code-pane" id="code-reveal-1">
+              <button class="btn-copy-code" onclick="copyCodeText('code-reveal-1-content')">Copy</button>
+              <pre id="code-reveal-1-content">
+/* HTML Structure */
+&lt;h1 class="word-mask"&gt;
+  &lt;span class="line"&gt;&lt;span&gt;Fresh Campus Dining,&lt;/span&gt;&lt;/span&gt;
+  &lt;span class="line"&gt;&lt;span&gt;Right at your fingers.&lt;/span&gt;&lt;/span&gt;
+&lt;/h1&gt;
+
+/* CSS Styling */
+.word-mask .line {
+  overflow: hidden;
+  display: block;
+  line-height: 1.1;
+}
+.word-mask .line span {
+  display: inline-block;
+  transform: translateY(105%) rotate(5deg);
+  transform-origin: 0% 100%;
+  transition: transform 0.85s cubic-bezier(0.76, 0, 0.24, 1);
+}
+.word-mask.animate .line span {
+  transform: translateY(0) rotate(0deg);
+}</pre>
+            </div>
+          </article>
+
+          <!-- Reveal 2 Card -->
+          <article class="lab-card">
+            <div class="lab-card-header">
+              <div class="lch-title">
+                <h2>Cyberpunk Glitch Stagger</h2>
+                <p>High energetic character entry. Perfect for modern/tech themes.</p>
+              </div>
+              <div class="lch-meta">
+                <span class="lch-badge badge-gsap">GSAP</span>
+                <button class="btn-replay" onclick="replayGlitchReveal()">⟳</button>
+              </div>
+            </div>
+            <div class="interaction-stage">
+              <div class="hero-stage-content">
+                <h1 class="glitch-reveal-title" id="glitchTitle">CAMPUS FOOD LANES</h1>
+              </div>
+            </div>
+            <div class="checklist-row">
+              <input type="checkbox" id="check-reveal-2" class="anim-checker" data-name="Cyberpunk Glitch Stagger" data-cat="Hero Reveals">
+              <label for="check-reveal-2" class="checkbox-label">
+                <span class="custom-checkbox"></span>
+                <span>Select this for landing page</span>
+              </label>
+              <span class="code-toggle" onclick="toggleCode('code-reveal-2')">‹/› View Code</span>
+            </div>
+            <div class="code-pane" id="code-reveal-2">
+              <button class="btn-copy-code" onclick="copyCodeText('code-reveal-2-content')">Copy</button>
+              <pre id="code-reveal-2-content">
+/* GSAP Glitch Letter Stagger */
+const target = document.getElementById("glitchTitle");
+const letters = target.innerText.split("");
+target.innerHTML = letters.map(l => `&lt;span class="glitch-char"&gt;${l}&lt;/span&gt;`).join("");
+
+gsap.fromTo(".glitch-char", 
+  { opacity: 0, scale: 0.5, y: 30 },
+  {
+    opacity: 1,
+    scale: 1,
+    y: 0,
+    stagger: 0.05,
+    duration: 0.65,
+    ease: "back.out(2)"
+  }
+);</pre>
+            </div>
+          </article>
+
+          <!-- Reveal 3 Card -->
+          <article class="lab-card">
+            <div class="lab-card-header">
+              <div class="lch-title">
+                <h2>Gold Ribbon Slow Focus</h2>
+                <p>Soft luxury layout with high visual hooks. Best with large display fonts.</p>
+              </div>
+              <div class="lch-meta">
+                <span class="lch-badge badge-css">CSS / GSAP</span>
+                <button class="btn-replay" onclick="replayGoldReveal()">⟳</button>
+              </div>
+            </div>
+            <div class="interaction-stage">
+              <div class="hero-stage-content">
+                <h1 class="gold-title-line animate" id="goldLine1">Quiet food arrays.</h1>
+                <h1 class="gold-title-line animate" id="goldLine2" style="font-weight:700;">Absolute zero wait.</h1>
+                <div class="gold-underline animate" id="goldUnderline"></div>
+              </div>
+            </div>
+            <div class="checklist-row">
+              <input type="checkbox" id="check-reveal-3" class="anim-checker" data-name="Gold Ribbon Slow Focus" data-cat="Hero Reveals">
+              <label for="check-reveal-3" class="checkbox-label">
+                <span class="custom-checkbox"></span>
+                <span>Select this for landing page</span>
+              </label>
+              <span class="code-toggle" onclick="toggleCode('code-reveal-3')">‹/› View Code</span>
+            </div>
+            <div class="code-pane" id="code-reveal-3">
+              <button class="btn-copy-code" onclick="copyCodeText('code-reveal-3-content')">Copy</button>
+              <pre id="code-reveal-3-content">
+/* Slow soft focus blur reveal */
+.gold-title-line {
+  opacity: 0;
+  transform: translateY(20px);
+  filter: blur(8px);
+  transition: all 1.2s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.gold-title-line.animate {
+  opacity: 1;
+  transform: translateY(0);
+  filter: blur(0px);
+}
+.gold-underline {
+  height: 2px;
+  width: 0%;
+  background: var(--accent);
+  transition: width 1.5s cubic-bezier(0.76, 0, 0.24, 1) 0.5s;
+}</pre>
+            </div>
+          </article>
+
+        </section>
+
+        <!-- ── TAB 2: SCROLL VISUAL HOOKS ── -->
+        <section class="lab-section" id="section-scroll">
+          
+          <!-- Scroll Hook 1: Text Highlight -->
+          <article class="lab-card">
+            <div class="lab-card-header">
+              <div class="lch-title">
+                <h2>Apple-Style Text Scroll Highlight</h2>
+                <p>Scroll down inside the window to see words light up dynamically.</p>
+              </div>
+              <div class="lch-meta">
+                <span class="lch-badge badge-gsap">GSAP / ScrollTrigger</span>
+              </div>
+            </div>
+            <div class="interaction-stage">
+              <div class="scroll-sandbox-container" id="scrollHighlightContainer">
+                <span class="scroll-sandbox-indicator">Scroll down ↓</span>
+                <div class="scroll-dummy-spacer">Start Scrolling</div>
+                
+                <p class="scroll-highlight-para" id="highlightPara">
+                  Tray is a high performance multi-tenant kitchen pipeline built directly into your college canteen ecosystems. Every single millisecond is tuned for zero-line takeaway or dine-in operations.
+                </p>
+                
+                <div class="scroll-dummy-spacer">Keep scrolling...</div>
+                <div class="scroll-dummy-spacer">End of Container</div>
+              </div>
+            </div>
+            <div class="checklist-row">
+              <input type="checkbox" id="check-scroll-1" class="anim-checker" data-name="Apple-Style Scroll Highlight" data-cat="Scroll Hooks">
+              <label for="check-scroll-1" class="checkbox-label">
+                <span class="custom-checkbox"></span>
+                <span>Select this for landing page</span>
+              </label>
+              <span class="code-toggle" onclick="toggleCode('code-scroll-1')">‹/› View Code</span>
+            </div>
+            <div class="code-pane" id="code-scroll-1">
+              <button class="btn-copy-code" onclick="copyCodeText('code-scroll-1-content')">Copy</button>
+              <pre id="code-scroll-1-content">
+/* Javascript split and highlight */
+const words = paragraph.innerText.split(' ');
+paragraph.innerHTML = words.map(w => `&lt;span class="word"&gt;${w}&lt;/span&gt;`).join(' ');
+
+gsap.utils.toArray('.word').forEach((word, i) => {
+  ScrollTrigger.create({
+    trigger: word,
+    scroller: ".scroll-container",
+    start: "top 65%",
+    end: "top 35%",
+    scrub: true,
+    onEnter: () => gsap.to(word, { color: '#1a140e', opacity: 1, duration: 0.1 }),
+    onLeaveBack: () => gsap.to(word, { color: '#eae5d8', opacity: 0.15, duration: 0.1 })
+  });
+});</pre>
+            </div>
+          </article>
+
+          <!-- Scroll Hook 2: Aperture Clip-Path -->
+          <article class="lab-card">
+            <div class="lab-card-header">
+              <div class="lch-title">
+                <h2>Scroll Aperture Expansion Mask</h2>
+                <p>Scroll down inside the window to see the portal frame clip expand.</p>
+              </div>
+              <div class="lch-meta">
+                <span class="lch-badge badge-gsap">GSAP / ClipPath</span>
+              </div>
+            </div>
+            <div class="interaction-stage">
+              <div class="aperture-box" id="apertureScroller">
+                <span class="scroll-sandbox-indicator">Scroll down ↓</span>
+                <div class="aperture-stage-height">
+                  <div class="aperture-frame-wrap">
+                    <div class="aperture-image-card" id="apertureImage">
+                      <span class="aperture-glass-label">TRAY HUD</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="checklist-row">
+              <input type="checkbox" id="check-scroll-2" class="anim-checker" data-name="Scroll Aperture Mask" data-cat="Scroll Hooks">
+              <label for="check-scroll-2" class="checkbox-label">
+                <span class="custom-checkbox"></span>
+                <span>Select this for landing page</span>
+              </label>
+              <span class="code-toggle" onclick="toggleCode('code-scroll-2')">‹/› View Code</span>
+            </div>
+            <div class="code-pane" id="code-scroll-2">
+              <button class="btn-copy-code" onclick="copyCodeText('code-scroll-2-content')">Copy</button>
+              <pre id="code-scroll-2-content">
+/* SVG circular clip path expand on scroll */
+gsap.to(".aperture-card", {
+  clipPath: "circle(100% at 50% 50%)",
+  scrollTrigger: {
+    trigger: ".aperture-trigger",
+    scroller: ".scroller-container",
+    start: "top top",
+    end: "bottom bottom",
+    scrub: true
+  }
+});</pre>
+            </div>
+          </article>
+
+          <!-- Scroll Hook 3: SVG Canteen Pipeline Wire -->
+          <article class="lab-card">
+            <div class="lab-card-header">
+              <div class="lch-title">
+                <h2>SVG Canteen Pipeline Draw</h2>
+                <p>Scroll down to flow canteen transaction nodes along the pipeline route.</p>
+              </div>
+              <div class="lch-meta">
+                <span class="lch-badge badge-gsap">GSAP / SVG Pipeline</span>
+              </div>
+            </div>
+            <div class="interaction-stage" style="padding: 10px 0;">
+              <div class="pipeline-scroller" id="pipelineScroller">
+                <span class="scroll-sandbox-indicator">Scroll down ↓</span>
+                <div class="pipeline-canvas">
+                  <svg class="pipeline-svg" viewBox="0 0 100 600" preserveAspectRatio="none">
+                    <path class="pipeline-wire-bg" d="M 50 0 C 150 150, -50 350, 50 600" />
+                    <path class="pipeline-wire-flow" id="pulseWire" d="M 50 0 C 150 150, -50 350, 50 600" />
+                  </svg>
+                  
+                  <div class="pipeline-node" style="top: 0%;"></div>
+                  <div class="pipeline-node" style="top: 33%;"></div>
+                  <div class="pipeline-node" style="top: 66%;"></div>
+                  <div class="pipeline-node" style="top: 100%;"></div>
+                </div>
+              </div>
+            </div>
+            <div class="checklist-row">
+              <input type="checkbox" id="check-scroll-3" class="anim-checker" data-name="SVG Canteen Pipeline Draw" data-cat="Scroll Hooks">
+              <label for="check-scroll-3" class="checkbox-label">
+                <span class="custom-checkbox"></span>
+                <span>Select this for landing page</span>
+              </label>
+              <span class="code-toggle" onclick="toggleCode('code-scroll-3')">‹/› View Code</span>
+            </div>
+            <div class="code-pane" id="code-scroll-3">
+              <button class="btn-copy-code" onclick="copyCodeText('code-scroll-3-content')">Copy</button>
+              <pre id="code-scroll-3-content">
+/* Animate SVG path draw in sync with scroll progress */
+const path = document.getElementById("pulseWire");
+const length = path.getTotalLength();
+path.style.strokeDasharray = length;
+path.style.strokeDashoffset = length;
+
+scroller.addEventListener("scroll", () => {
+  const pct = scroller.scrollTop / (scroller.scrollHeight - scroller.clientHeight);
+  path.style.strokeDashoffset = length - (pct * length);
+});</pre>
+            </div>
+          </article>
+
+        </section>
+
+        <!-- ── TAB 3: CURVY CARDS SCROLLER ── -->
+        <section class="lab-section" id="section-cards">
+          
+          <article class="lab-card">
+            <div class="lab-card-header">
+              <div class="lch-title">
+                <h2>Winding Railway Curvy Cards Scroller</h2>
+                <p>Absolute showstopper curvy card scroller. Spaced-out track and math coordinate positioning wiggles and rotates cards dynamically as they glide along the railway line.</p>
+              </div>
+              <div class="lch-meta">
+                <span class="lch-badge badge-gsap">GSAP / Curves</span>
+              </div>
+            </div>
+            
+            <div class="interaction-stage" style="padding: 10px 0;">
+              <!-- 3200px Scroll Sandbox -->
+              <div class="railway-scroller-box" id="railwayScroller">
+                <span class="scroll-sandbox-indicator">Scroll down slowly ↓</span>
+                
+                <div class="railway-canvas-container">
+                  <!-- Winding Dotted Track SVG -->
+                  <svg class="railway-svg-track" viewBox="0 0 460 3200" preserveAspectRatio="none">
+                    <!-- Background bed -->
+                    <path class="railway-track-bed" d="M 230 0 C 420 300, 40 500, 230 800 C 420 1100, 40 1300, 230 1600 C 420 1900, 40 2100, 230 2400 C 420 2700, 40 2900, 230 3200" />
+                    <!-- Wooden sleepers -->
+                    <path class="railway-sleepers" d="M 230 0 C 420 300, 40 500, 230 800 C 420 1100, 40 1300, 230 1600 C 420 1900, 40 2100, 230 2400 C 420 2700, 40 2900, 230 3200" />
+                    <!-- Steel track bg rails -->
+                    <path class="railway-track-bg" d="M 230 0 C 420 300, 40 500, 230 800 C 420 1100, 40 1300, 230 1600 C 420 1900, 40 2100, 230 2400 C 420 2700, 40 2900, 230 3200" />
+                    <!-- Front glowing steel monorail that draws dynamically -->
+                    <path class="railway-track-glow" id="railwayGlowPath" d="M 230 0 C 420 300, 40 500, 230 800 C 420 1100, 40 1300, 230 1600 C 420 1900, 40 2100, 230 2400 C 420 2700, 40 2900, 230 3200" />
+                    
+                    <!-- Glowing Stations/Stops positioned dynamically by JS -->
+                    <g class="railway-station" id="station-1">
+                      <circle class="station-ring-outer" r="16" />
+                      <circle class="station-ring-inner" r="8" />
+                      <circle class="station-dot" r="5" />
+                    </g>
+                    <g class="railway-station" id="station-2">
+                      <circle class="station-ring-outer" r="16" />
+                      <circle class="station-ring-inner" r="8" />
+                      <circle class="station-dot" r="5" style="stroke: var(--cool); --accent: var(--cool);" />
+                    </g>
+                    <g class="railway-station" id="station-3">
+                      <circle class="station-ring-outer" r="16" />
+                      <circle class="station-ring-inner" r="8" />
+                      <circle class="station-dot" r="5" style="stroke: purple; --accent: purple;" />
+                    </g>
+                    <g class="railway-station" id="station-4">
+                      <circle class="station-ring-outer" r="16" />
+                      <circle class="station-ring-inner" r="8" />
+                      <circle class="station-dot" r="5" style="stroke: teal; --accent: teal;" />
+                    </g>
+                  </svg>
+                  
+                  <!-- Curved absolute positioned cards -->
+                  <div class="railway-card" data-offset="0.08">
+                    <div class="railway-card-spotlight"></div>
+                    <span class="railway-card-badge" style="color:var(--accent);">01 · Student Order</span>
+                    <h3 style="font-family:var(--font-display); font-size:1.2rem; margin:0 0 6px; font-weight:800;">Dine in or Takeaway</h3>
+                    <p style="font-size:0.72rem; color:var(--ink-muted); margin:0; line-height:1.4;">Wipeout queues completely. Order directly from classes or rooms.</p>
+                  </div>
+                  
+                  <div class="railway-card" data-offset="0.33">
+                    <div class="railway-card-spotlight"></div>
+                    <span class="railway-card-badge" style="color:var(--cool);">02 · Central Hub</span>
+                    <h3 style="font-family:var(--font-display); font-size:1.2rem; margin:0 0 6px; font-weight:800;">Frictionless Transit</h3>
+                    <p style="font-size:0.72rem; color:var(--ink-muted); margin:0; line-height:1.4;">Orders route dynamically into respective kitchen segment arrays.</p>
+                  </div>
+                  
+                  <div class="railway-card" data-offset="0.58">
+                    <div class="railway-card-spotlight"></div>
+                    <span class="railway-card-badge" style="color:purple;">03 · Kitchen fulfillment</span>
+                    <h3 style="font-family:var(--font-display); font-size:1.2rem; margin:0 0 6px; font-weight:800;">Lanes & ETA Projections</h3>
+                    <p style="font-size:0.72rem; color:var(--ink-muted); margin:0; line-height:1.4;">Dynamic display boards showing active orders with dual FSSAI pulses.</p>
+                  </div>
+                  
+                  <div class="railway-card" data-offset="0.83">
+                    <div class="railway-card-spotlight"></div>
+                    <span class="railway-card-badge" style="color:teal;">04 · Swift Handoff</span>
+                    <h3 style="font-family:var(--font-display); font-size:1.2rem; margin:0 0 6px; font-weight:800;">Express Deliveries</h3>
+                    <p style="font-size:0.72rem; color:var(--ink-muted); margin:0; line-height:1.4;">Grab fresh containers within seconds. Real-time updates with zero lines.</p>
+                  </div>
+
+                </div>
+              </div>
+            </div>
+            
+            <div class="checklist-row">
+              <input type="checkbox" id="check-card-railway" class="anim-checker" data-name="Railway Curvy Card Scroller" data-cat="Card Layouts" checked>
+              <label for="check-card-railway" class="checkbox-label">
+                <span class="custom-checkbox"></span>
+                <span style="font-weight:700; color:var(--accent);">Select Winding Railway Curvy Scroller (Highly Recommended!)</span>
+              </label>
+              <span class="code-toggle" onclick="toggleCode('code-card-railway')">‹/› View Code</span>
+            </div>
+            <div class="code-pane" id="code-card-railway">
+              <button class="btn-copy-code" onclick="copyCodeText('code-card-railway-content')">Copy</button>
+              <pre id="code-card-railway-content">
+/* Curved math path coordinates positioning cache + tangent rotate dynamic alignment on scroll */
+// SVG Path D-Attribute: M 230 0 C 420 300, 40 500, 230 800 C 420 1100, 40 1300, 230 1600 C 420 1900, 40 2100, 230 2400 C 420 2700, 40 2900, 230 3200
+
+// On page load: cache points and tangent angles directly from SVG path
+railwayCards.forEach((card) => {
+  const dist = parseFloat(card.dataset.offset) * pathLength;
+  const pt = path.getPointAtLength(dist);
+  const ptNext = path.getPointAtLength(Math.min(dist + 6, pathLength));
+  card.baseX = pt.x;
+  card.baseY = pt.y;
+  card.baseAngle = Math.atan2(ptNext.y - pt.y, ptNext.x - pt.x) * (180 / Math.PI) - 90;
+});
+
+// During Scroll event loop:
+scroller.addEventListener("scroll", () => {
+  const viewportCenter = scroller.scrollTop + scroller.clientHeight / 2;
+  
+  railwayCards.forEach((card) => {
+    const distanceToCenter = card.baseY - viewportCenter;
+    const focusFactor = Math.max(0, 1 - Math.abs(distanceToCenter) / 220);
+    const easeFocus = Math.sin(focusFactor * Math.PI / 2);
+    
+    // Scale up, drift perpendicularly, and rotate kinetic tangent
+    const scale = 0.92 + easeFocus * 0.12;
+    const opacity = 0.25 + easeFocus * 0.75;
+    const driftX = (distanceToCenter / 220) * 20; 
+    const sway = (distanceToCenter / 220) * 12;
+    const finalRotate = card.baseAngle + sway * (1 - easeFocus);
+    
+    card.style.opacity = opacity;
+    card.style.left = `${card.baseX}px`;
+    card.style.top = `${card.baseY}px`;
+    card.style.transform = `translate(-50%, -50%) translate3d(${driftX}px, 0, 0) scale(${scale}) rotate(${finalRotate}deg)`;
+  });
+});</pre>
+            </div>
+          </article>
+
+        </section>
+
+        <!-- ── TAB 4: MICRO-INTERACTIONS ── -->
+        <section class="lab-section" id="section-micro">
+          
+          <div class="micro-stage">
+            
+            <!-- Box 1: Magnetic Button -->
+            <article class="micro-box">
+              <span class="micro-label">Magnetic Target</span>
+              <div class="magnetic-btn-wrap" id="magneticWrap">
+                <button class="magnetic-btn" id="magneticBtn">
+                  <span>Explore Portals</span>
+                  <span style="font-size:0.9rem;">→</span>
+                </button>
+              </div>
+              <div class="checklist-row" style="width:100%; border:none; background:transparent; padding:0; justify-content:center; gap:8px;">
+                <input type="checkbox" id="check-micro-1" class="anim-checker" data-name="Magnetic Floating Button" data-cat="Micro-interactions" checked>
+                <label for="check-micro-1" class="checkbox-label">
+                  <span class="custom-checkbox"></span>
+                  <span style="font-size:0.78rem; color:var(--ink); font-weight:700;">Magnetic Button</span>
+                </label>
+              </div>
+            </article>
+
+            <!-- Box 2: Liquid Slide Button -->
+            <article class="micro-box">
+              <span class="micro-label">Liquid-Fill</span>
+              <button class="liquid-btn">
+                <span class="liquid-btn-text">Place Order Now</span>
+                <div class="liquid-btn-wave">
+                  <svg viewBox="0 0 120 28" class="liquid-wave-svg">
+                    <path d="M0,15 C30,12 30,18 60,15 C90,12 90,18 120,15 L120,28 L0,28 Z" fill="var(--accent)"></path>
+                  </svg>
+                  <div class="liquid-wave-fill" style="background: var(--accent);"></div>
+                </div>
+                <span class="liquid-btn-icon">🔥</span>
+              </button>
+              <div class="checklist-row" style="width:100%; border:none; background:transparent; padding:0; justify-content:center; gap:8px;">
+                <input type="checkbox" id="check-micro-2" class="anim-checker" data-name="Liquid-Fill Action Button" data-cat="Micro-interactions" checked>
+                <label for="check-micro-2" class="checkbox-label">
+                  <span class="custom-checkbox"></span>
+                  <span style="font-size:0.78rem; color:var(--ink); font-weight:700;">Liquid Action Button</span>
+                </label>
+              </div>
+            </article>
+
+            <!-- Box 3: Arrow Slide Swap -->
+            <article class="micro-box">
+              <span class="micro-label">Hover Slide-Swap</span>
+              <a href="#" class="arrow-swap-link">
+                <span class="as-text">View Full Features</span>
+                <span class="as-arrow-container">
+                  <span class="as-arrow-primary">→</span>
+                  <span class="as-arrow-secondary">→</span>
+                </span>
+              </a>
+              <div class="checklist-row" style="width:100%; border:none; background:transparent; padding:0; justify-content:center; gap:8px;">
+                <input type="checkbox" id="check-micro-3" class="anim-checker" data-name="Arrow Slide-Swap Link" data-cat="Micro-interactions" checked>
+                <label for="check-micro-3" class="checkbox-label">
+                  <span class="custom-checkbox"></span>
+                  <span style="font-size:0.78rem; color:var(--ink); font-weight:700;">Arrow Slide-Swap</span>
+                </label>
+              </div>
+            </article>
+
+            <!-- Box 4: FSSAI Badges -->
+            <article class="micro-box" style="gap: 12px; min-height: 180px;">
+              <span class="micro-label">FSSAI Indian Food Dual Pulse</span>
+              
+              <div class="fssai-pulse-wrap">
+                <!-- Veg Badge Card -->
+                <div class="fssai-card" id="fssaiVeg">
+                  <div class="fssai-badge-container">
+                    <div class="fssai-badge-veg">
+                      <div class="fssai-outer-square">
+                        <div class="fssai-inner-circle"></div>
+                      </div>
+                      <div class="fssai-pulse-ring ring-1"></div>
+                      <div class="fssai-pulse-ring ring-2"></div>
+                    </div>
+                  </div>
+                  <div class="fssai-info">
+                    <span class="fssai-tag">VEG</span>
+                    <span class="fssai-lic">Lic. 1002409900018</span>
+                  </div>
+                </div>
+
+                <!-- Non-Veg Badge Card -->
+                <div class="fssai-card" id="fssaiNonVeg">
+                  <div class="fssai-badge-container">
+                    <div class="fssai-badge-nonveg">
+                      <div class="fssai-outer-square">
+                        <div class="fssai-inner-triangle"></div>
+                      </div>
+                      <div class="fssai-pulse-ring ring-1"></div>
+                      <div class="fssai-pulse-ring ring-2"></div>
+                    </div>
+                  </div>
+                  <div class="fssai-info">
+                    <span class="fssai-tag nonveg">NON-VEG</span>
+                    <span class="fssai-lic">Lic. 1002409900018</span>
+                  </div>
+                </div>
+              </div>
+              
+              <span style="font-size:0.6rem; color:var(--ink-muted); font-family:var(--font-mono)">Hover compliant food cards to spin 3D and trigger organic pulses</span>
+              <div class="checklist-row" style="width:100%; border:none; background:transparent; padding:0; justify-content:center; gap:8px;">
+                <input type="checkbox" id="check-micro-4" class="anim-checker" data-name="FSSAI Dual Pulse Badge" data-cat="Micro-interactions" checked>
+                <label for="check-micro-4" class="checkbox-label">
+                  <span class="custom-checkbox"></span>
+                  <span style="font-size:0.78rem; color:var(--ink); font-weight:700;">FSSAI Organic Pulse</span>
+                </label>
+              </div>
+            </article>
+
+          </div>
+
+        </section>
+
+      </div>
+    </main>
+
+  </div>
+
+  <!-- HANDOFF MODAL -->
+  <div class="modal-overlay" id="handoffModal">
+    <div class="modal-card">
+      <button class="modal-close" id="btnModalClose">×</button>
+      <div class="modal-header">
+        <h2>Motion Selection Handoff Blueprint</h2>
+        <p>Copy this spec file containing code blueprints for your chosen landing page animations.</p>
+      </div>
+      <div style="background: rgba(255,255,255,0.03); border:1px solid #222; border-radius:8px; padding:15px; font-size:0.78rem;">
+        <span style="font-family:var(--font-mono); font-size:0.65rem; color:var(--accent);">SELECTIONS CONFIRMED:</span>
+        <ul id="modalSelectionsList" style="margin:8px 0 0; padding-left:20px; line-height:1.5;">
+          <!-- Injected dynamically -->
+        </ul>
+      </div>
+      
+      <div style="display:flex; flex-direction:column; gap:8px;">
+        <span style="font-size:0.75rem; font-weight:600; color:#fff;">Generated Integration Blueprint Code:</span>
+        <div class="modal-code-area" id="modalBlueprintContent"></div>
+      </div>
+      <button class="sb-btn btn-primary" onclick="copyModalCode()">Copy Blueprint File</button>
+    </div>
+  </div>
+
+  <!-- SCRIPTING FOR LAB INTERACTIVES -->
+  <script>
+    /* ── CINEMATIC PRELOADER SIMULATOR ── */
+    const cinematicOverlay = document.getElementById("cinematicOverlay");
+    const pPaneTop = document.getElementById("pPaneTop");
+    const pPaneBottom = document.getElementById("pPaneBottom");
+    const pFrame = document.getElementById("pFrame");
+    const pBar = document.getElementById("pBar");
+    const btnRunPreloader = document.getElementById("btnRunPreloader");
+
+    function runCinematicPreloader() {
+      // Initialize states
+      cinematicOverlay.style.display = "flex";
+      pPaneTop.style.transform = "translateY(0%)";
+      pPaneBottom.style.transform = "translateY(0%)";
+      
+      const chars = document.querySelectorAll(".p-char");
+      const pCounter = document.getElementById("pCounter");
+      const pTag = document.getElementById("pTag");
+      const pBarWrap = document.querySelector(".preloader-indicator-bar-wrap");
+      const pFooter = document.getElementById("pFooter");
+      
+      gsap.set(chars, { opacity: 0, y: 70, rotateX: -60, scale: 0.8, letterSpacing: "0.02em" });
+      gsap.set([pCounter, pTag, pBarWrap, pFooter], { opacity: 0, y: 25 });
+      gsap.set(pBar, { width: "0%" });
+      
+      const tl = gsap.timeline();
+      
+      // Step 1: Reveal counter & footer
+      tl.to([pCounter, pFooter], {
+        opacity: 1,
+        y: 0,
+        duration: 0.8,
+        ease: "power3.out",
+        stagger: 0.1
+      })
+      // Step 2: Animate Counter 00 -> 100
+      .to({ val: 0 }, {
+        val: 100,
+        duration: 2.2,
+        ease: "power2.out",
+        onUpdate: function() {
+          const formatted = Math.floor(this.targets()[0].val).toString().padStart(3, '0');
+          pCounter.textContent = formatted;
+        }
+      }, "-=0.4")
+      // Step 3: Stagger characters in logo
+      .to(chars, {
+        opacity: 1,
+        y: 0,
+        rotateX: 0,
+        scale: 1,
+        duration: 1.4,
+        ease: "power4.out",
+        stagger: 0.12
+      }, "-=2.0")
+      // Step 4: Tagline and bar wrap reveal
+      .to([pTag, pBarWrap], {
+        opacity: 1,
+        y: 0,
+        duration: 0.8,
+        ease: "power3.out",
+        stagger: 0.15
+      }, "-=1.2")
+      // Step 5: Fill indicator bar in sync with counter ending
+      .to(pBar, {
+        width: "100%",
+        duration: 1.8,
+        ease: "power2.inOut"
+      }, "-=1.8")
+      // Step 6: Expand characters slightly (luxurious letter fanning)
+      .to(chars, {
+        letterSpacing: "0.22em",
+        duration: 1.8,
+        ease: "power3.out"
+      }, "-=1.0")
+      // Step 7: Collapse preloader elements elegantly
+      .to([pCounter, chars, pTag, pBarWrap, pFooter], {
+        opacity: 0,
+        y: -30,
+        duration: 0.7,
+        ease: "power3.in",
+        stagger: 0.05
+      })
+      // Step 8: Slide panes apart
+      .to(pPaneTop, {
+        transform: "translateY(-101%)",
+        duration: 1.1,
+        ease: "power4.inOut"
+      }, "-=0.2")
+      .to(pPaneBottom, {
+        transform: "translateY(101%)",
+        duration: 1.1,
+        ease: "power4.inOut"
+      }, "-=1.1")
+      .add(() => {
+        cinematicOverlay.style.display = "none";
+        // Trigger other entry animations
+        replayWordMask();
+        replayGlitchReveal();
+        replayGoldReveal();
+      });
+    }
+
+    btnRunPreloader.addEventListener("click", runCinematicPreloader);
+
+    /* ── SIDEBAR TAB SWITCHING ── */
+    const tabs = document.querySelectorAll(".nav-item");
+    const labSections = document.querySelectorAll(".lab-section");
+    const catTitle = document.getElementById("categoryTitle");
+    const catDesc = document.getElementById("categoryDesc");
+
+    const categoryText = {
+      reveals: {
+        title: "Hero Entrance Reveals",
+        desc: "Cinematic headlines designed to capture attention instantly using modern Editorial Serif reveals or snazzy Tech glitch tags."
+      },
+      scroll: {
+        title: "Scroll Visual Hooks",
+        desc: "Continuous visual interest driven by scroll scrub triggers, aperture expands, or pipeline draw flows that hook users."
+      },
+      cards: {
+        title: "Curvy Cards Scroller",
+        desc: "Addictive winding railway scroller that wiggles and rotates cards automatically along curved coordinate paths."
+      },
+      micro: {
+        title: "Micro-interactions",
+        desc: "Microscopic visual details like FSSAI compliant dual pulses, organic liquid fillings, or slide-swaps on hover."
+      }
+    };
+
+    tabs.forEach(tab => {
+      tab.addEventListener("click", () => {
+        const targetTab = tab.getAttribute("data-tab");
+        
+        tabs.forEach(t => t.classList.remove("is-active"));
+        tab.classList.add("is-active");
+
+        labSections.forEach(sec => {
+          sec.classList.remove("is-active");
+          if(sec.getAttribute("id") === `section-${targetTab}`) {
+            sec.classList.add("is-active");
+          }
+        });
+
+        // Set Headers
+        catTitle.textContent = categoryText[targetTab].title;
+        catDesc.textContent = categoryText[targetTab].desc;
+        
+        // Custom trigger for railway layout if shown
+        if (targetTab === "cards") {
+          setTimeout(() => {
+            railwayScroller.dispatchEvent(new Event("scroll"));
+          }, 100);
+        }
+      });
+    });
+
+    /* ── REPLAY FUNCTIONS FOR TAB 1 ── */
+    function replayWordMask() {
+      const l1 = document.getElementById("maskLine1");
+      const l2 = document.getElementById("maskLine2");
+      l1.classList.remove("animate");
+      l2.classList.remove("animate");
+      void l1.offsetWidth; // Trigger reflow
+      setTimeout(() => {
+        l1.classList.add("animate");
+        l2.classList.add("animate");
+      }, 50);
+    }
+
+    function replayGlitchReveal() {
+      const target = document.getElementById("glitchTitle");
+      const letters = "CAMPUS FOOD LANES".split("");
+      target.innerHTML = letters.map(l => `<span class="glitch-char">${l}</span>`).join("");
+      
+      gsap.fromTo(".glitch-char", 
+        { opacity: 0, scale: 0.5, y: 30 },
+        {
+          opacity: 1,
+          scale: 1,
+          y: 0,
+          stagger: 0.05,
+          duration: 0.65,
+          ease: "back.out(2)"
+        }
+      );
+    }
+
+    function replayGoldReveal() {
+      const l1 = document.getElementById("goldLine1");
+      const l2 = document.getElementById("goldLine2");
+      const line = document.getElementById("goldUnderline");
+      
+      l1.classList.remove("animate");
+      l2.classList.remove("animate");
+      line.classList.remove("animate");
+      
+      void l1.offsetWidth; // Trigger reflow
+      
+      setTimeout(() => {
+        l1.classList.add("animate");
+        l2.classList.add("animate");
+        line.classList.add("animate");
+      }, 50);
+    }
+
+    /* ── SCROLL SECTION: APPLE HIGHLIGHT DRIVER ── */
+    const highlightScroller = document.getElementById("scrollHighlightContainer");
+    const highlightPara = document.getElementById("highlightPara");
+    
+    // Split paragraph words into spans
+    const textWords = highlightPara.innerText.split(' ');
+    highlightPara.innerHTML = textWords.map(w => `<span class="word">${w}</span>`).join(' ');
+    const spanWords = highlightPara.querySelectorAll('.word');
+
+    highlightScroller.addEventListener("scroll", () => {
+      const scrollTop = highlightScroller.scrollTop;
+      const maxScroll = highlightScroller.scrollHeight - highlightScroller.clientHeight;
+      const pct = maxScroll > 0 ? scrollTop / maxScroll : 0;
+      
+      const totalWords = spanWords.length;
+      const litIndex = Math.min(Math.floor(pct * totalWords * 1.15), totalWords);
+      
+      spanWords.forEach((word, idx) => {
+        if(idx <= litIndex) {
+          word.classList.add("lit");
+        } else {
+          word.classList.remove("lit");
+        }
+      });
+    });
+
+    /* ── SCROLL SECTION: APERTURE DRIVER ── */
+    const apertureScroller = document.getElementById("apertureScroller");
+    const apertureImage = document.getElementById("apertureImage");
+
+    apertureScroller.addEventListener("scroll", () => {
+      const top = apertureScroller.scrollTop;
+      const max = apertureScroller.scrollHeight - apertureScroller.clientHeight;
+      const progress = top / max;
+      
+      // Map progress to clipPath circles (12% to 100%)
+      const circlePct = 12 + (progress * 88);
+      apertureImage.style.clipPath = `circle(${circlePct}% at 50% 50%)`;
+    });
+
+    /* ── SCROLL SECTION: PIPELINE DRIVER ── */
+    const pipelineScroller = document.getElementById("pipelineScroller");
+    const pulseWire = document.getElementById("pulseWire");
+    const wireLength = pulseWire.getTotalLength();
+    pulseWire.style.strokeDasharray = wireLength;
+    pulseWire.style.strokeDashoffset = wireLength;
+
+    pipelineScroller.addEventListener("scroll", () => {
+      const top = pipelineScroller.scrollTop;
+      const max = pipelineScroller.scrollHeight - pipelineScroller.clientHeight;
+      const progress = top / max;
+      
+      pulseWire.style.strokeDashoffset = wireLength - (progress * wireLength);
+    });
+
+    /* ── CURVY RAILWAY SCROLLER JS DRIVER ── */
+    const railwayScroller = document.getElementById("railwayScroller");
+    const railwayCards = document.querySelectorAll(".railway-card");
+    const railwayGlowPath = document.getElementById("railwayGlowPath");
+    const svgPathLength = railwayGlowPath.getTotalLength();
+    
+    // Set initial glow route dash details
+    railwayGlowPath.style.strokeDasharray = svgPathLength;
+    railwayGlowPath.style.strokeDashoffset = svgPathLength;
+
+    // Define interactive stations
+    const stations = [
+      { el: document.getElementById("station-1"), offset: 0.08, y: 0 },
+      { el: document.getElementById("station-2"), offset: 0.33, y: 0 },
+      { el: document.getElementById("station-3"), offset: 0.58, y: 0 },
+      { el: document.getElementById("station-4"), offset: 0.83, y: 0 }
+    ];
+
+    // Pre-calculate exact points and tangent rotations along the SVG track path once on load
+    // This avoids calling the heavy getPointAtLength API inside the 60fps scroll loop!
+    function initRailwayPositions() {
+      // Setup cards
+      railwayCards.forEach((card) => {
+        const offsetPct = parseFloat(card.getAttribute("data-offset"));
+        const dist = offsetPct * svgPathLength;
+        const pt = railwayGlowPath.getPointAtLength(dist);
+        const ptNext = railwayGlowPath.getPointAtLength(Math.min(dist + 6, svgPathLength));
+        
+        card.baseX = pt.x;
+        card.baseY = pt.y;
+        
+        const angleRad = Math.atan2(ptNext.y - pt.y, ptNext.x - pt.x);
+        card.baseAngle = angleRad * (180 / Math.PI) - 90; // Adjust orientation to match track curve
+      });
+
+      // Setup stations
+      stations.forEach((st) => {
+        const dist = st.offset * svgPathLength;
+        const pt = railwayGlowPath.getPointAtLength(dist);
+        st.x = pt.x;
+        st.y = pt.y;
+        st.el.setAttribute("transform", `translate(${pt.x}, ${pt.y})`);
+      });
+    }
+
+    // Interactive rendering based on scroll position
+    function renderRailwayScroll(scrollTop) {
+      const maxScroll = railwayScroller.scrollHeight - railwayScroller.clientHeight;
+      const progress = maxScroll > 0 ? scrollTop / maxScroll : 0;
+
+      // Fill glow monorail path in sync with progress
+      railwayGlowPath.style.strokeDashoffset = svgPathLength - (progress * svgPathLength);
+
+      const viewportCenter = scrollTop + (railwayScroller.clientHeight / 2);
+
+      // Render cards
+      railwayCards.forEach((card) => {
+        const distanceToCenter = card.baseY - viewportCenter;
+        const absDist = Math.abs(distanceToCenter);
+        
+        // Focus factor: 1 in exact center, fading to 0 at 220px distance
+        const focusFactor = Math.max(0, 1 - absDist / 220);
+        const easeFocus = Math.sin(focusFactor * Math.PI / 2); // Sine easing for visual punch
+        
+        const scale = 0.92 + easeFocus * 0.12;
+        const opacity = 0.25 + easeFocus * 0.75;
+        
+        // Dynamic horizontal wiggle drift based on scroll distance
+        const driftX = (distanceToCenter / 220) * 20; 
+        
+        // Tangent wiggling rotation sway as card glides through curve
+        const sway = (distanceToCenter / 220) * 12;
+        const finalRotate = card.baseAngle + sway * (1 - easeFocus);
+
+        card.style.left = `${card.baseX}px`;
+        card.style.top = `${card.baseY}px`;
+        card.style.opacity = opacity;
+        card.style.transform = `translate(-50%, -50%) translate3d(${driftX}px, 0, 0) scale(${scale}) rotate(${finalRotate}deg)`;
+
+        if(absDist < 160) {
+          card.classList.add("is-focused");
+        } else {
+          card.classList.remove("is-focused");
+        }
+      });
+
+      // Render stations active lightup glow rings
+      stations.forEach((st) => {
+        const dist = Math.abs(st.y - viewportCenter);
+        if(dist < 180) {
+          st.el.classList.add("is-active");
+        } else {
+          st.el.classList.remove("is-active");
+        }
+      });
+    }
+
+    // Kinematic Lerping Momentum Scroll Scroller
+    let currentScroll = 0;
+    let targetScroll = 0;
+    let isTickerRunning = false;
+
+    railwayScroller.addEventListener("scroll", () => {
+      targetScroll = railwayScroller.scrollTop;
+      if (!isTickerRunning) {
+        isTickerRunning = true;
+        updateRailwayMomentum();
+      }
+    });
+
+    function updateRailwayMomentum() {
+      // Lerp standard scroll coordinates for momentum feel
+      const diff = targetScroll - currentScroll;
+      if (Math.abs(diff) > 0.05) {
+        currentScroll += diff * 0.095; // Smooth momentum filter
+        renderRailwayScroll(currentScroll);
+        requestAnimationFrame(updateRailwayMomentum);
+      } else {
+        currentScroll = targetScroll;
+        renderRailwayScroll(currentScroll);
+        isTickerRunning = false;
+      }
+    }
+
+    // Run Initial computations
+    setTimeout(() => {
+      initRailwayPositions();
+      renderRailwayScroll(0);
+    }, 150);
+
+    /* ── MAGNETIC BUTTONS ── */
+    const magWrap = document.getElementById("magneticWrap");
+    const magBtn = document.getElementById("magneticBtn");
+
+    magWrap.addEventListener("mousemove", (e) => {
+      const rect = magWrap.getBoundingClientRect();
+      const x = e.clientX - rect.left - (rect.width / 2);
+      const y = e.clientY - rect.top - (rect.height / 2);
+      
+      const displaceX = Math.min(Math.max(x, -25), 25);
+      const displaceY = Math.min(Math.max(y, -25), 25);
+
+      gsap.to(magBtn, {
+        x: displaceX,
+        y: displaceY,
+        duration: 0.3,
+        ease: "power3.out",
+        overwrite: "auto"
+      });
+    });
+
+    magWrap.addEventListener("mouseleave", () => {
+      gsap.to(magBtn, {
+        x: 0,
+        y: 0,
+        duration: 0.6,
+        ease: "elastic.out(1.1, 0.4)",
+        overwrite: "auto"
+      });
+    });
+
+    /* ── SELECTION TRACKER & HANDOFF BLUEPRINT SYSTEM ── */
+    const modal = document.getElementById("handoffModal");
+    const btnHandoff = document.getElementById("btnHandoff");
+    const btnModalClose = document.getElementById("btnModalClose");
+    const modalSelectionsList = document.getElementById("modalSelectionsList");
+    const modalBlueprintContent = document.getElementById("modalBlueprintContent");
+    const selectionCount = document.getElementById("selectionCount");
+    const selectionList = document.getElementById("selectionList");
+
+    let activeSelections = [];
+
+    function updateSelections() {
+      activeSelections = [];
+      const checkboxes = document.querySelectorAll(".anim-checker");
+      
+      checkboxes.forEach(cb => {
+        if(cb.checked) {
+          activeSelections.push({
+            id: cb.id,
+            name: cb.getAttribute("data-name"),
+            category: cb.getAttribute("data-cat")
+          });
+        }
+      });
+
+      // Update Sidebar Count
+      selectionCount.textContent = activeSelections.length;
+
+      // Update Sidebar UI List
+      if(activeSelections.length === 0) {
+        selectionList.innerHTML = `<li style="list-style:none; margin-left:-14px; font-style:italic; opacity:0.6;">No animations selected yet.</li>`;
+      } else {
+        selectionList.innerHTML = activeSelections.map(sel => `
+          <li><strong>${sel.category}:</strong> ${sel.name}</li>
+        `).join('');
+      }
+    }
+
+    // Attach listeners to all checkers
+    document.querySelectorAll(".anim-checker").forEach(cb => {
+      cb.addEventListener("change", updateSelections);
+    });
+
+    // Initialize selections on load
+    updateSelections();
+
+    btnHandoff.addEventListener("click", () => {
+      if(activeSelections.length === 0) {
+        alert("Please select at least one animation style before generating handoff blueprint.");
+        return;
+      }
+      
+      modalSelectionsList.innerHTML = activeSelections.map(sel => `
+        <li><strong>${sel.category}:</strong> ${sel.name}</li>
+      `).join('');
+
+      const blueprintText = generateHandoffBlueprintText();
+      modalBlueprintContent.textContent = blueprintText.trim();
+
+      modal.style.display = "flex";
+    });
+
+    btnModalClose.addEventListener("click", () => {
+      modal.style.display = "none";
+    });
+
+    window.addEventListener("click", (e) => {
+      if(e.target === modal) {
+        modal.style.display = "none";
+      }
+    });
+
+    function copyModalCode() {
+      const codeText = modalBlueprintContent.textContent;
+      navigator.clipboard.writeText(codeText).then(() => {
+        alert("Integrations Blueprint handoff code copied to clipboard successfully!");
+      });
+    }
+
+    function toggleCode(paneId) {
+      const pane = document.getElementById(paneId);
+      if(pane.style.display === "block") {
+        pane.style.display = "none";
+      } else {
+        pane.style.display = "block";
+      }
+    }
+
+    function copyCodeText(preId) {
+      const code = document.getElementById(preId).innerText;
+      navigator.clipboard.writeText(code).then(() => {
+        alert("Code copied successfully!");
+      });
+    }
+
+    function generateHandoffBlueprintText() {
+      let blueprint = `/**\n * TRAY PORTAL LANDING SYSTEM - SPEC BLUEPRINT\n * Typography: Newsreader Display (Display Serif) + Outfit (UI Sans)\n * Generated on ${new Date().toLocaleDateString()}\n */\n\n`;
+
+      activeSelections.forEach(sel => {
+        blueprint += `/* ==========================================================================\n   [${sel.category.toUpperCase()}] : ${sel.name}\n   ========================================================================== */\n\n`;
+        
+        if (sel.id === "check-reveal-1") {
+          blueprint += `// Editorial Word Mask CSS\n.word-mask-line { overflow: hidden; display: block; }\n.word-mask-line span {\n  display: inline-block;\n  transform: translateY(105%) rotate(5deg);\n  transform-origin: 0% 100%;\n  transition: transform 0.85s cubic-bezier(0.76, 0, 0.24, 1);\n}\n.word-mask-line.animate span {\n  transform: translateY(0) rotate(0deg);\n}\n\n`;
+        }
+        else if (sel.id === "check-reveal-2") {
+          blueprint += `// Cyberpunk Glitch GSAP Entry\ngsap.fromTo(".glitch-char", \n  { opacity: 0, scale: 0.5, y: 30 },\n  {\n    opacity: 1,\n    scale: 1,\n    y: 0,\n    stagger: 0.05,\n    duration: 0.65,\n    ease: "back.out(2)"\n  }\n);\n\n`;
+        }
+        else if (sel.id === "check-reveal-3") {
+          blueprint += `// Gold slow focus blur reveal\n.gold-title-line { opacity: 0; transform: translateY(20px); filter: blur(8px); transition: all 1.2s cubic-bezier(0.22, 1, 0.36, 1); }\n.gold-title-line.animate { opacity: 1; transform: translateY(0); filter: blur(0px); }\n.gold-underline { height: 2px; width: 0%; background: var(--accent); transition: width 1.5s cubic-bezier(0.76, 0, 0.24, 1) 0.5s; }\n\n`;
+        }
+        else if (sel.id === "check-scroll-1") {
+          blueprint += `// Apple Scroll Highlight\nspan.word { opacity: 0.15; color: var(--ink); transition: all 0.25s var(--ease-out); }\nspan.word.lit { opacity: 1; color: var(--accent); }\n\n`;
+        }
+        else if (sel.id === "check-scroll-2") {
+          blueprint += `// Aperture Expansion Scroll\nconst progress = scroller.scrollTop / (scroller.scrollHeight - scroller.clientHeight);\napertureImage.style.clipPath = \`circle(\${12 + progress * 88}% at 50% 50%)\`;\n\n`;
+        }
+        else if (sel.id === "check-scroll-3") {
+          blueprint += `// SVG Pipeline Draw\npulseWire.style.strokeDashoffset = wireLength - (progress * wireLength);\n\n`;
+        }
+        else if (sel.id === "check-card-railway") {
+          blueprint += `// Winding Railway Curvy Scroller (Sinusoidal SVG Path + Perpendicular Tangents)\n// SVG Path: M 230 0 C 420 300, 40 500, 230 800 C 420 1100, 40 1300, 230 1600 C 420 1900, 40 2100, 230 2400 C 420 2700, 40 2900, 230 3200\n// Math cached positions positioned accurately on scroll:\nconst viewportCenter = scroller.scrollTop + scroller.clientHeight / 2;\nrailwayCards.forEach((card) => {\n  const distanceToCenter = card.baseY - viewportCenter;\n  const focusFactor = Math.max(0, 1 - Math.abs(distanceToCenter) / 220);\n  const easeFocus = Math.sin(focusFactor * Math.PI / 2);\n  const scale = 0.92 + easeFocus * 0.12;\n  const opacity = 0.25 + easeFocus * 0.75;\n  const driftX = (distanceToCenter / 220) * 20;\n  const sway = (distanceToCenter / 220) * 12;\n  const finalRotate = card.baseAngle + sway * (1 - easeFocus);\n  card.style.opacity = opacity;\n  card.style.left = \`\${card.baseX}px\`;\n  card.style.top = \`\${card.baseY}px\`;\n  card.style.transform = \`translate(-50%, -50%) translate3d(\${driftX}px, 0, 0) scale(\${scale}) rotate(\${finalRotate}deg)\`;\n});\n\n`;
+        }
+        else if (sel.id === "check-micro-1") {
+          blueprint += `// Magnetic Button Springs\nwrap.addEventListener("mousemove", (e) => {\n  const r = wrap.getBoundingClientRect();\n  const dx = Math.min(Math.max(e.clientX - r.left - r.width/2, -25), 25);\n  const dy = Math.min(Math.max(e.clientY - r.top - r.height/2, -25), 25);\n  gsap.to(btn, { x: dx, y: dy, duration: 0.3, ease: "power3.out" });\n});\nwrap.addEventListener("mouseleave", () => { gsap.to(btn, { x: 0, y:0, duration: 0.6, ease: "elastic.out" }); });\n\n`;
+        }
+        else if (sel.id === "check-micro-2") {
+          blueprint += `// Liquid Button Hover Fill wave\n.liquid-btn { position: relative; overflow: hidden; }\n.liquid-btn-wave { position: absolute; bottom: -100%; left: 0; width: 100%; height: 100%; transition: bottom 0.65s var(--ease-luxury); }\n.liquid-btn:hover .liquid-btn-wave { bottom: 0%; }\n\n`;
+        }
+        else if (sel.id === "check-micro-3") {
+          blueprint += `// Arrow Slide-Swap Link CSS\n.arrow-swap-link { display: inline-flex; overflow: hidden; }\n.as-arrow-primary { transition: transform 0.4s var(--ease-luxury); }\n.as-arrow-secondary { transform: translateX(-18px); opacity: 0; transition: transform 0.4s var(--ease-luxury), opacity 0.3s; }\n.arrow-swap-link:hover .as-arrow-primary { transform: translateX(18px); opacity: 0; }\n.arrow-swap-link:hover .as-arrow-secondary { transform: translateX(0); opacity: 1; }\n\n`;
+        }
+        else if (sel.id === "check-micro-4") {
+          blueprint += `// FSSAI Compliance badge organic double pulse\n.fssai-pulse-ring { border: 1.5px solid var(--fssai-color); border-radius: 50%; animation: fssaiPulse 2.2s infinite; }\n@keyframes fssaiPulse { 0% { transform: scale(0.6); opacity: 0.8; } 100% { transform: scale(1.5); opacity: 0; } }\n\n`;
+        }
+      });
+
+      return blueprint;
+    }
+
+    /* ── PALETTE SWITCHING DRIVER ── */
+    const paletteThemeData = {
+      A: {
+        bg: "#f5f2eb",
+        ink: "#18130e",
+        accent: "#c43d2f",
+        accent_rgb: "196, 61, 47",
+        cool: "#1b4b9b",
+        card_bg: "rgba(255, 255, 255, 0.45)",
+        border: "rgba(24, 19, 14, 0.08)",
+        displayFont: '"Newsreader", Georgia, serif',
+        sansFont: '"Outfit", system-ui, sans-serif'
+      },
+      B: {
+        bg: "#0c0d0f",
+        ink: "#edeef0",
+        accent: "#cdfa50",
+        accent_rgb: "205, 250, 80",
+        cool: "#00ffff",
+        card_bg: "rgba(25, 27, 31, 0.65)",
+        border: "rgba(255, 255, 255, 0.08)",
+        displayFont: '"Bricolage Grotesque", "Outfit", sans-serif',
+        sansFont: '"Outfit", system-ui, sans-serif'
+      },
+      C: {
+        bg: "#0f0806",
+        ink: "#faefe8",
+        accent: "#ef6a3a",
+        accent_rgb: "239, 106, 58",
+        cool: "#ff007f",
+        card_bg: "rgba(35, 18, 14, 0.7)",
+        border: "rgba(250, 239, 232, 0.08)",
+        displayFont: '"Syne", sans-serif',
+        sansFont: '"Outfit", system-ui, sans-serif'
+      },
+      D: {
+        bg: "#0d0b07",
+        ink: "#f4ede0",
+        accent: "#C28E2A",
+        accent_rgb: "194, 142, 42",
+        cool: "#cfb076",
+        card_bg: "rgba(26, 22, 14, 0.72)",
+        border: "rgba(244, 237, 224, 0.06)",
+        displayFont: '"Instrument Serif", serif',
+        sansFont: '"Outfit", system-ui, sans-serif'
+      },
+      E: {
+        bg: "#faf8f5",
+        ink: "#050505",
+        accent: "#FF5A1F",
+        accent_rgb: "255, 90, 31",
+        cool: "#2b2b2b",
+        card_bg: "rgba(255, 255, 255, 0.8)",
+        border: "rgba(5, 5, 5, 0.09)",
+        displayFont: '"Oswald", sans-serif',
+        sansFont: '"Outfit", system-ui, sans-serif'
+      }
+    };
+
+    const themeButtons = document.querySelectorAll(".theme-dot-btn");
+    themeButtons.forEach(btn => {
+      btn.addEventListener("click", () => {
+        themeButtons.forEach(b => b.classList.remove("is-active"));
+        btn.classList.add("is-active");
+        
+        const key = btn.getAttribute("data-theme");
+        document.body.setAttribute("data-theme", key);
+
+        const d = paletteThemeData[key];
+        const root = document.documentElement;
+        
+        root.style.setProperty("--bg", d.bg);
+        root.style.setProperty("--ink", d.ink);
+        root.style.setProperty("--ink-rgb", d.ink.includes("#f") ? "244, 237, 224" : "24, 19, 14");
+        root.style.setProperty("--accent", d.accent);
+        root.style.setProperty("--accent-rgb", d.accent_rgb);
+        root.style.setProperty("--cool", d.cool);
+        root.style.setProperty("--card-bg", d.card_bg);
+        root.style.setProperty("--border-color", d.border);
+        root.style.setProperty("--font-display", d.displayFont);
+        root.style.setProperty("--font-sans", d.sansFont);
+
+        // Retrigger railway cards scroll to re-render in case fonts shifted layout
+        setTimeout(() => {
+          initRailwayPositions();
+          railwayScroller.dispatchEvent(new Event("scroll"));
+        }, 150);
+      });
+    });
+
+    // Run Preloader automatically on page load
+    window.addEventListener("DOMContentLoaded", () => {
+      setTimeout(() => {
+        runCinematicPreloader();
+      }, 300);
+    });
+  </script>
+</body>
+</html>

@@ -1,17 +1,65 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Search } from "lucide-react";
 import type { MenuItem, MenuCategory } from "@/lib/db/types";
+import { getBrowserClient } from "@/lib/supabase/browser";
 import { DietFilterTabs, type DietFilter } from "./diet-filter";
 import { MenuItemCard } from "./menu-item-card";
 import { cn } from "@/lib/utils";
 
-type Props = { categories: MenuCategory[]; items: MenuItem[] };
+type Props = { categories: MenuCategory[]; items: MenuItem[]; tenantId: string; tenantSlug: string };
 
-export function MenuBoard({ categories, items }: Props) {
+export function MenuBoard({ categories, items, tenantId, tenantSlug }: Props) {
   const [filter, setFilter] = useState<DietFilter>("all");
   const [q, setQ] = useState("");
+  const router = useRouter();
+
+  useEffect(() => {
+    const sb = getBrowserClient();
+    
+    // Subscribe to menu_items changes for this tenant
+    const menuCh = sb
+      .channel(`realtime-menu-${tenantId}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "menu_items", filter: `tenant_id=eq.${tenantId}` },
+        () => {
+          router.refresh();
+        }
+      )
+      .subscribe();
+
+    // Subscribe to tenants changes for this tenant
+    const tenantCh = sb
+      .channel(`realtime-tenant-${tenantId}`)
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "tenants", filter: `id=eq.${tenantId}` },
+        () => {
+          router.refresh();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      sb.removeChannel(menuCh);
+      sb.removeChannel(tenantCh);
+    };
+  }, [tenantId, router]);
+
+  useEffect(() => {
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible") {
+        router.refresh();
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibility);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibility);
+    };
+  }, [router]);
 
   const counts = useMemo(() => {
     const c: Record<DietFilter, number> = { all: 0, veg: 0, egg: 0, nonveg: 0 };

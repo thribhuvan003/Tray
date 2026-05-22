@@ -220,7 +220,7 @@ html.dark {
 }
 /* Student dark: cream → midnight, ocean glows brighter */
 html.dark [data-portal="student"] {
-  --color-ocean-500: #4d8dff;
+  --color-ocean-500: #B2C8ED;
 }
 /* Kitchen dark: paper inversion */
 html.dark [data-portal="kitchen"] {
@@ -303,16 +303,16 @@ html.dark [data-portal="kitchen"] {
    ════════════════════════════════════════════════════════════════════ */
 
 :root {
-  /* Landing palette */
-  --tray-bg:      #D8C9AE;
-  --tray-surface: #CAB99C;
-  --tray-ink:     #1A1614;
-  --tray-muted:   #575757;
-  --tray-clay:    #B8531A;
-  --tray-green:   #2A6E3A;
-  --tray-border:  rgba(87, 87, 87, 0.14);
-  --tray-cream:   #EDE5D2;   /* used in overlays / ghost bg */
-  --tray-shadow:  rgba(26, 22, 20, 0.10);
+  /* Landing palette — Premium Lavender & Dark Charcoal */
+  --tray-bg:      #E6E6FA;   /* Luxurious Lavender */
+  --tray-surface: #D4D4F0;   /* Richer lavender card/surface */
+  --tray-ink:     #333333;   /* Pure Charcoal text/ink */
+  --tray-muted:   #5E5E5E;   /* Muted charcoal */
+  --tray-clay:    #5A4FCF;   /* Radiant Iris/Indigo primary accent */
+  --tray-green:   #3F725D;   /* Emerald Sage secondary accent */
+  --tray-border:  rgba(51, 51, 51, 0.12);
+  --tray-cream:   #FAF9FE;   /* Ultra-soft cream-lavender white */
+  --tray-shadow:  rgba(51, 51, 51, 0.08);
 
   /* Condensed display (Druk-like) — Barlow Condensed Black */
   --font-display-cond: var(--font-barlow), system-ui, sans-serif;
@@ -323,28 +323,28 @@ html.dark [data-portal="kitchen"] {
   --font-code:      var(--font-dm-mono), var(--font-jetbrains), ui-monospace, monospace;
 }
 
-/* Student portal — Amber + Blue Mirage */
+/* Student portal — Premium Pastel Blue & Stone Grays */
 [data-portal="student"] {
-  --color-paper:     #E9D9C9;
-  --color-paper-dim: #DCCDB9;
-  --color-ink:       #2A1F18;
-  --color-ocean-50:  #EEF2F8;
-  --color-ocean-100: #D6DFEE;
-  --color-ocean-200: #ADC0DF;
-  --color-ocean-300: #8AA3CC;
-  --color-ocean-400: #7A95C0;
-  --color-ocean-500: #6E86AB;   /* Blue Mirage primary */
-  --color-ocean-600: #5B7199;
-  --color-ocean-700: #485D82;
-  --color-ocean-900: #1E2E48;
+  --color-paper:     #E4E4E4;   /* Light gray paper */
+  --color-paper-dim: #C8C8C8;   /* Medium gray card/paper-dim */
+  --color-ink:       #000000;   /* Pure black text */
+  --color-ocean-50:  #F1F5FC;   /* Very soft pastel blue */
+  --color-ocean-100: #E3EDF9;
+  --color-ocean-200: #D5E4F6;
+  --color-ocean-300: #C7DCF2;
+  --color-ocean-400: #BDD3EF;
+  --color-ocean-500: #B2C8ED;   /* Soft Pastel Blue primary */
+  --color-ocean-600: #99B9EA;
+  --color-ocean-700: #73A1E2;
+  --color-ocean-900: #214986;
 }
 
 /* ── Landing page ambient background ─────────────────────────────── */
 .tray-page {
   min-height: 100svh;
   background:
-    radial-gradient(circle at 15% 10%, rgba(184, 83, 26, 0.12), transparent 30rem),
-    radial-gradient(circle at 85% 20%, rgba(42, 110, 58, 0.09), transparent 28rem),
+    radial-gradient(circle at 15% 10%, rgba(90, 79, 207, 0.12), transparent 30rem),
+    radial-gradient(circle at 85% 20%, rgba(63, 114, 93, 0.09), transparent 28rem),
     var(--tray-bg);
   color: var(--tray-ink);
 }

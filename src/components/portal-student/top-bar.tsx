@@ -44,7 +44,7 @@ export function StudentTopBar({ tenant, siblings = [] }: Props) {
       name: c.name,
       location: [c.building, c.zone].filter(Boolean).join(" · ") || null,
       isOpen: c.is_open,
-      dishCount: undefined,
+      dishCount: c.dishCount,
       queueMinutes: c.is_open
         ? Math.min(20, Math.max(3, 3 + c.pending_orders_count))
         : undefined,

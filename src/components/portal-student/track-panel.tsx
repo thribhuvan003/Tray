@@ -79,6 +79,18 @@ export function TrackPanel({ tenantSlug, tenantName, order: initial, lines }: { 
   }, [order.id, router]);
 
   useEffect(() => {
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible") {
+        router.refresh();
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibility);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibility);
+    };
+  }, [router]);
+
+  useEffect(() => {
     if (order.status === "ready") {
       getMyOrderOtp(order.id).then((r) => setOtp(r.otp));
     } else {
@@ -98,14 +110,21 @@ export function TrackPanel({ tenantSlug, tenantName, order: initial, lines }: { 
   const cancelWindowOpen = order.status === "placed" && now - placedAtMs < FIVE_MIN_MS;
 
   if (order.status === "rejected" || order.status === "expired") {
+    const isUncollected = order.status === "expired" && order.ready_at !== null;
     return (
       <div className="mx-auto max-w-2xl px-4 sm:px-6 pt-12 pb-20 text-center">
         <XCircle size={56} className="mx-auto text-rose-500 mb-4" />
         <h1 className="font-display text-[36px] font-medium tracking-tight">
-          {order.status === "expired" ? "Payment expired." : "Order rejected."}
+          {isUncollected
+            ? "Collection window expired."
+            : order.status === "expired"
+            ? "Payment expired."
+            : "Order rejected."}
         </h1>
         <p className="text-[14px] text-[color:var(--color-ink)]/65 mt-2">
-          {order.status === "expired"
+          {isUncollected
+            ? "Your order was ready for pickup but was not collected within the 30-minute window. Please contact canteen staff if you believe this is an error."
+            : order.status === "expired"
             ? "We didn't see the UPI payment in time. No money was charged."
             : "The canteen couldn't accept this order. If you paid, a refund is on its way."}
         </p>

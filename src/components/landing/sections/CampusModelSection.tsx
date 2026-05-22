@@ -45,22 +45,34 @@ export function CampusModelSection({ campusName }: { campusName?: string | null 
     <SectionReveal as="div" id="campus" className="px-5 py-24 sm:px-8 lg:px-10">
       <div className="mx-auto max-w-7xl">
         <RevealItem>
-          <p className="font-code mb-4 text-xs uppercase tracking-[0.3em] text-[var(--tray-muted)]">
-            Campus Edition
-          </p>
+          <div className="mb-4 flex flex-wrap items-center gap-3">
+            <p className="font-code text-xs uppercase tracking-[0.3em] text-[var(--tray-muted)]">
+              Campus Edition
+            </p>
+            <span
+              className="rounded border border-[var(--tray-border)] bg-[var(--tray-surface)] px-2.5 py-1 text-[0.6rem] font-bold uppercase tracking-[0.2em]"
+              style={{
+                fontFamily: "var(--font-dm-mono)",
+                color: "var(--tray-clay)",
+              }}
+            >
+              Specimen: INSTRUMENT SERIF + PLUS JAKARTA SANS
+            </span>
+          </div>
         </RevealItem>
 
         <RevealItem>
           <h2
-            className="max-w-3xl leading-[0.86] tracking-[-0.06em]"
+            className="max-w-3xl leading-[0.9] tracking-[-0.04em]"
             style={{
-              fontFamily: "var(--font-fraunces)",
-              fontWeight: 900,
+              fontFamily: "var(--font-instrument-serif)",
+              fontWeight: 400,
+              fontStyle: "italic",
               fontSize: "clamp(3.2rem, 7.5vw, 7.5rem)",
             }}
           >
             One campus.{" "}
-            <em style={{ fontStyle: "italic", color: "var(--tray-clay)" }}>Many counters.</em>
+            <em className="not-italic" style={{ fontFamily: "var(--font-barlow)", fontWeight: 900, textTransform: "uppercase", fontStyle: "normal", color: "var(--tray-clay)", letterSpacing: "-0.05em" }}>Many counters.</em>
           </h2>
         </RevealItem>
 

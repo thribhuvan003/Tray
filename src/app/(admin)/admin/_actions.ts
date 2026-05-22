@@ -186,6 +186,20 @@ export async function createMenuItem(form: {
   const c = await ctx();
   if (!c.ok) return { ok: false, error: c.error };
   const admin = getAdminClient(c.tenant.id);
+
+  // Check for duplicate menu item name (non-archived, case-insensitive)
+  const { data: existing } = await admin
+    .from("menu_items")
+    .select("id")
+    .eq("tenant_id", c.tenant.id)
+    .ilike("name", form.name)
+    .not("status", "eq", "archived")
+    .maybeSingle();
+
+  if (existing) {
+    return { ok: false, error: `A menu item named "${form.name}" already exists.` };
+  }
+
   const { data, error } = await admin
     .from("menu_items")
     .insert({
@@ -225,6 +239,21 @@ export async function updateMenuItem(
   const c = await ctx();
   if (!c.ok) return { ok: false, error: c.error };
   const admin = getAdminClient(c.tenant.id);
+
+  // Check for duplicate menu item name (non-archived, case-insensitive), excluding current item
+  const { data: existing } = await admin
+    .from("menu_items")
+    .select("id")
+    .eq("tenant_id", c.tenant.id)
+    .ilike("name", form.name)
+    .not("status", "eq", "archived")
+    .neq("id", id)
+    .maybeSingle();
+
+  if (existing && form.status !== "archived") {
+    return { ok: false, error: `A menu item named "${form.name}" already exists.` };
+  }
+
   const { error } = await admin
     .from("menu_items")
     .update({

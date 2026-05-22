@@ -98,12 +98,23 @@ export function TryDemoSection() {
     <section ref={rootRef} id="try-demo" className="relative overflow-hidden px-5 py-24 sm:px-8 lg:px-10">
       <div className="mx-auto max-w-7xl">
         {/* Section label */}
-        <p
-          className="mb-4 text-xs uppercase tracking-[0.3em]"
-          style={{ fontFamily: "var(--font-dm-mono)", color: "var(--tray-muted)" }}
-        >
-          Live demo · no sign-up · 90-second tour
-        </p>
+        <div className="mb-4 flex flex-wrap items-center gap-3">
+          <p
+            className="text-xs uppercase tracking-[0.3em]"
+            style={{ fontFamily: "var(--font-dm-mono)", color: "var(--tray-muted)" }}
+          >
+            Live demo · no sign-up · 90-second tour
+          </p>
+          <span
+            className="rounded border border-[var(--tray-border)] bg-[var(--tray-surface)] px-2.5 py-1 text-[0.6rem] font-bold uppercase tracking-[0.2em]"
+            style={{
+              fontFamily: "var(--font-dm-mono)",
+              color: "var(--tray-clay)",
+            }}
+          >
+            Specimen: THUNDER + NEUE HAAS GROTESK
+          </span>
+        </div>
 
         {/* Barlow Condensed 900 headline */}
         <h2
@@ -269,8 +280,8 @@ export function TryDemoSection() {
         ref={overlayRef}
         className="fixed inset-0 z-[9999] hidden"
         style={{
-          background: "var(--tray-bg, #D8C9AE)",
-          color: "var(--tray-ink, #1A1614)",
+          background: "var(--tray-bg, #E6E6FA)",
+          color: "var(--tray-ink, #333333)",
           alignItems: "center",
           justifyContent: "center",
           flexDirection: "column",

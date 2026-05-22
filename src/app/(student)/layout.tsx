@@ -2,6 +2,7 @@ import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { resolveTenant, collegeCanteens } from "@/lib/tenant";
 import { getCurrentUser } from "@/lib/auth/get-user";
+import { getAdminClient } from "@/lib/supabase/admin";
 import { StudentTopBar } from "@/components/portal-student/top-bar";
 import { CartDrawer } from "@/components/portal-student/cart-drawer";
 import { CartTenantSync } from "@/components/portal-student/cart-tenant-sync";
@@ -19,6 +20,31 @@ export default async function StudentLayout({ children }: { children: React.Reac
   const siblings = tenant.college_slug
     ? await collegeCanteens(tenant.college_slug).catch(() => [])
     : [];
+
+  if (siblings.length > 0) {
+    try {
+      const admin = getAdminClient();
+      const { data: counts } = await admin
+        .from("menu_items")
+        .select("id, tenants!inner(slug)")
+        .eq("status", "live");
+
+      if (counts) {
+        const dishCountsMap: Record<string, number> = {};
+        for (const item of counts) {
+          const s = (item.tenants as any)?.slug;
+          if (s) {
+            dishCountsMap[s] = (dishCountsMap[s] || 0) + 1;
+          }
+        }
+        for (const sib of siblings) {
+          sib.dishCount = dishCountsMap[sib.slug] ?? 0;
+        }
+      }
+    } catch (err) {
+      console.error("Failed to fetch dish counts for siblings:", err);
+    }
+  }
 
   // Auth is optional on the student portal (browse without sign-in is fine).
   // We pass the user id to OrderReadyListener so it can subscribe; nullable

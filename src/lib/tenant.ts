@@ -34,6 +34,7 @@ export type CollegeCanteen = {
   closes_at: string | null;
   logo_url: string | null;
   pending_orders_count: number;
+  dishCount?: number;
 };
 
 const RESERVED_SUBDOMAINS = new Set(["www", "app", "admin", "api", "auth", "static"]);

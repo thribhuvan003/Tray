@@ -741,27 +741,27 @@ export function GetStartedWizard() {
     <>
       <style>{`
         .gs-root {
-          --gs-bg: #D8C9AE;
-          --gs-surface: #EDE5D2;
-          --gs-line: rgba(26, 22, 20, 0.12);
-          --gs-ink: #1A1614;
-          --gs-ink-muted: rgba(26, 22, 20, 0.55);
-          --gs-accent: #B8531A;
-          --gs-accent-bg: rgba(184, 83, 26, 0.08);
-          --gs-accent-border: rgba(184, 83, 26, 0.25);
+          --gs-bg: #E6E6FA;
+          --gs-surface: #FAF9FE;
+          --gs-line: rgba(51, 51, 51, 0.12);
+          --gs-ink: #333333;
+          --gs-ink-muted: rgba(51, 51, 51, 0.58);
+          --gs-accent: #5A4FCF;
+          --gs-accent-bg: rgba(90, 79, 207, 0.08);
+          --gs-accent-border: rgba(90, 79, 207, 0.25);
         }
         html.dark .gs-root {
-          --gs-bg: #D8C9AE;
-          --gs-surface: #EDE5D2;
-          --gs-line: rgba(26, 22, 20, 0.12);
-          --gs-ink: #1A1614;
-          --gs-ink-muted: rgba(26, 22, 20, 0.55);
+          --gs-bg: #E6E6FA;
+          --gs-surface: #FAF9FE;
+          --gs-line: rgba(51, 51, 51, 0.12);
+          --gs-ink: #333333;
+          --gs-ink-muted: rgba(51, 51, 51, 0.58);
         }
-        .gs-input:focus { border-color: var(--gs-accent, #B8531A) !important; box-shadow: 0 0 0 3px rgba(184,83,26,0.12); }
+        .gs-input:focus { border-color: var(--gs-accent, #5A4FCF) !important; box-shadow: 0 0 0 3px rgba(90,79,207,0.12); }
         .gs-btn-primary {
           height: 48px;
           border-radius: 12px;
-          background: var(--gs-accent, #B8531A);
+          background: var(--gs-accent, #5A4FCF);
           color: #fff;
           border: none;
           font-size: 15px;

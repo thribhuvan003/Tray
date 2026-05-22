@@ -47,7 +47,7 @@ export function LandingMotion() {
     const onEnterHover = () => cursorRing?.classList.add("is-hovered");
     const onLeaveHover = () => cursorRing?.classList.remove("is-hovered");
     const hoverTargets = document.querySelectorAll(
-      ".tray-landing a, .tray-landing button, .tray-landing .tl-portal, .tray-landing .tl-line-chip"
+      ".tray-landing a, .tray-landing button, .tray-landing [data-portal-card], .tray-landing .tl-line-chip"
     );
     hoverTargets.forEach((el) => {
       el.addEventListener("mouseenter", onEnterHover);
@@ -118,11 +118,21 @@ export function LandingMotion() {
 
       gsap.from(".tray-landing .tl-h1 .tl-char-inner", {
         y: "115%",
-        rotateZ: 5,
+        rotateX: 45,
+        rotateY: 15,
+        scale: 0.82,
         opacity: 0,
-        stagger: { amount: 0.55, from: "start" },
-        duration: 1.1,
+        stagger: { amount: 0.65, from: "start" },
+        duration: 1.25,
         ease: "power4.out",
+        delay: 0.25,
+      });
+
+      gsap.from(".tray-landing .tl-h1 .tl-word", {
+        letterSpacing: "-0.08em",
+        wordSpacing: "-0.1em",
+        duration: 1.45,
+        ease: "power3.out",
         delay: 0.25,
       });
 
@@ -178,10 +188,12 @@ export function LandingMotion() {
       root.querySelectorAll<HTMLElement>("[data-reveal]").forEach((el) => {
         gsap.from(el, {
           scrollTrigger: { trigger: el, start: "top 88%", toggleActions: "play none none none" },
-          y: 44,
+          y: 50,
+          rotateX: 8,
           opacity: 0,
-          duration: 1.0,
+          duration: 1.15,
           ease: "power3.out",
+          transformPerspective: 1200,
         });
       });
 
@@ -191,83 +203,204 @@ export function LandingMotion() {
       ).forEach((el) => {
         gsap.from(el, {
           scrollTrigger: { trigger: el, start: "top 87%" },
-          y: 36,
+          y: 40,
+          rotateX: 15,
           opacity: 0,
-          duration: 0.95,
-          ease: "power3.out",
+          duration: 1.05,
+          ease: "power4.out",
+          transformPerspective: 1200,
         });
       });
 
-      // ── Portal cards: entrance + 3D mouse tilt ───────────────────────────
-      root.querySelectorAll<HTMLElement>(".tl-portal").forEach((el, i) => {
+      // ── Metrics Strip: Center-out stagger & Count-ups ─────────────────────
+      gsap.from(".tray-landing [data-count]", {
+        scrollTrigger: { trigger: ".tray-landing [data-count]", start: "top 95%" },
+        opacity: 0,
+        y: 35,
+        scale: 0.85,
+        stagger: { amount: 0.5, from: "center" },
+        duration: 1.0,
+        ease: "back.out(1.5)",
+      });
+
+      // ── Metrics Ticker Speed Ramp ─────────────────────────────────────────
+      gsap.from(".tray-landing [data-ticker-track]", {
+        scrollTrigger: { trigger: ".tray-landing .tl-ticker, .tray-landing [data-ticker-track]", start: "top 100%" },
+        scaleX: 0.9,
+        skewX: 5,
+        opacity: 0,
+        stagger: 0.15,
+        duration: 1.35,
+        ease: "power4.out",
+      });
+
+      // ── Portal cards: Staggered diagonal slide-ins + 3D mouse tilt + Spotlight ──
+      root.querySelectorAll<HTMLElement>("[data-portal-card]").forEach((el, i) => {
         gsap.from(el, {
           scrollTrigger: { trigger: el, start: "top 92%" },
-          y: 70,
+          y: 110,
+          x: i % 2 === 0 ? -60 : 60,
           opacity: 0,
-          rotateX: 10,
-          duration: 1.1,
+          rotateX: 15,
+          rotateY: i % 2 === 0 ? -10 : 10,
+          duration: 1.45,
           delay: i * 0.12,
-          ease: "power3.out",
+          ease: "elastic.out(1, 0.8)",
+          transformPerspective: 1200,
         });
 
         const onMove = (e: MouseEvent) => {
           const r = el.getBoundingClientRect();
           const nx = ((e.clientX - r.left) / r.width  - 0.5) * 2;
           const ny = ((e.clientY - r.top)  / r.height - 0.5) * 2;
+          
+          // Spotlight tracking
+          el.style.setProperty("--spot-x", `${e.clientX - r.left}px`);
+          el.style.setProperty("--spot-y", `${e.clientY - r.top}px`);
+
           gsap.to(el, {
-            rotateY: nx * 7,
-            rotateX: -ny * 5,
+            rotateY: nx * 8,
+            rotateX: -ny * 6,
             transformPerspective: 1200,
-            duration: 0.5,
+            duration: 0.45,
             ease: "power2.out",
           });
         };
         const onLeave = () => {
-          gsap.to(el, { rotateX: 0, rotateY: 0, duration: 0.7, ease: "power3.out" });
+          gsap.to(el, { rotateX: 0, rotateY: 0, duration: 0.75, ease: "power3.out" });
         };
         el.addEventListener("mousemove", onMove);
         el.addEventListener("mouseleave", onLeave);
       });
 
-      // ── Diagram nodes slide-in ────────────────────────────────────────────
-      gsap.from(".tray-landing .tl-node", {
-        scrollTrigger: { trigger: ".tray-landing .tl-diagram", start: "top 85%" },
-        x: -40,
+      // ── Campus Model: Diagonal reveals with clip-path masks ──────────────
+      gsap.from(".tray-landing #campus .mx-auto > div:last-child > div:first-child", {
+        scrollTrigger: { trigger: ".tray-landing #campus", start: "top 82%" },
+        clipPath: "polygon(0 0, 0 0, 0 100%, 0% 100%)",
+        x: -50,
         opacity: 0,
-        stagger: 0.1,
-        duration: 0.75,
-        ease: "power3.out",
+        duration: 1.25,
+        ease: "power4.out",
+      });
+      gsap.to(".tray-landing #campus .mx-auto > div:last-child > div:first-child", {
+        scrollTrigger: { trigger: ".tray-landing #campus", start: "top 82%" },
+        clipPath: "polygon(0 0, 100% 0, 100% 100%, 0 100%)",
+        duration: 1.25,
+        ease: "power4.out",
       });
 
-      // ── Flow steps ────────────────────────────────────────────────────────
-      gsap.from(".tray-landing .tl-flow-step", {
-        scrollTrigger: { trigger: ".tray-landing .tl-flow", start: "top 85%" },
-        y: 44,
+      // Bento active canteens grid staggered 3D fold-in
+      gsap.from(".tray-landing #campus .grid > div", {
+        scrollTrigger: { trigger: ".tray-landing #campus", start: "top 80%" },
+        rotateX: -30,
+        rotateY: 12,
+        y: 50,
+        opacity: 0,
+        stagger: 0.08,
+        duration: 1.2,
+        ease: "elastic.out(1, 0.75)",
+        transformPerspective: 1000,
+      });
+
+      gsap.from(".tray-landing #campus .mx-auto > div:last-child > div:last-child > div", {
+        scrollTrigger: { trigger: ".tray-landing #campus", start: "top 80%" },
+        x: 50,
         opacity: 0,
         stagger: 0.12,
-        duration: 0.85,
+        duration: 1.0,
         ease: "power3.out",
       });
 
-      // ── Stack cards ───────────────────────────────────────────────────────
-      gsap.from(".tray-landing .tl-stack-card", {
-        scrollTrigger: { trigger: ".tray-landing .tl-stack", start: "top 88%" },
-        y: 24,
+      // ── Sandbox Board: stagger slide up and elastic pops ────────────────
+      gsap.from(".tray-landing #sandbox-board .mx-auto > div:first-child", {
+        scrollTrigger: { trigger: ".tray-landing #sandbox-board", start: "top 85%" },
+        y: 60,
         opacity: 0,
-        scale: 0.94,
-        stagger: 0.05,
-        duration: 0.65,
+        duration: 1.1,
         ease: "power3.out",
       });
 
-      // ── Closing CTA buttons ───────────────────────────────────────────────
-      gsap.from(".tray-landing .tl-closing .tl-cta-row .tl-btn", {
-        scrollTrigger: { trigger: ".tray-landing .tl-closing", start: "top 80%" },
-        y: 30,
+      gsap.from(".tray-landing #sandbox-board .grid > div", {
+        scrollTrigger: { trigger: ".tray-landing #sandbox-board", start: "top 80%" },
+        scale: 0.94,
+        y: 50,
+        opacity: 0,
+        stagger: 0.15,
+        duration: 1.3,
+        ease: "elastic.out(1, 0.8)",
+        transformPerspective: 1200,
+      });
+
+      // ── Real-time Sync: Bespoke bouncy elastic reveals ───────────────────
+      gsap.from(".tray-landing #sync .grid > div", {
+        scrollTrigger: { trigger: ".tray-landing #sync", start: "top 78%" },
+        scale: 0.88,
+        rotateY: -20,
+        y: 40,
+        opacity: 0,
+        stagger: 0.12,
+        duration: 1.25,
+        ease: "elastic.out(1, 0.75)",
+        transformPerspective: 1000,
+      });
+
+      // ── Kitchen Quote line-by-line smooth stagger ─────────────────────────
+      const quote = root.querySelector<HTMLElement>(".tray-landing blockquote");
+      if (quote) {
+        gsap.from(quote, {
+          scrollTrigger: { trigger: quote, start: "top 85%" },
+          y: 60,
+          rotateX: 25,
+          opacity: 0,
+          scale: 0.95,
+          transformPerspective: 1200,
+          duration: 1.3,
+          ease: "power4.out",
+        });
+      }
+
+      // ── Flow steps: Zoom-in step numbers + clipping reveals ──────────────
+      gsap.from(".tray-landing #flow .grid > div > span", {
+        scrollTrigger: { trigger: ".tray-landing #flow", start: "top 80%" },
+        scale: 0.35,
+        opacity: 0,
+        stagger: 0.08,
+        duration: 0.9,
+        ease: "back.out(1.8)",
+      });
+      gsap.from(".tray-landing #flow .grid > div", {
+        scrollTrigger: { trigger: ".tray-landing #flow", start: "top 80%" },
+        y: 70,
+        rotateY: -15,
         opacity: 0,
         stagger: 0.1,
-        duration: 0.75,
-        ease: "power3.out",
+        duration: 1.2,
+        ease: "power4.out",
+        transformPerspective: 1200,
+      });
+
+      // ── Stack Section: Perspective skews + staggered pop-ins ──────────────
+      gsap.from(".tray-landing #stack .grid > div", {
+        scrollTrigger: { trigger: ".tray-landing #stack", start: "top 85%" },
+        y: 50,
+        opacity: 0,
+        rotateX: -30,
+        rotateY: 10,
+        stagger: 0.06,
+        duration: 1.15,
+        ease: "back.out(1.5)",
+        transformPerspective: 1000,
+      });
+
+      // ── Closing CTA / Try Demo: Bespoke Scale-up bounces ──────────────────
+      gsap.from(".tray-landing .tl-closing h2, .tray-landing .tl-closing p, .tray-landing .tl-closing a, .tray-landing #try-demo .tl-btn", {
+        scrollTrigger: { trigger: ".tray-landing .tl-closing", start: "top 85%" },
+        scale: 0.85,
+        y: 30,
+        opacity: 0,
+        stagger: 0.08,
+        duration: 0.95,
+        ease: "back.out(1.6)",
       });
 
       // ── Footer watermark parallax ─────────────────────────────────────────
@@ -291,7 +424,7 @@ export function LandingMotion() {
       });
 
       // ── Magnetic large buttons ────────────────────────────────────────────
-      root.querySelectorAll<HTMLElement>(".tl-btn-pri.tl-btn-lg, .tl-btn-ghost.tl-btn-lg").forEach((btn) => {
+      root.querySelectorAll<HTMLElement>(".tl-btn-pri.tl-btn-lg, .tl-btn-ghost.tl-btn-lg, [data-magnetic], .tl-btn").forEach((btn) => {
         const onMove = (e: MouseEvent) => {
           const r = btn.getBoundingClientRect();
           const dx = (e.clientX - (r.left + r.width  / 2)) * 0.28;

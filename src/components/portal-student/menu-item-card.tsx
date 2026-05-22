@@ -14,12 +14,12 @@ export function MenuItemCard({ item }: { item: MenuItem }) {
 
   const dietRing =
     item.diet === "veg"
-      ? "border-emerald-500"
+      ? "border-emerald-600"
       : item.diet === "egg"
-      ? "border-amber-500"
-      : "border-rose-500";
+      ? "border-amber-600"
+      : "border-rose-600";
   const dietFill =
-    item.diet === "veg" ? "bg-emerald-500" : item.diet === "egg" ? "bg-amber-500" : "bg-rose-500";
+    item.diet === "veg" ? "bg-emerald-600" : item.diet === "egg" ? "bg-amber-600" : "bg-rose-600";
 
   return (
     <article
@@ -48,11 +48,11 @@ export function MenuItemCard({ item }: { item: MenuItem }) {
         <span
           aria-label={item.diet}
           className={cn(
-            "absolute top-2 left-2 inline-flex h-4 w-4 items-center justify-center border-2 rounded-sm bg-white",
+            "absolute top-3 left-3 inline-flex h-5 w-5 items-center justify-center border-2 rounded-sm bg-transparent",
             dietRing
           )}
         >
-          <span className={cn("h-2 w-2 rounded-full", dietFill)} />
+          <span className={cn("h-2.5 w-2.5 rounded-full", dietFill)} />
         </span>
         {oos && (
           <span className="absolute top-2 right-2 text-[10px] font-mono uppercase tracking-wider bg-[color:var(--color-paper)]/90 text-[color:var(--color-ink)]/70 px-2 py-1 rounded-full">

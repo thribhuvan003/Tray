@@ -6,7 +6,10 @@ import { CampusTicker }         from "@/components/landing/sections/MetricsAndTi
 import { PiranhaPortalsSection } from "@/components/landing/sections/PiranhaPortalsSection";
 import { CampusModelSection }    from "@/components/landing/sections/CampusModelSection";
 import { TryDemoSection }        from "@/components/landing/sections/TryDemoSection";
+import { StudioSandbox }        from "@/components/landing/sections/StudioSandbox";
 import { LandingIntro }          from "@/components/landing/LandingIntro";
+import { LandingMotion }         from "@/components/landing/landing-motion";
+import { DesignerCustomizer }    from "@/components/landing/DesignerCustomizer";
 import {
   AnimatedNav,
   SectionReveal,
@@ -37,9 +40,10 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
   const campusName = tenant?.college_name ?? null;
 
   return (
-    <div className="tray-page min-h-svh overflow-x-hidden" style={{ fontFamily: "var(--font-ui)" }}>
+    <div className="tray-landing tray-page min-h-svh overflow-x-hidden" style={{ fontFamily: "var(--font-ui)" }}>
       <ScrollProgress />
       <LandingIntro />
+      <LandingMotion />
 
       {/* ── NAV ─────────────────────────────────────────────────────────── */}
       <input type="checkbox" id="tl-ham" className="sr-only peer" aria-hidden />
@@ -164,6 +168,7 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
 
         <TrayHero />
         <CampusTicker />
+        <StudioSandbox />
         <PiranhaPortalsSection />
         <CampusModelSection campusName={campusName} />
 
@@ -171,26 +176,37 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
         <SectionReveal id="sync" className="px-5 py-24 sm:px-8 lg:px-10">
           <div className="mx-auto max-w-7xl">
             <RevealItem>
-              <p className="mb-5 text-xs uppercase tracking-[0.34em]"
-                style={{ fontFamily: "var(--font-dm-mono)", color: "var(--tray-muted)" }}>
-                02 / Realtime
-              </p>
+              <div className="mb-5 flex flex-wrap items-center gap-3">
+                <p className="text-xs uppercase tracking-[0.34em]"
+                  style={{ fontFamily: "var(--font-dm-mono)", color: "var(--tray-muted)" }}>
+                  02 / Realtime
+                </p>
+                <span
+                  className="rounded border border-[var(--tray-border)] bg-[var(--tray-surface)] px-2.5 py-1 text-[0.6rem] font-bold uppercase tracking-[0.2em]"
+                  style={{
+                    fontFamily: "var(--font-dm-mono)",
+                    color: "var(--tray-clay)",
+                  }}
+                >
+                  Specimen: CORMORANT GARAMOND + GEIST SANS
+                </span>
+              </div>
             </RevealItem>
 
             <RevealItem>
               <h2
-                className="max-w-5xl leading-[0.80] tracking-[-0.025em]"
+                className="max-w-5xl leading-[0.85] tracking-[-0.04em]"
                 style={{
-                  fontFamily: "var(--font-barlow)",
-                  fontWeight: 900,
-                  fontSize: "clamp(3.8rem, 10vw, 10.5rem)",
-                  textTransform: "uppercase",
+                  fontFamily: "var(--font-cormorant)",
+                  fontStyle: "italic",
+                  fontSize: "clamp(3.8rem, 10vw, 9.5rem)",
+                  color: "var(--tray-ink)",
                 }}
               >
                 Add a special.{" "}
-                <em className="not-italic" style={{ fontFamily: "var(--font-fraunces)", fontStyle: "italic", textTransform: "none", color: "var(--tray-clay)" }}>
+                <span className="not-italic block sm:inline mt-2 sm:mt-0" style={{ fontFamily: "var(--font-barlow)", fontWeight: 900, textTransform: "uppercase", color: "var(--tray-clay)", letterSpacing: "-0.05em" }}>
                   Watch it land everywhere.
-                </em>
+                </span>
               </h2>
             </RevealItem>
 
@@ -215,17 +231,28 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
           style={{ background: "var(--tray-ink)", color: "var(--tray-cream, #EDE5D2)" }}
         >
           <div className="mx-auto max-w-5xl">
-            <p
-              className="mb-10 text-[0.62rem] uppercase tracking-[0.3em] opacity-40"
-              style={{ fontFamily: "var(--font-dm-mono)" }}
-            >
-              From the kitchen
-            </p>
-            {/* Cormorant Garamond — romantic Italian serif, ideal for quotes */}
+            <div className="mb-10 flex flex-wrap items-center gap-3">
+              <p
+                className="text-[0.62rem] uppercase tracking-[0.3em] opacity-40"
+                style={{ fontFamily: "var(--font-dm-mono)" }}
+              >
+                From the kitchen
+              </p>
+              <span
+                className="rounded border border-white/10 bg-white/5 px-2.5 py-1 text-[0.6rem] font-bold uppercase tracking-[0.2em]"
+                style={{
+                  fontFamily: "var(--font-manrope)",
+                  color: "var(--tray-clay)",
+                }}
+              >
+                Specimen: DM SERIF + MANROPE
+              </span>
+            </div>
+            {/* DM Serif Display — bold and striking serif */}
             <blockquote
               className="leading-[1.08] tracking-[-0.03em]"
               style={{
-                fontFamily: "var(--font-cormorant)",
+                fontFamily: "var(--font-dm-serif)",
                 fontWeight: 600,
                 fontStyle: "italic",
                 fontSize: "clamp(2.8rem, 7vw, 6.5rem)",
@@ -239,7 +266,7 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
             </blockquote>
             <footer
               className="mt-8 text-[0.65rem] uppercase tracking-[0.26em] opacity-40"
-              style={{ fontFamily: "var(--font-dm-mono)" }}
+              style={{ fontFamily: "var(--font-manrope)" }}
             >
               — Kitchen supervisor · Campus canteen
             </footer>
@@ -249,14 +276,25 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
         {/* ── PHONE TO PLATE (5 steps) — Fraunces numbers, Jakarta titles ── */}
         <SectionReveal id="flow" as="div" className="px-5 py-24 sm:px-8 lg:px-10">
           <div className="mx-auto max-w-7xl">
-            <p
-              className="mb-4 text-xs uppercase tracking-[0.3em]"
-              style={{ fontFamily: "var(--font-dm-mono)", color: "var(--tray-muted)" }}
-            >03 / How it works</p>
-            {/* Fraunces for editorial section heads */}
+            <div className="mb-4 flex flex-wrap items-center gap-3">
+              <p
+                className="text-xs uppercase tracking-[0.3em]"
+                style={{ fontFamily: "var(--font-dm-mono)", color: "var(--tray-muted)" }}
+              >03 / How it works</p>
+              <span
+                className="rounded border border-[var(--tray-border)] bg-[var(--tray-surface)] px-2.5 py-1 text-[0.6rem] font-bold uppercase tracking-[0.2em]"
+                style={{
+                  fontFamily: "var(--font-dm-mono)",
+                  color: "var(--tray-clay)",
+                }}
+              >
+                Specimen: NEWSREADER + GEIST SANS
+              </span>
+            </div>
+            {/* Newsreader for editorial section heads */}
             <h2
-              className="leading-[0.88] tracking-[-0.06em]"
-              style={{ fontFamily: "var(--font-fraunces)", fontWeight: 900, fontSize: "clamp(3rem,7vw,7rem)" }}
+              className="leading-[0.88] tracking-[-0.04em]"
+              style={{ fontFamily: "var(--font-newsreader)", fontWeight: 600, fontSize: "clamp(3rem,7vw,7rem)" }}
             >
               Phone to plate,<br />
               <em style={{ fontStyle: "italic", color: "var(--tray-clay)" }}>in eleven minutes.</em>
@@ -271,15 +309,15 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
               ] as const).map(([num, title, desc, tag]) => (
                 <div key={num} className="flex flex-col gap-3 rounded-[1.5rem] border p-5"
                   style={{ border: "1px solid var(--tray-border)", background: "rgba(255,255,255,0.52)" }}>
-                  {/* Fraunces Black for step numbers */}
+                  {/* Newsreader for step numbers */}
                   <span
-                    className="leading-none tracking-[-0.06em]"
-                    style={{ fontFamily: "var(--font-fraunces)", fontWeight: 900, fontSize: "3rem", color: "var(--tray-clay)" }}
+                    className="leading-none tracking-[-0.04em]"
+                    style={{ fontFamily: "var(--font-newsreader)", fontWeight: 600, fontSize: "3rem", color: "var(--tray-clay)" }}
                   >{num}</span>
-                  {/* Plus Jakarta Sans Semibold for step titles */}
+                  {/* Newsreader for step titles */}
                   <h3
                     className="text-[1.05rem] tracking-tight"
-                    style={{ fontFamily: "var(--font-jakarta)", fontWeight: 700 }}
+                    style={{ fontFamily: "var(--font-newsreader)", fontWeight: 600 }}
                   >{title}</h3>
                   <p
                     className="flex-1 text-[0.88rem] leading-6 opacity-65"
@@ -298,20 +336,31 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
         {/* ── STACK — Plus Jakarta Sans for clean tech feel ─────────── */}
         <SectionReveal id="stack" as="div" className="px-5 py-24 sm:px-8 lg:px-10">
           <div className="mx-auto max-w-7xl">
-            <p
-              className="mb-4 text-xs uppercase tracking-[0.3em]"
-              style={{ fontFamily: "var(--font-dm-mono)", color: "var(--tray-muted)" }}
-            >04 / Built with</p>
+            <div className="mb-4 flex flex-wrap items-center gap-3">
+              <p
+                className="text-xs uppercase tracking-[0.3em]"
+                style={{ fontFamily: "var(--font-dm-mono)", color: "var(--tray-muted)" }}
+              >04 / Built with</p>
+              <span
+                className="rounded border border-[var(--tray-border)] bg-[var(--tray-surface)] px-2.5 py-1 text-[0.6rem] font-bold uppercase tracking-[0.2em]"
+                style={{
+                  fontFamily: "var(--font-dm-mono)",
+                  color: "var(--tray-clay)",
+                }}
+              >
+                Specimen: SPACE GROTESK + JETBRAINS MONO
+              </span>
+            </div>
             <h2
               className="leading-[0.88] tracking-[-0.04em]"
-              style={{ fontFamily: "var(--font-jakarta)", fontWeight: 800, fontSize: "clamp(2.8rem,6.5vw,6.5rem)" }}
+              style={{ fontFamily: "var(--font-space-grotesk)", fontWeight: 700, fontSize: "clamp(2.8rem,6.5vw,6.5rem)" }}
             >
               A boring stack,<br />
               <span style={{ color: "var(--tray-clay)" }}>on purpose.</span>
             </h2>
             <p
               className="mt-6 max-w-xl text-[1.05rem] leading-8 opacity-70"
-              style={{ fontFamily: "var(--font-geist)" }}
+              style={{ fontFamily: "var(--font-jetbrains)" }}
             >
               Everything runs on a free tier until you have real users. No exotic infra. No lock-in surprises.
             </p>
@@ -331,8 +380,8 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
                   className="rounded-[1.25rem] border p-4"
                   style={{ border: "1px solid var(--tray-border)", background: "rgba(255,255,255,0.52)" }}
                 >
-                  <p className="tracking-tight" style={{ fontFamily: "var(--font-jakarta)", fontWeight: 600 }}>{name}</p>
-                  <p className="mt-1.5 text-[0.6rem] uppercase tracking-[0.14em]" style={{ fontFamily: "var(--font-dm-mono)", color: "var(--tray-muted)" }}>{role}</p>
+                  <p className="tracking-tight" style={{ fontFamily: "var(--font-space-grotesk)", fontWeight: 600 }}>{name}</p>
+                  <p className="mt-1.5 text-[0.6rem] uppercase tracking-[0.14em]" style={{ fontFamily: "var(--font-jetbrains)", color: "var(--tray-muted)" }}>{role}</p>
                 </HoverCard>
               ))}
             </div>
@@ -398,14 +447,25 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
         </div>
 
         {/* ── CLOSING CTA ───────────────────────────────────────────── */}
-        <SectionReveal as="div" className="relative overflow-hidden px-5 py-32 text-center sm:px-8 lg:px-10">
+        <SectionReveal as="div" id="closing" className="relative overflow-hidden px-5 py-32 text-center sm:px-8 lg:px-10 tl-closing">
           <div className="pointer-events-none absolute inset-0 -z-10">
             <div className="absolute left-1/2 top-0 h-96 w-96 -translate-x-1/2 rounded-full bg-[var(--tray-clay)]/15 blur-3xl" />
           </div>
           <RevealItem>
-            <p className="mb-5 text-xs uppercase tracking-[0.3em]" style={{ fontFamily: "var(--font-dm-mono)", color: "var(--tray-muted)" }}>
-              Ship it
-            </p>
+            <div className="mb-5 flex flex-wrap items-center justify-center gap-3">
+              <p className="text-xs uppercase tracking-[0.3em]" style={{ fontFamily: "var(--font-dm-mono)", color: "var(--tray-muted)" }}>
+                Ship it
+              </p>
+              <span
+                className="rounded border border-[var(--tray-border)] bg-[var(--tray-surface)] px-2.5 py-1 text-[0.6rem] font-bold uppercase tracking-[0.2em]"
+                style={{
+                  fontFamily: "var(--font-dm-mono)",
+                  color: "var(--tray-clay)",
+                }}
+              >
+                Specimen: THUNDER + FRAUNCES ITALIC
+              </span>
+            </div>
           </RevealItem>
           <RevealItem>
             <h2
@@ -553,6 +613,7 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
           </div>
         </div>
       </footer>
+      <DesignerCustomizer />
     </div>
   );
 }

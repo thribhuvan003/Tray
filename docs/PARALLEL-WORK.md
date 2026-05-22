@@ -375,3 +375,103 @@ pm run typecheck passes. Restart dev if port 3000 hangs: NODE_OPTIONS=--max-old-
 - **Cleaned Repository**: Cloned clean `main` branch, set default remote branch to `main` via `gh` CLI, deleted remote `production-ui-fidelity`, and deleted all obsolete `claude/*`, `cursor/*`, and `dependabot/*` branches on remote origin.
 - **Fixed static verification**: Added `data-tenant` attribute to canteen option element mappings in `public/demo/admin.html` to satisfy `demo-verify.mjs` requirements.
 - **Workspace Build Alignment**: Installed dependencies via `pnpm`, confirmed `npm run typecheck` and `npm run lint` both pass cleanly with zero warnings/errors, and verified `npm run demo:verify` passes completely.
+
+### 2026-05-22 — Swapped Home to Student Portal & FSSAI Indian Veg/Non-Veg Badges
+
+- **Configured Environments**: Created `.env.local` in the root containing Supabase credentials, Resend API key, QStash tokens/signing keys, and default tenant slug `aditya`.
+- **Next.js Homepage Swap**: Set up the Student Portal Canteen menu as the main homepage at `/`. Moved original to `src/app/(student)/page.tsx` and removed conflicting root `src/app/page.tsx`. Added a server-side redirect for `/menu` inside `src/app/(student)/menu/page.tsx` to handle legacy links seamlessly.
+- **Offline Demo Homepage**: Injected an immediate `<script>` redirection in the `<head>` of `public/demo/index.html` to instantly route visitors to `student.html`, ensuring it is the main demo surface while fully passing all static verifier checks.
+- **Premium FSSAI Badges**: Implemented transparent, crisp, slightly larger Veg (emerald), Non-Veg (rose), and Egg (amber) Indian FSSAI square-and-dot indicators overlaying cards in the student menu `src/components/portal-student/menu-item-card.tsx` and matching pseudo-element styling in the offline prototype `public/demo/student.html` CSS, matching your mockup perfectly.
+- **Verification & Dev Server**: Confirmed both `npm run typecheck` and `npm run demo:verify` pass with 100% success. Started the local development server in the background via `npm run dev` on port 3000.
+
+### 2026-05-22 — Premium Design Sandbox & Cinematic Preloader Upgrades
+
+- **Rebuilt Preview Sandbox**: Upgraded `public/design-preview/palettes.html` with a gorgeous interactive visual sandbox containing 5 premium design themes (A: Quiet Luxury Editorial, B: Swiss Tech Neo-Grotesk, C: Cyberpunk Kinetic, D: Vintage Awwwards Gold, E: Elite Wolker Juiced), a real-time Font Combinator panel, 5 fullscreen cinematic preloader simulators, and sweeping HSL mouse-tracking radial-glow bento cards.
+- **Cinematic Next.js Preloader**: Upgraded `src/components/landing/LandingIntro.tsx` with high-fidelity 3D perspective transitions (`rotateX: 45` to `0`, `scale: 0.85` to `1.0`), letter-spacing expansions (fluidly expanding flex gaps), and glowing text shadows that scale beautifully.
+- **Verification checks**: Confirmed all TypeScript typechecks (`npm run typecheck`) and static demo verification suites (`npm run demo:verify`) pass cleanly without warnings.
+
+### 2026-05-22 — F1 Multi-Agent QA Audit & Duplicate Prevention
+
+- **Static Prototype Duplicates Fix**: Added robust duplicate checks inside the static kitchen prototype `public/demo/kitchen.html` during specials creation. It prevents double pushing specials with the same name, displaying a professional error toast alert.
+- **Production Server Actions Guard**: Implemented duplicate name validation inside the Next.js server action `createMenuItem` at `src/app/(admin)/admin/_actions.ts`. It query-checks existing active dishes within the current tenant to prevent duplicates in the database.
+- **Verification Passes**: Confirmed both `npm run typecheck`, static `npm run demo:verify`, and E2E `npm run demo:verify:e2e` pass with 100% success.
+
+### 2026-05-22 — Premium Landing Animations & Motion Selection Suite
+
+- **Interactive Animations Sandbox**: Created `public/design-preview/animations.html` featuring 4 premium hero heading entrance reveals (Editorial Word Mask, Cyberpunk Glitch Stagger, Gold Slow Focus Pull, Swiss Block-Wipe), 3 scroll-driven visual hook triggers (Apple Text Highlight, Aperture Clip-Path Expansion, SVG Pipeline Node Draw), 3 dynamic card scroll & hover systems (3D Perspective Tilt Card with HSL spotlights, Pinned Overlapping Stack, Alternating Slide Enters), and 5 micro-interactions (Magnetic Button springs, Liquid Hover fills, Arrow Swap slide links, FSSAI Indian Veg Badge dual pulsing rings, Floating order steam halo).
+- **Handoff Blueprint Generator**: Integrated an interactive checklist system that allows real-time visual tracking of selections and compiles standard Tailwind-free CSS and GSAP JS code snippets into a downloadable, copyable handoff blueprint.
+- **Verification passes**: Confirmed both typechecks and static prototype verification suites pass cleanly without warnings.
+
+### 2026-05-22 — Elite Awwwards-Tier Railway Motion & Micro-Interactions Upgrades
+
+- **Ultra-Curvy Railway Scroller**: Completely rebuilt the winding card scroller in `public/design-preview/animations.html`. Increased the physical scroller viewport length to 3200px and implemented real, high-performance math coordinate positioning caching via SVG's `.getPointAtLength()` API. The cards now glide perfectly on actual steel rails with wooden sleepers (`stroke-dasharray`), wiggling, swaying, and scaling smoothly based on dynamic kinetic tangent-rotations.
+- **Glowing Interactive Stations**: Added 4 glowing neon station stops representing each canteen order pipeline step. The stations automatically light up, pulse organically, and expand in sync with the viewport scroll focus center as the user glides past them.
+- **Organic FSSAI Dual Pulse Badges**: Upgraded the food compliance badges into highly refined glassmorphic cards with rotating 3D structures and a realistic dual-pulsing glowing ring rhythm (green for Veg, red/brown for Non-Veg) that scales and vibrates on hover.
+- **Cinematic Preloader Upgrade**: Implemented an immediate, immersive cinematic preloader on page load using the luxurious `Newsreader` (italic display) and `Outfit` (sans-serif subtitle) font stack. Features a highly refined 0% to 100% JetBrains Mono ticker countdown, elegant character-by-character entrance stagger animations, fanned letter spacing, and horizontal pane splits.
+- **Liquid Action & Arrow Slide-Swap Link**: Hand-crafted gorgeous micro-interactions including a seamless wavy liquid swish order button and a magnetic arrow slide-swap link.
+- **Verification Passes**: Validated static integrity with `npm run demo:verify` and `npm run typecheck` which pass with 100% success.
+
+### 2026-05-22 — Section-by-Section Typography & Specimen Badges Complete
+
+- **Colossal Stark Preloader** (`LandingIntro.tsx`): Confirmed zero color glows or radiant text-shadows. Bone-cream `#FAF8F5` monumental "Tray" wordmark at `clamp(10rem,32vw,30rem)` on pitch-black — overflow-mask spring slide-up intact.
+- **12 Premium Palettes (A–L) & 8 Curated Font Pairings (1–8)** fully integrated into `DesignerCustomizer.tsx` and `StudioSandbox.tsx` — default selection: THUNDER + NEUE HAAS GROTESK (key `1`).
+- **Section typography mapping completed across all landing sections**:
+  - `#hero` → F-1: Barlow Condensed 900 + Geist Sans  
+  - `#ticker` → F-5: Bebas Neue (Druk) + DM Mono · Specimen badge updated
+  - `#sandbox` → F-3: Space Grotesk + JetBrains Mono · Specimen badge present
+  - `#portals` → F-4: Fraunces Display + Barlow Condensed · Specimen badge updated
+  - `#campus` → F-2: Instrument Serif italic + Plus Jakarta Sans · h2 font updated
+  - `#sync` → F-6: Cormorant Garamond italic + Geist Sans · Specimen badge + h2 font updated
+  - `#quote` → F-7: DM Serif Display italic + Manrope · badge, blockquote, footer all updated
+  - `#flow` → F-8: Newsreader + Geist Sans · badge, h2, step numbers, step titles all updated
+  - `#stack` → custom: Space Grotesk + JetBrains Mono · badge, h2, copy, bento cards all updated
+  - `#closing` → THUNDER + Fraunces Italic · Specimen badge present
+- **Bespoke scroll reveals** fully choreographed in `landing-motion.tsx` for every section.
+- **Gutter alignment**: all sections use `mx-auto max-w-7xl px-5 sm:px-8 lg:px-10`.
+- **Verification**: `npx tsc --noEmit` → 0 errors. Dev server running on port 3005.
+
+### 2026-05-22 — Student Switcher Dish Counts & Custom Port Setup
+
+- **Custom Dev Port**: Next.js development server running cleanly on **`http://localhost:3005`** via direct binary execution, keeping port 3000 fully available for the user.
+- **Dynamic Canteen Switcher Dish Count Fix**:
+  - Added optional `dishCount` property to the `CollegeCanteen` type in `src/lib/tenant.ts`.
+  - Updated `src/app/(student)/layout.tsx` to instantiate `getAdminClient` (service-role client bypassing RLS).
+  - Fetches all live `menu_items` with `tenants!inner(slug)`, aggregates the counts in-memory by slug, and dynamically maps them to the `siblings` list prior to rendering the `<StudentTopBar>`.
+  - Updated `src/components/portal-student/top-bar.tsx` to pass down `c.dishCount` to the underlying `<CanteenSwitcher>` component, resolving the issue where `0 dishes` was previously showing.
+- **Verification**: Zero TypeScript compilation errors (`npx tsc --noEmit`), dev server healthy.
+
+### 2026-05-22 — Real-time Client Portal Safeguards & Automated E2E Test Suite
+
+- **Automated E2E QA Test Script**: Created `scripts/test-new-features.mjs` utilizing Playwright and Supabase Admin API to verify the 6 critical integration scenarios:
+  1. Case-insensitive duplicate item rejection (Postgres index constraint & admin server action validation).
+  2. Student menu real-time updates upon price changes (realtime channel + client-side page refreshing).
+  3. Live Closed banner appearance and dismissal when `is_open` is changed in the database.
+  4. Phone lock/unlock simulation triggering dynamic state refresh on visibility changes.
+  5. Global campus switcher dynamically listing new canteens in real-time when inserted.
+  6. Uncollected ready order auto-expiry cron validation (secure bypass trigger) and tracking page transition to collection window expired layout.
+- **Verification**: Zero TypeScript compilation errors (`npx tsc --noEmit`), all E2E scenarios validated and passing successfully.
+
+### May 22, 2026 - Animation Sandbox to React Integration
+- **Completed:** Migrated the Ultra-Curvy Railway scroller from the GSAP laboratory directly into the Next.js production build (PiranhaPortalsSection.tsx & RailwayScroller.tsx).
+- **Completed:** Injected the Liquid-Fill Action Button into TrayHero.tsx.
+- **Completed:** Injected the FSSAI Dual Pulse badge into MetricsAndTicker.tsx.
+- **Completed:** Applied the Cinematic Preloader font stack (Newsreader/Outfit/JetBrains Mono) to LandingIntro.tsx.
+- **Verified:** `npm run typecheck` and `npm run demo:verify` both pass successfully.
+
+### May 22, 2026 - Premium Student Color Palette Tokenization
+- **Completed:** Applied custom premium color palette (`#000000` Pure Black, `#B2C8ED` Soft Pastel Blue, `#E4E4E4` Light Gray, and `#C8C8C8` Medium Gray) to the student offline prototype (`public/demo/student.html`) and live student main stylesheet (`src/app/globals.css`).
+- **Details:**
+  - In `src/app/globals.css`, retokenized `[data-portal="student"]` variables: `--color-paper` set to `#E4E4E4`, `--color-paper-dim` set to `#C8C8C8`, `--color-ink` set to `#000000`, and mapped ocean hues (50-900 scale) with a primary `--color-ocean-500` set to `#B2C8ED`.
+  - In `public/demo/student.html`, retokenized `:root` variables: `--bg` set to `#E4E4E4`, `--bg-2` set to `#C8C8C8`, `--text` set to `#000000`, and `--accent` set to `#B2C8ED`, and updated the dependent highlight/surface borders and gradients.
+  - Resolved contrast issues by styling dynamic badges and buttons (e.g. `.pill-status.is-live`, `.btn-add-initial`) with deep contrasting text.
+- **Verified:** Dev server builds successfully, `npm run typecheck` and `npm run demo:verify` both pass cleanly with 100% success.
+
+### May 22, 2026 - Luxurious Lavender & Charcoal Landing Page
+- **Completed:** Applied the requested luxurious `#E6E6FA` (Lavender) and `#333333` (Charcoal) color palette to the Next.js landing page variables, fallbacks, and get-started wizard layouts.
+- **Details:**
+  - Retokenized `:root` landing tokens in `src/app/globals.css`: `--tray-bg` set to `#E6E6FA`, `--tray-ink` set to `#333333`, `--tray-surface` set to `#D4D4F0`, `--tray-muted` set to `#5E5E5E`, `--tray-clay` set to `#5A4FCF`, `--tray-green` set to `#3F725D`, and `--tray-cream` set to `#FAF9FE`.
+  - Tuned ambient `.tray-page` radial gradients to harmonized `#5A4FCF` (Iris) and `#3F725D` (Emerald Sage) hues.
+  - Synchronized default inline style fallbacks and background blur blobs in `src/app/(public)/login/page.tsx` and `src/app/loading.tsx`.
+  - Mapped fullscreen transition panel defaults in `src/components/landing/sections/TryDemoSection.tsx`.
+  - Retokenized the get-started wizard styled variables in `src/app/get-started/wizard.tsx` to match the brand aesthetic perfectly.
+- **Verified:** Build is fully robust and compiling without errors; typescript compiler checks and demo verifiers both return 100% green. Dev server running on custom port **`3008`** (avoiding 3000, 3001, and 3005).

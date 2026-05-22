@@ -29,53 +29,76 @@ export function OrderReadyListener({
     const shownRef = useRef<Set<string>>(new Set());
 
     useEffect(() => {
-        if (!userId) return;
         const sb = getBrowserClient();
+        const activeChannels: any[] = [];
 
-        const channel = sb
-            .channel(`student-orders:${userId}`)
+        // 1. Subscribe to order updates if logged in
+        if (userId) {
+            const orderCh = sb
+                .channel(`student-orders:${userId}`)
+                .on(
+                    "postgres_changes",
+                    {
+                        event: "UPDATE",
+                        schema: "public",
+                        table: "orders",
+                        filter: `user_id=eq.${userId}`,
+                    },
+                    (payload) => {
+                        const row = payload.new as
+                            | { id: string; status: string; short_code?: string }
+                            | null;
+                        if (!row) return;
+
+                        const key = `${row.id}:${row.status}`;
+                        if (shownRef.current.has(key)) return;
+
+                        if (row.status === "ready") {
+                            shownRef.current.add(key);
+                            toast.success(
+                                `Order ${row.short_code ?? ""} is ready! Head to the counter.`,
+                                {
+                                    duration: 12000,
+                                    action: {
+                                        label: "View",
+                                        onClick: () =>
+                                            router.push(`/c/${tenantSlug}/track/${row.id}`),
+                                    },
+                                }
+                            );
+                        } else if (row.status === "preparing") {
+                            shownRef.current.add(key);
+                            toast(`Order ${row.short_code ?? ""} is being prepared.`, {
+                                duration: 5000,
+                            });
+                        }
+                    }
+                )
+                .subscribe();
+            activeChannels.push(orderCh);
+        }
+
+        // 2. Global tenants subscription (new canteens created, switcher status updates)
+        const tenantsCh = sb
+            .channel("global-tenants")
             .on(
                 "postgres_changes",
                 {
-                    event: "UPDATE",
+                    event: "*",
                     schema: "public",
-                    table: "orders",
-                    filter: `user_id=eq.${userId}`,
+                    table: "tenants",
                 },
-                (payload) => {
-                    const row = payload.new as
-                        | { id: string; status: string; short_code?: string }
-                        | null;
-                    if (!row) return;
-
-                    const key = `${row.id}:${row.status}`;
-                    if (shownRef.current.has(key)) return;
-
-                    if (row.status === "ready") {
-                        shownRef.current.add(key);
-                        toast.success(
-                            `Order ${row.short_code ?? ""} is ready! Head to the counter.`,
-                            {
-                                duration: 12000,
-                                action: {
-                                    label: "View",
-                                    onClick: () =>
-                                        router.push(`/c/${tenantSlug}/track/${row.id}`),
-                                },
-                            }
-                        );
-                    } else if (row.status === "preparing") {
-                        shownRef.current.add(key);
-                        toast(`Order ${row.short_code ?? ""} is being prepared.`, {
-                            duration: 5000,
-                        });
-                    }
+                () => {
+                    router.refresh();
                 }
             )
             .subscribe();
+        activeChannels.push(tenantsCh);
 
         return () => {
-            sb.removeChannel(channel);
+            activeChannels.forEach((ch) => {
+                sb.removeChannel(ch);
+            });
         };
     }, [userId, tenantSlug, router]);
 

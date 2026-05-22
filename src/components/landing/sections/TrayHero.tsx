@@ -15,6 +15,7 @@ import {
   fadeUpVar,
   softFadeUp,
 } from "@/lib/motion/tray-framer";
+import { LiquidButton } from "../LiquidButton";
 
 const HERO_CHIPS = [
   {
@@ -86,7 +87,7 @@ export function TrayHero() {
         {/* Left: copy */}
         <div>
           {/* Eyebrow — first to animate in */}
-          <motion.div variants={softFadeUp} className="mb-5">
+          <motion.div variants={softFadeUp} className="mb-5 flex flex-wrap items-center gap-3">
             <p
               className="inline-flex items-center gap-2 rounded-full border px-4 py-1.5 text-xs uppercase tracking-[0.2em]"
               style={{
@@ -99,22 +100,36 @@ export function TrayHero() {
               <span className="h-1.5 w-1.5 rounded-full animate-pulse" style={{ background: "var(--tray-clay)" }} />
               Campus Edition · Live
             </p>
+            <span
+              className="inline-flex items-center rounded-full border px-3 py-1.5 text-[0.65rem] font-bold uppercase tracking-[0.2em]"
+              style={{
+                fontFamily: "var(--font-dm-mono)",
+                color: "var(--tray-clay)",
+                border: "1px solid var(--tray-border)",
+                background: "rgba(255,255,255,0.45)",
+              }}
+            >
+              Specimen: THUNDER + NEUE HAAS GROTESK
+            </span>
           </motion.div>
 
-          {/* H1 — stronger fade + blur */}
+          {/* H1 — monumental THUNDER style word-stagger reveal */}
           <motion.h1
-            variants={fadeUpVar}
-            className="max-w-[18ch] leading-[0.88] tracking-[-0.02em]"
+            variants={softFadeUp}
+            className="tl-h1 max-w-4xl leading-[0.80] tracking-[-0.05em] uppercase"
             style={{
               fontFamily: "var(--font-barlow)",
               fontWeight: 900,
-              fontSize: "clamp(2.5rem, 5vw, 3.5rem)",
+              fontSize: "clamp(3.8rem, 10vw, 10.5rem)",
             }}
           >
-            Multi-tenant canteen{" "}
-            <em className="not-italic" style={{ fontFamily: "var(--font-fraunces)", fontStyle: "italic", color: "var(--tray-clay)" }}>
-              management for colleges.
-            </em>
+            <span className="tl-word inline-block mr-[0.2em]">Multi-tenant</span>{" "}
+            <span className="tl-word inline-block mr-[0.2em]">canteen</span>{" "}
+            <span className="tl-word inline-block mr-[0.2em]">management</span>{" "}
+            <span className="tl-word inline-block mr-[0.2em]">for</span>{" "}
+            <span className="tl-word inline-block" style={{ fontFamily: "var(--font-fraunces)", fontStyle: "italic", textTransform: "none", color: "var(--tray-clay)" }}>
+              colleges.
+            </span>
           </motion.h1>
 
           {/* Subtitle */}
@@ -163,15 +178,13 @@ export function TrayHero() {
           {/* CTAs */}
           <motion.div variants={softFadeUp}>
             <div className="mt-12 flex flex-wrap items-center gap-4">
-              <MotionCTA
-                data-magnetic
+              <LiquidButton
                 href="#portals"
-                variant="primary"
-                className="rounded-full bg-[var(--tray-ink)] px-7 py-3.5 text-[0.88rem] text-[var(--tray-cream)] font-semibold"
-                style={{ fontFamily: "var(--font-geist)" } as React.CSSProperties}
+                className="!px-7 !py-3.5 !text-[0.88rem] !font-semibold"
+                style={{ fontFamily: "var(--font-geist)" }}
               >
                 See how it works
-              </MotionCTA>
+              </LiquidButton>
               <MotionCTA
                 data-magnetic
                 href="/get-started"
@@ -208,7 +221,7 @@ export function TrayHero() {
         </div>
 
         {/* Right: live order journey visual */}
-        <motion.div variants={fadeUpVar}>
+        <motion.div variants={softFadeUp}>
           <OrderJourneyVisual />
         </motion.div>
       </div>

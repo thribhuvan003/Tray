@@ -17,14 +17,14 @@ export default async function LoginPage({
   return (
     <div
       className="min-h-svh overflow-x-hidden"
-      style={{ background: "var(--tray-bg, #D8C9AE)", color: "var(--tray-ink, #1A1614)" }}
+      style={{ background: "var(--tray-bg, #E6E6FA)", color: "var(--tray-ink, #333333)" }}
     >
       {/* Ambient blobs */}
       <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
         <div className="absolute -left-40 -top-20 h-[30rem] w-[30rem] rounded-full blur-[6rem]"
-          style={{ background: "rgba(184,83,26,0.13)" }} />
+          style={{ background: "rgba(90,79,207,0.13)" }} />
         <div className="absolute -right-32 bottom-0 h-[28rem] w-[28rem] rounded-full blur-[6rem]"
-          style={{ background: "rgba(42,110,58,0.10)" }} />
+          style={{ background: "rgba(63,114,93,0.10)" }} />
       </div>
 
       <div className="flex min-h-svh flex-col items-center justify-center px-5 py-12 sm:px-8">

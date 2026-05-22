@@ -832,6 +832,10 @@ function renderLiveSpecials(){
 
 $('#spPush').addEventListener('click', () => {
   const name = $('#spName').value.trim() || "Today's special";
+  if (specials.some(s => s.name.toLowerCase() === name.toLowerCase())) {
+    toast(`✕ "${name}" is already in today's specials!`);
+    return;
+  }
   const desc = $('#spDesc').value.trim();
   const price = Number($('#spPrice').value) || 0;
   const prep = Number($('#spPrep').value) || 5;
