@@ -264,15 +264,8 @@ async function main() {
     await adminPage.waitForTimeout(2000); // Hydration recovery
 
     // Select "I own a canteen" (owner) card
-    const ownerCard = adminPage.locator('button:has-text("I own a canteen")');
-    await ownerCard.waitFor({ state: "visible", timeout: 10000 });
-    await ownerCard.click();
-    await adminPage.waitForTimeout(1000);
-
-    // Switch to password mode
-    const pwdToggle = adminPage.locator('button:has-text("Use password")');
-    await pwdToggle.waitFor({ state: "visible", timeout: 10000 });
-    await pwdToggle.click();
+    await clickUntilVisible(adminPage, 'button:has-text("I own a canteen")', 'button:has-text("Use password")', "Owner role card");
+    await adminPage.click('button:has-text("Use password")');
     await adminPage.waitForTimeout(500);
 
     // Fill credentials
@@ -320,13 +313,8 @@ async function main() {
     await studentPage.waitForTimeout(2000);
 
     // Select student card
-    await waitAndClick(studentPage, "[data-role-card]", "Student role card");
-    await studentPage.waitForTimeout(1000);
-
-    // Switch to password mode
-    const studentPwdToggle = studentPage.locator('button:has-text("Use password")');
-    await studentPwdToggle.waitFor({ state: "visible", timeout: 10000 });
-    await studentPwdToggle.click();
+    await clickUntilVisible(studentPage, 'button:has-text("Student")', 'button:has-text("Use password")', "Student role card");
+    await studentPage.click('button:has-text("Use password")');
     await studentPage.waitForTimeout(500);
 
     await studentPage.fill('input[type="email"]', STUDENT_EMAIL);
