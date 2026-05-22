@@ -546,3 +546,11 @@ pm run typecheck passes. Restart dev if port 3000 hangs: NODE_OPTIONS=--max-old-
 - **Completed**: Hardened scrolling physics in `landing-motion.tsx` for a slower, ultra-premium experience. Set Lenis duration to `2.2` and wheel multiplier to `0.55`. Slowed down character hero stagger animations and scroll-reveals to ensure silky-smooth, hooking visual transitions with zero lag.
 - **Completed**: Conducted a thorough font scaling audit across all landing page sections, manually bumping up all tiny tags/badges in color boxes to highly readable, standardized `0.72rem` and `0.75rem` sizes. Modified files: `landing-page.tsx`, `CampusModelSection.tsx`, `TryDemoSection.tsx`, and `PiranhaPortalsSection.tsx`.
 - **Verified**: Confirmed all specimen tags and sandbox panel files are completely removed. Verified build integrity (`pnpm run build`), offline verifier (`pnpm run demo:verify`), and TypeScript compile check (`npm run typecheck`), which all pass with 100% green success.
+
+### 2026-05-22 — Resolve Production Landing Page 404 Routing Bug
+
+- **Completed**: Fixed a critical P0 404 routing error affecting direct root visits on `https://trayy.vercel.app/` when no tenant slug is present in the host.
+- **Details**:
+  - Removed the legacy/mismatched rewrite to `/landing` in `src/middleware.ts` for requests hitting `/` without a tenant slug.
+  - Allowed requests without tenant slugs to fall through to `NextResponse.next()`, letting the root dynamic route (`src/app/page.tsx`) resolve the tenant and correctly render `<LandingPage tenant={tenant} />`.
+- **Verified**: Next.js production builds (`npm run build`), offline verifications (`npm run demo:verify`), code lint checks (`npm run lint`), and compiler typechecks (`npm run typecheck`) are all fully passing with 100% green status. Verified that visiting `/` locally runs cleanly.
