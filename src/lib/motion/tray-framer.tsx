@@ -261,60 +261,82 @@ export function SyncPipelineVisual({ className }: { className?: string }) {
 
   useEffect(() => {
     if (reduce) return;
-    const id = window.setInterval(() => setActive(c => (c + 1) % SYNC_STEPS.length), 1100);
+    const id = window.setInterval(() => setActive(c => (c + 1) % SYNC_STEPS.length), 2000);
     return () => clearInterval(id);
   }, [reduce]);
 
   return (
     <motion.div
       variants={cardReveal}
-      className={`rounded-[2rem] border overflow-hidden ${className ?? ""}`}
-      style={{ border: "1px solid var(--tray-border)", background: "rgba(255,255,255,0.55)" }}
+      className={`rounded-[2rem] border overflow-hidden p-6 sm:p-8 ${className ?? ""}`}
+      style={{ border: "2px solid var(--tray-border)", background: "rgba(255,255,255,0.65)", backdropFilter: "blur(16px)" }}
     >
-      <div className="grid grid-cols-2 gap-3 p-5 sm:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-4 sm:gap-6">
         {SYNC_STEPS.map((step, i) => {
-          const on = active >= i;
+          const on = active === i;
+          const passed = active >= i;
           return (
             <motion.div
               key={step.label}
               animate={{
-                opacity: on ? 1 : 0.4,
-                y: on ? 0 : 6,
-                borderColor: on ? "rgba(184,83,26,0.38)" : "rgba(87,87,87,0.12)",
+                scale: on ? 1.05 : 1,
+                opacity: passed ? 1 : 0.45,
+                borderColor: on
+                  ? "var(--tray-clay)"
+                  : passed
+                  ? "rgba(184,83,26,0.22)"
+                  : "rgba(87,87,87,0.12)",
+                boxShadow: on
+                  ? "0 12px 30px rgba(184,83,26,0.15)"
+                  : "0 0 0 rgba(0,0,0,0)",
               }}
-              transition={{ duration: 0.35, ease: tm.ease }}
-              className="rounded-[1.5rem] border p-4"
-              style={{ background: on ? "rgba(184,83,26,0.06)" : "rgba(255,255,255,0.40)" }}
+              transition={{ duration: 0.45, ease: tm.ease }}
+              className="relative rounded-[1.75rem] border-2 p-5 sm:p-6 flex flex-col justify-between min-h-[160px] transition-all"
+              style={{
+                background: on
+                  ? "linear-gradient(135deg, rgba(184,83,26,0.08), rgba(184,83,26,0.02))"
+                  : passed
+                  ? "rgba(255,255,255,0.50)"
+                  : "rgba(255,255,255,0.25)",
+              }}
             >
-              <motion.div
-                animate={on ? { scale: [1, 1.1, 1] } : undefined}
-                transition={{ duration: 0.4 }}
-                className="mb-3 flex h-8 w-8 items-center justify-center rounded-xl text-xs font-bold"
-                style={{
-                  background: on ? "rgba(184,83,26,0.14)" : "rgba(87,87,87,0.08)",
-                  color: on ? "var(--tray-clay)" : "var(--tray-muted)",
-                }}
-              >
-                {i + 1}
-              </motion.div>
-              <p className="text-[0.85rem] font-semibold tracking-tight" style={{ fontFamily: "var(--font-jakarta)", color: "var(--tray-ink)" }}>
-                {step.label}
-              </p>
-              <p className="mt-1 text-[0.65rem] leading-[1.5]" style={{ fontFamily: "var(--font-dm-mono)", color: "var(--tray-muted)" }}>
-                {step.body}
-              </p>
+              <div className="flex justify-between items-start mb-4">
+                <motion.div
+                  animate={on ? { scale: [1, 1.15, 1], rotate: [0, 360, 360] } : undefined}
+                  transition={{ duration: 0.8, ease: tm.ease }}
+                  className="flex h-12 w-12 sm:h-14 sm:w-14 items-center justify-center rounded-2xl text-base sm:text-lg font-black"
+                  style={{
+                    background: on ? "var(--tray-clay)" : passed ? "rgba(184,83,26,0.15)" : "rgba(87,87,87,0.06)",
+                    color: on ? "var(--tray-cream)" : passed ? "var(--tray-clay)" : "var(--tray-muted)",
+                    boxShadow: on ? "0 4px 12px rgba(184,83,26,0.3)" : "none"
+                  }}
+                >
+                  {i + 1}
+                </motion.div>
+                {on && (
+                  <span className="h-2 w-2 rounded-full bg-[var(--tray-clay)] animate-ping" />
+                )}
+              </div>
+              <div>
+                <p className="text-[0.95rem] sm:text-base font-black tracking-tight" style={{ fontFamily: "var(--font-jakarta)", color: "var(--tray-ink)" }}>
+                  {step.label}
+                </p>
+                <p className="mt-2 text-[0.72rem] sm:text-xs leading-[1.6] font-semibold" style={{ fontFamily: "var(--font-dm-mono)", color: "var(--tray-muted)" }}>
+                  {step.body}
+                </p>
+              </div>
             </motion.div>
           );
         })}
       </div>
 
       {/* Progress bar */}
-      <div className="mx-5 mb-5 h-1.5 overflow-hidden rounded-full" style={{ background: "rgba(87,87,87,0.10)" }}>
+      <div className="mt-8 h-2 overflow-hidden rounded-full" style={{ background: "rgba(87,87,87,0.10)" }}>
         <motion.div
           className="h-full rounded-full"
           style={{ background: "var(--tray-clay)" }}
           animate={{ width: `${((active + 1) / SYNC_STEPS.length) * 100}%` }}
-          transition={{ duration: 0.4, ease: tm.ease }}
+          transition={{ duration: 0.45, ease: tm.ease }}
         />
       </div>
     </motion.div>
@@ -391,7 +413,7 @@ export function OrderJourneyVisual({ className }: { className?: string }) {
         ))}
       </div>
 
-      <div className="m-4 rounded-[1.25rem] border p-4" style={{ background: "rgba(255,255,255,0.50)", borderColor: "var(--tray-border)" }}>
+      <div className="m-4 rounded-[1.25rem] border overflow-hidden" style={{ background: current.state === "READY" ? "rgba(42,110,58,0.04)" : "rgba(255,255,255,0.50)", borderColor: current.state === "READY" ? "rgba(42,110,58,0.3)" : "var(--tray-border)", transition: "all 0.4s ease" }}>
         <AnimatePresence mode="wait">
           <motion.div
             key={current.state}
@@ -399,21 +421,40 @@ export function OrderJourneyVisual({ className }: { className?: string }) {
             animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
             exit={{ opacity: 0, y: -8, filter: "blur(6px)" }}
             transition={{ duration: 0.32, ease: tm.ease }}
+            className={current.state === "READY" ? "p-6" : "p-4"}
           >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-[0.62rem] uppercase tracking-[0.24em]" style={{ fontFamily: "var(--font-dm-mono)", color: current.color }}>
+            {current.state === "READY" ? (
+              <div className="flex flex-col items-center justify-center text-center relative overflow-hidden">
+                <span className="relative inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[0.72rem] font-bold tracking-[0.2em] uppercase text-[var(--tray-green)] bg-[var(--tray-green)]/[0.12] animate-bounce">
+                  <span className="h-2 w-2 rounded-full bg-[var(--tray-green)] animate-ping" />
                   {current.label}
+                </span>
+                <div className="mt-4 font-mono font-black text-5xl tracking-widest text-[var(--tray-green)] animate-pulse">
+                  7 3 4 2
+                </div>
+                <p className="mt-3 text-[1rem] font-bold text-[var(--tray-ink)] uppercase tracking-wider">
+                  Ready for collection!
                 </p>
-                <p className="mt-1 text-[0.95rem] font-semibold" style={{ fontFamily: "var(--font-jakarta)", color: "var(--tray-ink)" }}>
-                  {current.title}
+                <p className="mt-1 text-[0.75rem] text-[var(--tray-muted)] font-medium">
+                  Show this OTP at the counter to claim your meal.
                 </p>
               </div>
-              <span className="rounded-xl border px-3 py-1.5 text-[0.62rem] font-bold uppercase tracking-[0.14em]"
-                style={{ fontFamily: "var(--font-dm-mono)", background: "rgba(255,255,255,0.60)", color: current.color, borderColor: "var(--tray-border)" }}>
-                {current.state}
-              </span>
-            </div>
+            ) : (
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-[0.62rem] uppercase tracking-[0.24em]" style={{ fontFamily: "var(--font-dm-mono)", color: current.color }}>
+                    {current.label}
+                  </p>
+                  <p className="mt-1 text-[0.95rem] font-semibold" style={{ fontFamily: "var(--font-jakarta)", color: "var(--tray-ink)" }}>
+                    {current.title}
+                  </p>
+                </div>
+                <span className="rounded-xl border px-3 py-1.5 text-[0.62rem] font-bold uppercase tracking-[0.14em]"
+                  style={{ fontFamily: "var(--font-dm-mono)", background: "rgba(255,255,255,0.60)", color: current.color, borderColor: "var(--tray-border)" }}>
+                  {current.state}
+                </span>
+              </div>
+            )}
           </motion.div>
         </AnimatePresence>
       </div>

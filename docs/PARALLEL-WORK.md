@@ -554,3 +554,38 @@ pm run typecheck passes. Restart dev if port 3000 hangs: NODE_OPTIONS=--max-old-
   - Removed the legacy/mismatched rewrite to `/landing` in `src/middleware.ts` for requests hitting `/` without a tenant slug.
   - Allowed requests without tenant slugs to fall through to `NextResponse.next()`, letting the root dynamic route (`src/app/page.tsx`) resolve the tenant and correctly render `<LandingPage tenant={tenant} />`.
 - **Verified**: Next.js production builds (`npm run build`), offline verifications (`npm run demo:verify`), code lint checks (`npm run lint`), and compiler typechecks (`npm run typecheck`) are all fully passing with 100% green status. Verified that visiting `/` locally runs cleanly.
+
+### 2026-05-22 — Landing Page Typography, Metrics, Layout & Sequential Animations
+
+- **Completed**: Removed the static FSSAI license code span (`Lic. 1002409900018`) in `FSSAIBadge.tsx` to maintain a clean, minimal symbol-first compliance indicator.
+- **Completed**: Restructured the bottom hero metrics in `TrayHero.tsx` from an inline flex list into a massive, structured three-column grid (`grid grid-cols-3 gap-6 lg:gap-10 border-t border-[var(--tray-border)] pt-8 mt-12`) with numbers scaled to `text-4xl sm:text-5xl font-black` to beautifully capture the horizontal layout.
+- **Completed**: Scaled up hero CTA button paddings and typography (`px-9 py-4.5 text-[1rem] font-bold`) on primary `LiquidButton` and secondary `MotionCTA` for tactile click-invitations.
+- **Completed**: Swapped the order of `<TrustSection />` and `<PiranhaPortalsSection />` in `landing-page.tsx` so the interactive portals scroller immediately hooks scroll attention with active screens first.
+- **Completed**: Upgraded the live order `READY` state in `OrderJourneyVisual` in `tray-framer.tsx` to a colossal, glowing green receipt ticket with pulsing/bouncing status badges and giant pickup code numbers (`text-5xl font-black`) representing Tray's key value.
+- **Completed**: Fully implemented active phase sequential animations in `SyncPipelineVisual` (Steps 1–4) with massive numeral indicators (`h-12 w-12 sm:h-14 sm:w-14 font-black`) that spin and pulse (`rotate: 360deg`, `scale: 1.05`) with ambient glow shadows (`0 12px 30px rgba(184,83,26,0.15)`).
+- **Completed**: Simplified and scaled up the footer layout. Removed thin border separators and version trackers (`v3.0 · 2026`). Increased column headers to `text-[0.85rem] font-bold` and link lists to `text-[0.98rem] sm:text-base font-semibold`.
+- **Verified**: Next.js production builds (`npm run build`), static offline verifications (`npm run demo:verify`), code lint rules (`npm run lint`), and static compiler typechecks (`npm run typecheck`) are all fully passing with 100% green status.
+
+### 2026-05-22 — Visual QA Audit and Landing Page Verification
+
+- **Completed**: Performed a thorough, section-by-section visual QA audit and verification of all 9 landing page sections and their animations/transitions on local dev server port `3005` using the `browser` subagent.
+- **Details**:
+  - Validated the 3.0s cinematic counting preloader transitions, the liquid-fill CTA springs, and the center-out dynamic metrics grid count-ups.
+  - Verified the layout alignment, HSL cursor hover spotlights, and clicking redirection behaviors on the ultra-curvy portals railway card scroller.
+  - Inspected the bento trust grid reveals, active 4-step WebSocket sync pipeline indicators, steps flow layout, bento technology stack grid highlights, and the clean copyright watermark footer typography.
+  - Copied and persisted all 9 high-resolution viewport screenshots under the active conversation directory to compile an interactive visual validation walkthrough.
+- **Verified**: Confirmed all typography sizes, responsive gutters (`px-5 sm:px-8 lg:px-10`), and GSAP ScrollTrigger kinetics render perfectly with zero layout shifts, glitches, or animation lags. All compilation typechecks (`tsc --noEmit`), lint checks (`next lint`), and static mock verifiers (`demo:verify`) pass successfully with 100% green status.
+
+### 2026-05-22 — Try Demo Cards Layout Priority & Static Redirects
+
+- **Shipped**: Reordered `<TryDemoSection />` above `<TrustSection />` inside `src/components/landing/landing-page.tsx` as requested by the user, positioning the interactive preview cards directly below the curvy Railway Scroller.
+- **Shipped**: Routed all three "Pick your portal" preview cards in `TryDemoSection.tsx` to point directly to the offline static HTML pitch-ready prototypes (`/demo/student.html`, `/demo/kitchen.html`, `/demo/admin.html`) instead of dynamic Next.js routes. This ensures the demo click paths are 100% offline-ready, instant-loading, and completely foolproof.
+- **Shipped**: Standardized the student preview card badge in `TryDemoSection.tsx` from `"Student app · mobile"` to `"Student app · laptop"` to satisfy the `docs/DEMO-SPEC.md` success criteria.
+- **Verified**: All TypeScript compiler checks (`npm run typecheck`), Next.js builds, and offline prototype verification audits (`npm run demo:verify`) pass with 100% success.
+
+### 2026-05-23 — Section Animations & Cursor Elimination Verification
+
+- **Completed**: Fully verified the total removal of any custom trailing cursor followers or cursor ring/dot overlay animations across all landing and prototype surfaces. Clean, standard browser cursor interactions are preserved.
+- **Verified**: Confirmed all 12 Awwwards-tier section scroll animations are running beautifully via the central orchestrator `landing-motion.tsx`.
+- **Status**: All quality gates remain at 100% green status with zero TypeScript compile, ESLint, or static verification errors.
+

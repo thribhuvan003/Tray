@@ -128,7 +128,6 @@ export function FSSAIBadge({ type, licenseNumber = "1002409900018" }: FSSAIBadge
         </div>
         <div className="fssai-info">
           <span className={`fssai-tag ${!isVeg ? "nonveg" : ""}`}>{isVeg ? "VEG" : "NON-VEG"}</span>
-          <span className="fssai-lic">Lic. {licenseNumber}</span>
         </div>
       </div>
     </>

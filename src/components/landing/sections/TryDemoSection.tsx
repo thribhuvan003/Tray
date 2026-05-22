@@ -17,34 +17,34 @@ const roles = [
   {
     label: "Student",
     description: "Order from any canteen in the campus. Pay by UPI. Track live. Show OTP.",
-    href: "/c/aditya/menu",
+    href: "/demo/student.html",
     tag: "student",
     previewSrc: "/demo/student.html",
     previewLabel: "Student app · mobile",
-    accentColor: "var(--color-ocean-500, #6E86AB)",
+    accentColor: "var(--color-ocean-500, #E60000)",
     authRequired: false,
     buttonLabel: "Open student demo",
   },
   {
     label: "Kitchen staff",
     description: "Manage one canteen's live queue. Accept, prep, hand over with OTP.",
-    href: "/c/aditya/login?next=/c/aditya/kitchen",
+    href: "/demo/kitchen.html",
     tag: "kitchen",
     previewSrc: "/demo/kitchen.html",
     previewLabel: "Kitchen view · tablet",
     accentColor: "#B8531A",
-    authRequired: true,
+    authRequired: false,
     buttonLabel: "Sign in as kitchen staff",
   },
   {
     label: "Canteen admin",
     description: "Menu, orders, staff, and daily revenue. Full audit log included.",
-    href: "/c/aditya/login?next=/c/aditya/admin/dashboard",
+    href: "/demo/admin.html",
     tag: "admin",
     previewSrc: "/demo/admin.html",
     previewLabel: "Admin console · desktop",
-    accentColor: "var(--tray-green)",
-    authRequired: true,
+    accentColor: "var(--tray-green, #0c8a43)",
+    authRequired: false,
     buttonLabel: "Sign in as admin",
   },
 ] as const;
@@ -71,13 +71,13 @@ export function TryDemoSection() {
 
   function openDemo(href: string, label: string) {
     setRoleLabel(label);
-    if (prefersReducedMotion()) { router.push(href); return; }
+    if (prefersReducedMotion()) { window.location.href = href; return; }
 
     const overlay = overlayRef.current;
-    if (!overlay) { router.push(href); return; }
+    if (!overlay) { window.location.href = href; return; }
 
     gsap
-      .timeline({ onComplete: () => router.push(href) })
+      .timeline({ onComplete: () => { window.location.href = href; } })
       .set(overlay, { display: "flex" })
       .fromTo(overlay, { yPercent: 100 }, { yPercent: 0, duration: 0.65, ease: "power4.inOut" })
       .fromTo(
@@ -95,31 +95,31 @@ export function TryDemoSection() {
   }
 
   return (
-    <section ref={rootRef} id="try-demo" className="relative overflow-hidden px-5 py-24 sm:px-8 lg:px-10">
+    <section ref={rootRef} id="try-demo" className="relative overflow-hidden px-5 py-28 sm:px-8 lg:px-10">
       <div className="mx-auto max-w-7xl">
-        {/* Section label */}
-        <div className="mb-4 flex flex-wrap items-center gap-3">
+        {/* Eyebrow badge */}
+        <div className="mb-5 flex flex-wrap items-center gap-3">
           <p
-            className="text-xs uppercase tracking-[0.3em]"
+            className="text-xs uppercase tracking-[0.3em] font-medium"
             style={{ fontFamily: "var(--font-dm-mono)", color: "var(--tray-muted)" }}
           >
-            Live demo · no sign-up · 90-second tour
+            01 / The system
           </p>
         </div>
 
-        {/* Barlow Condensed 900 headline */}
+        {/* Headline: Three portals, one source of truth. */}
         <h2
-          className="max-w-4xl leading-[0.84] tracking-[-0.02em]"
+          className="max-w-5xl leading-[0.80] tracking-[-0.02em]"
           style={{
             fontFamily: "var(--font-barlow)",
             fontWeight: 900,
-            fontSize: "clamp(3.4rem, 8.5vw, 9rem)",
+            fontSize: "clamp(3.8rem, 9.5vw, 10.5rem)",
             textTransform: "uppercase",
           }}
         >
-          Pick your{" "}
+          Three portals,{" "}
           <em
-            className="not-italic"
+            className="not-italic block sm:inline"
             style={{
               fontFamily: "var(--font-fraunces)",
               fontStyle: "italic",
@@ -127,20 +127,37 @@ export function TryDemoSection() {
               color: "var(--tray-clay)",
             }}
           >
-            portal.
+            one source of truth.
           </em>
         </h2>
 
         <p
-          className="mt-5 max-w-xl text-[1.05rem] leading-8 opacity-68"
+          className="mt-6 max-w-4xl text-[1.12rem] leading-8 opacity-68"
           style={{ fontFamily: "var(--font-geist)" }}
         >
-          Same product, three views. Student demo opens instantly — no login needed.
-          Kitchen and admin use a shared demo account.
+          One database, three purpose-built views. What a student orders is what the
+          kitchen prepares, which is what the admin monitors. No lag, no re-sync,
+          no mystery. Open any portal below — fully live, no sign-up.
         </p>
 
+        {/* pick your portal block */}
+        <div className="mt-14 border-t border-[var(--tray-border)] pt-8">
+          <div className="flex flex-col gap-3">
+            <span
+              className="text-[0.72rem] font-code font-bold uppercase tracking-[0.24em]"
+              style={{ color: "var(--tray-clay)" }}
+            >
+              Pick your portal · no sign-up · 90-second tour
+            </span>
+            <p className="max-w-2xl text-[0.98rem] leading-relaxed opacity-60" style={{ fontFamily: "var(--font-geist)" }}>
+              Same product, three views. Student demo opens instantly — no login needed.
+              Kitchen and admin use a shared demo account.
+            </p>
+          </div>
+        </div>
+
         {/* Role preview cards — 3 columns desktop */}
-        <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-12 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
           {roles.map((role) => (
             <article
               key={role.label}
@@ -154,33 +171,25 @@ export function TryDemoSection() {
                   openDemo(role.href, role.label);
                 }
               }}
-              className="group flex flex-col overflow-hidden rounded-[2.25rem] border transition-all cursor-pointer select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
+              className="group flex flex-col overflow-hidden rounded-[3rem] transition-all cursor-pointer select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 p-8 sm:p-10"
               style={{
-                border: "1px solid var(--tray-border)",
+                border: "1px solid rgba(255, 255, 255, 0.4)",
                 background: "rgba(255,255,255,0.58)",
-                boxShadow: "0 16px 48px rgba(26,22,20,0.08)",
+                boxShadow: "0 16px 48px rgba(26,22,20,0.06)",
                 outlineColor: "var(--tray-clay)",
-              }}
-              onMouseEnter={(e) => {
-                (e.currentTarget as HTMLElement).style.transform = "translateY(-6px)";
-                (e.currentTarget as HTMLElement).style.boxShadow = "0 28px 80px rgba(26,22,20,0.14)";
-              }}
-              onMouseLeave={(e) => {
-                (e.currentTarget as HTMLElement).style.transform = "";
-                (e.currentTarget as HTMLElement).style.boxShadow = "0 16px 48px rgba(26,22,20,0.08)";
               }}
             >
               {/* Card header */}
-              <div className="flex items-start justify-between px-5 pt-5 pb-4">
+              <div className="flex items-start justify-between mb-4">
                 <div>
                   <span
-                    className="mb-1 block text-[0.72rem] font-code font-semibold uppercase tracking-[0.2em]"
+                    className="mb-1 block text-[0.72rem] font-code font-bold uppercase tracking-[0.2em]"
                     style={{ color: "var(--tray-muted)" }}
                   >
                     {role.tag}
                   </span>
                   <h3
-                    className="text-[1.5rem] tracking-[-0.04em]"
+                    className="text-[1.85rem] tracking-[-0.04em] leading-tight"
                     style={{ fontFamily: "var(--font-jakarta)", fontWeight: 700 }}
                   >
                     {role.label}
@@ -188,15 +197,15 @@ export function TryDemoSection() {
                 </div>
                 {/* Colored status dot */}
                 <span
-                  className="mt-1.5 h-2.5 w-2.5 flex-shrink-0 rounded-full"
+                  className="mt-2 h-3 w-3 flex-shrink-0 rounded-full animate-pulse"
                   style={{ background: role.accentColor, boxShadow: `0 0 10px ${role.accentColor}` }}
                 />
               </div>
 
-              {/* iframe preview — scaled to fit inside card */}
+              {/* iframe preview — scaled to fit inside card, perfectly curved rounded-[2.5rem] with zero borders */}
               <div
-                className="relative mx-4 mb-4 overflow-hidden rounded-[1.5rem]"
-                style={{ height: 240, background: "var(--tray-surface, #CAB99C)", border: "1px solid var(--tray-border)" }}
+                className="relative overflow-hidden rounded-[2.5rem] mb-6"
+                style={{ height: 420, background: "var(--tray-surface, #CAB99C)", border: "none" }}
               >
                 <iframe
                   src={role.previewSrc}
@@ -218,17 +227,14 @@ export function TryDemoSection() {
                     pointerEvents: "none",
                   }}
                 />
-                {/* Bottom fade + device tag */}
-                <div
-                  className="pointer-events-none absolute inset-0"
-                  style={{ background: "linear-gradient(180deg, transparent 55%, rgba(255,255,255,0.58) 100%)" }}
-                />
+                
+                {/* Clean label overlay inside the preview window */}
                 <span
-                  className="absolute left-3 top-3 rounded-md px-2.5 py-1.5 text-[0.7rem] font-code font-semibold uppercase tracking-[0.12em] backdrop-blur-sm"
+                  className="absolute left-4 top-4 rounded-xl px-3 py-1.5 text-[0.7rem] font-code font-bold uppercase tracking-[0.12em] backdrop-blur-md"
                   style={{
                     color: "var(--tray-ink)",
-                    background: "rgba(255,255,255,0.70)",
-                    border: "1px solid var(--tray-border)",
+                    background: "rgba(255,255,255,0.85)",
+                    border: "none",
                   }}
                 >
                   {role.previewLabel}
@@ -236,9 +242,9 @@ export function TryDemoSection() {
               </div>
 
               {/* Card body */}
-              <div className="flex flex-1 flex-col gap-4 px-5 pb-5">
+              <div className="flex flex-1 flex-col gap-5">
                 <p
-                  className="flex-1 text-[0.9rem] leading-[1.65]"
+                  className="text-[0.95rem] leading-[1.65]"
                   style={{ fontFamily: "var(--font-geist)", color: "var(--tray-muted)" }}
                 >
                   {role.description}
@@ -246,7 +252,7 @@ export function TryDemoSection() {
 
                 {role.authRequired && (
                   <p
-                    className="text-[0.72rem] uppercase tracking-[0.16em]"
+                    className="text-[0.72rem] uppercase tracking-[0.16em] font-medium"
                     style={{ fontFamily: "var(--font-dm-mono)", color: "var(--tray-muted)", opacity: 0.65 }}
                   >
                     Demo login · shared credentials
@@ -254,13 +260,13 @@ export function TryDemoSection() {
                 )}
 
                 <div
-                  className="flex w-full items-center justify-between rounded-[1rem] px-4 py-3 transition group-hover:opacity-85"
+                  className="mt-auto flex w-full items-center justify-between rounded-2xl px-5 py-3.5 transition group-hover:opacity-85"
                   style={{
-                    background: role.authRequired ? "var(--tray-muted)" : "var(--tray-ink)",
+                    background: "var(--tray-ink)",
                     color: "var(--tray-cream, #EDE5D2)",
                     fontFamily: "var(--font-geist)",
                     fontWeight: 600,
-                    fontSize: "0.88rem",
+                    fontSize: "0.92rem",
                   }}
                 >
                   <span>{role.buttonLabel}</span>
@@ -273,13 +279,13 @@ export function TryDemoSection() {
 
       </div>
 
-      {/* La Revoltosa fullscreen wipe — large, perfectly centered */}
+      {/* Fullscreen wipe */}
       <div
         ref={overlayRef}
         className="fixed inset-0 z-[9999] hidden"
         style={{
-          background: "var(--tray-bg, #E6E6FA)",
-          color: "var(--tray-ink, #333333)",
+          background: "var(--tray-bg, #FAF8F5)",
+          color: "var(--tray-ink, #1A1A19)",
           alignItems: "center",
           justifyContent: "center",
           flexDirection: "column",
@@ -297,7 +303,7 @@ export function TryDemoSection() {
               lineHeight: 0.80,
               letterSpacing: "-0.05em",
               textTransform: "uppercase",
-              color: "var(--tray-ink, #1A1614)",
+              color: "var(--tray-ink, #1A1A19)",
               padding: "0 clamp(1rem, 4vw, 4rem)",
             }}
           >
@@ -322,3 +328,4 @@ export function TryDemoSection() {
     </section>
   );
 }
+

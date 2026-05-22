@@ -28,9 +28,9 @@
   --ink-3:#908879;
   --ink-4:#60594B;
 
-  --lime:#E60000;
-  --lime-2:#C40000;
-  --lime-soft:rgba(230, 0, 0, 0.12);
+  --lime:#cdfa50;
+  --lime-2:#b2df40;
+  --lime-soft:rgba(205, 250, 80, 0.12);
   --amber:#ffb22a;
   --amber-soft:rgba(255, 178, 42, 0.14);
   --rose:#ff6b6b;
@@ -347,10 +347,10 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
     </a>
 
     <div class="sb-tenant" id="tenantToggle" role="button" tabindex="0" aria-expanded="false" aria-haspopup="listbox">
-      <div class="av" id="tenantAv">H</div>
+      <div class="av" id="tenantAv">A</div>
       <div class="info">
-        <div class="n" id="tenantName">Hostel B Mess</div>
-        <div class="r" id="tenantSlug">hostel-b · admin</div>
+        <div class="n" id="tenantName">Aditya Eng. Canteen</div>
+        <div class="r" id="tenantSlug">aditya · admin</div>
       </div>
       <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 5l3 3 3-3"/></svg>
     </div>
@@ -925,33 +925,109 @@ const revGroup = document.querySelector('.dash-row.r1 .panel-head .actions');
 let currentRevMetric = 'revenue';
 const REV_METRICS = {
   revenue: {
-    sub: 'DAILY TOTAL · ₹ THOUSANDS',
-    hl: '₹38.4K · today',
-    hlSub: '↑ 12.4% vs yest.',
-    line: 'M0,160 L88,140 L175,148 L263,110 L350,118 L438,84 L525,96 L613,56 L700,42',
-    fill: 'M0,160 L88,140 L175,148 L263,110 L350,118 L438,84 L525,96 L613,56 L700,42 L700,220 L0,220 Z',
-    y1: '40K', y2: '25K', y3: '10K',
+    y1: { hour: '4K', day: '40K', week: '280K', month: '1.2M' },
+    y2: { hour: '2.5K', day: '25K', week: '180K', month: '0.8M' },
+    y3: { hour: '1K', day: '10K', week: '80K', month: '0.3M' },
+    hour: {
+      sub: 'LAST 12 HOURS · ₹ THOUSANDS',
+      hl: '₹4.6K · this hour',
+      hlSub: '↑ 5.2% vs last hour',
+      line: 'M0,170 L100,165 L200,150 L300,120 L400,80 L500,55 L600,40 L700,30',
+      fill: 'M0,170 L100,165 L200,150 L300,120 L400,80 L500,55 L600,40 L700,30 L700,220 L0,220 Z',
+    },
+    day: {
+      sub: 'DAILY TOTAL · ₹ THOUSANDS',
+      hl: '₹38.4K · today',
+      hlSub: '↑ 12.4% vs yest.',
+      line: 'M0,160 L88,140 L175,148 L263,110 L350,118 L438,84 L525,96 L613,56 L700,42',
+      fill: 'M0,160 L88,140 L175,148 L263,110 L350,118 L438,84 L525,96 L613,56 L700,42 L700,220 L0,220 Z',
+    },
+    week: {
+      sub: 'WEEKLY TOTAL · ₹ THOUSANDS',
+      hl: '₹268.9K · this week',
+      hlSub: '↑ 11.2% vs last week',
+      line: 'M0,160 L100,110 L200,125 L300,75 L400,55 L500,90 L600,45 L700,35',
+      fill: 'M0,160 L100,110 L200,125 L300,75 L400,55 L500,90 L600,45 L700,35 L700,220 L0,220 Z',
+    },
+    month: {
+      sub: 'MONTHLY TOTAL · ₹ LAKHS',
+      hl: '₹1.15M · this month',
+      hlSub: '↑ 9.5% vs last month',
+      line: 'M0,180 L100,155 L200,100 L300,135 L400,60 L500,40 L600,80 L700,20',
+      fill: 'M0,180 L100,155 L200,100 L300,135 L400,60 L500,40 L600,80 L700,20 L700,220 L0,220 Z',
+    }
   },
   orders: {
-    sub: 'ORDERS PER DAY · COUNT',
-    hl: '248 orders · today',
-    hlSub: '↑ 8.1% vs yest.',
-    line: 'M0,175 L88,165 L175,170 L263,145 L350,150 L438,120 L525,130 L613,85 L700,70',
-    fill: 'M0,175 L88,165 L175,170 L263,145 L350,150 L438,120 L525,130 L613,85 L700,70 L700,220 L0,220 Z',
-    y1: '300', y2: '180', y3: '80',
+    y1: { hour: '40', day: '300', week: '2,000', month: '8,000' },
+    y2: { hour: '25', day: '180', week: '1,200', month: '5,000' },
+    y3: { hour: '10', day: '80', week: '500', month: '2,000' },
+    hour: {
+      sub: 'ORDERS PER HOUR · COUNT',
+      hl: '28 orders · this hour',
+      hlSub: '↑ 4.2% vs last hour',
+      line: 'M0,180 L100,170 L200,160 L300,135 L400,100 L500,80 L600,60 L700,50',
+      fill: 'M0,180 L100,170 L200,160 L300,135 L400,100 L500,80 L600,60 L700,50 L700,220 L0,220 Z',
+    },
+    day: {
+      sub: 'ORDERS PER DAY · COUNT',
+      hl: '248 orders · today',
+      hlSub: '↑ 8.1% vs yest.',
+      line: 'M0,175 L88,165 L175,170 L263,145 L350,150 L438,120 L525,130 L613,85 L700,70',
+      fill: 'M0,175 L88,165 L175,170 L263,145 L350,150 L438,120 L525,130 L613,85 L700,70 L700,220 L0,220 Z',
+    },
+    week: {
+      sub: 'ORDERS PER WEEK · COUNT',
+      hl: '1,736 orders · this week',
+      hlSub: '↑ 7.8% vs last week',
+      line: 'M0,170 L100,130 L200,140 L300,95 L400,75 L500,110 L600,65 L700,55',
+      fill: 'M0,170 L100,130 L200,140 L300,95 L400,75 L500,110 L600,65 L700,55 L700,220 L0,220 Z',
+    },
+    month: {
+      sub: 'ORDERS PER MONTH · COUNT',
+      hl: '7,440 orders · this month',
+      hlSub: '↑ 6.5% vs last month',
+      line: 'M0,190 L100,165 L200,120 L300,150 L400,80 L500,60 L600,90 L700,30',
+      fill: 'M0,190 L100,165 L200,120 L300,150 L400,80 L500,60 L600,90 L700,30 L700,220 L0,220 Z',
+    }
   },
   'avg ticket': {
-    sub: 'AVG TICKET · ₹ PER ORDER',
-    hl: '₹155 · avg today',
-    hlSub: '↑ ₹6 vs yest.',
-    line: 'M0,140 L88,145 L175,138 L263,132 L350,140 L438,125 L525,135 L613,115 L700,108',
-    fill: 'M0,140 L88,145 L175,138 L263,132 L350,140 L438,125 L525,135 L613,115 L700,108 L700,220 L0,220 Z',
-    y1: '₹200', y2: '₹150', y3: '₹100',
-  },
+    y1: { hour: '₹200', day: '₹200', week: '₹200', month: '₹200' },
+    y2: { hour: '₹150', day: '₹150', week: '₹150', month: '₹150' },
+    y3: { hour: '₹100', day: '₹100', week: '₹100', month: '₹100' },
+    hour: {
+      sub: 'AVG TICKET · ₹ PER ORDER',
+      hl: '₹152 · avg this hour',
+      hlSub: '↑ ₹2 vs last hour',
+      line: 'M0,145 L100,148 L200,142 L300,145 L400,138 L500,140 L600,132 L700,135',
+      fill: 'M0,145 L100,148 L200,142 L300,145 L400,138 L500,140 L600,132 L700,135 L700,220 L0,220 Z',
+    },
+    day: {
+      sub: 'AVG TICKET · ₹ PER ORDER',
+      hl: '₹155 · avg today',
+      hlSub: '↑ ₹6 vs yest.',
+      line: 'M0,140 L88,145 L175,138 L263,132 L350,140 L438,125 L525,135 L613,115 L700,108',
+      fill: 'M0,140 L88,145 L175,138 L263,132 L350,140 L438,125 L525,135 L613,115 L700,108 L700,220 L0,220 Z',
+    },
+    week: {
+      sub: 'AVG TICKET · ₹ PER ORDER',
+      hl: '₹156 · avg this week',
+      hlSub: '↑ ₹4 vs last week',
+      line: 'M0,135 L100,138 L200,130 L300,125 L400,132 L500,120 L600,122 L700,118',
+      fill: 'M0,135 L100,138 L200,130 L300,125 L400,132 L500,120 L600,122 L700,118 L700,220 L0,220 Z',
+    },
+    month: {
+      sub: 'AVG TICKET · ₹ PER ORDER',
+      hl: '₹158 · avg this month',
+      hlSub: '↑ ₹8 vs last month',
+      line: 'M0,130 L100,132 L200,125 L300,120 L400,122 L500,115 L600,110 L700,105',
+      fill: 'M0,130 L100,132 L200,125 L300,120 L400,122 L500,115 L600,110 L700,105 L700,220 L0,220 Z',
+    }
+  }
 };
 function applyRevMetric(key) {
   currentRevMetric = key;
-  const cfg = REV_METRICS[key] || REV_METRICS.revenue;
+  const metric = REV_METRICS[key] || REV_METRICS.revenue;
+  const cfg = metric[currentRange] || metric.day;
   const svg = document.querySelector('.rev-chart svg');
   if (!svg) return;
   const area = svg.querySelector('path.area');
@@ -969,13 +1045,11 @@ function applyRevMetric(key) {
   const sub = svg.closest('.panel').querySelector('.panel-head .sub');
   if (sub) sub.textContent = cfg.sub;
   // Update y-axis labels
-  const yLabels = svg.querySelectorAll('.y-label:not([fill])');
-  const yAll = [...svg.querySelectorAll('text.y-label')].filter(t => !t.hasAttribute('fill') || t.getAttribute('fill') === '');
   const yTexts = svg.querySelectorAll('text.y-label');
   yTexts.forEach((t, i) => {
-    if (i === 0) t.textContent = cfg.y1;
-    else if (i === 1) t.textContent = cfg.y2;
-    else if (i === 2) t.textContent = cfg.y3;
+    if (i === 0) t.textContent = metric.y1[currentRange] || metric.y1.day;
+    else if (i === 1) t.textContent = metric.y2[currentRange] || metric.y2.day;
+    else if (i === 2) t.textContent = metric.y3[currentRange] || metric.y3.day;
   });
   const hl = svg.querySelector('.label-hl');
   const hlSub = svg.querySelector('.label-hl-sub');

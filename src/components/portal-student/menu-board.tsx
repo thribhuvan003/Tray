@@ -5,16 +5,25 @@ import { useRouter } from "next/navigation";
 import { Search } from "lucide-react";
 import type { MenuItem, MenuCategory } from "@/lib/db/types";
 import { getBrowserClient } from "@/lib/supabase/browser";
-import { DietFilterTabs, type DietFilter } from "./diet-filter";
 import { MenuItemCard } from "./menu-item-card";
 import { cn } from "@/lib/utils";
+import { useCart } from "@/lib/cart/store";
 
-type Props = { categories: MenuCategory[]; items: MenuItem[]; tenantId: string; tenantSlug: string };
+type Props = {
+  categories: MenuCategory[];
+  items: MenuItem[];
+  tenantId: string;
+  tenantSlug: string;
+  siblings?: any[];
+};
 
-export function MenuBoard({ categories, items, tenantId, tenantSlug }: Props) {
-  const [filter, setFilter] = useState<DietFilter>("all");
+export function MenuBoard({ categories, items, tenantId, tenantSlug, siblings = [] }: Props) {
+  const [activeCat, setActiveCat] = useState<string>("all");
+  const [vegOnly, setVegOnly] = useState(false);
   const [q, setQ] = useState("");
   const router = useRouter();
+
+  const { orderType, setOrderType, tableLabel, setTableLabel } = useCart();
 
   useEffect(() => {
     const sb = getBrowserClient();
@@ -61,23 +70,14 @@ export function MenuBoard({ categories, items, tenantId, tenantSlug }: Props) {
     };
   }, [router]);
 
-  const counts = useMemo(() => {
-    const c: Record<DietFilter, number> = { all: 0, veg: 0, egg: 0, nonveg: 0 };
-    for (const it of items) {
-      c.all++;
-      c[it.diet]++;
-    }
-    return c;
-  }, [items]);
-
   const filtered = useMemo(() => {
     const needle = q.trim().toLowerCase();
     return items.filter((it) => {
-      if (filter !== "all" && it.diet !== filter) return false;
+      if (vegOnly && it.diet !== "veg") return false;
       if (!needle) return true;
       return it.name.toLowerCase().includes(needle) || (it.description ?? "").toLowerCase().includes(needle);
     });
-  }, [items, filter, q]);
+  }, [items, vegOnly, q]);
 
   const byCat = useMemo(() => {
     const m = new Map<string | null, MenuItem[]>();
@@ -89,84 +89,283 @@ export function MenuBoard({ categories, items, tenantId, tenantSlug }: Props) {
     return m;
   }, [filtered]);
 
+  const activeCategoryList = useMemo(() => {
+    if (activeCat === "all") return categories;
+    return categories.filter((c) => c.id === activeCat);
+  }, [categories, activeCat]);
+
   return (
-    <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-0 lg:max-w-none pt-6 pb-10">
-      <div className="mb-6 sm:mb-8">
-        <h1 className="font-display text-[clamp(32px,5.5vw,52px)] leading-[1.04] tracking-[-0.035em] font-medium">
-          What&rsquo;s <span className="italic text-ocean-500">cooking.</span>
-        </h1>
-        <p className="text-[14px] text-[color:var(--color-ink)]/65 mt-1">
-          {counts.all} dishes · live menu · pickup in 4–11 min
+    <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:max-w-none pt-4 pb-10 lg:grid lg:grid-cols-[14rem,1fr] lg:gap-8 lg:items-start">
+      
+      {/* ── Desktop Category Sidebar (.cat-nav) ── */}
+      <nav className="hidden lg:block w-56 shrink-0 sticky top-24 self-start" aria-label="Categories">
+        <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[color:var(--color-ink)]/45 mb-3 px-3">
+          Browse
         </p>
-      </div>
-
-      <div className="sticky top-14 z-30 -mx-4 px-4 sm:-mx-6 sm:px-6 lg:mx-0 lg:px-0 py-3 bg-[color:var(--color-paper)]/85 backdrop-blur-xl border-b border-[color:var(--color-line)] flex flex-col gap-3">
-        <label className="relative">
-          <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[color:var(--color-ink)]/40" />
-          <input
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            placeholder="Search dishes…"
-            className="w-full h-10 pl-10 pr-3 rounded-full border border-[color:var(--color-line)] bg-[color:var(--color-paper-dim)] text-[14px] focus:outline-none focus:border-ocean-500 focus:bg-[color:var(--color-paper)]"
-          />
-        </label>
-        <DietFilterTabs value={filter} onChange={setFilter} counts={counts} />
-      </div>
-
-      {filtered.length === 0 ? (
-        <div className="py-16 text-center text-[color:var(--color-ink)]/55">
-          <div className="font-display italic text-[24px] text-ocean-500">Nothing found.</div>
-          <p className="text-[14px] mt-2">
-            {q || filter !== "all"
-              ? "Clear the filter to see more dishes."
-              : "Check back at lunchtime."}
-          </p>
-        </div>
-      ) : (
-        <div className="mt-6 sm:mt-8 flex flex-col gap-8">
+        <ul className="flex flex-col gap-1">
+          <li>
+            <button
+              onClick={() => setActiveCat("all")}
+              className={cn(
+                "w-full text-left px-3 py-2.5 rounded-xl text-[14px] font-semibold transition-all border",
+                activeCat === "all"
+                  ? "bg-ocean-500/10 text-ocean-600 dark:text-ocean-400 font-bold border-ocean-500/20"
+                  : "border-transparent text-[color:var(--color-ink)]/65 hover:bg-[color:var(--color-paper-dim)]"
+              )}
+            >
+              All items
+            </button>
+          </li>
           {categories.map((cat) => {
-            const list = byCat.get(cat.id) ?? [];
-            if (list.length === 0) return null;
+            const catItemsCount = byCat.get(cat.id)?.length ?? 0;
+            if (catItemsCount === 0) return null;
             return (
-              <section key={cat.id}>
-                <div className="flex items-end justify-between mb-3">
-                  <h2 className="font-display text-[22px] sm:text-[26px] font-medium tracking-tight">{cat.name}</h2>
-                  <span className="text-[11px] font-mono uppercase tracking-wider text-[color:var(--color-ink)]/45">
-                    {list.length} item{list.length === 1 ? "" : "s"}
+              <li key={cat.id}>
+                <button
+                  onClick={() => setActiveCat(cat.id)}
+                  className={cn(
+                    "w-full text-left px-3 py-2.5 rounded-xl text-[14px] font-semibold transition-all border",
+                    activeCat === cat.id
+                      ? "bg-ocean-500/10 text-ocean-600 dark:text-ocean-400 font-bold border-ocean-500/20"
+                      : "border-transparent text-[color:var(--color-ink)]/65 hover:bg-[color:var(--color-paper-dim)]"
+                  )}
+                >
+                  {cat.name}
+                  <span className="block text-[11px] text-[color:var(--color-ink)]/45 font-medium mt-0.5">
+                    {catItemsCount} items
                   </span>
-                </div>
-                <div className={cn("grid gap-3", "grid-cols-2 md:grid-cols-3 lg:grid-cols-3")}>
-                  {list.map((it) => (
-                    <MenuItemCard key={it.id} item={it} />
-                  ))}
-                </div>
-              </section>
+                </button>
+              </li>
             );
           })}
-          {/* Render items that have no category (category_id === null) last */}
-          {(() => {
-            const uncategorised = byCat.get(null) ?? [];
-            if (uncategorised.length === 0) return null;
+        </ul>
+      </nav>
+
+      {/* ── Main content area ── */}
+      <div className="min-w-0">
+        
+        {/* ── .menu-controls block ── */}
+        <div className="mb-6 p-5 rounded-2xl border border-[color:var(--color-line)] bg-[color:var(--color-paper-dim)] shadow-sm flex flex-col gap-5">
+          {/* Canteen Selector / Switcher */}
+          {siblings.length > 1 && (
+            <div className="canteen-bar">
+              <p className="text-[12px] font-bold uppercase tracking-[0.1em] text-[color:var(--color-ink)]/55 mb-2.5">
+                Canteen
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                {siblings.map((sib) => {
+                  const isActive = sib.slug === tenantSlug;
+                  return (
+                    <button
+                      key={sib.slug}
+                      type="button"
+                      onClick={() => {
+                        if (!isActive) {
+                          router.push(`/c/${sib.slug}/menu`);
+                        }
+                      }}
+                      className={cn(
+                        "p-3 rounded-xl border text-left transition-all hover:bg-[color:var(--color-paper)]",
+                        isActive
+                          ? "border-ocean-500 bg-[color:var(--color-paper)] shadow-[0_4px_12px_rgba(0,0,0,0.04)]"
+                          : "border-[color:var(--color-line)] bg-[color:var(--color-paper)]/50"
+                      )}
+                    >
+                      <div className="font-bold text-[14px] truncate">{sib.name}</div>
+                      <div className="text-[11px] text-[color:var(--color-ink)]/55 mt-0.5">
+                        {sib.building || "Campus block"} · {sib.dishCount ?? 0} dishes
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {siblings.length > 1 && (
+            <div className="h-px bg-[color:var(--color-line)]" />
+          )}
+
+          {/* Eating modes & Veg only */}
+          <div className="service-bar">
+            <div className="flex items-center justify-between gap-4 mb-3.5">
+              <p className="text-[12px] font-bold uppercase tracking-[0.11em] text-[color:var(--color-ink)]/55">
+                How are you eating today?
+              </p>
+              <button
+                type="button"
+                onClick={() => setVegOnly(!vegOnly)}
+                className={cn(
+                  "text-[12px] font-bold uppercase tracking-[0.06em] py-1.5 px-3.5 rounded-full border transition-all flex items-center gap-1",
+                  vegOnly
+                    ? "border-emerald-500/50 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold"
+                    : "border-[color:var(--color-line)] text-[color:var(--color-ink)]/55 bg-[color:var(--color-paper)] hover:bg-[color:var(--color-paper-dim)]"
+                )}
+              >
+                🌿 Veg only
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => setOrderType("takeaway")}
+                className={cn(
+                  "p-4 rounded-xl border text-left transition-all hover:bg-[color:var(--color-paper)]",
+                  orderType === "takeaway"
+                    ? "border-ocean-500 bg-[color:var(--color-paper)] shadow-[0_4px_12px_rgba(0,0,0,0.04)]"
+                    : "border-[color:var(--color-line)] bg-[color:var(--color-paper)]/50"
+                )}
+              >
+                <span className="text-xl block mb-1">🥡</span>
+                <span className="font-bold text-[15px] block">Takeaway</span>
+                <span className="text-[12px] text-[color:var(--color-ink)]/55 block mt-0.5 leading-relaxed">
+                  Counter pickup · OTP handover
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setOrderType("dine_in")}
+                className={cn(
+                  "p-4 rounded-xl border text-left transition-all hover:bg-[color:var(--color-paper)]",
+                  orderType === "dine_in"
+                    ? "border-ocean-500 bg-[color:var(--color-paper)] shadow-[0_4px_12px_rgba(0,0,0,0.04)]"
+                    : "border-[color:var(--color-line)] bg-[color:var(--color-paper)]/50"
+                )}
+              >
+                <span className="text-xl block mb-1">🍽</span>
+                <span className="font-bold text-[15px] block">Dine in</span>
+                <span className="text-[12px] text-[color:var(--color-ink)]/55 block mt-0.5 leading-relaxed">
+                  Mess seating · optional table
+                </span>
+              </button>
+            </div>
+
+            {orderType === "dine_in" && (
+              <div className="mt-4 flex flex-col gap-1.5 animate-in fade-in duration-200">
+                <label htmlFor="tableInput" className="text-[12px] font-bold uppercase tracking-[0.1em] text-[color:var(--color-ink)]/55">
+                  Table or block (optional)
+                </label>
+                <input
+                  id="tableInput"
+                  type="text"
+                  placeholder="e.g. T4, Block B"
+                  value={tableLabel}
+                  onChange={(e) => setTableLabel(e.target.value)}
+                  className="w-full h-11 px-3.5 rounded-xl border border-[color:var(--color-line)] bg-[color:var(--color-paper)] text-[14px] focus:outline-none focus:border-ocean-500 focus:bg-[color:var(--color-paper)]"
+                />
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* ── Mobile Category Pills (.cat-pills) ── */}
+        <div className="lg:hidden flex gap-2 overflow-x-auto pb-3 mb-5 scrollbar-none -mx-4 px-4 sticky top-14 bg-[color:var(--color-paper)]/95 backdrop-blur-md z-20 border-b border-[color:var(--color-line)] py-2.5">
+          <button
+            onClick={() => setActiveCat("all")}
+            className={cn(
+              "shrink-0 px-4 py-1.5 rounded-full text-[13px] font-semibold border transition-all",
+              activeCat === "all"
+                ? "border-ocean-500 bg-ocean-500/10 text-ocean-600 dark:text-ocean-400 font-bold"
+                : "border-[color:var(--color-line)] bg-[color:var(--color-paper-dim)] text-[color:var(--color-ink)]/65"
+            )}
+          >
+            All items
+          </button>
+          {categories.map((cat) => {
+            const catItemsCount = byCat.get(cat.id)?.length ?? 0;
+            if (catItemsCount === 0) return null;
             return (
-              <section key="__uncategorised">
-                {categories.length > 0 && (
-                  <div className="flex items-end justify-between mb-3">
-                    <h2 className="font-display text-[22px] sm:text-[26px] font-medium tracking-tight">Other</h2>
+              <button
+                key={cat.id}
+                onClick={() => setActiveCat(cat.id)}
+                className={cn(
+                  "shrink-0 px-4 py-1.5 rounded-full text-[13px] font-semibold border transition-all",
+                  activeCat === cat.id
+                    ? "border-ocean-500 bg-ocean-500/10 text-ocean-600 dark:text-ocean-400 font-bold"
+                    : "border-[color:var(--color-line)] bg-[color:var(--color-paper-dim)] text-[color:var(--color-ink)]/65"
+                )}
+              >
+                {cat.name}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* ── Search Bar ── */}
+        <div className="mb-6">
+          <label className="relative block">
+            <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-[color:var(--color-ink)]/40" />
+            <input
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="Search menu items…"
+              className="w-full h-11 pl-11 pr-4 rounded-xl border border-[color:var(--color-line)] bg-[color:var(--color-paper-dim)] text-[14px] focus:outline-none focus:border-ocean-500 focus:bg-[color:var(--color-paper)]"
+            />
+          </label>
+        </div>
+
+        {/* ── Menu Grid ── */}
+        {filtered.length === 0 ? (
+          <div className="py-16 text-center text-[color:var(--color-ink)]/55">
+            <div className="font-display italic text-[24px] text-ocean-500">Nothing found.</div>
+            <p className="text-[14px] mt-2">
+              {q || vegOnly
+                ? "Clear the filters or search term to see more dishes."
+                : "Check back at lunchtime."}
+            </p>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-8">
+            {activeCategoryList.map((cat) => {
+              const list = byCat.get(cat.id) ?? [];
+              if (list.length === 0) return null;
+              return (
+                <section key={cat.id} className="animate-in fade-in duration-300">
+                  <div className="flex items-end justify-between mb-4 border-b border-[color:var(--color-line)] pb-2">
+                    <h2 className="font-display text-[22px] sm:text-[26px] font-medium tracking-tight">
+                      {cat.name}
+                    </h2>
                     <span className="text-[11px] font-mono uppercase tracking-wider text-[color:var(--color-ink)]/45">
-                      {uncategorised.length} item{uncategorised.length === 1 ? "" : "s"}
+                      {list.length} item{list.length === 1 ? "" : "s"}
                     </span>
                   </div>
-                )}
-                <div className={cn("grid gap-3", "grid-cols-2 md:grid-cols-3 lg:grid-cols-3")}>
-                  {uncategorised.map((it) => (
-                    <MenuItemCard key={it.id} item={it} />
-                  ))}
-                </div>
-              </section>
-            );
-          })()}
-        </div>
-      )}
+                  <div className={cn("grid gap-3 grid-cols-2 md:grid-cols-2 lg:grid-cols-2")}>
+                    {list.map((it) => (
+                      <MenuItemCard key={it.id} item={it} />
+                    ))}
+                  </div>
+                </section>
+              );
+            })}
+
+            {/* Uncategorized items */}
+            {(activeCat === "all" || activeCat === "uncategorised") && (() => {
+              const uncategorised = byCat.get(null) ?? [];
+              if (uncategorised.length === 0) return null;
+              return (
+                <section key="__uncategorised" className="animate-in fade-in duration-300">
+                  {categories.length > 0 && (
+                    <div className="flex items-end justify-between mb-4 border-b border-[color:var(--color-line)] pb-2">
+                      <h2 className="font-display text-[22px] sm:text-[26px] font-medium tracking-tight">Other</h2>
+                      <span className="text-[11px] font-mono uppercase tracking-wider text-[color:var(--color-ink)]/45">
+                        {uncategorised.length} item{uncategorised.length === 1 ? "" : "s"}
+                      </span>
+                    </div>
+                  )}
+                  <div className={cn("grid gap-3 grid-cols-2 md:grid-cols-2 lg:grid-cols-2")}>
+                    {uncategorised.map((it) => (
+                      <MenuItemCard key={it.id} item={it} />
+                    ))}
+                  </div>
+                </section>
+              );
+            })()}
+          </div>
+        )}
+
+      </div>
     </div>
   );
 }

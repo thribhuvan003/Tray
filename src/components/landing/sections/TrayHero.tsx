@@ -56,9 +56,27 @@ export function TrayHero() {
 
       if (blobA) {
         gsap.to(blobA, { y: -120, scrollTrigger: { trigger: blobRef.current, start: "top top", end: "bottom top", scrub: 1.4 } });
+        // Slow organic floating orbital orbit
+        gsap.to(blobA, {
+          xPercent: 12,
+          yPercent: -8,
+          duration: 22,
+          repeat: -1,
+          yoyo: true,
+          ease: "sine.inOut",
+        });
       }
       if (blobB) {
         gsap.to(blobB, { y: -80, scrollTrigger: { trigger: blobRef.current, start: "top top", end: "bottom top", scrub: 0.9 } });
+        // Slow organic floating orbital orbit (opposite)
+        gsap.to(blobB, {
+          xPercent: -10,
+          yPercent: 12,
+          duration: 28,
+          repeat: -1,
+          yoyo: true,
+          ease: "sine.inOut",
+        });
       }
 
       const cleanups = Array.from(buttons).map((btn) => magneticButton(btn as HTMLElement));
@@ -168,7 +186,7 @@ export function TrayHero() {
             <div className="mt-12 flex flex-wrap items-center gap-4">
               <LiquidButton
                 href="#portals"
-                className="!px-7 !py-3.5 !text-[0.88rem] !font-semibold"
+                className="!px-9 !py-4.5 !text-[1rem] !font-bold tracking-tight shadow-md hover:shadow-lg transition-shadow duration-300"
                 style={{ fontFamily: "var(--font-geist)" }}
               >
                 See how it works
@@ -177,7 +195,7 @@ export function TrayHero() {
                 data-magnetic
                 href="/get-started"
                 variant="secondary"
-                className="rounded-full border border-[var(--tray-border)] px-7 py-3.5 text-[0.88rem] font-semibold transition hover:bg-white/40"
+                className="rounded-full border-2 border-[var(--tray-border)] px-9 py-4.5 text-[1rem] font-bold tracking-tight transition hover:bg-white/40 shadow-md hover:shadow-lg duration-300"
                 style={{ fontFamily: "var(--font-geist)" } as React.CSSProperties}
               >
                 I have a canteen
@@ -186,18 +204,18 @@ export function TrayHero() {
           </motion.div>
 
           {/* Metrics strip */}
-          <motion.div variants={softFadeUp}>
-            <div className="mt-10 flex flex-wrap gap-6">
+          <motion.div variants={softFadeUp} className="w-full">
+            <div className="mt-12 grid grid-cols-3 gap-6 lg:gap-10 border-t border-[var(--tray-border)] pt-8">
               {METRICS.map((m) => (
-                <div key={m.label}>
+                <div key={m.label} className="flex flex-col gap-2">
                   <p
-                    className="text-2xl leading-none font-black tracking-tight"
+                    className="text-4xl sm:text-5xl font-black leading-none tracking-tighter"
                     style={{ fontFamily: "var(--font-barlow)", color: "var(--tray-clay)" }}
                   >
                     <CountUp end={m.end} suffix={m.suffix} />
                   </p>
                   <p
-                    className="mt-1 text-xs uppercase tracking-[0.18em] opacity-55"
+                    className="text-[0.68rem] sm:text-xs uppercase tracking-[0.18em] opacity-60 font-bold"
                     style={{ fontFamily: "var(--font-dm-mono)" }}
                   >
                     {m.label}

@@ -8,7 +8,7 @@ import {
   registerTrayGsap,
   tickerLoop,
 } from "@/lib/motion/tray-motion";
-import { FSSAIBadge } from "../FSSAIBadge";
+
 
 // Metrics: Fraunces Black for impact numbers + DM Mono uppercase labels.
 // Ticker: DM Mono — two rows, opposite directions.
@@ -85,12 +85,7 @@ export function CampusTicker() {
 
   useGSAP(
     () => {
-      registerTrayGsap();
-      if (prefersReducedMotion()) return;
-
-      rootRef.current?.querySelectorAll<HTMLElement>("[data-ticker-track]").forEach((track, i) => {
-        tickerLoop(track, i === 0 ? 34 : 44);
-      });
+      // Centrally managed by landing-motion.tsx for Awwwards-tier scroll velocity and skew tracking
     },
     { scope: rootRef }
   );
@@ -104,17 +99,6 @@ export function CampusTicker() {
       className="overflow-hidden py-5"
       style={{ borderTop: "1px solid var(--tray-border)", borderBottom: "1px solid var(--tray-border)" }}
     >
-      <div className="mx-auto max-w-7xl px-5 sm:px-8 lg:px-10 mb-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-4">
-          <span
-            className="text-[0.72rem] font-code font-semibold uppercase tracking-[0.18em] opacity-45"
-            style={{ color: "var(--tray-muted)" }}
-          >
-            Active network counters
-          </span>
-          <FSSAIBadge type="veg" />
-        </div>
-      </div>
       <TickerRow items={row1} fontStyle="druk" />
       <TickerRow items={row2} reverse fontStyle="mono" />
     </section>

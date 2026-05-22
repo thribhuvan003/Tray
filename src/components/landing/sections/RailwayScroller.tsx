@@ -78,7 +78,7 @@ export function RailwayScroller() {
         st.el.setAttribute("transform", `translate(${pt.x}, ${pt.y})`);
       });
 
-      function renderRailwayScroll(scrollTop: number) {
+      function renderRailwayScroll(scrollTop: number, velocity: number = 0) {
         const maxScroll = railwayScroller.scrollHeight - railwayScroller.clientHeight;
         const progress = maxScroll > 0 ? scrollTop / maxScroll : 0;
 
@@ -96,7 +96,8 @@ export function RailwayScroller() {
           const opacity = 0.25 + easeFocus * 0.75;
           const driftX = (distanceToCenter / 220) * 20; 
           const sway = (distanceToCenter / 220) * 12;
-          const finalRotate = card.baseAngle + sway * (1 - easeFocus);
+          const kineticTilt = Math.max(-15, Math.min(15, velocity * 0.15));
+          const finalRotate = card.baseAngle + sway * (1 - easeFocus) + kineticTilt * easeFocus;
 
           card.el.style.left = `${card.baseX}px`;
           card.el.style.top = `${card.baseY}px`;
@@ -137,11 +138,11 @@ export function RailwayScroller() {
         const diff = targetScroll - currentScroll;
         if (Math.abs(diff) > 0.05) {
           currentScroll += diff * 0.095;
-          renderRailwayScroll(currentScroll);
+          renderRailwayScroll(currentScroll, diff);
           requestAnimationFrame(updateRailwayMomentum);
         } else {
           currentScroll = targetScroll;
-          renderRailwayScroll(currentScroll);
+          renderRailwayScroll(currentScroll, 0);
           isTickerRunning = false;
         }
       }
@@ -270,6 +271,20 @@ export function RailwayScroller() {
           opacity: 0.25;
           transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s, box-shadow 0.3s, transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
           color: var(--tray-cream);
+          overflow: hidden;
+        }
+        .railway-card::before {
+          content: "";
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(115deg, transparent 30%, rgba(255,255,255,0.08) 45%, rgba(255,255,255,0.18) 50%, rgba(255,255,255,0.08) 55%, transparent 70%);
+          transform: translateX(-100%);
+          transition: transform 0.95s cubic-bezier(0.16, 1, 0.3, 1);
+          pointer-events: none;
+          z-index: 1;
+        }
+        .railway-card.is-focused::before {
+          transform: translateX(100%);
         }
         .railway-card:hover {
           border-color: rgba(255, 255, 255, 0.25);

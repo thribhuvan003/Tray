@@ -60,7 +60,7 @@
     } catch (_) {}
   }
 
-  var DEFAULT_ID = "hostel-b";
+  var DEFAULT_ID = "aditya";
   /** Shown in student / kitchen / admin pickers — three distinct menus (eng / north / mess). */
   var DEMO_CANTEEN_IDS = ["hostel-b", "aditya", "north-block"];
 

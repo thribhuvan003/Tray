@@ -167,8 +167,9 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
 
         <TrayHero />
         <CampusTicker />
-        <TrustSection />
+        <TryDemoSection />
         <PiranhaPortalsSection />
+        <TrustSection />
         <CampusModelSection campusName={campusName} />
 
         {/* ── REALTIME SYNC — animated pipeline visual ─────────────── */}
@@ -178,7 +179,7 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
               <div className="mb-5 flex flex-wrap items-center gap-3">
                 <p className="text-xs uppercase tracking-[0.34em]"
                   style={{ fontFamily: "var(--font-dm-mono)", color: "var(--tray-muted)" }}>
-                  02 / Realtime
+                  03 / Realtime
                 </p>
               </div>
             </RevealItem>
@@ -261,7 +262,7 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
               <p
                 className="text-xs uppercase tracking-[0.3em]"
                 style={{ fontFamily: "var(--font-dm-mono)", color: "var(--tray-muted)" }}
-              >03 / How it works</p>
+              >04 / How it works</p>
             </div>
             {/* Newsreader for editorial section heads */}
             <h2
@@ -277,9 +278,9 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
                 ["02", "Browse menu",     "Live availability, prep times, veg/non-veg.",       "CART"],
                 ["03", "Pay by UPI",      "Single-use QR. Webhook confirms in seconds.",       "PAID"],
                 ["04", "Track live",      "Queued → preparing → ready in ~250 ms.",            "PREPARING"],
-                ["05", "Collect w/ OTP",  "Four-digit code at counter. Staff marks complete.", "CLOSED"],
+                ["05", "Collect w/ OTP",  "Four-digit code at counter. Staff marks complete.", "READY"],
               ] as const).map(([num, title, desc, tag]) => (
-                <div key={num} className="flex flex-col gap-3 rounded-[1.5rem] border p-5"
+                <div key={num} className="flex flex-col gap-3 rounded-[1.5rem] border p-5 transition-all duration-300 ease-out hover:scale-[1.03] hover:-translate-y-1 hover:shadow-xl select-none cursor-pointer"
                   style={{ border: "1px solid var(--tray-border)", background: "rgba(255,255,255,0.52)" }}>
                   {/* Newsreader for step numbers */}
                   <span
@@ -312,7 +313,7 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
               <p
                 className="text-xs uppercase tracking-[0.3em]"
                 style={{ fontFamily: "var(--font-dm-mono)", color: "var(--tray-muted)" }}
-              >04 / Built with</p>
+              >05 / Built with</p>
             </div>
             <h2
               className="leading-[0.88] tracking-[-0.04em]"
@@ -350,8 +351,6 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
             </div>
           </div>
         </SectionReveal>
-
-        <TryDemoSection />
 
         {/* ── REALTIME HOOK — compact strip above closing CTA ──────── */}
         <div className="px-5 py-12 sm:px-8 lg:px-10">
@@ -463,19 +462,19 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
 
       {/* ── FOOTER ────────────────────────────────────────────────────── */}
       <footer
-        className="relative overflow-hidden border-t border-[var(--tray-border)] px-5 pb-8 pt-12 sm:px-8 lg:px-10"
+        className="relative overflow-hidden px-5 pb-8 pt-12 sm:px-8 lg:px-10 tl-footer"
         style={{ paddingBottom: "max(2rem, env(safe-area-inset-bottom))" }}
       >
         {/* Ghost TRAY watermark — bottom-right, sized so it clears the footer links */}
         <div
-          className="pointer-events-none absolute bottom-0 right-0 select-none"
+          className="pointer-events-none absolute bottom-0 right-0 select-none tl-footer-mark"
           style={{ overflow: "hidden" }}
         >
           <span
             style={{
               fontFamily: "var(--font-barlow)",
               fontWeight: 900,
-              fontSize: "clamp(4.5rem, 10vw, 9rem)",
+              fontSize: "clamp(14rem, 24vw, 24rem)",
               lineHeight: 0.82,
               letterSpacing: "-0.06em",
               textTransform: "uppercase",
@@ -496,7 +495,7 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
             <div>
               <BrandMark />
               <p
-                className="mt-4 max-w-xs text-[0.9rem] leading-7 opacity-60"
+                className="mt-5 max-w-sm text-[1.15rem] leading-[1.8] opacity-75 font-medium"
                 style={{ fontFamily: "var(--font-geist)" }}
               >
                 A campus canteen ordering system. Multi-tenant, source-available, built for India.
@@ -505,8 +504,8 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
 
             {/* Product */}
             <div>
-              <p className="font-code mb-4 text-[0.65rem] uppercase tracking-[0.22em] text-[var(--tray-muted)]">Product</p>
-              <ul className="flex flex-col gap-2.5 text-sm">
+              <p className="font-code mb-5 text-[0.85rem] font-bold uppercase tracking-[0.22em] text-[var(--tray-muted)]">Product</p>
+              <ul className="flex flex-col gap-3.5 text-[1.12rem] sm:text-[1.25rem]">
                 {[
                   ["Student app",   "/menu"],
                   ["Kitchen view",  "/kitchen"],
@@ -514,7 +513,7 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
                   ["Get started",   "/get-started"],
                 ].map(([label, href]) => (
                   <li key={label}>
-                    <Link href={href} className="opacity-65 transition hover:opacity-100">{label}</Link>
+                    <Link href={href} className="opacity-75 hover:opacity-100 transition-opacity font-semibold">{label}</Link>
                   </li>
                 ))}
               </ul>
@@ -522,15 +521,15 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
 
             {/* Resources */}
             <div>
-              <p className="font-code mb-4 text-[0.65rem] uppercase tracking-[0.22em] text-[var(--tray-muted)]">Resources</p>
-              <ul className="flex flex-col gap-2.5 text-sm">
+              <p className="font-code mb-5 text-[0.85rem] font-bold uppercase tracking-[0.22em] text-[var(--tray-muted)]">Resources</p>
+              <ul className="flex flex-col gap-3.5 text-[1.12rem] sm:text-[1.25rem]">
                 {[
                   ["README",       "https://github.com/thribhuvan003/Tray/blob/main/README.md"],
                   ["Architecture", "https://github.com/thribhuvan003/Tray/tree/main/docs/adr"],
                   ["Security",     "https://github.com/thribhuvan003/Tray/blob/main/SECURITY.md"],
                 ].map(([label, href]) => (
                   <li key={label}>
-                    <a href={href} target="_blank" rel="noreferrer" className="opacity-65 transition hover:opacity-100">{label}</a>
+                    <a href={href} target="_blank" rel="noreferrer" className="opacity-75 hover:opacity-100 transition-opacity font-semibold">{label}</a>
                   </li>
                 ))}
               </ul>
@@ -538,32 +537,16 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
 
             {/* Contact */}
             <div>
-              <p className="font-code mb-4 text-[0.65rem] uppercase tracking-[0.22em] text-[var(--tray-muted)]">Contact</p>
+              <p className="font-code mb-5 text-[0.85rem] font-bold uppercase tracking-[0.22em] text-[var(--tray-muted)]">Contact</p>
               <a
                 href="https://github.com/thribhuvan003"
                 target="_blank"
                 rel="noreferrer"
-                className="text-sm opacity-65 transition hover:opacity-100"
+                className="text-[1.12rem] sm:text-[1.25rem] opacity-75 hover:opacity-100 transition-opacity font-semibold block"
               >
                 github.com/thribhuvan003
               </a>
             </div>
-          </div>
-
-          {/* Bottom bar */}
-          <div className="relative z-10 mt-12 flex flex-wrap items-center justify-between gap-4 border-t border-[var(--tray-border)] pt-6">
-            <p
-              className="text-[0.72rem] uppercase tracking-[0.2em] opacity-45"
-              style={{ fontFamily: "var(--font-dm-mono)" }}
-            >
-              Built for campus canteens · Made in India
-            </p>
-            <p
-              className="text-[0.72rem] uppercase tracking-[0.2em] opacity-45"
-              style={{ fontFamily: "var(--font-dm-mono)" }}
-            >
-              v3.0 · 2026
-            </p>
           </div>
         </div>
       </footer>

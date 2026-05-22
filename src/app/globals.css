@@ -198,9 +198,9 @@
   --admin-ink-2:       #D0C7B7;
   --admin-ink-3:       #908879;
   --admin-ink-4:       #60594B;
-  --admin-lime:        #E60000;
-  --admin-lime-2:      #C40000;
-  --admin-lime-soft:   rgba(230, 0, 0, 0.12);
+  --admin-lime:        #cdfa50;
+  --admin-lime-2:      #b2df40;
+  --admin-lime-soft:   rgba(205, 250, 80, 0.12);
   --admin-amber:       #ffb22a;
   --admin-amber-soft:  rgba(255, 178, 42, 0.14);
   --admin-rose:        #ff6b6b;
@@ -228,7 +228,15 @@ html.dark [data-portal="student"] {
   --color-ink:       #F4EFE6;
   --color-line:      rgba(244, 239, 230, 0.08);
   --color-line-strong: rgba(244, 239, 230, 0.15);
+  --color-ocean-50:  #241515;
+  --color-ocean-100: #381B1B;
+  --color-ocean-200: #542222;
+  --color-ocean-300: #732A2A;
+  --color-ocean-400: #9E3030;
   --color-ocean-500: #FF3333;
+  --color-ocean-600: #D92626;
+  --color-ocean-700: #B31919;
+  --color-ocean-900: #420808;
 }
 /* Kitchen dark: paper inversion */
 html.dark [data-portal="kitchen"] {

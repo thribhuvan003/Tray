@@ -180,8 +180,8 @@ export function PayPanel({
           <div className="hidden md:block text-[11px] font-mono uppercase tracking-wider text-[color:var(--color-ink)]/55 mb-3">
             Scan with any UPI app
           </div>
-          <div className="hidden md:block p-4 bg-white rounded-2xl shadow-[inset_0_0_0_1px_rgba(10,22,40,0.06)]">
-            <QRCode value={upiUri} size={208} bgColor="#ffffff" fgColor="#0a1628" />
+          <div className="hidden md:block p-4 bg-white rounded-2xl shadow-[inset_0_0_0_1px_rgba(26,26,25,0.06)]">
+            <QRCode value={upiUri} size={208} bgColor="#ffffff" fgColor="#1A1A19" />
           </div>
           <a
             href={upiUri}
@@ -196,8 +196,8 @@ export function PayPanel({
               On desktop? Scan this QR
             </summary>
             <div className="mt-3 flex flex-col items-center gap-2">
-              <div className="p-4 bg-white rounded-2xl shadow-[inset_0_0_0_1px_rgba(10,22,40,0.06)]">
-                <QRCode value={upiUri} size={180} bgColor="#ffffff" fgColor="#0a1628" />
+              <div className="p-4 bg-white rounded-2xl shadow-[inset_0_0_0_1px_rgba(26,26,25,0.06)]">
+                <QRCode value={upiUri} size={180} bgColor="#ffffff" fgColor="#1A1A19" />
               </div>
             </div>
           </details>
