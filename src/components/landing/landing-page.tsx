@@ -1,10 +1,20 @@
+import React from "react";
 import Link from "next/link";
 import type { ResolvedTenant } from "@/lib/tenant";
 import { TrayHero }             from "@/components/landing/sections/TrayHero";
-import { MetricsStrip, CampusTicker } from "@/components/landing/sections/MetricsAndTicker";
+import { CampusTicker }         from "@/components/landing/sections/MetricsAndTicker";
 import { PiranhaPortalsSection } from "@/components/landing/sections/PiranhaPortalsSection";
 import { CampusModelSection }    from "@/components/landing/sections/CampusModelSection";
 import { TryDemoSection }        from "@/components/landing/sections/TryDemoSection";
+import {
+  AnimatedNav,
+  SectionReveal,
+  RevealItem,
+  HoverCard,
+  SyncPipelineVisual,
+  MotionCTA,
+  CountUp,
+} from "@/lib/motion/tray-framer";
 
 // ── Brand wordmark ────────────────────────────────────────────────────────────
 function BrandMark() {
@@ -28,15 +38,13 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
     <div className="tray-page min-h-svh overflow-x-hidden" style={{ fontFamily: "var(--font-ui)" }}>
 
       {/* ── NAV ─────────────────────────────────────────────────────────── */}
-      {/*
-          Pure-CSS hamburger: hidden checkbox controls mobile sheet.
-          Desktop: links visible, hamburger hidden.
-          One "Demo" CTA — scrolls to #try-demo. Sign in is separate.
-      */}
       <input type="checkbox" id="tl-ham" className="sr-only peer" aria-hidden />
 
-      <header className="sticky top-0 z-50 border-b border-[var(--tray-border)] bg-[var(--tray-bg)]/85 backdrop-blur-xl"
-        style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}>
+      <AnimatedNav
+        className="sticky top-0 z-50 backdrop-blur-xl"
+        style={{ paddingTop: "env(safe-area-inset-top, 0px)" } as React.CSSProperties}
+      >
+      <header>
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-3.5 sm:px-8 lg:px-10">
           <BrandMark />
 
@@ -118,6 +126,7 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
           </nav>
         </div>
       </header>
+      </AnimatedNav>
 
       {/* ── PAGE SECTIONS ────────────────────────────────────────────── */}
       <main id="main">
@@ -150,122 +159,51 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
         </div>
 
         <TrayHero />
-        <MetricsStrip />
         <CampusTicker />
         <PiranhaPortalsSection />
         <CampusModelSection campusName={campusName} />
 
-        {/* ── REALTIME SYNC — big fonts, sand bg, micro-interactions ── */}
-        <section id="sync" className="px-5 py-24 sm:px-8 lg:px-10">
+        {/* ── REALTIME SYNC — animated pipeline visual ─────────────── */}
+        <SectionReveal id="sync" className="px-5 py-24 sm:px-8 lg:px-10">
           <div className="mx-auto max-w-7xl">
-            <p
-              className="mb-5 text-xs uppercase tracking-[0.34em]"
-              style={{ fontFamily: "var(--font-dm-mono)", color: "var(--tray-muted)" }}
-            >
-              02 / Realtime
-            </p>
+            <RevealItem>
+              <p className="mb-5 text-xs uppercase tracking-[0.34em]"
+                style={{ fontFamily: "var(--font-dm-mono)", color: "var(--tray-muted)" }}>
+                02 / Realtime
+              </p>
+            </RevealItem>
 
-            <h2
-              className="max-w-5xl leading-[0.80] tracking-[-0.025em]"
-              style={{
-                fontFamily: "var(--font-barlow)",
-                fontWeight: 900,
-                fontSize: "clamp(3.8rem, 10vw, 10.5rem)",
-                textTransform: "uppercase",
-              }}
-            >
-              Add a special.{" "}
-              <em
-                className="not-italic"
-                style={{ fontFamily: "var(--font-fraunces)", fontStyle: "italic", textTransform: "none", color: "var(--tray-clay)" }}
+            <RevealItem>
+              <h2
+                className="max-w-5xl leading-[0.80] tracking-[-0.025em]"
+                style={{
+                  fontFamily: "var(--font-barlow)",
+                  fontWeight: 900,
+                  fontSize: "clamp(3.8rem, 10vw, 10.5rem)",
+                  textTransform: "uppercase",
+                }}
               >
-                Watch it land everywhere.
-              </em>
-            </h2>
+                Add a special.{" "}
+                <em className="not-italic" style={{ fontFamily: "var(--font-fraunces)", fontStyle: "italic", textTransform: "none", color: "var(--tray-clay)" }}>
+                  Watch it land everywhere.
+                </em>
+              </h2>
+            </RevealItem>
 
-            <p
-              className="mt-7 max-w-lg text-[1.1rem] leading-[1.75] opacity-65"
-              style={{ fontFamily: "var(--font-geist)" }}
-            >
-              The kitchen adds a dish — it appears on every student phone in under 300 ms.
-              One source of truth, three windows, no refresh.
-            </p>
+            <RevealItem>
+              <p className="mt-6 max-w-lg text-[1.05rem] leading-[1.75] opacity-65"
+                style={{ fontFamily: "var(--font-geist)" }}>
+                The kitchen adds a dish — it appears on every student phone in under 300 ms.
+                One source of truth, three portals, no refresh.
+              </p>
+            </RevealItem>
 
-            {/* Three nodes with micro-interactions */}
-            <div className="mt-14 grid gap-4 sm:grid-cols-3">
-
-              {/* SOURCE */}
-              <div
-                className="group rounded-[1.75rem] border p-7 transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_24px_64px_rgba(26,22,20,0.13)]"
-                style={{ border: "1px solid var(--tray-border)", background: "rgba(255,255,255,0.55)" }}
-              >
-                <div className="mb-5 flex items-center gap-3">
-                  <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full" style={{ background: "rgba(184,83,26,0.12)", border: "1px solid rgba(184,83,26,0.28)" }}>
-                    <span className="h-3 w-3 rounded-full animate-pulse" style={{ background: "var(--tray-clay)" }} />
-                  </span>
-                  <span className="text-[0.65rem] uppercase tracking-[0.3em]" style={{ fontFamily: "var(--font-dm-mono)", color: "var(--tray-clay)" }}>Source</span>
-                </div>
-                <p className="text-[1.35rem] leading-tight tracking-tight" style={{ fontFamily: "var(--font-jakarta)", fontWeight: 700 }}>
-                  Kitchen pushes update
-                </p>
-                <p className="mt-3 text-[0.72rem]" style={{ fontFamily: "var(--font-dm-mono)", letterSpacing: "0.08em", color: "var(--tray-muted)" }}>
-                  POST /api/menu
-                </p>
-                <p className="mt-1.5 text-[0.62rem] uppercase tracking-[0.16em]" style={{ fontFamily: "var(--font-dm-mono)", color: "var(--tray-muted)", opacity: 0.7 }}>
-                  RLS-enforced · tenant-scoped
-                </p>
-              </div>
-
-              {/* FAN OUT — featured node with big 240ms metric */}
-              <div
-                className="group rounded-[1.75rem] border p-7 transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_24px_64px_rgba(26,22,20,0.13)]"
-                style={{ borderColor: "rgba(184,83,26,0.30)", background: "rgba(184,83,26,0.06)" }}
-              >
-                <div className="mb-5 flex items-center gap-3">
-                  <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full" style={{ border: "1px solid rgba(184,83,26,0.35)" }}>
-                    <span style={{ color: "var(--tray-clay)", fontSize: "1.1rem", fontWeight: 700, lineHeight: 1 }}>⟡</span>
-                  </span>
-                  <span className="text-[0.65rem] uppercase tracking-[0.3em]" style={{ fontFamily: "var(--font-dm-mono)", color: "var(--tray-clay)" }}>Fan Out</span>
-                </div>
-                <p className="text-[1.35rem] leading-tight tracking-tight" style={{ fontFamily: "var(--font-jakarta)", fontWeight: 700 }}>
-                  Supabase Realtime broadcasts
-                </p>
-                <p
-                  className="mt-4 leading-none tracking-[-0.04em]"
-                  style={{ fontFamily: "var(--font-barlow)", fontWeight: 900, fontSize: "clamp(3rem, 6vw, 5rem)", color: "var(--tray-clay)" }}
-                >
-                  ~240ms
-                </p>
-                <p className="mt-2 text-[0.62rem] uppercase tracking-[0.16em]" style={{ fontFamily: "var(--font-dm-mono)", color: "var(--tray-muted)", opacity: 0.7 }}>
-                  WebSocket · p95 latency
-                </p>
-              </div>
-
-              {/* AUDIT */}
-              <div
-                className="group rounded-[1.75rem] border p-7 transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_24px_64px_rgba(26,22,20,0.13)]"
-                style={{ border: "1px solid var(--tray-border)", background: "rgba(255,255,255,0.55)" }}
-              >
-                <div className="mb-5 flex items-center gap-3">
-                  <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full" style={{ border: "1px solid rgba(42,110,58,0.40)", background: "rgba(42,110,58,0.08)" }}>
-                    <span className="h-2.5 w-2.5 rounded-full animate-pulse" style={{ background: "var(--tray-green, #2A6E3A)" }} />
-                  </span>
-                  <span className="text-[0.65rem] uppercase tracking-[0.3em]" style={{ fontFamily: "var(--font-dm-mono)", color: "var(--tray-green, #2A6E3A)" }}>Audit</span>
-                </div>
-                <p className="text-[1.35rem] leading-tight tracking-tight" style={{ fontFamily: "var(--font-jakarta)", fontWeight: 700 }}>
-                  Admin sees the log row
-                </p>
-                <p className="mt-3 text-[0.72rem]" style={{ fontFamily: "var(--font-dm-mono)", letterSpacing: "0.08em", color: "var(--tray-muted)" }}>
-                  menu.add · tenant-scoped
-                </p>
-                <p className="mt-1.5 text-[0.62rem] uppercase tracking-[0.16em]" style={{ fontFamily: "var(--font-dm-mono)", color: "var(--tray-muted)", opacity: 0.7 }}>
-                  Instant · full audit trail
-                </p>
-              </div>
-
-            </div>
+            {/* Animated sync pipeline */}
+            <RevealItem variant="card">
+              <SyncPipelineVisual className="mt-12" />
+            </RevealItem>
           </div>
-        </section>
+        </SectionReveal>
 
         {/* ── KITCHEN QUOTE — Cormorant Garamond for romantic serif feel ── */}
         <section
@@ -305,7 +243,7 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
         </section>
 
         {/* ── PHONE TO PLATE (5 steps) — Fraunces numbers, Jakarta titles ── */}
-        <section id="flow" className="px-5 py-24 sm:px-8 lg:px-10">
+        <SectionReveal id="flow" as="div" className="px-5 py-24 sm:px-8 lg:px-10">
           <div className="mx-auto max-w-7xl">
             <p
               className="mb-4 text-xs uppercase tracking-[0.3em]"
@@ -351,10 +289,10 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
               ))}
             </div>
           </div>
-        </section>
+        </SectionReveal>
 
         {/* ── STACK — Plus Jakarta Sans for clean tech feel ─────────── */}
-        <section id="stack" className="px-5 py-24 sm:px-8 lg:px-10">
+        <SectionReveal id="stack" as="div" className="px-5 py-24 sm:px-8 lg:px-10">
           <div className="mx-auto max-w-7xl">
             <p
               className="mb-4 text-xs uppercase tracking-[0.3em]"
@@ -384,21 +322,18 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
                 ["Vercel Edge",       "Hosting · CDN"],
                 ["Supabase Realtime", "Live · WebSocket"],
               ] as const).map(([name, role]) => (
-                <div key={name} className="rounded-[1.25rem] border p-4"
-                  style={{ border: "1px solid var(--tray-border)", background: "rgba(255,255,255,0.52)" }}>
-                  <p
-                    className="tracking-tight"
-                    style={{ fontFamily: "var(--font-jakarta)", fontWeight: 600 }}
-                  >{name}</p>
-                  <p
-                    className="mt-1.5 text-[0.6rem] uppercase tracking-[0.14em]"
-                    style={{ fontFamily: "var(--font-dm-mono)", color: "var(--tray-muted)" }}
-                  >{role}</p>
-                </div>
+                <HoverCard
+                  key={name}
+                  className="rounded-[1.25rem] border p-4"
+                  style={{ border: "1px solid var(--tray-border)", background: "rgba(255,255,255,0.52)" }}
+                >
+                  <p className="tracking-tight" style={{ fontFamily: "var(--font-jakarta)", fontWeight: 600 }}>{name}</p>
+                  <p className="mt-1.5 text-[0.6rem] uppercase tracking-[0.14em]" style={{ fontFamily: "var(--font-dm-mono)", color: "var(--tray-muted)" }}>{role}</p>
+                </HoverCard>
               ))}
             </div>
           </div>
-        </section>
+        </SectionReveal>
 
         <TryDemoSection />
 
@@ -459,51 +394,53 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
         </div>
 
         {/* ── CLOSING CTA ───────────────────────────────────────────── */}
-        <section className="relative overflow-hidden px-5 py-32 text-center sm:px-8 lg:px-10">
+        <SectionReveal as="div" className="relative overflow-hidden px-5 py-32 text-center sm:px-8 lg:px-10">
           <div className="pointer-events-none absolute inset-0 -z-10">
             <div className="absolute left-1/2 top-0 h-96 w-96 -translate-x-1/2 rounded-full bg-[var(--tray-clay)]/15 blur-3xl" />
           </div>
-          <p
-            className="mb-5 text-xs uppercase tracking-[0.3em]"
-            style={{ fontFamily: "var(--font-dm-mono)", color: "var(--tray-muted)" }}
-          >
-            Ship it
-          </p>
-          {/* Barlow Condensed 900 — maximum final impact */}
-          <h2
-            className="mx-auto max-w-5xl leading-[0.82] tracking-[-0.02em]"
-            style={{
-              fontFamily: "var(--font-barlow)",
-              fontWeight: 900,
-              fontSize: "clamp(3.5rem, 9.5vw, 10.5rem)",
-              textTransform: "uppercase",
-            }}
-          >
-            Run lunch{" "}
-            <em
-              className="not-italic"
-              style={{ fontFamily: "var(--font-fraunces)", fontStyle: "italic", textTransform: "none", color: "var(--tray-clay)" }}
+          <RevealItem>
+            <p className="mb-5 text-xs uppercase tracking-[0.3em]" style={{ fontFamily: "var(--font-dm-mono)", color: "var(--tray-muted)" }}>
+              Ship it
+            </p>
+          </RevealItem>
+          <RevealItem>
+            <h2
+              className="mx-auto max-w-5xl leading-[0.82] tracking-[-0.02em]"
+              style={{ fontFamily: "var(--font-barlow)", fontWeight: 900, fontSize: "clamp(3.5rem, 9.5vw, 10.5rem)", textTransform: "uppercase" }}
             >
-              without the rush.
-            </em>
-          </h2>
-          <p
-            className="mx-auto mt-7 max-w-2xl text-[1.05rem] leading-8 opacity-70"
-            style={{ fontFamily: "var(--font-geist)" }}
-          >
-            Three screens. Zero printed tokens. Every order tracked, every payment confirmed,
-            every handover verified. Deploy on a free tier and go live today.
-          </p>
-          <div className="mt-10 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
-            <a href="#try-demo" className="rounded-full bg-[var(--tray-ink)] px-8 py-4 text-sm font-semibold text-[var(--tray-cream)] transition hover:opacity-85">
-              Try full demo →
-            </a>
-            <Link href="/get-started" className="rounded-full border border-[var(--tray-border)] px-8 py-4 text-sm font-semibold transition hover:bg-white/30">
-              I have a canteen →
-            </Link>
-          </div>
-
-        </section>
+              Run lunch{" "}
+              <em className="not-italic" style={{ fontFamily: "var(--font-fraunces)", fontStyle: "italic", textTransform: "none", color: "var(--tray-clay)" }}>
+                without the rush.
+              </em>
+            </h2>
+          </RevealItem>
+          <RevealItem>
+            <p className="mx-auto mt-7 max-w-2xl text-[1.05rem] leading-8 opacity-70" style={{ fontFamily: "var(--font-geist)" }}>
+              Three screens. Zero printed tokens. Every order tracked, every payment confirmed,
+              every handover verified. Deploy on a free tier and go live today.
+            </p>
+          </RevealItem>
+          <RevealItem>
+            <div className="mt-10 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+              <MotionCTA
+                href="#try-demo"
+                variant="primary"
+                className="rounded-full bg-[var(--tray-ink)] px-8 py-4 text-sm font-semibold text-[var(--tray-cream)]"
+                style={{ fontFamily: "var(--font-geist)" } as React.CSSProperties}
+              >
+                Try full demo
+              </MotionCTA>
+              <MotionCTA
+                href="/get-started"
+                variant="secondary"
+                className="rounded-full border border-[var(--tray-border)] px-8 py-4 text-sm font-semibold"
+                style={{ fontFamily: "var(--font-geist)" } as React.CSSProperties}
+              >
+                I have a canteen
+              </MotionCTA>
+            </div>
+          </RevealItem>
+        </SectionReveal>
       </main>
 
       {/* ── FOOTER ────────────────────────────────────────────────────── */}
