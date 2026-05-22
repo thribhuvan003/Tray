@@ -1125,7 +1125,7 @@ function initAdminCanteenSelect() {
   const menu = document.getElementById('tenantMenu');
   if (!menu) return;
   menu.innerHTML = TD.listCanteens().map(function (c) {
-    return '<div class="sb-tenant-opt' + (c.id === TD.getSelectedCanteenId() ? ' active' : '') + '" data-cid="' + c.id + '">' + c.name + '<br><span style="font-size:10px;opacity:0.6">' + (c.block || '') + '</span></div>';
+    return '<div class="sb-tenant-opt' + (c.id === TD.getSelectedCanteenId() ? ' active' : '') + '" data-cid="' + c.id + '" data-tenant="' + c.id + '">' + c.name + '<br><span style="font-size:10px;opacity:0.6">' + (c.block || '') + '</span></div>';
   }).join('');
   menu.querySelectorAll('.sb-tenant-opt').forEach(function (opt) {
     opt.addEventListener('click', function (e) {

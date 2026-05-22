@@ -369,3 +369,9 @@ pm run typecheck passes. Restart dev if port 3000 hangs: NODE_OPTIONS=--max-old-
 - **Removed:** Session debug ingest (`debug-ingest` API, `landing-motion` probes); cleared stale `.next/types/app/api/debug-ingest`.
 - **Verify:** `npm run typecheck`, `npm run lint`, `npm run demo:verify` — pass.
 - **Pushed:** `main` for Vercel deploy.
+
+### 2026-05-22 — Repository cleanup + verification & typecheck alignment (resume)
+
+- **Cleaned Repository**: Cloned clean `main` branch, set default remote branch to `main` via `gh` CLI, deleted remote `production-ui-fidelity`, and deleted all obsolete `claude/*`, `cursor/*`, and `dependabot/*` branches on remote origin.
+- **Fixed static verification**: Added `data-tenant` attribute to canteen option element mappings in `public/demo/admin.html` to satisfy `demo-verify.mjs` requirements.
+- **Workspace Build Alignment**: Installed dependencies via `pnpm`, confirmed `npm run typecheck` and `npm run lint` both pass cleanly with zero warnings/errors, and verified `npm run demo:verify` passes completely.
