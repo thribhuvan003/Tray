@@ -38,7 +38,7 @@ export function KitchenBoard({
   tenantSlug,
   orders: initialOrders,
   lines: initialLines,
-  marquee,
+  marquee: initialMarquee,
 }: {
   tenantId: string;
   tenantName: string;
@@ -49,6 +49,7 @@ export function KitchenBoard({
 }) {
   const [orders, setOrders] = useState(initialOrders);
   const [lines, setLines] = useState(initialLines);
+  const [marqueeItems, setMarqueeItems] = useState(initialMarquee);
   const [verifyId, setVerifyId] = useState<string | null>(null);
   const [clock, setClock] = useState<string>("--:--");
   const [wsConnected, setWsConnected] = useState(false);
@@ -96,7 +97,7 @@ export function KitchenBoard({
       o.connect(g).connect(ctx.destination);
       o.start();
       o.stop(ctx.currentTime + 0.5);
-      setTimeout(() => ctx.close().catch(() => {}), 700);
+      setTimeout(() => ctx.close().catch(() => { }), 700);
     } catch {
       // audio unavailable — silent fail
     }
@@ -137,6 +138,19 @@ export function KitchenBoard({
         }
         if (newPlaced) onNewPlaced?.();
       }
+      // Refresh the live-menu marquee on every cycle so admin stock/status
+      // changes mid-shift propagate to the kitchen ticker without a page
+      // reload. Cheap, indexed query (limit 24, scoped by tenant + status).
+      const { data: freshMarquee } = await sb
+        .from("menu_items")
+        .select("id, name, price_paise, diet")
+        .eq("tenant_id", tenantId)
+        .eq("status", "live")
+        .eq("in_stock", true)
+        .order("sort_order")
+        .limit(24)
+        .returns<{ id: string; name: string; price_paise: number; diet: "veg" | "nonveg" | "egg" }[]>();
+      if (freshMarquee) setMarqueeItems(freshMarquee);
     };
 
     // Subscribe to the append-only order_events log (migration 0009 + 0011).
@@ -702,7 +716,7 @@ export function KitchenBoard({
           <KitchenKpiStrip orders={orders} newOrderFlash={newOrderFlash} />
         </header>
 
-        <KitchenMarquee items={marquee} />
+        <KitchenMarquee items={marqueeItems} />
 
         {/* Main board area */}
         <main style={{ padding: "24px 24px 64px" }}>
@@ -719,56 +733,56 @@ export function KitchenBoard({
             }}
           >
             <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0">
-            <div className="grid grid-cols-4 min-w-[680px]" style={{ minHeight: "520px" }}>
-              <OrderColumn
-                title="Incoming"
-                subtitle="Just paid · awaiting kitchen"
-                status="placed"
-                orders={groups.placed}
-                linesByOrder={linesByOrder}
-                onAction={async (id, action) => {
-                  const { markPreparing } = await import("@/app/(kitchen)/_actions");
-                  const r = await markPreparing(id);
-                  if (!r.ok) handleActionError(r.error);
-                  if (action === "start" && r.ok) toast.success(`Started ${id.slice(0, 6)}`);
-                }}
-                onReject={async (id, reason) => {
-                  const { rejectOrder } = await import("@/app/(kitchen)/_actions");
-                  const r = await rejectOrder(id, reason);
-                  if (!r.ok) handleActionError(r.error ?? "Failed to reject order");
-                  else toast.success("Order rejected — refund queued");
-                }}
-              />
-              <OrderColumn
-                title="Preparing"
-                subtitle="Currently cooking"
-                status="preparing"
-                orders={groups.preparing}
-                linesByOrder={linesByOrder}
-                onAction={async (id) => {
-                  const { markReady } = await import("@/app/(kitchen)/_actions");
-                  const r = await markReady(id);
-                  if (!r.ok) handleActionError(r.error);
-                  else toast.success("Ready — pickup code issued");
-                }}
-              />
-              <OrderColumn
-                title="Ready"
-                subtitle="Student will show a code"
-                status="ready"
-                orders={groups.ready}
-                linesByOrder={linesByOrder}
-                onAction={(id) => setVerifyId(id)}
-              />
-              <OrderColumn
-                title="Collected"
-                subtitle="Today · last 10"
-                status="collected"
-                orders={groups.collected}
-                linesByOrder={linesByOrder}
-                onAction={() => {}}
-              />
-            </div>
+              <div className="grid grid-cols-4 min-w-[680px]" style={{ minHeight: "520px" }}>
+                <OrderColumn
+                  title="Incoming"
+                  subtitle="Just paid · awaiting kitchen"
+                  status="placed"
+                  orders={groups.placed}
+                  linesByOrder={linesByOrder}
+                  onAction={async (id, action) => {
+                    const { markPreparing } = await import("@/app/(kitchen)/_actions");
+                    const r = await markPreparing(id);
+                    if (!r.ok) handleActionError(r.error);
+                    if (action === "start" && r.ok) toast.success(`Started ${id.slice(0, 6)}`);
+                  }}
+                  onReject={async (id, reason) => {
+                    const { rejectOrder } = await import("@/app/(kitchen)/_actions");
+                    const r = await rejectOrder(id, reason);
+                    if (!r.ok) handleActionError(r.error ?? "Failed to reject order");
+                    else toast.success("Order rejected — refund queued");
+                  }}
+                />
+                <OrderColumn
+                  title="Preparing"
+                  subtitle="Currently cooking"
+                  status="preparing"
+                  orders={groups.preparing}
+                  linesByOrder={linesByOrder}
+                  onAction={async (id) => {
+                    const { markReady } = await import("@/app/(kitchen)/_actions");
+                    const r = await markReady(id);
+                    if (!r.ok) handleActionError(r.error);
+                    else toast.success("Ready — pickup code issued");
+                  }}
+                />
+                <OrderColumn
+                  title="Ready"
+                  subtitle="Student will show a code"
+                  status="ready"
+                  orders={groups.ready}
+                  linesByOrder={linesByOrder}
+                  onAction={(id) => setVerifyId(id)}
+                />
+                <OrderColumn
+                  title="Collected"
+                  subtitle="Today · last 10"
+                  status="collected"
+                  orders={groups.collected}
+                  linesByOrder={linesByOrder}
+                  onAction={() => { }}
+                />
+              </div>
             </div>
             {/* Queue footer — matches .queue-foot */}
             <div
@@ -816,11 +830,11 @@ function KitchenKpiStrip({ orders, newOrderFlash }: { orders: OrderRow[]; newOrd
   }, [orders]);
 
   const cells: { label: string; value: string; accent?: boolean; icon?: React.ReactNode }[] = [
-    { label: "Incoming",       value: String(counts.placed).padStart(2, "0") },
-    { label: "Preparing",      value: String(counts.preparing).padStart(2, "0"), accent: true },
-    { label: "Ready",          value: String(counts.ready).padStart(2, "0") },
-    { label: "Collected today",value: String(counts.collected) },
-    { label: "Revenue today",  value: formatRupees(counts.revenue), icon: <ChefHat size={11} /> },
+    { label: "Incoming", value: String(counts.placed).padStart(2, "0") },
+    { label: "Preparing", value: String(counts.preparing).padStart(2, "0"), accent: true },
+    { label: "Ready", value: String(counts.ready).padStart(2, "0") },
+    { label: "Collected today", value: String(counts.collected) },
+    { label: "Revenue today", value: formatRupees(counts.revenue), icon: <ChefHat size={11} /> },
   ];
 
   return (

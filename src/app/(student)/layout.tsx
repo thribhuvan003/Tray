@@ -1,9 +1,11 @@
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { resolveTenant, collegeCanteens } from "@/lib/tenant";
+import { getCurrentUser } from "@/lib/auth/get-user";
 import { StudentTopBar } from "@/components/portal-student/top-bar";
 import { CartDrawer } from "@/components/portal-student/cart-drawer";
 import { CartTenantSync } from "@/components/portal-student/cart-tenant-sync";
+import { OrderReadyListener } from "@/components/portal-student/order-ready-listener";
 
 export default async function StudentLayout({ children }: { children: React.ReactNode }) {
   const h = await headers();
@@ -18,12 +20,18 @@ export default async function StudentLayout({ children }: { children: React.Reac
     ? await collegeCanteens(tenant.college_slug).catch(() => [])
     : [];
 
+  // Auth is optional on the student portal (browse without sign-in is fine).
+  // We pass the user id to OrderReadyListener so it can subscribe; nullable
+  // means the listener no-ops for guests.
+  const user = await getCurrentUser();
+
   return (
     <div
       data-portal="student"
       className="min-h-screen bg-[color:var(--color-paper)] text-[color:var(--color-ink)] antialiased"
     >
       <CartTenantSync slug={tenant.slug} />
+      <OrderReadyListener userId={user?.id ?? null} tenantSlug={tenant.slug} />
       <StudentTopBar tenant={tenant} siblings={siblings} />
       {/* Desktop reserves a 20rem right column for the sticky cart sidebar.
           Mobile stays single-column; the CartDrawer self-promotes to a
