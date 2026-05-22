@@ -194,9 +194,9 @@ export async function createMenuItem(form: {
     .eq("tenant_id", c.tenant.id)
     .ilike("name", form.name)
     .not("status", "eq", "archived")
-    .maybeSingle();
+    .limit(1);
 
-  if (existing) {
+  if (existing && existing.length > 0) {
     return { ok: false, error: `A menu item named "${form.name}" already exists.` };
   }
 
@@ -248,9 +248,9 @@ export async function updateMenuItem(
     .ilike("name", form.name)
     .not("status", "eq", "archived")
     .neq("id", id)
-    .maybeSingle();
+    .limit(1);
 
-  if (existing && form.status !== "archived") {
+  if (existing && existing.length > 0 && form.status !== "archived") {
     return { ok: false, error: `A menu item named "${form.name}" already exists.` };
   }
 
