@@ -1,5 +1,7 @@
-import { redirect } from "next/navigation";
+import StudentHomePage from "../page";
 
-export default function MenuRedirectPage() {
-  redirect("/");
-}
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
+export default StudentHomePage;
+

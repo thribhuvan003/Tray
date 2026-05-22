@@ -585,8 +585,8 @@ async function main() {
     await studentPage.waitForTimeout(8000);
     await screenshot(studentPage, "62-student-track-expired");
 
-    const expiredTitleVisible = await studentPage.locator('text="Collection window expired."').isVisible().catch(() => false);
-    const expiredDescVisible = await studentPage.locator('text="was not collected within the 30-minute window"').isVisible().catch(() => false);
+    const expiredTitleVisible = await studentPage.locator('h1:has-text("Collection window expired.")').isVisible().catch(() => false);
+    const expiredDescVisible = await studentPage.locator('p:has-text("was not collected within the 30-minute window")').isVisible().catch(() => false);
 
     const expirySuccess = dbOrder?.status === "expired" && expiredTitleVisible && expiredDescVisible;
     if (!expirySuccess) {

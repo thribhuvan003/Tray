@@ -489,3 +489,16 @@ pm run typecheck passes. Restart dev if port 3000 hangs: NODE_OPTIONS=--max-old-
 - **Completed:** Cast the polled result in the direct Supabase orders query in `src/components/portal-student/track-panel.tsx` to resolve a TypeScript `never` type inference error, bringing compilation errors down to zero.
 - **Verified:** Production build (`pnpm build`), typescript check (`pnpm typecheck`), and static mock verifications pass with 100% success.
 
+### May 22, 2026 - Real-Time Safeguards, Duplicate Prevention, and Auto-Expiry QA Complete
+- **Completed:** Verified the end-to-end functionality of all new integration features on local port `3005` (communicating with remote Supabase database `https://mepowrsrbjddaqfvzvtc.supabase.co`).
+- **Verified:** Executed automated integration and E2E verification test suite `scripts/test-new-features.mjs` using Playwright, confirming 100% success across all 7 checks (6 scenarios).
+- **Details of verified scenarios:**
+  1. Postgres partial unique index (case-insensitive duplicate check).
+  2. Canteen Admin UI server action validation (rejects duplicate item names under the same tenant case-insensitively).
+  3. Student menu real-time price updates (automatic refresh via Supabase Realtime).
+  4. Real-time Closed banner visibility (automatic display when `is_open = false`).
+  5. Phone lock/unlock synchronization (automatic refresh on page visibility transitions).
+  6. Live Canteen Switcher synchronization (immediate list updates when new tenants are added).
+  7. Uncollected ready order auto-expiry tracking (30-minute collection limit, automatic transition to "Collection window expired" layout).
+- **Status:** All gates fully verified, code changes validated, and E2E tests passing cleanly.
+
