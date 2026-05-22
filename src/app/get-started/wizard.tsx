@@ -686,6 +686,8 @@ export function GetStartedWizard() {
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    // Enter key on steps 1/2 should advance forward, not validate step 3
+    if (step < 3) { handleNext(); return; }
     const errs = validateStep3(formData);
     if (Object.keys(errs).length > 0) { setErrors(errs); return; }
     setErrors({});

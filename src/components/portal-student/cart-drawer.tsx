@@ -122,12 +122,13 @@ export function CartDrawer({ tenantSlug, tenantName }: { tenantSlug: string; ten
           lines.map((l) => (
             <li
               key={l.menuItemId}
-              className="flex items-center gap-3 rounded-2xl border border-[color:var(--color-line)] p-3"
+              className="flex items-start gap-2.5 rounded-2xl border border-[color:var(--color-line)] p-3"
             >
+              {/* Diet indicator */}
               <span
                 aria-label={l.diet}
                 className={cn(
-                  "inline-flex h-4 w-4 items-center justify-center border-2 rounded-sm bg-white shrink-0",
+                  "mt-0.5 inline-flex h-4 w-4 flex-shrink-0 items-center justify-center border-2 rounded-sm bg-white",
                   l.diet === "veg"
                     ? "border-emerald-500"
                     : l.diet === "egg"
@@ -135,46 +136,41 @@ export function CartDrawer({ tenantSlug, tenantName }: { tenantSlug: string; ten
                     : "border-rose-500"
                 )}
               >
-                <span
-                  className={cn(
-                    "h-2 w-2 rounded-full",
-                    l.diet === "veg" ? "bg-emerald-500" : l.diet === "egg" ? "bg-amber-500" : "bg-rose-500"
-                  )}
-                />
+                <span className={cn("h-2 w-2 rounded-full", l.diet === "veg" ? "bg-emerald-500" : l.diet === "egg" ? "bg-amber-500" : "bg-rose-500")} />
               </span>
+
+              {/* Name + controls — two rows */}
               <div className="flex-1 min-w-0">
-                <div className="text-[14px] font-medium truncate">{l.name || "Item"}</div>
-                <div className="text-[12px] text-[color:var(--color-ink)]/55 tabular">
-                  {formatRupees(l.pricePaise)} ea
+                <div className="text-[13.5px] font-medium leading-snug truncate">{l.name || "Item"}</div>
+                <div className="mt-1.5 flex items-center gap-2">
+                  <div className="inline-flex items-center rounded-full border border-[color:var(--color-line)]">
+                    <button aria-label="Decrease" onClick={() => dec(l.menuItemId)} className="h-7 w-7 inline-flex items-center justify-center">
+                      <Minus size={12} />
+                    </button>
+                    <span className="text-[12px] font-medium tabular w-4 text-center">{l.qty}</span>
+                    <button aria-label="Increase" onClick={() => inc(l.menuItemId)} className="h-7 w-7 inline-flex items-center justify-center">
+                      <Plus size={12} />
+                    </button>
+                  </div>
+                  <span className="text-[11px] text-[color:var(--color-ink)]/50 tabular">
+                    {formatRupees(l.pricePaise)} ea
+                  </span>
                 </div>
               </div>
-              <div className="inline-flex items-center rounded-full border border-[color:var(--color-line)]">
+
+              {/* Total + remove stacked on right */}
+              <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                <div className="text-[13.5px] font-semibold tabular">
+                  {formatRupees(l.pricePaise * l.qty)}
+                </div>
                 <button
-                  aria-label="Decrease"
-                  onClick={() => dec(l.menuItemId)}
-                  className="h-8 w-8 inline-flex items-center justify-center"
+                  aria-label="Remove"
+                  onClick={() => remove(l.menuItemId)}
+                  className="h-6 w-6 inline-flex items-center justify-center text-[color:var(--color-ink)]/35 hover:text-rose-500 transition-colors"
                 >
-                  <Minus size={13} />
-                </button>
-                <span className="text-[13px] font-medium tabular w-5 text-center">{l.qty}</span>
-                <button
-                  aria-label="Increase"
-                  onClick={() => inc(l.menuItemId)}
-                  className="h-8 w-8 inline-flex items-center justify-center"
-                >
-                  <Plus size={13} />
+                  <Trash2 size={12} />
                 </button>
               </div>
-              <div className="text-[14px] font-semibold tabular min-w-[64px] text-right">
-                {formatRupees(l.pricePaise * l.qty)}
-              </div>
-              <button
-                aria-label="Remove"
-                onClick={() => remove(l.menuItemId)}
-                className="h-8 w-8 inline-flex items-center justify-center text-[color:var(--color-ink)]/40 hover:text-rose-500"
-              >
-                <Trash2 size={13} />
-              </button>
             </li>
           ))
         )}

@@ -4,14 +4,12 @@ import { tenantSlugFromHost } from "@/lib/tenant";
 
 const DEFAULT_TENANT_SLUG = process.env.DEFAULT_TENANT_SLUG ?? "aditya";
 
-// Path-based tenant routing: `/c/[slug]/...` for canteens, `/college/[slug]/...` for college portal.
-// Subdomain routing (`aditya.tray.local`) is kept as a fallback for backwards compat.
 export async function middleware(req: NextRequest) {
   const url = req.nextUrl;
   const pathname = url.pathname;
   const requestHeaders = new Headers(req.headers);
 
-  // 1. Resolve slugs from path first, then subdomain, then ?tenant= override.
+  // 1. Resolve tenant slug from path, subdomain, or query override
   const canteenMatch = pathname.match(/^\/c\/([^/]+)(\/.*)?$/);
   const collegeMatch = pathname.match(/^\/college\/([^/]+)(\/.*)?$/);
 
@@ -33,21 +31,12 @@ export async function middleware(req: NextRequest) {
   requestHeaders.set("x-tenant-slug", resolvedTenantSlug);
   if (collegeSlug) requestHeaders.set("x-college-slug", collegeSlug);
 
-  // 2. If `/c/[slug]/<rest>`, rewrite internally to the existing portal routes.
-  //    URL in the browser stays as /c/[slug]/menu — but Next serves /menu under the hood.
-  //    Bare `/c/[slug]` falls through to the canteen-landing page at app/c/[slug]/page.tsx.
-  let res: NextResponse;
-  if (canteenMatch && canteenMatch[2] && canteenMatch[2] !== "/") {
-    const rewriteUrl = url.clone();
-    rewriteUrl.pathname = canteenMatch[2];
-    res = NextResponse.rewrite(rewriteUrl, { request: { headers: requestHeaders } });
-  } else {
-    res = NextResponse.next({ request: { headers: requestHeaders } });
-  }
-  res.headers.set("x-tenant-slug", resolvedTenantSlug);
-  if (collegeSlug) res.headers.set("x-college-slug", collegeSlug);
+  // 2. Refresh Supabase auth tokens FIRST so the refreshed cookies reach
+  //    the page handler. We collect the refreshed cookies, then build the
+  //    response (rewrite or next) with those cookies applied to both the
+  //    forwarded request headers and the response SET-COOKIE headers.
+  const refreshedCookies: { name: string; value: string; options: CookieOptions }[] = [];
 
-  // 3. Refresh Supabase auth cookies (required by @supabase/ssr to keep sessions alive).
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -57,17 +46,42 @@ export async function middleware(req: NextRequest) {
           return req.cookies.getAll();
         },
         setAll(set: { name: string; value: string; options: CookieOptions }[]) {
-          for (const { name, value, options } of set) {
-            // Must set on BOTH request and response — otherwise the session
-            // appears stale on the very next server render (direct URL nav).
-            req.cookies.set(name, value);
-            res.cookies.set(name, value, options);
+          for (const cookie of set) {
+            refreshedCookies.push(cookie);
+            // Update req so the page handler sees the refreshed token
+            req.cookies.set(cookie.name, cookie.value);
           }
         },
       },
     }
   );
   await supabase.auth.getUser();
+
+  // Rebuild request headers with refreshed cookie values
+  if (refreshedCookies.length > 0) {
+    const cookieHeader = req.cookies.getAll()
+      .map(({ name, value }) => `${name}=${value}`)
+      .join("; ");
+    requestHeaders.set("cookie", cookieHeader);
+  }
+
+  // 3. Build the response — rewrite /c/[slug]/<rest> to internal portal routes
+  let res: NextResponse;
+  if (canteenMatch && canteenMatch[2] && canteenMatch[2] !== "/") {
+    const rewriteUrl = url.clone();
+    rewriteUrl.pathname = canteenMatch[2];
+    res = NextResponse.rewrite(rewriteUrl, { request: { headers: requestHeaders } });
+  } else {
+    res = NextResponse.next({ request: { headers: requestHeaders } });
+  }
+
+  res.headers.set("x-tenant-slug", resolvedTenantSlug);
+  if (collegeSlug) res.headers.set("x-college-slug", collegeSlug);
+
+  // 4. Apply refreshed cookies to response so browser stores them
+  for (const { name, value, options } of refreshedCookies) {
+    res.cookies.set(name, value, options);
+  }
 
   return res;
 }
