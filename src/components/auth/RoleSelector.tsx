@@ -83,11 +83,11 @@ export function RoleSelector({
     registerTrayGsap();
     if (prefersReducedMotion()) return;
 
-    // Cards stagger in on mount
+    // Cards stagger in on mount — only y, no opacity, so no SSR flash
     gsap.fromTo(
       "[data-role-card]",
-      { y: 32, opacity: 0 },
-      { y: 0, opacity: 1, stagger: 0.1, duration: 0.7, ease: "power3.out", delay: 0.2 }
+      { y: 28 },
+      { y: 0, stagger: 0.08, duration: 0.55, ease: "power3.out" }
     );
   });
 
@@ -177,7 +177,7 @@ export function RoleSelector({
                       className="mt-2 inline-flex items-center gap-1 text-[0.82rem]"
                       style={{ fontFamily: "var(--font-geist)", fontWeight: 600, color: role.accent }}
                     >
-                      Set up my campus →
+                      I have a canteen →
                     </span>
                   )}
                 </div>

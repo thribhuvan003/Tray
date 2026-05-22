@@ -22,24 +22,30 @@ const roles = [
     previewSrc: "/demo/student.html",
     previewLabel: "Student app · mobile",
     accentColor: "var(--color-ocean-500, #6E86AB)",
+    authRequired: false,
+    buttonLabel: "Open student demo",
   },
   {
     label: "Kitchen staff",
     description: "Manage one canteen's live queue. Accept, prep, hand over with OTP.",
-    href: "/c/aditya/kitchen",
+    href: "/c/aditya/login?next=/c/aditya/kitchen",
     tag: "kitchen",
     previewSrc: "/demo/kitchen.html",
     previewLabel: "Kitchen view · tablet",
     accentColor: "#B8531A",
+    authRequired: true,
+    buttonLabel: "Sign in as kitchen staff",
   },
   {
     label: "Canteen admin",
     description: "Menu, orders, staff, and daily revenue. Full audit log included.",
-    href: "/c/aditya/admin/dashboard",
+    href: "/c/aditya/login?next=/c/aditya/admin/dashboard",
     tag: "admin",
     previewSrc: "/demo/admin.html",
     previewLabel: "Admin console · desktop",
     accentColor: "var(--tray-green)",
+    authRequired: true,
+    buttonLabel: "Sign in as admin",
   },
 ] as const;
 
@@ -127,7 +133,8 @@ export function TryDemoSection() {
           className="mt-5 max-w-xl text-[1.05rem] leading-8 opacity-68"
           style={{ fontFamily: "var(--font-geist)" }}
         >
-          Same product, three views. Click any card to open the live demo — no account required.
+          Same product, three views. Student demo opens instantly — no login needed.
+          Kitchen and admin use a shared demo account.
         </p>
 
         {/* Role preview cards — 3 columns desktop */}
@@ -226,19 +233,28 @@ export function TryDemoSection() {
                   {role.description}
                 </p>
 
+                {role.authRequired && (
+                  <p
+                    className="text-[0.62rem] uppercase tracking-[0.16em]"
+                    style={{ fontFamily: "var(--font-dm-mono)", color: "var(--tray-muted)", opacity: 0.65 }}
+                  >
+                    Demo login · shared credentials
+                  </p>
+                )}
+
                 <button
                   type="button"
                   onClick={() => openDemo(role.href, role.label)}
                   className="flex w-full items-center justify-between rounded-[1rem] px-4 py-3 transition hover:opacity-85"
                   style={{
-                    background: "var(--tray-ink)",
+                    background: role.authRequired ? "var(--tray-muted)" : "var(--tray-ink)",
                     color: "var(--tray-cream, #EDE5D2)",
                     fontFamily: "var(--font-geist)",
                     fontWeight: 600,
                     fontSize: "0.88rem",
                   }}
                 >
-                  <span>Open {role.label.toLowerCase()} demo</span>
+                  <span>{role.buttonLabel}</span>
                   <span className="transition-transform group-hover:translate-x-1">→</span>
                 </button>
               </div>
