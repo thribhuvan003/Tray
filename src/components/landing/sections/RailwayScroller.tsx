@@ -7,27 +7,24 @@ import { prefersReducedMotion } from "@/lib/motion/tray-motion";
 const portals = [
   {
     index: "01",
-    label: "Student Order",
+    label: "Student Portal",
     badgeColor: "var(--tray-clay)",
-    text: "Order from any canteen. UPI native.",
+    text: "Order from any canteen with native UPI and live queue updates.",
+    href: "/demo/student.html",
   },
   {
     index: "02",
-    label: "Central Hub",
-    badgeColor: "var(--tray-ink)",
-    text: "Live availability & queue sync.",
+    label: "Kitchen Board",
+    badgeColor: "var(--tray-green)",
+    text: "Fulfill orders instantly and broadcast menu specials in real time.",
+    href: "/demo/kitchen.html",
   },
   {
     index: "03",
-    label: "Kitchen fulfillment",
-    badgeColor: "var(--tray-green)",
-    text: "New tickets land instantly.",
-  },
-  {
-    index: "04",
-    label: "Swift Handoff",
-    badgeColor: "var(--tray-clay)",
-    text: "4-digit OTP handover.",
+    label: "Admin Console",
+    badgeColor: "var(--tray-ink)",
+    text: "Manage multiple canteens, monitor live insights, and configure menus.",
+    href: "/demo/admin.html",
   },
 ];
 
@@ -50,17 +47,15 @@ export function RailwayScroller() {
       railwayGlowPath.style.strokeDashoffset = `${svgPathLength}`;
 
       const cardData = [
-        { offset: 0.08, el: cardsRef.current[0], baseX: 0, baseY: 0, baseAngle: 0 },
-        { offset: 0.33, el: cardsRef.current[1], baseX: 0, baseY: 0, baseAngle: 0 },
-        { offset: 0.58, el: cardsRef.current[2], baseX: 0, baseY: 0, baseAngle: 0 },
-        { offset: 0.83, el: cardsRef.current[3], baseX: 0, baseY: 0, baseAngle: 0 },
+        { offset: 0.18, el: cardsRef.current[0], baseX: 0, baseY: 0, baseAngle: 0 },
+        { offset: 0.50, el: cardsRef.current[1], baseX: 0, baseY: 0, baseAngle: 0 },
+        { offset: 0.82, el: cardsRef.current[2], baseX: 0, baseY: 0, baseAngle: 0 },
       ];
 
       const stationData = [
-        { offset: 0.08, el: stationsRef.current[0], y: 0 },
-        { offset: 0.33, el: stationsRef.current[1], y: 0 },
-        { offset: 0.58, el: stationsRef.current[2], y: 0 },
-        { offset: 0.83, el: stationsRef.current[3], y: 0 },
+        { offset: 0.18, el: stationsRef.current[0], y: 0 },
+        { offset: 0.50, el: stationsRef.current[1], y: 0 },
+        { offset: 0.82, el: stationsRef.current[2], y: 0 },
       ];
 
       // Init positions
@@ -273,14 +268,26 @@ export function RailwayScroller() {
           top: 0;
           transform: translate(-50%, -50%) scale(0.92);
           opacity: 0.25;
-          transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s, box-shadow 0.3s;
+          transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s, box-shadow 0.3s, transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
           color: var(--tray-cream);
+        }
+        .railway-card:hover {
+          border-color: rgba(255, 255, 255, 0.25);
+          background: rgba(255, 255, 255, 0.08);
         }
         .railway-card.is-focused {
           opacity: 1;
           border-color: var(--tray-clay);
           background: rgba(255,255,255,0.08);
           box-shadow: 0 16px 40px rgba(184, 83, 26, 0.16);
+        }
+        .railway-card.is-focused:hover {
+          border-color: var(--tray-clay);
+          background: rgba(255,255,255,0.12);
+          box-shadow: 0 20px 48px rgba(184, 83, 26, 0.24);
+        }
+        .railway-card:active {
+          filter: brightness(0.9);
         }
         .railway-card-badge {
           font-size: 0.58rem;
@@ -303,7 +310,7 @@ export function RailwayScroller() {
             <path className="railway-track-bg" d="M 230 0 C 420 300, 40 500, 230 800 C 420 1100, 40 1300, 230 1600 C 420 1900, 40 2100, 230 2400 C 420 2700, 40 2900, 230 3200" />
             <path className="railway-track-glow" ref={pathRef} d="M 230 0 C 420 300, 40 500, 230 800 C 420 1100, 40 1300, 230 1600 C 420 1900, 40 2100, 230 2400 C 420 2700, 40 2900, 230 3200" />
             
-            {[1, 2, 3, 4].map((_, i) => (
+            {[1, 2, 3].map((_, i) => (
               <g key={i} className="railway-station" ref={(el) => { stationsRef.current[i] = el; }}>
                 <circle className="station-ring-outer" cx="0" cy="0" r="24" />
                 <circle className="station-ring-inner" cx="0" cy="0" r="14" />
@@ -313,10 +320,29 @@ export function RailwayScroller() {
           </svg>
 
           {portals.map((p, i) => (
-            <div key={i} className="railway-card" ref={(el) => { cardsRef.current[i] = el; }}>
-              <span className="railway-card-badge" style={{ color: p.badgeColor }}>
-                {p.index} · {p.label}
-              </span>
+            <div
+              key={i}
+              role="button"
+              tabIndex={0}
+              onClick={() => { window.location.href = p.href; }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  window.location.href = p.href;
+                }
+              }}
+              className="railway-card cursor-pointer group/card select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
+              ref={(el) => { cardsRef.current[i] = el; }}
+              style={{ outlineColor: p.badgeColor }}
+            >
+              <div className="flex items-center justify-between mb-3">
+                <span className="railway-card-badge" style={{ color: p.badgeColor, marginBottom: 0 }}>
+                  {p.index} · {p.label}
+                </span>
+                <span className="text-[0.65rem] font-code font-bold uppercase tracking-wider opacity-0 translate-x-[-4px] group-hover/card:opacity-75 group-hover/card:translate-x-0 transition-all text-white/80">
+                  Launch →
+                </span>
+              </div>
               <h3 className="text-2xl font-bold font-editorial mb-2" style={{ color: "var(--tray-cream)" }}>
                 {p.label}
               </h3>

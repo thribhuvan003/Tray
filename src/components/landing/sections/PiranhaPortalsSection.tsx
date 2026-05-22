@@ -125,26 +125,16 @@ export function PiranhaPortalsSection() {
       <div className="pointer-events-none absolute inset-0 opacity-[0.06] [background-image:radial-gradient(circle_at_1px_1px,currentColor_1px,transparent_0)] [background-size:18px_18px]" />
 
       <div
-        className="relative z-10 flex flex-col gap-8 lg:h-full lg:flex-row lg:items-center"
+        className="relative z-10 flex flex-col gap-8 lg:h-full lg:flex-row lg:items-center mx-auto max-w-7xl w-full"
       >
         {/* Heading panel */}
         <div className="lg:w-[45vw] lg:shrink-0 lg:pr-10">
           <div className="mb-5 flex flex-wrap items-center gap-3">
             <p
-              className="text-xs uppercase tracking-[0.34em] opacity-40"
-              style={{ fontFamily: "var(--font-dm-mono)" }}
+              className="text-[0.72rem] font-code font-medium uppercase tracking-[0.24em] opacity-40"
             >
               01 / The system
             </p>
-            <span
-              className="rounded border border-white/10 bg-white/5 px-2.5 py-1 text-[0.6rem] font-bold uppercase tracking-[0.2em]"
-              style={{
-                fontFamily: "var(--font-dm-mono)",
-                color: "var(--tray-clay)",
-              }}
-            >
-              Specimen: FRAUNCES DISPLAY + BARLOW CONDENSED
-            </span>
           </div>
 
           {/* Barlow Condensed 900 — maximum impact */}
@@ -202,9 +192,19 @@ export function PiranhaPortalsSection() {
             <article
               key={portal.label}
               data-portal-card
-              className="motion-card flex min-h-[30rem] flex-col rounded-[2.25rem] bg-white/5 border border-white/10 overflow-hidden"
+              role="button"
+              tabIndex={0}
+              onClick={() => { window.location.href = portal.previewSrc; }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  window.location.href = portal.previewSrc;
+                }
+              }}
+              className="motion-card group flex min-h-[30rem] flex-col rounded-[2.25rem] bg-white/5 border border-white/10 overflow-hidden cursor-pointer select-none transition-all hover:bg-white/10 hover:border-white/20 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
+              style={{ outlineColor: portal.accent }}
             >
-              <div className="flex flex-col p-6">
+              <div className="flex flex-col flex-1 p-6">
                 <div
                   className="mb-8 flex items-center justify-between text-[0.65rem] uppercase tracking-[0.24em]"
                   style={{ fontFamily: "var(--font-dm-mono)", color: "var(--tray-muted)" }}
@@ -232,6 +232,15 @@ export function PiranhaPortalsSection() {
                 <p className="mt-4 text-[0.95rem] leading-7 opacity-65 font-geist">
                   {portal.text}
                 </p>
+
+                <div className="mt-auto pt-8 flex items-center justify-between">
+                  <span className="text-[0.7rem] font-code font-semibold uppercase tracking-[0.12em] opacity-40">
+                    {portal.previewDevice}
+                  </span>
+                  <span className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider opacity-70 group-hover:opacity-100 group-hover:text-white transition-all">
+                    Launch Demo <span className="transition-transform group-hover:translate-x-1">→</span>
+                  </span>
+                </div>
               </div>
             </article>
           ))}

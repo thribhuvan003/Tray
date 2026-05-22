@@ -123,6 +123,8 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
+export const dynamic = "force-dynamic";
+
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const h = await headers();
   const slug = h.get("x-tenant-slug") ?? "aditya";

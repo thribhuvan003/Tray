@@ -69,10 +69,10 @@ export function LandingMotion() {
         if (!killed) {
           const Lenis = ((LenisModule as Record<string, unknown>).default ?? LenisModule) as new (opts: Record<string, unknown>) => LenisLike;
           lenisInstance = new Lenis({
-            duration: 1.4,
+            duration: 2.0,
             easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
             smoothWheel: true,
-            wheelMultiplier: 0.85,
+            wheelMultiplier: 0.70,
           });
           lenisInstance.on("scroll", ScrollTrigger.update);
           const li = lenisInstance;

@@ -157,7 +157,7 @@ export function TrackPanel({ tenantSlug, tenantName, order: initial, lines }: { 
         </p>
         <Link
           href={`/c/${tenantSlug}/menu`}
-          className="mt-6 inline-flex items-center gap-1.5 h-11 px-5 rounded-full bg-ocean-500 text-white text-[13px] font-medium hover:bg-ocean-600 transition-colors"
+          className="mt-6 inline-flex items-center gap-1.5 h-11 px-5 rounded-full bg-ocean-500 text-black text-[13px] font-medium hover:bg-ocean-600 transition-colors"
         >
           Try another order
         </Link>
@@ -233,13 +233,13 @@ export function TrackPanel({ tenantSlug, tenantName, order: initial, lines }: { 
       )}
 
       {!isCancelled && isReady && otp && (
-        <div className="mb-6 rounded-3xl bg-ocean-500 text-white p-6 sm:p-8 relative overflow-hidden">
+        <div className="mb-6 rounded-3xl bg-ocean-500 text-black p-6 sm:p-8 relative overflow-hidden">
           <div
             aria-hidden
-            className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(255,255,255,0.18),transparent_60%)]"
+            className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(0,0,0,0.06),transparent_60%)]"
           />
           <div className="relative">
-            <div className="text-[11px] font-mono uppercase tracking-wider text-white/75 mb-2">
+            <div className="text-[11px] font-mono uppercase tracking-wider text-black/75 mb-2">
               Your pickup code · show at counter
             </div>
             <div
@@ -250,7 +250,7 @@ export function TrackPanel({ tenantSlug, tenantName, order: initial, lines }: { 
             >
               {otp.split("").join(" ")}
             </div>
-            <p className="text-[13px] text-white/80 mt-3">
+            <p className="text-[13px] text-black/80 mt-3">
               Show this code at the counter. You have 3 tries — if it doesn&rsquo;t work, show your order number #{order.short_code} to the staff.
             </p>
           </div>
@@ -299,7 +299,7 @@ export function TrackPanel({ tenantSlug, tenantName, order: initial, lines }: { 
                     done
                       ? "bg-emerald-500 text-white"
                       : active
-                      ? "bg-ocean-500 text-white animate-pulse"
+                      ? "bg-ocean-500 text-black animate-pulse"
                       : "bg-[color:var(--color-paper-dim)] text-[color:var(--color-ink)]/35"
                   )}
                 >

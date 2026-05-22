@@ -89,9 +89,8 @@ export function TrayHero() {
           {/* Eyebrow — first to animate in */}
           <motion.div variants={softFadeUp} className="mb-5 flex flex-wrap items-center gap-3">
             <p
-              className="inline-flex items-center gap-2 rounded-full border px-4 py-1.5 text-xs uppercase tracking-[0.2em]"
+              className="inline-flex items-center gap-2 rounded-full border px-4 py-1.5 text-[0.75rem] font-code uppercase tracking-[0.2em]"
               style={{
-                fontFamily: "var(--font-dm-mono)",
                 color: "var(--tray-muted)",
                 border: "1px solid var(--tray-border)",
                 background: "rgba(255,255,255,0.45)",
@@ -100,17 +99,6 @@ export function TrayHero() {
               <span className="h-1.5 w-1.5 rounded-full animate-pulse" style={{ background: "var(--tray-clay)" }} />
               Campus Edition · Live
             </p>
-            <span
-              className="inline-flex items-center rounded-full border px-3 py-1.5 text-[0.65rem] font-bold uppercase tracking-[0.2em]"
-              style={{
-                fontFamily: "var(--font-dm-mono)",
-                color: "var(--tray-clay)",
-                border: "1px solid var(--tray-border)",
-                background: "rgba(255,255,255,0.45)",
-              }}
-            >
-              Specimen: THUNDER + NEUE HAAS GROTESK
-            </span>
           </motion.div>
 
           {/* H1 — monumental THUNDER style word-stagger reveal */}

@@ -515,7 +515,19 @@ pm run typecheck passes. Restart dev if port 3000 hangs: NODE_OPTIONS=--max-old-
 - **Details:**
   - Removed `<StudioSandbox />` and `<DesignerCustomizer />` components and their imports from `src/components/landing/landing-page.tsx`.
   - Deleted the corresponding ScrollTrigger scroll animation blocks targeting `#sandbox-board` from `src/components/landing/landing-motion.tsx` to maintain clean GSAP orchestration without DOM warnings.
-- **Verified:** Local TypeScript checks, E2E verification tests, and static verification tests pass cleanly. Changes pushed to `origin/main`.
+- **Verified**: Local TypeScript checks, E2E verification tests, and static verification tests pass cleanly. Changes pushed to `origin/main`.
 
+### 2026-05-22 — Visual Alignment and Premium Theme Refinement
 
+- **Shipped**: Refactored Next.js live admin portal components (`canteen-links.tsx` and `kpi-card.tsx`) to use the dynamic theme CSS variables (`var(--admin-*)`) instead of hardcoded dark colors and accents.
+- **Shipped**: Added `--admin-violet` and `--admin-violet-soft` design tokens to `src/app/globals.css` for consistent portal link coloring.
+- **Shipped**: Standardized `public/demo/student.html` display typography to use Google Fonts import of `Fraunces` and `--font-display: "Fraunces"`, matching the live student portal display stack.
+- **Shipped**: Updated `public/demo/admin.html` variables, typography (Fraunces & Manrope), headings, and SVG gradients to align with the Dark Editorial Crimson & Charcoal palette.
+- **Verified**: Local Typechecks (`npm run typecheck`), production builds (`npm run build`), and offline static verifications (`npm run demo:verify`) pass cleanly.
 
+### 2026-05-22 — Interactive Card Redirects & Build System Optimization
+
+- **Completed**: Made all demo preview cards across the landing page fully interactive. Clicking anywhere on the role cards (TryDemoSection) triggers the cinematic transition animation and navigates to the dynamic demo routes.
+- **Completed**: Made both mobile preview cards and desktop curvy railway scroller cards (PiranhaPortalsSection & RailwayScroller) fully clickable, navigating directly to the static HTML prototype views (`student.html`, `kitchen.html`, `admin.html`) with clean focus rings, cursor pointers, scale animations, and hover highlights.
+- **Fixed**: Added `export const dynamic = "force-dynamic"` to `src/app/layout.tsx` and `src/app/page.tsx` to handle request headers resolving multi-tenant configuration dynamically. This resolves the static export failure during page data collection that manifested as the `pages-manifest.json` ENOENT build error.
+- **Verified**: Fully built the Next.js production app (`pnpm build`) and verified offline prototypes (`pnpm demo:verify`) successfully with 100% green status.

@@ -30,8 +30,8 @@ function OrderingLinkBanner({ tenantSlug }: { tenantSlug: string }) {
   }
 
   return (
-    <div className="mx-2 mb-2 rounded-lg border border-[#cdfa50]/20 bg-[#cdfa50]/[0.06] px-3 py-2.5">
-      <div className="text-[10px] font-mono uppercase tracking-[0.12em] text-[#cdfa50]/70 mb-1.5">
+    <div className="mx-2 mb-2 rounded-lg border border-[var(--admin-lime)]/20 bg-[var(--admin-lime)]/[0.06] px-3 py-2.5">
+      <div className="text-[10px] font-mono uppercase tracking-[0.12em] text-[var(--admin-lime)]/70 mb-1.5">
         Student ordering link
       </div>
       <div className="flex items-center gap-1.5">
@@ -39,7 +39,7 @@ function OrderingLinkBanner({ tenantSlug }: { tenantSlug: string }) {
           href={`/c/${tenantSlug}/menu`}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex-1 min-w-0 text-[11px] font-mono text-[#aab3c5] hover:text-[#cdfa50] truncate transition-colors"
+          className="flex-1 min-w-0 text-[11px] font-mono text-[var(--admin-ink-2)] hover:text-[var(--admin-lime)] truncate transition-colors"
         >
           /c/{tenantSlug}/menu
         </a>
@@ -47,7 +47,7 @@ function OrderingLinkBanner({ tenantSlug }: { tenantSlug: string }) {
           type="button"
           onClick={copyLink}
           title="Copy link"
-          className="shrink-0 h-6 w-6 inline-flex items-center justify-center rounded text-[#6d7689] hover:text-[#cdfa50] hover:bg-[#cdfa50]/10 transition-colors"
+          className="shrink-0 h-6 w-6 inline-flex items-center justify-center rounded text-[var(--admin-ink-3)] hover:text-[var(--admin-lime)] hover:bg-[var(--admin-lime)]/10 transition-colors"
         >
           <Copy size={11} />
         </button>
@@ -56,7 +56,7 @@ function OrderingLinkBanner({ tenantSlug }: { tenantSlug: string }) {
           target="_blank"
           rel="noopener noreferrer"
           title="Open in new tab"
-          className="shrink-0 h-6 w-6 inline-flex items-center justify-center rounded text-[#6d7689] hover:text-[#cdfa50] hover:bg-[#cdfa50]/10 transition-colors"
+          className="shrink-0 h-6 w-6 inline-flex items-center justify-center rounded text-[var(--admin-ink-3)] hover:text-[var(--admin-lime)] hover:bg-[var(--admin-lime)]/10 transition-colors"
         >
           <ExternalLink size={11} />
         </a>
@@ -89,41 +89,41 @@ export function AdminShell({
   }
 
   return (
-    <div className="relative z-10 flex" style={{ background: "#0b0e14", minHeight: "100vh" }}>
+    <div className="relative z-10 flex" style={{ background: "var(--admin-bg)", minHeight: "100vh" }}>
       {/* ── Sidebar ─────────────────────────────────────────── */}
       <aside
         className="hidden lg:flex w-[248px] shrink-0 sticky top-0 self-start h-screen flex-col"
         style={{
-          background: "#11151d",
-          borderRight: "1px solid rgba(255,255,255,0.07)",
+          background: "var(--admin-bg-2)",
+          borderRight: "1px solid var(--admin-line)",
         }}
       >
         {/* Brand */}
-        <div style={{ padding: "18px 14px 14px", borderBottom: "1px solid rgba(255,255,255,0.07)", marginBottom: "14px" }}>
+        <div style={{ padding: "18px 14px 14px", borderBottom: "1px solid var(--admin-line)", marginBottom: "14px" }}>
           <Link
             href={`/c/${tenantSlug}/admin/dashboard`}
             className="inline-flex items-center gap-2.5 font-semibold text-[18px] tracking-tight"
-            style={{ color: "#eef1f7", letterSpacing: "-0.025em" }}
+            style={{ color: "var(--admin-ink)", letterSpacing: "-0.025em" }}
           >
-            {/* 28px lime square brand mark with glow */}
+            {/* 28px brand mark with glow */}
             <span
               className="inline-flex items-center justify-center font-mono font-bold text-[13px] shrink-0"
               style={{
                 width: 28,
                 height: 28,
                 borderRadius: 7,
-                background: "#cdfa50",
-                color: "#0b0e14",
-                boxShadow: "0 0 20px rgba(205,250,80,0.32)",
+                background: "var(--admin-lime)",
+                color: "var(--admin-bg)",
+                boxShadow: "0 0 20px var(--admin-lime-soft)",
               }}
             >
               T
             </span>
-            Tray<span className="italic font-medium" style={{ color: "#cdfa50", marginLeft: -2 }}>.</span>
+            Tray<span className="italic font-medium" style={{ color: "var(--admin-lime)", marginLeft: -2 }}>.</span>
           </Link>
           <div
             className="mt-2 font-mono uppercase font-semibold"
-            style={{ fontSize: 10, letterSpacing: "0.14em", color: "#6d7689" }}
+            style={{ fontSize: 10, letterSpacing: "0.14em", color: "var(--admin-ink-3)" }}
           >
             {tenantName}
           </div>
@@ -141,7 +141,7 @@ export function AdminShell({
                   fontSize: 10,
                   letterSpacing: "0.16em",
                   textTransform: "uppercase",
-                  color: "#6d7689",
+                  color: "var(--admin-ink-3)",
                 }}
               >
                 {n.group}
@@ -153,15 +153,15 @@ export function AdminShell({
                 className="group flex items-center gap-[11px] rounded-[7px] font-medium transition-colors"
                 style={{
                   padding: "8px 11px",
-                  background: isActive(n.key) ? "rgba(205,250,80,0.12)" : "transparent",
-                  color: isActive(n.key) ? "#cdfa50" : "#aab3c5",
+                  background: isActive(n.key) ? "var(--admin-lime-soft)" : "transparent",
+                  color: isActive(n.key) ? "var(--admin-lime)" : "var(--admin-ink-2)",
                   fontWeight: isActive(n.key) ? 600 : 500,
                 }}
               >
                 <n.icon
                   size={15}
                   strokeWidth={1.6}
-                  style={{ opacity: isActive(n.key) ? 1 : 0.65, color: isActive(n.key) ? "#cdfa50" : undefined, flexShrink: 0 }}
+                  style={{ opacity: isActive(n.key) ? 1 : 0.65, color: isActive(n.key) ? "var(--admin-lime)" : undefined, flexShrink: 0 }}
                 />
                 <span>{n.label}</span>
                 {"kbd" in n && n.kbd && (
@@ -170,10 +170,10 @@ export function AdminShell({
                     style={{
                       fontSize: 10,
                       padding: "1px 5px",
-                      background: isActive(n.key) ? "rgba(205,250,80,0.06)" : "#171c26",
-                      border: `1px solid ${isActive(n.key) ? "rgba(205,250,80,0.18)" : "rgba(255,255,255,0.13)"}`,
+                      background: isActive(n.key) ? "rgba(230, 0, 0, 0.06)" : "var(--admin-bg-3)",
+                      border: `1px solid ${isActive(n.key) ? "var(--admin-lime-soft)" : "var(--admin-line-2)"}`,
                       borderRadius: 4,
-                      color: isActive(n.key) ? "#cdfa50" : "#6d7689",
+                      color: isActive(n.key) ? "var(--admin-lime)" : "var(--admin-ink-3)",
                     }}
                   >
                     {n.kbd}
@@ -189,7 +189,7 @@ export function AdminShell({
           <OrderingLinkBanner tenantSlug={tenantSlug} />
 
           {/* Portal quick-links in mono */}
-          <div style={{ borderTop: "1px solid rgba(255,255,255,0.07)", padding: "14px 14px 0" }}>
+          <div style={{ borderTop: "1px solid var(--admin-line)", padding: "14px 14px 0" }}>
             {[
               { label: "Kitchen", href: `/c/${tenantSlug}/kitchen` },
               { label: "Student menu", href: `/c/${tenantSlug}/menu` },
@@ -202,12 +202,12 @@ export function AdminShell({
                   padding: "7px 11px",
                   fontFamily: "var(--font-geist-mono), ui-monospace, monospace",
                   fontSize: 11,
-                  color: "#6d7689",
+                  color: "var(--admin-ink-3)",
                   letterSpacing: "0.04em",
                   textTransform: "uppercase",
                 }}
-                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "#171c26"; (e.currentTarget as HTMLElement).style.color = "#eef1f7"; }}
-                onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = ""; (e.currentTarget as HTMLElement).style.color = "#6d7689"; }}
+                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--admin-bg-3)"; (e.currentTarget as HTMLElement).style.color = "var(--admin-ink)"; }}
+                onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = ""; (e.currentTarget as HTMLElement).style.color = "var(--admin-ink-3)"; }}
               >
                 <span>{pl.label}</span>
                 <ExternalLink size={10} />
@@ -220,29 +220,29 @@ export function AdminShell({
             className="flex items-center gap-2.5 mx-[14px] mb-[14px] mt-2 rounded-lg"
             style={{
               padding: "8px 10px",
-              background: "#171c26",
-              border: "1px solid rgba(255,255,255,0.07)",
+              background: "var(--admin-bg-3)",
+              border: "1px solid var(--admin-line)",
             }}
           >
-            {/* Avatar: lime→mint gradient */}
+            {/* Avatar: gradient */}
             <div
               className="shrink-0 inline-flex items-center justify-center rounded-full font-mono font-bold text-[12px]"
               style={{
                 width: 30,
                 height: 30,
-                background: "linear-gradient(135deg, #cdfa50, #3fe6a3)",
-                color: "#0b0e14",
+                background: "linear-gradient(135deg, var(--admin-lime), var(--admin-mint))",
+                color: "var(--admin-bg)",
               }}
             >
               {(userEmail ?? "A").slice(0, 1).toUpperCase()}
             </div>
             <div className="flex-1 min-w-0" style={{ lineHeight: 1.2 }}>
-              <div className="truncate font-semibold" style={{ fontSize: 12.5, color: "#eef1f7" }}>
+              <div className="truncate font-semibold" style={{ fontSize: 12.5, color: "var(--admin-ink)" }}>
                 {userEmail ?? "admin"}
               </div>
               <div
                 className="font-mono"
-                style={{ fontSize: 10, color: "#6d7689", letterSpacing: "0.04em" }}
+                style={{ fontSize: 10, color: "var(--admin-ink-3)", letterSpacing: "0.04em" }}
               >
                 canteen_admin
               </div>
@@ -251,7 +251,7 @@ export function AdminShell({
               href="/auth/signout"
               aria-label="Sign out"
               className="inline-flex items-center justify-center rounded-md transition-colors"
-              style={{ height: 28, width: 28, color: "#6d7689" }}
+              style={{ height: 28, width: 28, color: "var(--admin-ink-3)" }}
             >
               <LogOut size={13} />
             </Link>
@@ -267,24 +267,24 @@ export function AdminShell({
           style={{
             height: 52,
             padding: "0 32px",
-            background: "rgba(11,14,20,0.85)",
+            background: "rgba(26,26,25,0.85)",
             backdropFilter: "blur(10px)",
             WebkitBackdropFilter: "blur(10px)",
-            borderBottom: "1px solid rgba(255,255,255,0.07)",
+            borderBottom: "1px solid var(--admin-line)",
           }}
         >
           {/* Left: tenant context */}
           <div
             className="flex items-center gap-2 font-mono"
-            style={{ fontSize: 11, color: "#6d7689" }}
+            style={{ fontSize: 11, color: "var(--admin-ink-3)" }}
           >
             <span className="hidden sm:inline">
-              <span style={{ color: "#cdfa50" }}>{tenantSlug}</span>.tray.app/admin
+              <span style={{ color: "var(--admin-lime)" }}>{tenantSlug}</span>.tray.app/admin
             </span>
           </div>
           {/* Right: theme toggle + kitchen link */}
           <div className="flex items-center gap-2">
-            <ThemeToggle className="text-[#aab3c5]" />
+            <ThemeToggle className="text-[var(--admin-ink-2)]" />
             <Link
               href={`/c/${tenantSlug}/kitchen`}
               className="hidden md:inline-flex items-center gap-1.5 font-mono uppercase tracking-wider transition-colors"
@@ -292,12 +292,12 @@ export function AdminShell({
                 height: 32,
                 padding: "0 12px",
                 borderRadius: 7,
-                border: "1px solid rgba(255,255,255,0.13)",
+                border: "1px solid var(--admin-line-2)",
                 fontSize: 11,
-                color: "#aab3c5",
+                color: "var(--admin-ink-2)",
               }}
-              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "#cdfa50"; (e.currentTarget as HTMLElement).style.color = "#cdfa50"; }}
-              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.13)"; (e.currentTarget as HTMLElement).style.color = "#aab3c5"; }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "var(--admin-lime)"; (e.currentTarget as HTMLElement).style.color = "var(--admin-lime)"; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "var(--admin-line-2)"; (e.currentTarget as HTMLElement).style.color = "var(--admin-ink-2)"; }}
             >
               <Activity size={11} /> Kitchen
             </Link>
@@ -310,8 +310,8 @@ export function AdminShell({
         <nav
           className="lg:hidden fixed bottom-0 inset-x-0 z-30 border-t backdrop-blur-xl"
           style={{
-            borderColor: "rgba(255,255,255,0.07)",
-            background: "rgba(11,14,20,0.95)",
+            borderColor: "var(--admin-line)",
+            background: "rgba(26,26,25,0.95)",
           }}
         >
           <div className="grid grid-cols-5">
@@ -328,7 +328,7 @@ export function AdminShell({
                 className="flex flex-col items-center justify-center gap-0.5 py-2.5 font-mono uppercase tracking-wider"
                 style={{
                   fontSize: 12,
-                  color: pathname?.startsWith(n.match) ? "#cdfa50" : "#6d7689",
+                  color: pathname?.startsWith(n.match) ? "var(--admin-lime)" : "var(--admin-ink-3)",
                 }}
               >
                 <n.icon size={15} />

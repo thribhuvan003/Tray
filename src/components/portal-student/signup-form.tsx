@@ -142,7 +142,7 @@ export function SignupForm({
         type="submit"
         disabled={pending}
         className={cn(
-          "h-12 rounded-xl bg-ocean-500 text-white text-[14px] font-medium inline-flex items-center justify-center gap-2 hover:bg-ocean-600 transition-colors",
+          "h-12 rounded-xl bg-ocean-500 text-black text-[14px] font-medium inline-flex items-center justify-center gap-2 hover:bg-ocean-600 transition-colors",
           pending && "opacity-70 cursor-not-allowed"
         )}
       >

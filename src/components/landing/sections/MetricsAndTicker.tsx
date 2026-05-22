@@ -69,8 +69,8 @@ function Metric({ value, suffix, label }: { value: number; suffix?: string; labe
       </div>
       {/* DM Mono for label */}
       <p
-        className="text-[0.65rem] uppercase tracking-[0.2em]"
-        style={{ fontFamily: "var(--font-dm-mono)", color: "var(--tray-muted)" }}
+        className="text-[0.72rem] font-code font-semibold uppercase tracking-[0.18em]"
+        style={{ color: "var(--tray-muted)" }}
       >
         {label}
       </p>
@@ -107,22 +107,13 @@ export function CampusTicker() {
       <div className="mx-auto max-w-7xl px-5 sm:px-8 lg:px-10 mb-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
           <span
-            className="text-[0.65rem] uppercase tracking-[0.2em] opacity-45"
-            style={{ fontFamily: "var(--font-dm-mono)", color: "var(--tray-muted)" }}
+            className="text-[0.72rem] font-code font-semibold uppercase tracking-[0.18em] opacity-45"
+            style={{ color: "var(--tray-muted)" }}
           >
             Active network counters
           </span>
           <FSSAIBadge type="veg" />
         </div>
-        <span
-          className="rounded border border-[var(--tray-border)] bg-[var(--tray-surface)] px-2.5 py-1 text-[0.6rem] font-bold uppercase tracking-[0.2em]"
-          style={{
-            fontFamily: "var(--font-dm-mono)",
-            color: "var(--tray-clay)",
-          }}
-        >
-          Specimen: DRUK CONDENSED + NEUE HAAS MONO
-        </span>
       </div>
       <TickerRow items={row1} fontStyle="druk" />
       <TickerRow items={row2} reverse fontStyle="mono" />
@@ -138,8 +129,8 @@ function TickerRow({ items, reverse, fontStyle = "mono" }: { items: string[]; re
         data-ticker-track
         className="flex w-max gap-8 whitespace-nowrap items-center"
         style={{
-          fontFamily: fontStyle === "druk" ? "var(--font-bebas)" : "var(--font-dm-mono)",
-          fontSize: fontStyle === "druk" ? "clamp(1.4rem, 3.5vw, 2rem)" : "0.7rem",
+          fontFamily: fontStyle === "druk" ? "var(--font-bebas)" : "var(--font-code)",
+          fontSize: fontStyle === "druk" ? "clamp(1.4rem, 3.5vw, 2rem)" : "0.75rem",
           letterSpacing: fontStyle === "druk" ? "0.06em" : "0.22em",
           textTransform: "uppercase",
           color: "var(--tray-muted)",

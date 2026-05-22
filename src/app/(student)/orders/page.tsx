@@ -51,7 +51,7 @@ export default async function OrdersPage() {
           <p className="text-[15px] text-[color:var(--color-ink)]/60">No orders yet.</p>
           <Link
             href={`/c/${tenant.slug}/menu`}
-            className="mt-4 inline-flex items-center gap-1.5 h-11 px-5 rounded-full bg-ocean-500 text-white text-[13px] font-medium hover:bg-ocean-600 transition-colors"
+            className="mt-4 inline-flex items-center gap-1.5 h-11 px-5 rounded-full bg-ocean-500 text-black text-[13px] font-medium hover:bg-ocean-600 transition-colors"
           >
             Open the menu →
           </Link>
@@ -90,7 +90,7 @@ export default async function OrdersPage() {
                           ? "bg-rose-500/10 text-rose-600"
                           : meta.tone === "amber"
                           ? "bg-amber-500/10 text-amber-600"
-                          : "bg-ocean-500/10 text-ocean-500")
+                          : "bg-ocean-500/10 text-ocean-900")
                       }
                     >
                       {meta.label}

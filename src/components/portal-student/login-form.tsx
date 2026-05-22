@@ -129,7 +129,7 @@ export function LoginForm({ next, slug = "" }: { next: string; slug?: string }) 
                 type="submit"
                 disabled={otp.length !== 6 || verifying}
                 className={cn(
-                  "h-12 px-4 rounded-xl bg-ocean-500 text-white text-[13.5px] font-medium inline-flex items-center justify-center gap-1.5 hover:bg-ocean-600 transition-colors",
+                  "h-12 px-4 rounded-xl bg-ocean-500 text-black text-[13.5px] font-medium inline-flex items-center justify-center gap-1.5 hover:bg-ocean-600 transition-colors",
                   (otp.length !== 6 || verifying) && "opacity-60 cursor-not-allowed"
                 )}
               >
@@ -176,7 +176,7 @@ export function LoginForm({ next, slug = "" }: { next: string; slug?: string }) 
           onClick={() => setMode("magic")}
           className={cn(
             "h-9 rounded-full inline-flex items-center justify-center gap-1.5 transition-colors",
-            mode === "magic" ? "bg-ocean-500 text-white" : "text-[color:var(--color-ink)]/65"
+            mode === "magic" ? "bg-ocean-500 text-black" : "text-[color:var(--color-ink)]/65"
           )}
         >
           <Mail size={13} /> Magic link
@@ -186,7 +186,7 @@ export function LoginForm({ next, slug = "" }: { next: string; slug?: string }) 
           onClick={() => setMode("password")}
           className={cn(
             "h-9 rounded-full inline-flex items-center justify-center gap-1.5 transition-colors",
-            mode === "password" ? "bg-ocean-500 text-white" : "text-[color:var(--color-ink)]/65"
+            mode === "password" ? "bg-ocean-500 text-black" : "text-[color:var(--color-ink)]/65"
           )}
         >
           <KeyRound size={13} /> Use password
@@ -227,7 +227,7 @@ export function LoginForm({ next, slug = "" }: { next: string; slug?: string }) 
         type="submit"
         disabled={pending}
         className={cn(
-          "h-12 rounded-xl bg-ocean-500 text-white text-[14px] font-medium inline-flex items-center justify-center gap-2 hover:bg-ocean-600 transition-colors",
+          "h-12 rounded-xl bg-ocean-500 text-black text-[14px] font-medium inline-flex items-center justify-center gap-2 hover:bg-ocean-600 transition-colors",
           pending && "opacity-70 cursor-not-allowed"
         )}
       >

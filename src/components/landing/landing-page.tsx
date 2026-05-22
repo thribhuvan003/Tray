@@ -3,6 +3,7 @@ import Link from "next/link";
 import type { ResolvedTenant } from "@/lib/tenant";
 import { TrayHero }             from "@/components/landing/sections/TrayHero";
 import { CampusTicker }         from "@/components/landing/sections/MetricsAndTicker";
+import { TrustSection }          from "@/components/landing/sections/TrustSection";
 import { PiranhaPortalsSection } from "@/components/landing/sections/PiranhaPortalsSection";
 import { CampusModelSection }    from "@/components/landing/sections/CampusModelSection";
 import { TryDemoSection }        from "@/components/landing/sections/TryDemoSection";
@@ -166,6 +167,7 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
 
         <TrayHero />
         <CampusTicker />
+        <TrustSection />
         <PiranhaPortalsSection />
         <CampusModelSection campusName={campusName} />
 
@@ -178,15 +180,6 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
                   style={{ fontFamily: "var(--font-dm-mono)", color: "var(--tray-muted)" }}>
                   02 / Realtime
                 </p>
-                <span
-                  className="rounded border border-[var(--tray-border)] bg-[var(--tray-surface)] px-2.5 py-1 text-[0.6rem] font-bold uppercase tracking-[0.2em]"
-                  style={{
-                    fontFamily: "var(--font-dm-mono)",
-                    color: "var(--tray-clay)",
-                  }}
-                >
-                  Specimen: CORMORANT GARAMOND + GEIST SANS
-                </span>
               </div>
             </RevealItem>
 
@@ -235,15 +228,6 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
               >
                 From the kitchen
               </p>
-              <span
-                className="rounded border border-white/10 bg-white/5 px-2.5 py-1 text-[0.6rem] font-bold uppercase tracking-[0.2em]"
-                style={{
-                  fontFamily: "var(--font-manrope)",
-                  color: "var(--tray-clay)",
-                }}
-              >
-                Specimen: DM SERIF + MANROPE
-              </span>
             </div>
             {/* DM Serif Display — bold and striking serif */}
             <blockquote
@@ -278,15 +262,6 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
                 className="text-xs uppercase tracking-[0.3em]"
                 style={{ fontFamily: "var(--font-dm-mono)", color: "var(--tray-muted)" }}
               >03 / How it works</p>
-              <span
-                className="rounded border border-[var(--tray-border)] bg-[var(--tray-surface)] px-2.5 py-1 text-[0.6rem] font-bold uppercase tracking-[0.2em]"
-                style={{
-                  fontFamily: "var(--font-dm-mono)",
-                  color: "var(--tray-clay)",
-                }}
-              >
-                Specimen: NEWSREADER + GEIST SANS
-              </span>
             </div>
             {/* Newsreader for editorial section heads */}
             <h2
@@ -338,15 +313,6 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
                 className="text-xs uppercase tracking-[0.3em]"
                 style={{ fontFamily: "var(--font-dm-mono)", color: "var(--tray-muted)" }}
               >04 / Built with</p>
-              <span
-                className="rounded border border-[var(--tray-border)] bg-[var(--tray-surface)] px-2.5 py-1 text-[0.6rem] font-bold uppercase tracking-[0.2em]"
-                style={{
-                  fontFamily: "var(--font-dm-mono)",
-                  color: "var(--tray-clay)",
-                }}
-              >
-                Specimen: SPACE GROTESK + JETBRAINS MONO
-              </span>
             </div>
             <h2
               className="leading-[0.88] tracking-[-0.04em]"
@@ -453,15 +419,6 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
               <p className="text-xs uppercase tracking-[0.3em]" style={{ fontFamily: "var(--font-dm-mono)", color: "var(--tray-muted)" }}>
                 Ship it
               </p>
-              <span
-                className="rounded border border-[var(--tray-border)] bg-[var(--tray-surface)] px-2.5 py-1 text-[0.6rem] font-bold uppercase tracking-[0.2em]"
-                style={{
-                  fontFamily: "var(--font-dm-mono)",
-                  color: "var(--tray-clay)",
-                }}
-              >
-                Specimen: THUNDER + FRAUNCES ITALIC
-              </span>
             </div>
           </RevealItem>
           <RevealItem>

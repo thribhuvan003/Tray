@@ -6,6 +6,7 @@ import { Minus, Plus, ShoppingBag, ShoppingCart, Trash2, UtensilsCrossed, X } fr
 import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { motion } from "framer-motion";
 import { useCart, cartTotalPaise, cartItemCount } from "@/lib/cart/store";
 import { formatRupees, cn } from "@/lib/utils";
 import { placeOrder } from "@/app/(student)/_actions";
@@ -189,7 +190,7 @@ export function CartDrawer({ tenantSlug, tenantName }: { tenantSlug: string; ten
               onClick={() => setOrderType("takeaway")}
               className={cn(
                 "h-10 inline-flex items-center justify-center gap-2 rounded-lg text-[13px] font-medium transition-colors",
-                orderType === "takeaway" ? "bg-ocean-500 text-white" : "text-[color:var(--color-ink)]/70"
+                orderType === "takeaway" ? "bg-ocean-500 text-black" : "text-[color:var(--color-ink)]/70"
               )}
             >
               <ShoppingBag size={14} /> Takeaway
@@ -200,7 +201,7 @@ export function CartDrawer({ tenantSlug, tenantName }: { tenantSlug: string; ten
               onClick={() => setOrderType("dine_in")}
               className={cn(
                 "h-10 inline-flex items-center justify-center gap-2 rounded-lg text-[13px] font-medium transition-colors",
-                orderType === "dine_in" ? "bg-ocean-500 text-white" : "text-[color:var(--color-ink)]/70"
+                orderType === "dine_in" ? "bg-ocean-500 text-black" : "text-[color:var(--color-ink)]/70"
               )}
             >
               <UtensilsCrossed size={14} /> Dine-in
@@ -239,7 +240,7 @@ export function CartDrawer({ tenantSlug, tenantName }: { tenantSlug: string; ten
               onClick={onCheckout}
               disabled={pending}
               className={cn(
-                "inline-flex items-center gap-2 h-12 px-6 rounded-full bg-ocean-500 text-white text-[14px] font-medium hover:bg-ocean-600 transition-colors",
+                "inline-flex items-center gap-2 h-12 px-6 rounded-full bg-ocean-500 text-black text-[14px] font-medium hover:bg-ocean-600 transition-colors",
                 pending && "opacity-70 cursor-not-allowed"
               )}
             >
@@ -273,13 +274,21 @@ export function CartDrawer({ tenantSlug, tenantName }: { tenantSlug: string; ten
       <Drawer.Trigger asChild>
         <button
           aria-label={`View cart — ${count} items, ${formatRupees(total)}`}
-          className="fixed bottom-5 left-1/2 -translate-x-1/2 z-30 inline-flex items-center gap-3 rounded-full bg-ocean-500 text-white px-5 h-12 shadow-[0_10px_30px_-10px_rgba(0,102,255,0.6)] hover:bg-ocean-600 transition-colors"
+          className="fixed bottom-5 left-1/2 -translate-x-1/2 z-30 inline-flex items-center gap-3 rounded-full bg-ocean-500 text-black px-5 h-12 shadow-[0_10px_30px_-10px_rgba(0,102,255,0.6)] hover:bg-ocean-600 transition-colors"
         >
           <span className="inline-flex items-center gap-1.5">
-            <ShoppingCart size={15} />
-            <span className="text-[13px] font-medium">{count} item{count === 1 ? "" : "s"}</span>
+            <motion.span
+              key={count}
+              initial={{ scale: 0.8 }}
+              animate={{ scale: [1, 1.25, 0.9, 1], rotate: [0, -8, 8, 0] }}
+              transition={{ duration: 0.35, ease: "easeOut" }}
+              className="inline-flex items-center gap-1.5"
+            >
+              <ShoppingCart size={15} />
+              <span className="text-[13px] font-medium">{count} item{count === 1 ? "" : "s"}</span>
+            </motion.span>
           </span>
-          <span className="h-4 w-px bg-white/30" />
+          <span className="h-4 w-px bg-black/30" />
           <span className="text-[13px] font-medium tabular">{formatRupees(total)}</span>
           <span className="text-[12px] font-mono uppercase tracking-wider opacity-90">View cart →</span>
         </button>

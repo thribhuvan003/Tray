@@ -105,15 +105,6 @@ export function TryDemoSection() {
           >
             Live demo · no sign-up · 90-second tour
           </p>
-          <span
-            className="rounded border border-[var(--tray-border)] bg-[var(--tray-surface)] px-2.5 py-1 text-[0.6rem] font-bold uppercase tracking-[0.2em]"
-            style={{
-              fontFamily: "var(--font-dm-mono)",
-              color: "var(--tray-clay)",
-            }}
-          >
-            Specimen: THUNDER + NEUE HAAS GROTESK
-          </span>
         </div>
 
         {/* Barlow Condensed 900 headline */}
@@ -154,11 +145,21 @@ export function TryDemoSection() {
             <article
               key={role.label}
               data-demo-card
-              className="group flex flex-col overflow-hidden rounded-[2.25rem] border transition-all"
+              role="button"
+              tabIndex={0}
+              onClick={() => openDemo(role.href, role.label)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  openDemo(role.href, role.label);
+                }
+              }}
+              className="group flex flex-col overflow-hidden rounded-[2.25rem] border transition-all cursor-pointer select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
               style={{
                 border: "1px solid var(--tray-border)",
                 background: "rgba(255,255,255,0.58)",
                 boxShadow: "0 16px 48px rgba(26,22,20,0.08)",
+                outlineColor: "var(--tray-clay)",
               }}
               onMouseEnter={(e) => {
                 (e.currentTarget as HTMLElement).style.transform = "translateY(-6px)";
@@ -173,8 +174,8 @@ export function TryDemoSection() {
               <div className="flex items-start justify-between px-5 pt-5 pb-4">
                 <div>
                   <span
-                    className="mb-1 block text-[0.62rem] uppercase tracking-[0.2em]"
-                    style={{ fontFamily: "var(--font-dm-mono)", color: "var(--tray-muted)" }}
+                    className="mb-1 block text-[0.72rem] font-code font-semibold uppercase tracking-[0.2em]"
+                    style={{ color: "var(--tray-muted)" }}
                   >
                     {role.tag}
                   </span>
@@ -223,9 +224,8 @@ export function TryDemoSection() {
                   style={{ background: "linear-gradient(180deg, transparent 55%, rgba(255,255,255,0.58) 100%)" }}
                 />
                 <span
-                  className="absolute left-3 top-3 rounded-md px-2 py-1 text-[0.6rem] uppercase tracking-[0.12em] backdrop-blur-sm"
+                  className="absolute left-3 top-3 rounded-md px-2.5 py-1.5 text-[0.7rem] font-code font-semibold uppercase tracking-[0.12em] backdrop-blur-sm"
                   style={{
-                    fontFamily: "var(--font-dm-mono)",
                     color: "var(--tray-ink)",
                     background: "rgba(255,255,255,0.70)",
                     border: "1px solid var(--tray-border)",
@@ -253,10 +253,8 @@ export function TryDemoSection() {
                   </p>
                 )}
 
-                <button
-                  type="button"
-                  onClick={() => openDemo(role.href, role.label)}
-                  className="flex w-full items-center justify-between rounded-[1rem] px-4 py-3 transition hover:opacity-85"
+                <div
+                  className="flex w-full items-center justify-between rounded-[1rem] px-4 py-3 transition group-hover:opacity-85"
                   style={{
                     background: role.authRequired ? "var(--tray-muted)" : "var(--tray-ink)",
                     color: "var(--tray-cream, #EDE5D2)",
@@ -267,7 +265,7 @@ export function TryDemoSection() {
                 >
                   <span>{role.buttonLabel}</span>
                   <span className="transition-transform group-hover:translate-x-1">→</span>
-                </button>
+                </div>
               </div>
             </article>
           ))}

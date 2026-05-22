@@ -49,15 +49,6 @@ export function CampusModelSection({ campusName }: { campusName?: string | null 
             <p className="font-code text-xs uppercase tracking-[0.3em] text-[var(--tray-muted)]">
               Campus Edition
             </p>
-            <span
-              className="rounded border border-[var(--tray-border)] bg-[var(--tray-surface)] px-2.5 py-1 text-[0.6rem] font-bold uppercase tracking-[0.2em]"
-              style={{
-                fontFamily: "var(--font-dm-mono)",
-                color: "var(--tray-clay)",
-              }}
-            >
-              Specimen: INSTRUMENT SERIF + PLUS JAKARTA SANS
-            </span>
           </div>
         </RevealItem>
 
@@ -129,8 +120,8 @@ export function CampusModelSection({ campusName }: { campusName?: string | null 
                           style={{ fontFamily: "var(--font-jakarta)", color: "var(--tray-ink)" }}>
                           {r.role}
                         </span>
-                        <span className="rounded-full px-2.5 py-0.5 text-[0.58rem] uppercase tracking-[0.16em]"
-                          style={{ fontFamily: "var(--font-dm-mono)", background: `${r.color}18`, color: r.color }}>
+                        <span className="rounded-full px-3 py-1 text-[0.72rem] font-code font-bold uppercase tracking-[0.16em]"
+                          style={{ background: `${r.color}18`, color: r.color }}>
                           {r.scope}
                         </span>
                       </div>

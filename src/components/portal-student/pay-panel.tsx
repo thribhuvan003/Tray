@@ -170,7 +170,7 @@ export function PayPanel({
           {/* Mobile: "Open UPI app" is the hero CTA */}
           <a
             href={upiUri}
-            className="md:hidden w-full h-14 text-[15px] inline-flex items-center justify-center gap-2 rounded-full border-2 border-ocean-500 text-ocean-500 bg-transparent font-medium hover:bg-ocean-50 dark:hover:bg-ocean-500/10 transition-colors mb-1"
+            className="md:hidden w-full h-14 text-[15px] inline-flex items-center justify-center gap-2 rounded-full border-2 border-ocean-600 text-ocean-900 bg-transparent font-medium hover:bg-ocean-100/50 dark:hover:bg-ocean-500/15 transition-colors mb-1"
           >
             <Smartphone size={16} /> Open UPI app
           </a>
@@ -185,7 +185,7 @@ export function PayPanel({
           </div>
           <a
             href={upiUri}
-            className="hidden md:inline-flex mt-5 items-center gap-2 h-11 px-5 rounded-full bg-ocean-500 text-white text-[13px] font-medium hover:bg-ocean-600 transition-colors"
+            className="hidden md:inline-flex mt-5 items-center gap-2 h-11 px-5 rounded-full bg-ocean-500 text-black text-[13px] font-medium hover:bg-ocean-600 transition-colors"
           >
             <Smartphone size={14} /> Open UPI app
           </a>
@@ -281,7 +281,7 @@ export function PayPanel({
           <button
             onClick={onIvePaid}
             disabled={verifying || Boolean(expired)}
-            className="inline-flex items-center justify-center gap-2 h-12 rounded-xl bg-ocean-500 text-white text-[14px] font-medium hover:bg-ocean-600 disabled:opacity-50 transition-colors"
+            className="inline-flex items-center justify-center gap-2 h-12 rounded-xl bg-ocean-500 text-black text-[14px] font-medium hover:bg-ocean-600 disabled:opacity-50 transition-colors"
           >
             {verifying ? (
               <>
@@ -302,7 +302,7 @@ export function PayPanel({
               <button
                 onClick={onSimulate}
                 disabled={pending}
-                className="inline-flex items-center justify-center gap-2 h-11 rounded-xl border border-dashed border-ocean-500/40 text-ocean-500 text-[13px] font-medium hover:bg-ocean-50 dark:hover:bg-ocean-500/10 transition-colors"
+                className="inline-flex items-center justify-center gap-2 h-11 rounded-xl border border-dashed border-ocean-600/40 text-ocean-900 text-[13px] font-medium hover:bg-ocean-50 dark:hover:bg-ocean-500/10 transition-colors"
               >
                 <Sparkles size={14} /> DEV · simulate paid
               </button>

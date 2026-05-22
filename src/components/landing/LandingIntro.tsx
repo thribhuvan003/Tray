@@ -27,8 +27,8 @@ export function LandingIntro() {
       return () => window.clearTimeout(timeout);
     }
 
-    // Counting phase: 0 to 100 in 900ms
-    const duration = 900;
+    // Counting phase: 0 to 100 in 1400ms
+    const duration = 1400;
     const startTime = performance.now();
 
     let frameId: number;
@@ -46,10 +46,10 @@ export function LandingIntro() {
         frameId = requestAnimationFrame(updateCount);
       } else {
         setPhase("reveal");
-        // Hold on reveal phase for 1.2s, then hide
+        // Hold on reveal phase for 1.6s, then hide
         const fadeTimeout = window.setTimeout(() => {
           setShow(false);
-        }, 1200);
+        }, 1600);
         return () => window.clearTimeout(fadeTimeout);
       }
     };
@@ -109,7 +109,7 @@ export function LandingIntro() {
                 </div>
                 <div className="mt-4 flex items-center gap-3">
                   <span className="h-1.5 w-1.5 rounded-full bg-[#FAF8F5] opacity-50 animate-pulse" />
-                  <span className="text-xs uppercase tracking-[0.3em] opacity-45" style={{ fontFamily: "var(--font-outfit)" }}>
+                  <span className="text-xs uppercase tracking-[0.3em] opacity-45" style={{ fontFamily: "var(--font-ui)" }}>
                     Initializing Campus Core
                   </span>
                 </div>
@@ -127,9 +127,20 @@ export function LandingIntro() {
                 className="flex flex-col items-center"
                 style={{ perspective: "1200px", transformStyle: "preserve-3d" }}
               >
+                {/* Brand Logo Mark */}
+                <motion.div
+                  initial={{ scale: 0.75, rotateY: -90, opacity: 0 }}
+                  animate={{ scale: 1, rotateY: 0, opacity: 1 }}
+                  transition={{ duration: 1.1, ease: [0.16, 1, 0.3, 1] }}
+                  className="mb-6 flex h-24 w-24 items-center justify-center rounded-3xl bg-[#FAF8F5] text-[52px] font-black text-[#000000] shadow-[0_0_60px_rgba(250,248,245,0.15)] font-editorial relative overflow-hidden"
+                >
+                  <span className="absolute inset-0 bg-gradient-to-tr from-[#FAF8F5]/10 to-[#FAF8F5]/40 opacity-50" />
+                  T
+                </motion.div>
+
                 {/* Unified Monumental Mask Reveal */}
                 <div 
-                   className="overflow-hidden py-4 px-10 flex justify-center items-center"
+                   className="overflow-hidden py-2 px-10 flex justify-center items-center"
                    style={{ transformStyle: "preserve-3d" }}
                 >
                   <motion.h1
@@ -149,7 +160,7 @@ export function LandingIntro() {
                       duration: 1.35,
                       ease: [0.16, 1, 0.3, 1]
                     }}
-                    className="text-[clamp(10rem,32vw,30rem)] font-normal italic leading-none select-none text-[#FAF8F5] tracking-[-0.05em] lowercase"
+                    className="text-[clamp(6rem,18vw,14rem)] font-normal italic leading-none select-none text-[#FAF8F5] tracking-[-0.05em] lowercase"
                     style={{
                       fontFamily: "var(--font-newsreader)",
                       transformOrigin: "center bottom",
@@ -166,7 +177,7 @@ export function LandingIntro() {
                     animate={{ y: 0, opacity: 1 }}
                     transition={{ duration: 0.8, delay: 0.35, ease: [0.16, 1, 0.3, 1] }}
                     className="text-xs uppercase tracking-[0.35em] text-[#FAF8F5] opacity-60 font-medium"
-                    style={{ fontFamily: "var(--font-outfit)" }}
+                    style={{ fontFamily: "var(--font-ui)" }}
                   >
                     Campus food suite · Unified
                   </motion.p>

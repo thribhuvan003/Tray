@@ -61,7 +61,7 @@ export function CanteenSwitcher({
                 {selected.isOpen ? "Open now" : "Closed"}
               </p>
             </div>
-            <span className="mt-2 rounded-full bg-ocean-500 p-2 text-white">
+            <span className="mt-2 rounded-full bg-ocean-500 p-2 text-black">
               <ChevronDown size={18} />
             </span>
           </div>
@@ -131,7 +131,7 @@ export function CanteenSwitcher({
                         className={[
                           "font-code rounded-full px-2.5 py-1 text-[0.6rem] uppercase tracking-[0.14em]",
                           canteen.isOpen
-                            ? "bg-ocean-500/10 text-ocean-600"
+                            ? "bg-ocean-500/10 text-ocean-900"
                             : "bg-[color:var(--color-ink)]/08 text-[color:var(--color-ink)]/45",
                         ].join(" ")}
                       >

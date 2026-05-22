@@ -173,9 +173,9 @@ export function DashboardView({
       {isFirstDay && (
         <div
           className="mb-5 rounded-xl p-5"
-          style={{ border: "1px solid rgba(205,250,80,0.25)", background: "rgba(205,250,80,0.05)" }}
+          style={{ border: "1px solid var(--admin-line-2)", background: "var(--admin-bg-card)" }}
         >
-          <div className="text-[13px] font-semibold mb-3" style={{ color: "#cdfa50" }}>
+          <div className="text-[13px] font-semibold mb-3" style={{ color: "var(--admin-lime)" }}>
             Welcome! Here&rsquo;s how to get your first order in 3 steps:
           </div>
           <ol className="flex flex-col gap-2.5">
@@ -203,11 +203,11 @@ export function DashboardView({
               <li key={step.n} className="flex items-start gap-3">
                 <span
                   className="mt-0.5 shrink-0 h-5 w-5 rounded-full text-[11px] font-bold inline-flex items-center justify-center"
-                  style={{ background: "rgba(205,250,80,0.20)", color: "#cdfa50" }}
+                  style={{ background: "var(--admin-lime-soft)", color: "var(--admin-lime)" }}
                 >
                   {step.n}
                 </span>
-                <div className="flex flex-col gap-1.5 flex-1 text-[13px]" style={{ color: "#aab3c5" }}>
+                <div className="flex flex-col gap-1.5 flex-1 text-[13px]" style={{ color: "var(--admin-ink-2)" }}>
                   <span>{step.text}</span>
                   {"copyStudentLink" in step && step.copyStudentLink && (
                     <button
@@ -215,7 +215,7 @@ export function DashboardView({
                         const origin = typeof window !== "undefined" ? window.location.origin : "";
                         navigator.clipboard.writeText(`${origin}/c/${tenantSlug}/menu`).catch(() => undefined);
                       }}
-                      className="inline-flex items-center gap-1.5 text-[12px] font-mono bg-lime/10 border border-lime/20 text-lime px-3 py-1.5 rounded-lg hover:bg-lime/20 transition-colors w-fit"
+                      className="inline-flex items-center gap-1.5 text-[12px] font-mono bg-[var(--admin-lime-soft)] border border-[var(--admin-lime)]/20 text-[var(--admin-lime)] px-3 py-1.5 rounded-lg hover:bg-[var(--admin-lime)]/20 transition-colors w-fit"
                     >
                       <Copy size={11} /> Copy student link
                     </button>
@@ -224,7 +224,7 @@ export function DashboardView({
                     <a
                       href={step.href}
                       className="ml-2 text-[12px] font-medium hover:underline inline-flex items-center gap-0.5"
-                      style={{ color: "#cdfa50" }}
+                      style={{ color: "var(--admin-lime)" }}
                     >
                       {step.cta} <ArrowRight size={11} />
                     </a>
@@ -239,18 +239,18 @@ export function DashboardView({
       {/* ── Page heading + topbar-style row ─────────────────────────── */}
       <div
         className="flex flex-wrap items-end justify-between gap-3 mb-6 pb-5"
-        style={{ borderBottom: "1px solid rgba(255,255,255,0.07)" }}
+        style={{ borderBottom: "1px solid var(--admin-line)" }}
       >
         <div>
           <h1
             className="font-semibold leading-tight"
-            style={{ fontSize: 24, letterSpacing: "-0.025em", color: "#eef1f7" }}
+            style={{ fontSize: 24, letterSpacing: "-0.025em", color: "var(--admin-ink)" }}
           >
             Today&rsquo;s overview
           </h1>
           <div
             className="font-mono uppercase mt-1"
-            style={{ fontSize: 11, letterSpacing: "0.06em", color: "#6d7689" }}
+            style={{ fontSize: 11, letterSpacing: "0.06em", color: "var(--admin-ink-3)" }}
           >
             {dayjs().format("ddd · D MMM YYYY").toUpperCase()} · {tenantName.toUpperCase()} · COUNTER 01
           </div>
@@ -263,12 +263,12 @@ export function DashboardView({
               height: 36,
               padding: "0 12px",
               borderRadius: 7,
-              border: "1px solid rgba(255,255,255,0.13)",
+              border: "1px solid var(--admin-line-2)",
               fontSize: 11,
-              color: "#aab3c5",
+              color: "var(--admin-ink-2)",
             }}
-            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "#cdfa50"; (e.currentTarget as HTMLElement).style.color = "#cdfa50"; }}
-            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.13)"; (e.currentTarget as HTMLElement).style.color = "#aab3c5"; }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "var(--admin-lime)"; (e.currentTarget as HTMLElement).style.color = "var(--admin-lime)"; }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "var(--admin-line-2)"; (e.currentTarget as HTMLElement).style.color = "var(--admin-ink-2)"; }}
           >
             <Download size={11} /> Export CSV
           </a>
@@ -317,27 +317,27 @@ export function DashboardView({
                 className="relative overflow-hidden flex flex-col gap-3 transition-colors"
                 style={{
                   padding: "18px 20px",
-                  background: "#0f131b",
-                  border: "1px solid rgba(255,255,255,0.07)",
+                  background: "var(--admin-bg-card)",
+                  border: "1px solid var(--admin-line)",
                   borderRadius: 12,
-                  boxShadow: "3px 3px 0 rgba(238,241,247,0.08)",
+                  boxShadow: "3px 3px 0 var(--admin-line)",
                 }}
               >
                 <div
                   className="inline-flex items-center justify-center rounded-md"
-                  style={{ height: 28, width: 28, background: "rgba(255,255,255,0.05)" }}
+                  style={{ height: 28, width: 28, background: "var(--admin-bg-3)" }}
                 >
-                  <card.icon size={13} strokeWidth={1.6} style={{ color: "#6d7689" }} />
+                  <card.icon size={13} strokeWidth={1.6} style={{ color: "var(--admin-ink-3)" }} />
                 </div>
                 <div
                   className="font-mono uppercase font-medium"
-                  style={{ fontSize: 11, letterSpacing: "0.12em", color: "#6d7689" }}
+                  style={{ fontSize: 11, letterSpacing: "0.12em", color: "var(--admin-ink-3)" }}
                 >
                   {card.label}
                 </div>
                 <p
                   className="leading-snug"
-                  style={{ fontSize: 13, color: "#aab3c5", margin: 0 }}
+                  style={{ fontSize: 13, color: "var(--admin-ink-2)", margin: 0 }}
                 >
                   {card.prompt}
                 </p>
@@ -345,7 +345,7 @@ export function DashboardView({
                   <a
                     href={card.href}
                     className="font-mono font-medium hover:underline"
-                    style={{ fontSize: 11, color: "#cdfa50", letterSpacing: "0.04em" }}
+                    style={{ fontSize: 11, color: "var(--admin-lime)", letterSpacing: "0.04em" }}
                   >
                     {card.cta}
                   </a>

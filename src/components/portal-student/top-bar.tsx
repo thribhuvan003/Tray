@@ -70,7 +70,7 @@ export function StudentTopBar({ tenant, siblings = [] }: Props) {
           aria-label="Back to Tray home"
         >
           <span
-            className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-ocean-500 text-white text-[12px] transition group-hover:scale-105"
+            className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-ocean-500 text-black text-[12px] transition group-hover:scale-105"
             style={{ fontFamily: "var(--font-barlow, var(--font-geist))", fontWeight: 900 }}
           >T</span>
           <span
