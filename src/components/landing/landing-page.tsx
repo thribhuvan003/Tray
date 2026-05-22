@@ -6,10 +6,8 @@ import { CampusTicker }         from "@/components/landing/sections/MetricsAndTi
 import { PiranhaPortalsSection } from "@/components/landing/sections/PiranhaPortalsSection";
 import { CampusModelSection }    from "@/components/landing/sections/CampusModelSection";
 import { TryDemoSection }        from "@/components/landing/sections/TryDemoSection";
-import { StudioSandbox }        from "@/components/landing/sections/StudioSandbox";
 import { LandingIntro }          from "@/components/landing/LandingIntro";
 import { LandingMotion }         from "@/components/landing/landing-motion";
-import { DesignerCustomizer }    from "@/components/landing/DesignerCustomizer";
 import {
   AnimatedNav,
   SectionReveal,
@@ -168,7 +166,6 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
 
         <TrayHero />
         <CampusTicker />
-        <StudioSandbox />
         <PiranhaPortalsSection />
         <CampusModelSection campusName={campusName} />
 
@@ -613,7 +610,6 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
           </div>
         </div>
       </footer>
-      <DesignerCustomizer />
     </div>
   );
 }

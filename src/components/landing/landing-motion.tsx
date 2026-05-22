@@ -310,27 +310,6 @@ export function LandingMotion() {
         duration: 1.0,
         ease: "power3.out",
       });
-
-      // ── Sandbox Board: stagger slide up and elastic pops ────────────────
-      gsap.from(".tray-landing #sandbox-board .mx-auto > div:first-child", {
-        scrollTrigger: { trigger: ".tray-landing #sandbox-board", start: "top 85%" },
-        y: 60,
-        opacity: 0,
-        duration: 1.1,
-        ease: "power3.out",
-      });
-
-      gsap.from(".tray-landing #sandbox-board .grid > div", {
-        scrollTrigger: { trigger: ".tray-landing #sandbox-board", start: "top 80%" },
-        scale: 0.94,
-        y: 50,
-        opacity: 0,
-        stagger: 0.15,
-        duration: 1.3,
-        ease: "elastic.out(1, 0.8)",
-        transformPerspective: 1200,
-      });
-
       // ── Real-time Sync: Bespoke bouncy elastic reveals ───────────────────
       gsap.from(".tray-landing #sync .grid > div", {
         scrollTrigger: { trigger: ".tray-landing #sync", start: "top 78%" },
