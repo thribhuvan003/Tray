@@ -246,7 +246,7 @@ export function TryDemoSection() {
 
                 {role.authRequired && (
                   <p
-                    className="text-[0.62rem] uppercase tracking-[0.16em]"
+                    className="text-[0.72rem] uppercase tracking-[0.16em]"
                     style={{ fontFamily: "var(--font-dm-mono)", color: "var(--tray-muted)", opacity: 0.65 }}
                   >
                     Demo login · shared credentials

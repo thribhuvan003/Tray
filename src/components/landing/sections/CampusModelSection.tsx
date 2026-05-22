@@ -80,7 +80,7 @@ export function CampusModelSection({ campusName }: { campusName?: string | null 
 
           {/* Left: canteen grid */}
           <div>
-            <p className="mb-4 text-[0.65rem] uppercase tracking-[0.28em]"
+            <p className="mb-4 text-[0.75rem] uppercase tracking-[0.28em]"
               style={{ fontFamily: "var(--font-dm-mono)", color: "var(--tray-muted)" }}>
               {campusName || "Your University"} · active canteens
             </p>
@@ -94,7 +94,7 @@ export function CampusModelSection({ campusName }: { campusName?: string | null 
                   <span className="text-2xl">{c.icon}</span>
                   <p className="mt-3 font-semibold tracking-tight"
                     style={{ fontFamily: "var(--font-jakarta)" }}>{c.name}</p>
-                  <p className="mt-1 text-[0.62rem] uppercase tracking-[0.14em]"
+                  <p className="mt-1 text-[0.72rem] uppercase tracking-[0.14em]"
                     style={{ fontFamily: "var(--font-dm-mono)", color: "var(--tray-muted)" }}>{c.tag}</p>
                 </HoverCard>
               ))}
@@ -103,7 +103,7 @@ export function CampusModelSection({ campusName }: { campusName?: string | null 
 
           {/* Right: role access table */}
           <div className="flex flex-col gap-3">
-            <p className="mb-1 text-[0.65rem] uppercase tracking-[0.28em]"
+            <p className="mb-1 text-[0.75rem] uppercase tracking-[0.28em]"
               style={{ fontFamily: "var(--font-dm-mono)", color: "var(--tray-muted)" }}>
               Role access
             </p>

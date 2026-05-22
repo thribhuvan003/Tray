@@ -539,3 +539,10 @@ pm run typecheck passes. Restart dev if port 3000 hangs: NODE_OPTIONS=--max-old-
 - **Completed**: Cart floating trigger button: cart count badge now uses Framer Motion scale + wiggle keyframe (`scale: [1,1.25,0.9,1], rotate: [0,-8,8,0]`) on each item count change for tactile feedback.
 - **Completed**: Landing Railway Scroller (`RailwayScroller.tsx`) — confirmed 3-station configuration (Student Portal `0.18`, Kitchen Board `0.50`, Admin Console `0.82`) matching the mobile portal card fallback. Each card is a full-width clickable `role=button` with keyboard (Enter/Space) support, `is-focused` focus class, and slide-in "Launch →" CTA on hover.
 - **Verified**: `pnpm typecheck` → 0 errors. `pnpm lint` → 0 warnings/errors. `pnpm demo:verify` → 100% pass. `pnpm build` → ✓ Compiled successfully. Pushed to `origin/main` under owner `thribhuvan003`.
+
+### 2026-05-22 — Cinematic Preloader Timing, Smooth Scrolling & Font Scale Upgrades
+
+- **Completed**: Tuned preloader counts and transitions (`LandingIntro.tsx`) to last exactly 3.0 seconds, featuring a slower 1600ms count-up and 1400ms reveal hold, along with scaled up counter font sizes (`clamp(8rem,22vw,18rem)`) and brand text sizes (`clamp(7rem,20vw,16rem)`) for a cinematic, immersive look.
+- **Completed**: Hardened scrolling physics in `landing-motion.tsx` for a slower, ultra-premium experience. Set Lenis duration to `2.2` and wheel multiplier to `0.55`. Slowed down character hero stagger animations and scroll-reveals to ensure silky-smooth, hooking visual transitions with zero lag.
+- **Completed**: Conducted a thorough font scaling audit across all landing page sections, manually bumping up all tiny tags/badges in color boxes to highly readable, standardized `0.72rem` and `0.75rem` sizes. Modified files: `landing-page.tsx`, `CampusModelSection.tsx`, `TryDemoSection.tsx`, and `PiranhaPortalsSection.tsx`.
+- **Verified**: Confirmed all specimen tags and sandbox panel files are completely removed. Verified build integrity (`pnpm run build`), offline verifier (`pnpm run demo:verify`), and TypeScript compile check (`npm run typecheck`), which all pass with 100% green success.

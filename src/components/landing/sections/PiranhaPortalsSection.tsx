@@ -206,7 +206,7 @@ export function PiranhaPortalsSection() {
             >
               <div className="flex flex-col flex-1 p-6">
                 <div
-                  className="mb-8 flex items-center justify-between text-[0.65rem] uppercase tracking-[0.24em]"
+                  className="mb-8 flex items-center justify-between text-[0.72rem] uppercase tracking-[0.24em]"
                   style={{ fontFamily: "var(--font-dm-mono)", color: "var(--tray-muted)" }}
                 >
                   <span>{portal.label}</span>
@@ -234,7 +234,7 @@ export function PiranhaPortalsSection() {
                 </p>
 
                 <div className="mt-auto pt-8 flex items-center justify-between">
-                  <span className="text-[0.7rem] font-code font-semibold uppercase tracking-[0.12em] opacity-40">
+                  <span className="text-[0.72rem] font-code font-semibold uppercase tracking-[0.12em] opacity-40">
                     {portal.previewDevice}
                   </span>
                   <span className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider opacity-70 group-hover:opacity-100 group-hover:text-white transition-all">

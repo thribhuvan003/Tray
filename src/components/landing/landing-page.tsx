@@ -144,19 +144,19 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
         >
           <div className="mx-auto flex max-w-7xl items-center justify-between gap-6 overflow-hidden">
             <p
-              className="text-[0.65rem] uppercase tracking-[0.22em] opacity-55 hidden sm:block shrink-0"
+              className="text-[0.75rem] uppercase tracking-[0.22em] opacity-55 hidden sm:block shrink-0"
               style={{ fontFamily: "var(--font-dm-mono)" }}
             >
               Campus Edition
             </p>
             <p
-              className="text-[0.65rem] uppercase tracking-[0.22em] opacity-55 min-w-0"
+              className="text-[0.75rem] uppercase tracking-[0.22em] opacity-55 min-w-0"
               style={{ fontFamily: "var(--font-dm-mono)" }}
             >
               12 min saved per lunch · UPI native · OTP verified · live queue
             </p>
             <span
-              className="hidden items-center gap-1.5 text-[0.65rem] uppercase tracking-[0.22em] lg:flex shrink-0"
+              className="hidden items-center gap-1.5 text-[0.75rem] uppercase tracking-[0.22em] lg:flex shrink-0"
               style={{ fontFamily: "var(--font-dm-mono)", color: "var(--tray-clay, #B8531A)" }}
             >
               <span className="h-1.5 w-1.5 rounded-full bg-current animate-pulse" />
@@ -223,7 +223,7 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
           <div className="mx-auto max-w-5xl">
             <div className="mb-10 flex flex-wrap items-center gap-3">
               <p
-                className="text-[0.62rem] uppercase tracking-[0.3em] opacity-40"
+                className="text-[0.72rem] uppercase tracking-[0.3em] opacity-40"
                 style={{ fontFamily: "var(--font-dm-mono)" }}
               >
                 From the kitchen
@@ -246,7 +246,7 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
               {" "}ends on time.&rdquo;
             </blockquote>
             <footer
-              className="mt-8 text-[0.65rem] uppercase tracking-[0.26em] opacity-40"
+              className="mt-8 text-[0.72rem] uppercase tracking-[0.26em] opacity-40"
               style={{ fontFamily: "var(--font-manrope)" }}
             >
               — Kitchen supervisor · Campus canteen
@@ -296,7 +296,7 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
                     style={{ fontFamily: "var(--font-geist)" }}
                   >{desc}</p>
                   <span
-                    className="mt-auto self-start rounded-full border px-3 py-1 text-[0.6rem] uppercase tracking-[0.16em]"
+                    className="mt-auto self-start rounded-full border px-3 py-1 text-[0.72rem] uppercase tracking-[0.16em]"
                     style={{ fontFamily: "var(--font-dm-mono)", color: "var(--tray-muted)", border: "1px solid var(--tray-border)" }}
                   >{tag}</span>
                 </div>
@@ -344,7 +344,7 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
                   style={{ border: "1px solid var(--tray-border)", background: "rgba(255,255,255,0.52)" }}
                 >
                   <p className="tracking-tight" style={{ fontFamily: "var(--font-space-grotesk)", fontWeight: 600 }}>{name}</p>
-                  <p className="mt-1.5 text-[0.6rem] uppercase tracking-[0.14em]" style={{ fontFamily: "var(--font-jetbrains)", color: "var(--tray-muted)" }}>{role}</p>
+                  <p className="mt-1.5 text-[0.72rem] uppercase tracking-[0.14em]" style={{ fontFamily: "var(--font-jetbrains)", color: "var(--tray-muted)" }}>{role}</p>
                 </HoverCard>
               ))}
             </div>
@@ -365,7 +365,7 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
               }}
             >
               <span
-                className="flex items-center gap-2.5 text-[0.7rem] uppercase tracking-[0.22em]"
+                className="flex items-center gap-2.5 text-[0.72rem] uppercase tracking-[0.22em]"
                 style={{ fontFamily: "var(--font-dm-mono)", color: "var(--tray-muted)" }}
               >
                 <span className="h-1.5 w-1.5 rounded-full animate-pulse" style={{ background: "var(--tray-clay)" }} />
@@ -373,7 +373,7 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
               </span>
 
               <span
-                className="text-[0.6rem] uppercase tracking-[0.2em] opacity-30"
+                className="text-[0.72rem] uppercase tracking-[0.2em] opacity-30"
                 style={{ fontFamily: "var(--font-dm-mono)" }}
               >
                 ——
@@ -392,14 +392,14 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
               </span>
 
               <span
-                className="text-[0.6rem] uppercase tracking-[0.2em] opacity-30"
+                className="text-[0.72rem] uppercase tracking-[0.2em] opacity-30"
                 style={{ fontFamily: "var(--font-dm-mono)" }}
               >
                 ——
               </span>
 
               <span
-                className="flex items-center gap-2.5 text-[0.7rem] uppercase tracking-[0.22em]"
+                className="flex items-center gap-2.5 text-[0.72rem] uppercase tracking-[0.22em]"
                 style={{ fontFamily: "var(--font-dm-mono)", color: "var(--tray-muted)" }}
               >
                 <span className="h-1.5 w-1.5 rounded-full animate-pulse" style={{ background: "var(--tray-green, #2A6E3A)" }} />
@@ -553,13 +553,13 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
           {/* Bottom bar */}
           <div className="relative z-10 mt-12 flex flex-wrap items-center justify-between gap-4 border-t border-[var(--tray-border)] pt-6">
             <p
-              className="text-[0.62rem] uppercase tracking-[0.2em] opacity-45"
+              className="text-[0.72rem] uppercase tracking-[0.2em] opacity-45"
               style={{ fontFamily: "var(--font-dm-mono)" }}
             >
               Built for campus canteens · Made in India
             </p>
             <p
-              className="text-[0.62rem] uppercase tracking-[0.2em] opacity-45"
+              className="text-[0.72rem] uppercase tracking-[0.2em] opacity-45"
               style={{ fontFamily: "var(--font-dm-mono)" }}
             >
               v3.0 · 2026
