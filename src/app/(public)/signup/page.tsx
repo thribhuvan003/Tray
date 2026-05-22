@@ -21,7 +21,7 @@ export default async function SignupPage({
       <div className="flex-1 flex items-center justify-center px-5 py-12">
         <div className="w-full max-w-md">
           <Link href="/" className="inline-flex items-center gap-2.5 font-display text-[19px] tracking-tight mb-10">
-            <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-ocean-500 text-white font-mono text-[12px] font-bold">T</span>
+            <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-ocean-500 text-black font-mono text-[12px] font-bold">T</span>
             <span className="font-medium">Tray<span className="italic text-ocean-500">.</span></span>
           </Link>
           <h1 className="font-display text-[40px] leading-[1.05] tracking-tight font-medium">

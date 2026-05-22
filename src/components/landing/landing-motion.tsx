@@ -69,10 +69,10 @@ export function LandingMotion() {
         if (!killed) {
           const Lenis = ((LenisModule as Record<string, unknown>).default ?? LenisModule) as new (opts: Record<string, unknown>) => LenisLike;
           lenisInstance = new Lenis({
-            duration: 2.0,
+            duration: 2.2,
             easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
             smoothWheel: true,
-            wheelMultiplier: 0.70,
+            wheelMultiplier: 0.55,
           });
           lenisInstance.on("scroll", ScrollTrigger.update);
           const li = lenisInstance;
@@ -122,8 +122,8 @@ export function LandingMotion() {
         rotateY: 15,
         scale: 0.82,
         opacity: 0,
-        stagger: { amount: 0.65, from: "start" },
-        duration: 1.25,
+        stagger: { amount: 0.75, from: "start" },
+        duration: 1.45,
         ease: "power4.out",
         delay: 0.25,
       });
@@ -188,10 +188,10 @@ export function LandingMotion() {
       root.querySelectorAll<HTMLElement>("[data-reveal]").forEach((el) => {
         gsap.from(el, {
           scrollTrigger: { trigger: el, start: "top 88%", toggleActions: "play none none none" },
-          y: 50,
+          y: 40,
           rotateX: 8,
           opacity: 0,
-          duration: 1.15,
+          duration: 1.35,
           ease: "power3.out",
           transformPerspective: 1200,
         });
@@ -243,9 +243,9 @@ export function LandingMotion() {
           opacity: 0,
           rotateX: 15,
           rotateY: i % 2 === 0 ? -10 : 10,
-          duration: 1.45,
+          duration: 1.55,
           delay: i * 0.12,
-          ease: "elastic.out(1, 0.8)",
+          ease: "power4.out",
           transformPerspective: 1200,
         });
 

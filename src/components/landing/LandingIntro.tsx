@@ -28,7 +28,7 @@ export function LandingIntro() {
     }
 
     // Counting phase: 0 to 100 in 1400ms
-    const duration = 1400;
+    const duration = 1600;
     const startTime = performance.now();
 
     let frameId: number;
@@ -49,7 +49,7 @@ export function LandingIntro() {
         // Hold on reveal phase for 1.6s, then hide
         const fadeTimeout = window.setTimeout(() => {
           setShow(false);
-        }, 1600);
+        }, 1400);
         return () => window.clearTimeout(fadeTimeout);
       }
     };
@@ -103,7 +103,7 @@ export function LandingIntro() {
                 transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
                 className="flex flex-col items-center justify-center"
               >
-                <div className="relative font-bold text-[clamp(7rem,20vw,16rem)] leading-none tracking-tighter" style={{ fontFamily: "var(--font-jetbrains)" }}>
+                <div className="relative font-bold text-[clamp(8rem,22vw,18rem)] leading-none tracking-tighter" style={{ fontFamily: "var(--font-jetbrains)" }}>
                   <span className="tabular-nums">{count.toString().padStart(2, "0")}</span>
                   <span className="text-[#FAF8F5] opacity-35 text-[0.35em] absolute top-[0.1em] ml-1">%</span>
                 </div>
@@ -160,7 +160,7 @@ export function LandingIntro() {
                       duration: 1.35,
                       ease: [0.16, 1, 0.3, 1]
                     }}
-                    className="text-[clamp(6rem,18vw,14rem)] font-normal italic leading-none select-none text-[#FAF8F5] tracking-[-0.05em] lowercase"
+                    className="text-[clamp(7rem,20vw,16rem)] font-normal italic leading-none select-none text-[#FAF8F5] tracking-[-0.05em] lowercase"
                     style={{
                       fontFamily: "var(--font-newsreader)",
                       transformOrigin: "center bottom",
