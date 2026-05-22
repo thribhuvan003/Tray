@@ -510,4 +510,12 @@ pm run typecheck passes. Restart dev if port 3000 hangs: NODE_OPTIONS=--max-old-
   - Adjusted background gradients (`.tray-page`) to use Theme H clay and green colors with appropriate opacities (`rgba(230, 0, 0, 0.08)` and `rgba(22, 163, 74, 0.06)`).
 - **Verified:** All quality gates passed with 100% success—TypeScript compile check (`pnpm typecheck`), offline mock verifier (`pnpm demo:verify`), and 7 E2E checks in `scripts/test-new-features.mjs`. Committed and pushed cleanly to the `main` branch under user `thribhuvan003`.
 
+### May 22, 2026 - Sandbox & Designer Customizer Removal
+- **Completed:** Removed the interactive visual designer widget (`DesignerCustomizer.tsx`) and the landing page playground section (`StudioSandbox.tsx`) from the main public landing page.
+- **Details:**
+  - Removed `<StudioSandbox />` and `<DesignerCustomizer />` components and their imports from `src/components/landing/landing-page.tsx`.
+  - Deleted the corresponding ScrollTrigger scroll animation blocks targeting `#sandbox-board` from `src/components/landing/landing-motion.tsx` to maintain clean GSAP orchestration without DOM warnings.
+- **Verified:** Local TypeScript checks, E2E verification tests, and static verification tests pass cleanly. Changes pushed to `origin/main`.
+
+
 
