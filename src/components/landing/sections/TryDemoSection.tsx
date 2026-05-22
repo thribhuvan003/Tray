@@ -246,57 +246,6 @@ export function TryDemoSection() {
           ))}
         </div>
 
-        {/* Campus admin teaser — hooks the college director / IT head */}
-        <div
-          className="mt-5 flex flex-col gap-4 overflow-hidden rounded-[2rem] border p-6 sm:flex-row sm:items-center sm:justify-between"
-          style={{
-            border: "1px solid var(--tray-border)",
-            background: "rgba(255,255,255,0.40)",
-          }}
-        >
-          <div className="flex items-start gap-4">
-            <span
-              className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl text-xl"
-              style={{ background: "rgba(87,87,87,0.10)" }}
-            >
-              🏫
-            </span>
-            <div>
-              <div className="flex items-center gap-2 flex-wrap">
-                <span
-                  className="text-[1rem] tracking-tight"
-                  style={{ fontFamily: "var(--font-jakarta)", fontWeight: 700 }}
-                >
-                  Campus admin
-                </span>
-                <span
-                  className="rounded-full px-2.5 py-0.5 text-[0.6rem] uppercase tracking-[0.16em]"
-                  style={{ fontFamily: "var(--font-dm-mono)", background: "rgba(87,87,87,0.10)", color: "var(--tray-muted)" }}
-                >
-                  Coming next
-                </span>
-              </div>
-              <p
-                className="mt-1 max-w-lg text-[0.9rem] leading-[1.6]"
-                style={{ fontFamily: "var(--font-geist)", color: "var(--tray-muted)" }}
-              >
-                One screen for the whole campus — every canteen, all revenue, cross-canteen analytics,
-                staff permissions, and real-time oversight. Built for college directors and IT heads.
-              </p>
-            </div>
-          </div>
-          <div
-            className="flex-shrink-0 rounded-full border px-5 py-2.5 text-[0.82rem] text-center sm:text-left"
-            style={{
-              fontFamily: "var(--font-geist)",
-              fontWeight: 600,
-              border: "1px solid var(--tray-border)",
-              color: "var(--tray-muted)",
-            }}
-          >
-            Notify me →
-          </div>
-        </div>
       </div>
 
       {/* La Revoltosa fullscreen wipe — large, perfectly centered */}

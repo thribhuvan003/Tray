@@ -22,24 +22,27 @@ const portals = [
     index: "01",
     label: "Student app",
     title: "Order from any canteen.",
-    text: "Choose canteen, browse menu, pay by UPI, track live, show OTP.",
-    flow: ["Canteen", "Menu", "Cart", "UPI", "OTP"],
+    text: "Choose canteen, browse menu, pay by UPI, track your order live, collect with a 4-digit OTP.",
+    previewSrc: "/demo/student.html",
+    previewDevice: "Mobile · student",
     accent: "var(--color-ocean-500, #6E86AB)",
   },
   {
     index: "02",
     label: "Kitchen view",
     title: "Run the live queue.",
-    text: "New tickets, prep timers, ready status, OTP handover at counter.",
-    flow: ["New", "Preparing", "Ready", "Verified"],
+    text: "New tickets land instantly, prep timers count down, OTP handover clears the order — no paper, no shouting.",
+    previewSrc: "/demo/kitchen.html",
+    previewDevice: "Tablet · kitchen",
     accent: "#B8531A",
   },
   {
     index: "03",
     label: "Admin console",
     title: "See the whole operation.",
-    text: "Orders, revenue, menu, staff, audit log, canteen performance.",
-    flow: ["Canteens", "Orders", "Revenue", "Staff"],
+    text: "Live orders, daily revenue, menu edits, staff access, full audit log — one screen, every metric.",
+    previewSrc: "/demo/admin.html",
+    previewDevice: "Desktop · admin",
     accent: "var(--tray-green)",
   },
 ] as const;
@@ -191,21 +194,29 @@ export function PiranhaPortalsSection() {
           <article
             key={portal.label}
             data-portal-card
-            className="motion-card flex min-h-[30rem] flex-col justify-between rounded-[2.25rem] p-6 lg:h-[72vh] lg:w-[34vw] lg:shrink-0 lg:p-8"
+            className="motion-card flex min-h-[30rem] flex-col rounded-[2.25rem] lg:h-[76vh] lg:w-[34vw] lg:shrink-0"
             style={{
               background: "var(--tray-bg, #D8C9AE)",
               color: "var(--tray-ink)",
               border: "1px solid rgba(26,22,20,0.12)",
               boxShadow: "0 30px 100px rgba(0,0,0,0.35)",
+              overflow: "hidden",
             }}
           >
-            <div>
+            {/* Card header + copy */}
+            <div className="flex flex-col p-6 lg:p-8">
               <div
-                className="mb-10 flex items-center justify-between text-[0.65rem] uppercase tracking-[0.24em]"
+                className="mb-8 flex items-center justify-between text-[0.65rem] uppercase tracking-[0.24em]"
                 style={{ fontFamily: "var(--font-dm-mono)", color: "var(--tray-muted)" }}
               >
                 <span>{portal.label}</span>
-                <span>{portal.index}</span>
+                <span
+                  className="flex items-center gap-1.5"
+                  style={{ color: portal.accent }}
+                >
+                  <span className="h-1.5 w-1.5 rounded-full animate-pulse" style={{ background: portal.accent }} />
+                  {portal.index}
+                </span>
               </div>
 
               {/* Fraunces for card titles — editorial serif contrast */}
@@ -214,35 +225,66 @@ export function PiranhaPortalsSection() {
                 style={{
                   fontFamily: "var(--font-fraunces)",
                   fontWeight: 900,
-                  fontSize: "clamp(2.8rem, 4.5vw, 4.5rem)",
+                  fontSize: "clamp(2.4rem, 3.8vw, 4rem)",
                 }}
               >
                 {portal.title}
               </h3>
 
               <p
-                className="mt-5 text-[1rem] leading-7 opacity-68"
+                className="mt-4 text-[0.95rem] leading-7 opacity-65"
                 style={{ fontFamily: "var(--font-geist)" }}
               >
                 {portal.text}
               </p>
             </div>
 
-            {/* Flow chips */}
-            <div className="mt-8 flex flex-wrap gap-2">
-              {portal.flow.map((step) => (
-                <span
-                  key={step}
-                  className="rounded-full border px-3 py-2 text-[0.65rem] uppercase tracking-[0.16em]"
-                  style={{
-                    fontFamily: "var(--font-dm-mono)",
-                    borderColor: "rgba(26,22,20,0.14)",
-                    background: "rgba(255,255,255,0.55)",
-                  }}
-                >
-                  {step}
-                </span>
-              ))}
+            {/* IRL iframe preview — scaled to fit, decorative */}
+            <div
+              className="relative mx-4 mb-4 flex-1 overflow-hidden rounded-[1.5rem]"
+              style={{
+                minHeight: 200,
+                background: "rgba(255,255,255,0.35)",
+                border: "1px solid rgba(26,22,20,0.10)",
+              }}
+            >
+              <iframe
+                src={portal.previewSrc}
+                title={`${portal.label} live preview`}
+                loading="lazy"
+                sandbox="allow-scripts allow-same-origin"
+                scrolling="no"
+                tabIndex={-1}
+                aria-hidden="true"
+                style={{
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  width: "200%",
+                  height: "200%",
+                  transform: "scale(0.5)",
+                  transformOrigin: "0 0",
+                  border: 0,
+                  pointerEvents: "none",
+                }}
+              />
+              {/* Bottom fade */}
+              <div
+                className="pointer-events-none absolute inset-0"
+                style={{ background: "linear-gradient(180deg, transparent 45%, var(--tray-bg, #D8C9AE) 100%)" }}
+              />
+              {/* Device label */}
+              <span
+                className="absolute left-3 top-3 rounded-md px-2 py-1 text-[0.58rem] uppercase tracking-[0.14em] backdrop-blur-sm"
+                style={{
+                  fontFamily: "var(--font-dm-mono)",
+                  color: "var(--tray-ink)",
+                  background: "rgba(255,255,255,0.72)",
+                  border: "1px solid rgba(26,22,20,0.10)",
+                }}
+              >
+                {portal.previewDevice}
+              </span>
             </div>
           </article>
         ))}

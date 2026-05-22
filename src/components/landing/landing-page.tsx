@@ -155,22 +155,22 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
         <PiranhaPortalsSection />
         <CampusModelSection campusName={campusName} />
 
-        {/* ── REALTIME SYNC — Barlow Condensed title ─────────────────── */}
+        {/* ── REALTIME SYNC — big fonts, sand bg, micro-interactions ── */}
         <section id="sync" className="px-5 py-24 sm:px-8 lg:px-10">
           <div className="mx-auto max-w-7xl">
             <p
-              className="mb-4 text-xs uppercase tracking-[0.3em]"
+              className="mb-5 text-xs uppercase tracking-[0.34em]"
               style={{ fontFamily: "var(--font-dm-mono)", color: "var(--tray-muted)" }}
             >
               02 / Realtime
             </p>
-            {/* Barlow Condensed for technical section titles */}
+
             <h2
-              className="max-w-3xl leading-[0.82] tracking-[-0.02em]"
+              className="max-w-5xl leading-[0.80] tracking-[-0.025em]"
               style={{
                 fontFamily: "var(--font-barlow)",
                 fontWeight: 900,
-                fontSize: "clamp(3rem, 7.5vw, 7.5rem)",
+                fontSize: "clamp(3.8rem, 10vw, 10.5rem)",
                 textTransform: "uppercase",
               }}
             >
@@ -182,35 +182,87 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
                 Watch it land everywhere.
               </em>
             </h2>
+
             <p
-              className="mt-6 max-w-xl text-[1.05rem] leading-8 opacity-70"
+              className="mt-7 max-w-lg text-[1.1rem] leading-[1.75] opacity-65"
               style={{ fontFamily: "var(--font-geist)" }}
             >
               The kitchen adds a dish — it appears on every student phone in under 300 ms.
               One source of truth, three windows, no refresh.
             </p>
-            <div className="mt-10 grid gap-3 sm:grid-cols-3">
-              {([
-                ["SOURCE",  "Kitchen pushes update",         "POST /api/menu · RLS-enforced"],
-                ["FAN OUT", "Supabase Realtime broadcasts",  "~240 ms · WebSocket · p95"],
-                ["AUDIT",   "Admin sees the log row",        "menu.add · tenant-scoped"],
-              ] as const).map(([label, title, meta]) => (
-                <div key={label} className="rounded-[1.5rem] border p-5"
-                  style={{ border: "1px solid var(--tray-border)", background: "rgba(255,255,255,0.52)" }}>
-                  <p
-                    className="mb-3 text-[0.65rem] uppercase tracking-[0.24em]"
-                    style={{ fontFamily: "var(--font-dm-mono)", color: "var(--tray-clay)" }}
-                  >{label}</p>
-                  <p
-                    className="text-[1rem] tracking-tight"
-                    style={{ fontFamily: "var(--font-jakarta)", fontWeight: 600 }}
-                  >{title}</p>
-                  <p
-                    className="mt-2 text-[0.62rem] uppercase tracking-[0.14em]"
-                    style={{ fontFamily: "var(--font-dm-mono)", color: "var(--tray-muted)" }}
-                  >{meta}</p>
+
+            {/* Three nodes with micro-interactions */}
+            <div className="mt-14 grid gap-4 sm:grid-cols-3">
+
+              {/* SOURCE */}
+              <div
+                className="group rounded-[1.75rem] border p-7 transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_24px_64px_rgba(26,22,20,0.13)]"
+                style={{ border: "1px solid var(--tray-border)", background: "rgba(255,255,255,0.55)" }}
+              >
+                <div className="mb-5 flex items-center gap-3">
+                  <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full" style={{ background: "rgba(184,83,26,0.12)", border: "1px solid rgba(184,83,26,0.28)" }}>
+                    <span className="h-3 w-3 rounded-full animate-pulse" style={{ background: "var(--tray-clay)" }} />
+                  </span>
+                  <span className="text-[0.65rem] uppercase tracking-[0.3em]" style={{ fontFamily: "var(--font-dm-mono)", color: "var(--tray-clay)" }}>Source</span>
                 </div>
-              ))}
+                <p className="text-[1.35rem] leading-tight tracking-tight" style={{ fontFamily: "var(--font-jakarta)", fontWeight: 700 }}>
+                  Kitchen pushes update
+                </p>
+                <p className="mt-3 text-[0.72rem]" style={{ fontFamily: "var(--font-dm-mono)", letterSpacing: "0.08em", color: "var(--tray-muted)" }}>
+                  POST /api/menu
+                </p>
+                <p className="mt-1.5 text-[0.62rem] uppercase tracking-[0.16em]" style={{ fontFamily: "var(--font-dm-mono)", color: "var(--tray-muted)", opacity: 0.7 }}>
+                  RLS-enforced · tenant-scoped
+                </p>
+              </div>
+
+              {/* FAN OUT — featured node with big 240ms metric */}
+              <div
+                className="group rounded-[1.75rem] border p-7 transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_24px_64px_rgba(26,22,20,0.13)]"
+                style={{ borderColor: "rgba(184,83,26,0.30)", background: "rgba(184,83,26,0.06)" }}
+              >
+                <div className="mb-5 flex items-center gap-3">
+                  <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full" style={{ border: "1px solid rgba(184,83,26,0.35)" }}>
+                    <span style={{ color: "var(--tray-clay)", fontSize: "1.1rem", fontWeight: 700, lineHeight: 1 }}>⟡</span>
+                  </span>
+                  <span className="text-[0.65rem] uppercase tracking-[0.3em]" style={{ fontFamily: "var(--font-dm-mono)", color: "var(--tray-clay)" }}>Fan Out</span>
+                </div>
+                <p className="text-[1.35rem] leading-tight tracking-tight" style={{ fontFamily: "var(--font-jakarta)", fontWeight: 700 }}>
+                  Supabase Realtime broadcasts
+                </p>
+                <p
+                  className="mt-4 leading-none tracking-[-0.04em]"
+                  style={{ fontFamily: "var(--font-barlow)", fontWeight: 900, fontSize: "clamp(3rem, 6vw, 5rem)", color: "var(--tray-clay)" }}
+                >
+                  ~240ms
+                </p>
+                <p className="mt-2 text-[0.62rem] uppercase tracking-[0.16em]" style={{ fontFamily: "var(--font-dm-mono)", color: "var(--tray-muted)", opacity: 0.7 }}>
+                  WebSocket · p95 latency
+                </p>
+              </div>
+
+              {/* AUDIT */}
+              <div
+                className="group rounded-[1.75rem] border p-7 transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_24px_64px_rgba(26,22,20,0.13)]"
+                style={{ border: "1px solid var(--tray-border)", background: "rgba(255,255,255,0.55)" }}
+              >
+                <div className="mb-5 flex items-center gap-3">
+                  <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full" style={{ border: "1px solid rgba(42,110,58,0.40)", background: "rgba(42,110,58,0.08)" }}>
+                    <span className="h-2.5 w-2.5 rounded-full animate-pulse" style={{ background: "var(--tray-green, #2A6E3A)" }} />
+                  </span>
+                  <span className="text-[0.65rem] uppercase tracking-[0.3em]" style={{ fontFamily: "var(--font-dm-mono)", color: "var(--tray-green, #2A6E3A)" }}>Audit</span>
+                </div>
+                <p className="text-[1.35rem] leading-tight tracking-tight" style={{ fontFamily: "var(--font-jakarta)", fontWeight: 700 }}>
+                  Admin sees the log row
+                </p>
+                <p className="mt-3 text-[0.72rem]" style={{ fontFamily: "var(--font-dm-mono)", letterSpacing: "0.08em", color: "var(--tray-muted)" }}>
+                  menu.add · tenant-scoped
+                </p>
+                <p className="mt-1.5 text-[0.62rem] uppercase tracking-[0.16em]" style={{ fontFamily: "var(--font-dm-mono)", color: "var(--tray-muted)", opacity: 0.7 }}>
+                  Instant · full audit trail
+                </p>
+              </div>
+
             </div>
           </div>
         </section>
@@ -350,6 +402,62 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
 
         <TryDemoSection />
 
+        {/* ── REALTIME HOOK — compact strip above closing CTA ──────── */}
+        <div className="px-5 py-12 sm:px-8 lg:px-10">
+          <div className="mx-auto max-w-7xl">
+            <div
+              className="flex flex-wrap items-center justify-center gap-6 rounded-[1.75rem] border px-8 py-6 sm:gap-10"
+              style={{
+                border: "1px solid var(--tray-border)",
+                background: "rgba(255,255,255,0.38)",
+                backdropFilter: "blur(12px)",
+              }}
+            >
+              <span
+                className="flex items-center gap-2.5 text-[0.7rem] uppercase tracking-[0.22em]"
+                style={{ fontFamily: "var(--font-dm-mono)", color: "var(--tray-muted)" }}
+              >
+                <span className="h-1.5 w-1.5 rounded-full animate-pulse" style={{ background: "var(--tray-clay)" }} />
+                Kitchen pushes update
+              </span>
+
+              <span
+                className="text-[0.6rem] uppercase tracking-[0.2em] opacity-30"
+                style={{ fontFamily: "var(--font-dm-mono)" }}
+              >
+                ——
+              </span>
+
+              <span
+                className="leading-none tracking-[-0.04em]"
+                style={{
+                  fontFamily: "var(--font-barlow)",
+                  fontWeight: 900,
+                  fontSize: "clamp(2rem, 4vw, 3.2rem)",
+                  color: "var(--tray-clay)",
+                }}
+              >
+                ~240ms
+              </span>
+
+              <span
+                className="text-[0.6rem] uppercase tracking-[0.2em] opacity-30"
+                style={{ fontFamily: "var(--font-dm-mono)" }}
+              >
+                ——
+              </span>
+
+              <span
+                className="flex items-center gap-2.5 text-[0.7rem] uppercase tracking-[0.22em]"
+                style={{ fontFamily: "var(--font-dm-mono)", color: "var(--tray-muted)" }}
+              >
+                <span className="h-1.5 w-1.5 rounded-full animate-pulse" style={{ background: "var(--tray-green, #2A6E3A)" }} />
+                Every portal · no refresh
+              </span>
+            </div>
+          </div>
+        </div>
+
         {/* ── CLOSING CTA ───────────────────────────────────────────── */}
         <section className="relative overflow-hidden px-5 py-32 text-center sm:px-8 lg:px-10">
           <div className="pointer-events-none absolute inset-0 -z-10">
@@ -403,6 +511,30 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
         className="relative overflow-hidden border-t border-[var(--tray-border)] px-5 pb-8 pt-12 sm:px-8 lg:px-10"
         style={{ paddingBottom: "max(2rem, env(safe-area-inset-bottom))" }}
       >
+        {/* Ghost TRAY watermark — bottom-right, large, clipped */}
+        <div
+          className="pointer-events-none absolute bottom-0 right-0 select-none"
+          style={{ overflow: "hidden" }}
+        >
+          <span
+            style={{
+              fontFamily: "var(--font-barlow)",
+              fontWeight: 900,
+              fontSize: "clamp(7rem, 20vw, 16rem)",
+              lineHeight: 0.82,
+              letterSpacing: "-0.06em",
+              textTransform: "uppercase",
+              color: "var(--tray-ink)",
+              opacity: 0.045,
+              display: "block",
+              paddingRight: "clamp(1rem, 3vw, 3rem)",
+              paddingBottom: "0.5rem",
+            }}
+          >
+            TRAY
+          </span>
+        </div>
+
         <div className="mx-auto max-w-7xl">
           <div className="relative z-10 grid gap-10 sm:grid-cols-2 lg:grid-cols-[2fr_1fr_1fr_1fr]">
             {/* Brand */}

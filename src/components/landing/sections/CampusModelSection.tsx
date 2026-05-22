@@ -72,16 +72,20 @@ export function CampusModelSection({ campusName }: { campusName?: string | null 
 
         {/* Diagram */}
         <div className="relative rounded-[2rem] border border-[var(--tray-border)] bg-white/55 p-5 shadow-[0_24px_80px_rgba(17,17,17,0.07)]">
-          {/* SVG lines drawn by GSAP */}
+          {/* SVG lines drawn by GSAP — bezier paths from campus node (350,82) to each canteen card center */}
           <svg
             className="pointer-events-none absolute inset-0 h-full w-full"
             viewBox="0 0 700 520"
             aria-hidden
           >
-            <path data-campus-line d="M350 90 C260 160 210 180 150 250" fill="none" stroke="var(--tray-clay)" strokeWidth="2" />
-            <path data-campus-line d="M350 90 C310 170 300 190 300 250" fill="none" stroke="var(--tray-clay)" strokeWidth="2" />
-            <path data-campus-line d="M350 90 C420 170 430 190 450 250" fill="none" stroke="var(--tray-clay)" strokeWidth="2" />
-            <path data-campus-line d="M350 90 C510 155 540 190 560 250" fill="none" stroke="var(--tray-clay)" strokeWidth="2" />
+            {/* → Main Canteen (top-left) */}
+            <path data-campus-line d="M350 82 C 285 155, 175 205, 170 268" fill="none" stroke="var(--tray-clay)" strokeWidth="1.5" strokeDasharray="4 3" strokeOpacity="0.55" />
+            {/* → Hostel Mess (top-right) */}
+            <path data-campus-line d="M350 82 C 415 155, 525 205, 530 268" fill="none" stroke="var(--tray-clay)" strokeWidth="1.5" strokeDasharray="4 3" strokeOpacity="0.55" />
+            {/* → North Block (bottom-left) */}
+            <path data-campus-line d="M350 82 C 280 175, 165 250, 165 358" fill="none" stroke="var(--tray-clay)" strokeWidth="1.5" strokeDasharray="4 3" strokeOpacity="0.55" />
+            {/* → Night Canteen (bottom-right) */}
+            <path data-campus-line d="M350 82 C 420 175, 535 250, 535 358" fill="none" stroke="var(--tray-clay)" strokeWidth="1.5" strokeDasharray="4 3" strokeOpacity="0.55" />
           </svg>
 
           <div className="relative z-10 grid gap-5">
@@ -94,7 +98,7 @@ export function CampusModelSection({ campusName }: { campusName?: string | null 
                 Campus
               </p>
               <p className="mt-1 font-semibold">
-                {campusName || "Your College Campus"}
+                {campusName || "Your University"}
               </p>
             </div>
 
