@@ -213,6 +213,21 @@ async function main() {
   const browser = await chromium.launch({ headless: !HEADED });
   info(`Browser launched (headless: ${!HEADED})`);
 
+  // Warm up Next.js routes to avoid Fast Refresh reloads during active scenarios
+  info("Warming up Next.js routes in background context...");
+  const warmupCtx = await browser.newContext();
+  const warmupPage = await warmupCtx.newPage();
+  try {
+    await warmupPage.goto(`${BASE}/c/${TENANT_SLUG}/menu`, { waitUntil: "networkidle", timeout: 40000 });
+    await warmupPage.goto(`${BASE}/login?tenant=${TENANT_SLUG}`, { waitUntil: "networkidle", timeout: 40000 });
+    await warmupPage.goto(`${BASE}/c/${TENANT_SLUG}/admin/menu/new`, { waitUntil: "networkidle", timeout: 40000 });
+    info("Warm-up complete!");
+  } catch (err) {
+    info(`Warm-up page load completed or timed out (expected in dev mode compile): ${err.message}`);
+  } finally {
+    await warmupCtx.close();
+  }
+
   try {
     /* ── SCENARIO 1: Case-insensitive duplicate item rejection in Admin UI ── */
     log("Scenario 1 — Case-insensitive duplicate name rejection in Admin UI");
@@ -257,12 +272,12 @@ async function main() {
     await adminPage.click('button[type="submit"]');
     info("Submitted duplicate menu item form");
 
-    // Form should reload with error parameter
-    await adminPage.waitForURL(/err=/, { timeout: 15000 });
-    await adminPage.waitForTimeout(1000);
+    // Form should reload and display the error message
+    const errorMsgLoc = adminPage.locator('.text-rose-300');
+    await errorMsgLoc.waitFor({ state: "visible", timeout: 25000 });
     await screenshot(adminPage, "12-admin-duplicate-error");
 
-    const errorMsg = await adminPage.locator('.text-rose-300').textContent();
+    const errorMsg = await errorMsgLoc.textContent();
     const isErrorShown = errorMsg && errorMsg.includes('already exists');
     recordResult(
       "Admin UI Duplicate Check Rejection",
