@@ -13,6 +13,7 @@ export function LoginForm({ next, slug = "" }: { next: string; slug?: string }) 
   const [mode, setMode] = useState<"magic" | "password">("magic");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [authError, setAuthError] = useState<string | null>(null);
   const [pending, start] = useTransition();
 
   const onGoogleSignIn = () => {
@@ -82,9 +83,13 @@ export function LoginForm({ next, slug = "" }: { next: string; slug?: string }) 
           toast.success("Magic link sent — check your inbox.");
         }
       } else {
+        setAuthError(null);
         const { error } = await sb.auth.signInWithPassword({ email, password });
-        if (error) toast.error(error.message);
-        else window.location.href = next;
+        if (error) {
+          setAuthError("Wrong email or password. Check your credentials and try again.");
+        } else {
+          window.location.href = next;
+        }
       }
     });
   };
@@ -212,6 +217,11 @@ export function LoginForm({ next, slug = "" }: { next: string; slug?: string }) 
             className="w-full h-12 px-4 rounded-xl border border-[color:var(--color-line)] bg-[color:var(--color-paper)] text-[14px] focus:outline-none focus:border-ocean-500"
           />
         </label>
+      )}
+      {authError && (
+        <p className="rounded-xl border border-rose-500/30 bg-rose-500/8 px-4 py-3 text-[13px] text-rose-600 dark:text-rose-400">
+          {authError}
+        </p>
       )}
       <button
         type="submit"

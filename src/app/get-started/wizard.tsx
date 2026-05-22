@@ -677,7 +677,11 @@ export function GetStartedWizard() {
   }
 
   function handleBack() {
-    if (step > 1) setStep((prev) => (prev - 1) as Step);
+    if (step > 1) {
+      setErrors({});
+      setSubmitError(null);
+      setStep((prev) => (prev - 1) as Step);
+    }
   }
 
   function handleSubmit(e: React.FormEvent) {

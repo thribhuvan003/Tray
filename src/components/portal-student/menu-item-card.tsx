@@ -28,14 +28,22 @@ export function MenuItemCard({ item }: { item: MenuItem }) {
         oos ? "opacity-60" : "border-[color:var(--color-line)] hover:border-ocean-500/40 hover:shadow-[0_8px_24px_-12px_rgba(10,22,40,0.12)]"
       )}
     >
-      <div className="relative aspect-[4/3] bg-gradient-to-br from-ocean-50 to-cream-100 dark:from-ocean-500/10 dark:to-graphite-700">
+      <div className="relative aspect-[4/3]">
         {item.image_url ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={item.image_url} alt={item.name} className="absolute inset-0 h-full w-full object-cover" />
         ) : (
-          <div className="absolute inset-0 flex items-center justify-center font-display text-[44px] text-ocean-500/25 select-none leading-none">
-            {item.name.charAt(0).toUpperCase()}
-          </div>
+          <div
+            className="absolute inset-0"
+            style={{
+              background:
+                item.diet === "veg"
+                  ? "linear-gradient(135deg,#e8f5e9,#a5d6a7)"
+                  : item.diet === "egg"
+                  ? "linear-gradient(135deg,#fff8e1,#ffe082)"
+                  : "linear-gradient(135deg,#fce4ec,#ef9a9a)",
+            }}
+          />
         )}
         <span
           aria-label={item.diet}

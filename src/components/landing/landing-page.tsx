@@ -511,7 +511,7 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
         className="relative overflow-hidden border-t border-[var(--tray-border)] px-5 pb-8 pt-12 sm:px-8 lg:px-10"
         style={{ paddingBottom: "max(2rem, env(safe-area-inset-bottom))" }}
       >
-        {/* Ghost TRAY watermark — bottom-right, large, clipped */}
+        {/* Ghost TRAY watermark — bottom-right, sized so it clears the footer links */}
         <div
           className="pointer-events-none absolute bottom-0 right-0 select-none"
           style={{ overflow: "hidden" }}
@@ -520,15 +520,15 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
             style={{
               fontFamily: "var(--font-barlow)",
               fontWeight: 900,
-              fontSize: "clamp(7rem, 20vw, 16rem)",
+              fontSize: "clamp(4.5rem, 10vw, 9rem)",
               lineHeight: 0.82,
               letterSpacing: "-0.06em",
               textTransform: "uppercase",
               color: "var(--tray-ink)",
               opacity: 0.045,
               display: "block",
-              paddingRight: "clamp(1rem, 3vw, 3rem)",
-              paddingBottom: "0.5rem",
+              paddingRight: "clamp(1.5rem, 4vw, 4rem)",
+              paddingBottom: "clamp(1.5rem, 3vw, 3rem)",
             }}
           >
             TRAY

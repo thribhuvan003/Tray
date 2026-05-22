@@ -148,25 +148,32 @@ export async function placeOrder(
   if (!tenant) return { ok: false, error: "Tenant not found" };
 
   const user = await getCurrentUser();
-  if (!user) return { ok: false, error: "Sign in to place an order", code: "AUTH_REQUIRED" };
+  // Auth check is deferred below (after reading guest_orders_enabled from DB)
 
-  const rl = await rateLimit(`placeOrder:${user.id}`, { limit: 5, windowMs: 60_000 });
+  const rl = user
+    ? await rateLimit(`placeOrder:${user.id}`, { limit: 5, windowMs: 60_000 })
+    : { success: true };
   if (!rl.success) return { ok: false, error: "Too many orders — slow down a moment", code: "RATE_LIMITED" };
 
   const supabase = await getServerClient(tenant.id);
 
-  // Verify canteen is accepting orders
+  // Verify canteen is accepting orders + check guest_orders_enabled
   const { data: tenantStatus } = await supabase
     .from("tenants")
-    .select("is_open, paused_until")
+    .select("is_open, paused_until, guest_orders_enabled")
     .eq("id", tenant.id)
-    .maybeSingle<{ is_open: boolean; paused_until: string | null }>();
+    .maybeSingle<{ is_open: boolean; paused_until: string | null; guest_orders_enabled: boolean }>();
 
   if (tenantStatus) {
     const isPaused = tenantStatus.paused_until && new Date(tenantStatus.paused_until) > new Date();
     if (!tenantStatus.is_open || isPaused) {
       return { ok: false, error: isPaused ? "Orders are paused — please try again shortly" : "This canteen is currently closed" };
     }
+  }
+
+  // Require auth unless the canteen has guest orders enabled
+  if (!user && !tenantStatus?.guest_orders_enabled) {
+    return { ok: false, error: "Sign in to place an order", code: "AUTH_REQUIRED" };
   }
 
   const ids = lines.map((l) => l.menuItemId);
@@ -207,13 +214,13 @@ export async function placeOrder(
     .from("orders")
     .insert({
       tenant_id: tenant.id,
-      user_id: user.id,
+      user_id: user?.id ?? null,
       short_code: shortCode,
       status: "pending_payment",
       total_paise: total,
       order_type: orderType,
       table_label: tableLabel,
-      customer_name: user.displayName ?? user.email ?? "Student",
+      customer_name: user?.displayName ?? user?.email ?? "Guest",
       notes: note ? note.slice(0, 120) : null,
       payment_expires_at: dayjs().add(15, "minute").toISOString(),
     })
@@ -241,12 +248,12 @@ export async function placeOrder(
     order_id: order.id,
     from_status: null,
     to_status: "pending_payment",
-    actor_user_id: user.id,
+    actor_user_id: user?.id ?? null,
     note: "Order placed",
   });
   await admin.from("audit_logs").insert({
     tenant_id: tenant.id,
-    actor_user_id: user.id,
+    actor_user_id: user?.id ?? null,
     action: "order.placed",
     target_type: "order",
     target_id: order.id,

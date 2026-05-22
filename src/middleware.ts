@@ -58,6 +58,9 @@ export async function middleware(req: NextRequest) {
         },
         setAll(set: { name: string; value: string; options: CookieOptions }[]) {
           for (const { name, value, options } of set) {
+            // Must set on BOTH request and response — otherwise the session
+            // appears stale on the very next server render (direct URL nav).
+            req.cookies.set(name, value);
             res.cookies.set(name, value, options);
           }
         },
