@@ -157,7 +157,7 @@ const SCOPED_CSS = `
 /* Portal preview cards */
 .tray-landing .tl-portals { display: grid; grid-template-columns: 1fr; gap: 18px; }
 @media (min-width: 720px) { .tray-landing .tl-portals { grid-template-columns: repeat(3, 1fr); } }
-.tray-landing .tl-portal { background: var(--tl-bg-2); border: 1px solid var(--tl-line); border-radius: 18px; overflow: hidden; display: flex; flex-direction: column; position: relative; transition: transform .25s, border-color .2s, box-shadow .25s; }
+.tray-landing .tl-portal { background: var(--tl-bg-2); border: 1px solid var(--tl-line); border-radius: 18px; overflow: hidden; display: flex; flex-direction: column; position: relative; transition: transform .25s, border-color .2s, box-shadow .25s; cursor: pointer; text-decoration: none; color: inherit; }
 .tray-landing .tl-portal:hover { transform: translateY(-4px); border-color: var(--tl-ink-4); box-shadow: 0 20px 50px rgba(0, 0, 0, .4); }
 .tray-landing .tl-portal-head { padding: 22px 24px 14px; display: flex; justify-content: space-between; align-items: flex-start; gap: 14px; border-bottom: 1px solid var(--tl-line); }
 .tray-landing .tl-portal-head .tl-ix { font-family: var(--font-geist-mono), monospace; font-size: 10.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--tl-ink-3); font-weight: 500; }
@@ -183,12 +183,11 @@ const SCOPED_CSS = `
 .tray-landing .tl-feat-tags { display: flex; gap: 6px; flex-wrap: wrap; }
 .tray-landing .tl-feat-tag { padding: 4px 9px; background: var(--tl-bg-3); border: 1px solid var(--tl-line); border-radius: 5px; font-family: var(--font-geist-mono), monospace; font-size: 10.5px; color: var(--tl-ink-2); font-weight: 500; letter-spacing: 0.04em; }
 .tray-landing .tl-portal-open { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: var(--tl-bg-3); border: 1px solid var(--tl-line); border-radius: 10px; margin-top: auto; font-size: 13px; font-weight: 500; transition: all .2s; color: var(--tl-ink); }
-.tray-landing .tl-portal-open:hover { background: var(--tl-bg-4); border-color: var(--tl-ink-4); }
-.tray-landing .tl-portal[data-c="student"] .tl-portal-open:hover { border-color: var(--tl-student); color: var(--tl-student); }
-.tray-landing .tl-portal[data-c="kitchen"] .tl-portal-open:hover { border-color: var(--tl-kitchen); color: var(--tl-kitchen); }
-.tray-landing .tl-portal[data-c="admin"] .tl-portal-open:hover { border-color: var(--tl-admin); color: var(--tl-admin); }
-.tray-landing .tl-portal-open .tl-arrow { transition: transform .2s; }
-.tray-landing .tl-portal-open:hover .tl-arrow { transform: translateX(4px); }
+.tray-landing .tl-portal:hover .tl-portal-open { background: var(--tl-bg-4); border-color: var(--tl-ink-4); }
+.tray-landing .tl-portal[data-c="student"]:hover .tl-portal-open { border-color: var(--tl-student); color: var(--tl-student); }
+.tray-landing .tl-portal[data-c="kitchen"]:hover .tl-portal-open { border-color: var(--tl-kitchen); color: var(--tl-kitchen); }
+.tray-landing .tl-portal[data-c="admin"]:hover .tl-portal-open { border-color: var(--tl-admin); color: var(--tl-admin); }
+.tray-landing .tl-portal:hover .tl-portal-open .tl-arrow { transform: translateX(4px); }
 
 /* Sync section */
 .tray-landing .tl-sync { padding: 96px 0; background: var(--tl-bg-2); border-top: 1px solid var(--tl-line); border-bottom: 1px solid var(--tl-line); position: relative; overflow: hidden; }
@@ -447,7 +446,7 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
           </div>
 
           <div className="tl-portals">
-            <article className="tl-portal" data-c="student">
+            <a href="/demo/student.html" className="tl-portal" data-c="student">
               <div className="tl-portal-head">
                 <div>
                   <span className="tl-portal-ix tl-ix">01 — Student</span>
@@ -470,14 +469,14 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
                   <span className="tl-feat-tag">Pickup window</span>
                   <span className="tl-feat-tag">Veg lane</span>
                 </div>
-                <a href="/demo/student.html" className="tl-portal-open">
+                <span className="tl-portal-open">
                   <span>Open the student app</span>
                   <span className="tl-arrow">→</span>
-                </a>
+                </span>
               </div>
-            </article>
+            </a>
 
-            <article className="tl-portal" data-c="kitchen">
+            <a href="/demo/kitchen.html" className="tl-portal" data-c="kitchen">
               <div className="tl-portal-head">
                 <div>
                   <span className="tl-portal-ix tl-ix">02 — Kitchen</span>
@@ -497,14 +496,14 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
                   <span className="tl-feat-tag">Add specials</span>
                   <span className="tl-feat-tag">OTP verify</span>
                 </div>
-                <a href="/demo/kitchen.html" className="tl-portal-open">
+                <span className="tl-portal-open">
                   <span>Open the kitchen view</span>
                   <span className="tl-arrow">→</span>
-                </a>
+                </span>
               </div>
-            </article>
+            </a>
 
-            <article className="tl-portal" data-c="admin">
+            <a href="/demo/admin.html" className="tl-portal" data-c="admin">
               <div className="tl-portal-head">
                 <div>
                   <span className="tl-portal-ix tl-ix">03 — Admin</span>
@@ -524,12 +523,12 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
                   <span className="tl-feat-tag">Audit log</span>
                   <span className="tl-feat-tag">⌘K search</span>
                 </div>
-                <a href="/demo/admin.html" className="tl-portal-open">
+                <span className="tl-portal-open">
                   <span>Open the admin console</span>
                   <span className="tl-arrow">→</span>
-                </a>
+                </span>
               </div>
-            </article>
+            </a>
           </div>
         </section>
 
