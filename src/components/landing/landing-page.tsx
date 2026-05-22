@@ -8,6 +8,8 @@ import { LandingSplash } from "@/components/landing/landing-splash";
 // Scoped to .tray-landing only; student/kitchen/admin portals stay separate.
 
 const SCOPED_CSS = `
+@import url('https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800;900&display=swap');
+
 .tray-landing {
   --tl-bg: #0d1220;
   --tl-bg-2: #141d38;
@@ -97,15 +99,20 @@ const SCOPED_CSS = `
 .tray-landing .tl-hero::before { content: ""; position: absolute; left: 50%; top: -220px; width: 1100px; height: 900px; border-radius: 50%; background: radial-gradient(ellipse at center, rgba(126, 184, 255, 0.14) 0%, rgba(196, 168, 130, 0.08) 35%, transparent 68%); transform: translateX(-50%); pointer-events: none; z-index: 0; }
 .tray-landing .tl-h1 .tl-word { display: inline-block; transform-origin: 50% 100%; }
 .tray-landing [data-reveal] { will-change: transform, opacity; }
-.tray-landing .tl-ticker { overflow: hidden; border-block: 1px solid var(--tl-line); background: rgba(20, 29, 56, 0.55); position: relative; z-index: 2; }
-.tray-landing .tl-ticker-track { display: flex; width: max-content; animation: tlTicker 42s linear infinite; }
+.tray-landing .tl-ticker { overflow: hidden; border-block: 1px solid var(--tl-line); background: rgba(20, 29, 56, 0.55); position: relative; z-index: 2; width: 100vw; margin-left: calc(-50vw + 50%); }
+.tray-landing .tl-ticker-track { display: flex; width: max-content; animation: tlTicker 38s linear infinite; }
 .tray-landing .tl-ticker:hover .tl-ticker-track { animation-play-state: paused; }
-.tray-landing .tl-ticker-item { flex-shrink: 0; padding: 14px 28px; font-family: var(--font-geist-mono), monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--tl-ink-3); white-space: nowrap; }
-.tray-landing .tl-ticker-item em { font-style: normal; color: var(--tl-accent); font-weight: 600; }
+.tray-landing .tl-ticker-item { flex-shrink: 0; padding: 16px 36px; font-family: 'Big Shoulders Display', var(--font-geist-mono), monospace; font-size: 15px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: var(--tl-ink-3); white-space: nowrap; word-spacing: 0.2em; }
+.tray-landing .tl-ticker-item em { font-style: normal; color: var(--tl-accent); font-weight: 900; }
 @keyframes tlTicker { from { transform: translateX(0); } to { transform: translateX(-50%); } }
 @media (prefers-reduced-motion: reduce) {
   .tray-landing .tl-ticker-track { animation: none; flex-wrap: wrap; width: 100%; justify-content: center; }
 }
+.tray-landing .tl-ticker-2 { overflow: hidden; border-block: 1px solid var(--tl-line); background: rgba(20, 29, 56, 0.35); position: relative; z-index: 2; width: 100vw; margin-left: calc(-50vw + 50%); }
+.tray-landing .tl-ticker-2 .tl-ticker-track { animation: tlTicker2 52s linear infinite; }
+.tray-landing .tl-ticker-2:hover .tl-ticker-track { animation-play-state: paused; }
+.tray-landing .tl-ticker-2 .tl-ticker-item { font-size: 13px; font-weight: 700; letter-spacing: 0.14em; color: var(--tl-ink-4); padding: 14px 32px; }
+@keyframes tlTicker2 { from { transform: translateX(-50%); } to { transform: translateX(0); } }
 .tray-landing .tl-hero-top { display: flex; align-items: center; justify-content: space-between; gap: 16px; font-family: var(--font-geist-mono), monospace; font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--tl-ink-3); padding-bottom: 24px; border-bottom: 1px solid var(--tl-line); margin-bottom: 40px; font-weight: 500; flex-wrap: wrap; }
 .tray-landing .tl-hero-top .tl-l, .tray-landing .tl-hero-top .tl-r { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
 .tray-landing .tl-live { display: inline-flex; align-items: center; gap: 8px; color: var(--tl-good); text-transform: none; letter-spacing: 0.02em; font-family: var(--font-geist), sans-serif; font-weight: 500; font-size: 12px; }
@@ -143,7 +150,7 @@ const SCOPED_CSS = `
 .tray-landing .tl-section-num .tl-num { color: var(--tl-persimmon); font-weight: 600; }
 .tray-landing .tl-section-head { display: grid; grid-template-columns: 1fr; gap: 32px; align-items: flex-end; margin-bottom: 40px; }
 @media (min-width: 900px) { .tray-landing .tl-section-head { grid-template-columns: 1.3fr 1fr; gap: 80px; margin-bottom: 56px; } }
-.tray-landing .tl-section-head h2 { margin: 0; font-family: var(--font-instrument-serif), serif; font-weight: 400; font-size: clamp(40px, 7vw, 96px); letter-spacing: -0.03em; line-height: 0.94; }
+.tray-landing .tl-section-head h2 { margin: 0; font-family: var(--font-instrument-serif), serif; font-weight: 400; font-size: clamp(40px, 7vw, 96px); letter-spacing: -0.02em; line-height: 1.05; word-spacing: 0.06em; }
 .tray-landing .tl-section-head h2 .tl-it { font-style: italic; color: var(--tl-persimmon); }
 .tray-landing .tl-section-head .tl-side { color: var(--tl-ink-2); max-width: 42ch; font-size: 16px; line-height: 1.6; }
 
@@ -164,10 +171,11 @@ const SCOPED_CSS = `
 .tray-landing .tl-portal[data-c="kitchen"] .tl-portal-head h3 .tl-it { color: var(--tl-kitchen); }
 .tray-landing .tl-portal[data-c="admin"] .tl-portal-head h3 .tl-it { color: var(--tl-admin); }
 
-.tray-landing .tl-portal-frame { position: relative; height: 280px; overflow: hidden; background: var(--tl-bg-3); border-bottom: 1px solid var(--tl-line); }
-@media (min-width: 720px) { .tray-landing .tl-portal-frame { height: 420px; } }
-.tray-landing .tl-portal-frame iframe { position: absolute; top: 0; left: 0; width: 200%; height: 200%; transform: scale(0.5); transform-origin: 0 0; border: 0; pointer-events: none; background: var(--tl-bg-3); }
-.tray-landing .tl-portal-frame .tl-portal-overlay { position: absolute; inset: 0; background: linear-gradient(180deg, transparent 60%, var(--tl-bg-2) 100%); pointer-events: none; z-index: 2; }
+.tray-landing .tl-portal-frame { position: relative; height: 320px; overflow: hidden; background: var(--tl-bg-3); border-bottom: 1px solid var(--tl-line); }
+@media (min-width: 720px) { .tray-landing .tl-portal-frame { height: 480px; } }
+.tray-landing .tl-portal-frame iframe { position: absolute; top: 0; left: 0; width: 200%; height: 200%; transform: scale(0.5); transform-origin: 0 0; border: 0; pointer-events: none; background: var(--tl-bg-3); transition: transform 0.4s cubic-bezier(0.2, 0.7, 0.3, 1); }
+.tray-landing .tl-portal:hover .tl-portal-frame iframe { transform: scale(0.5) translateY(-8px); }
+.tray-landing .tl-portal-frame .tl-portal-overlay { position: absolute; inset: 0; background: linear-gradient(180deg, transparent 75%, var(--tl-bg-2) 100%); pointer-events: none; z-index: 2; }
 .tray-landing .tl-portal-frame .tl-device-tag { position: absolute; top: 14px; left: 14px; font-family: var(--font-geist-mono), monospace; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--tl-ink-3); background: rgba(14, 10, 6, 0.7); padding: 4px 10px; border-radius: 5px; font-weight: 500; z-index: 3; backdrop-filter: blur(4px); }
 
 .tray-landing .tl-portal-body { padding: 20px 24px 24px; display: flex; flex-direction: column; gap: 14px; }
@@ -275,6 +283,31 @@ const SCOPED_CSS = `
 .tray-landing .tl-line-chip.is-on { border-color: rgba(196, 168, 130, 0.55); background: rgba(196, 168, 130, 0.12); color: var(--tl-ink); }
 .tray-landing .tl-line-hint { margin: 8px 2px 0; font-size: 14px; line-height: 1.5; color: var(--tl-ink-2); min-height: 3em; }
 .tray-landing .tl-footer-bot { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; align-items: center; padding-top: 24px; font-family: var(--font-geist-mono), monospace; font-size: 11px; color: var(--tl-ink-4); letter-spacing: 0.08em; font-weight: 500; }
+
+/* Section entrance — GSAP sets these, CSS provides will-change hints */
+.tray-landing .tl-section-head h2,
+.tray-landing .tl-section-num,
+.tray-landing .tl-section-head .tl-side,
+.tray-landing .tl-portal,
+.tray-landing .tl-node,
+.tray-landing .tl-flow-step,
+.tray-landing .tl-stack-card,
+.tray-landing .tl-pull p,
+.tray-landing .tl-closing h2 {
+  will-change: transform, opacity;
+}
+
+/* Hover lift on stack cards */
+.tray-landing .tl-stack-card:hover {
+  transform: translateY(-3px);
+  transition: transform 0.2s cubic-bezier(0.2, 0.7, 0.3, 1), border-color .15s, background .15s;
+}
+
+/* Flow step hover */
+.tray-landing .tl-flow-step:hover {
+  background: var(--tl-bg-3);
+  transition: background 0.2s;
+}
 `;
 
 function BrandMark() {
@@ -393,11 +426,11 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
           </div>
         </section>
 
-        <div className="tl-ticker" aria-hidden>
+        <div className="tl-ticker" aria-hidden="true">
           <div className="tl-ticker-track">
             {tickerDoubled.map((item, i) => (
-              <span key={`${item}-${i}`} className="tl-ticker-item">
-                <em>●</em> {item}
+              <span key={`ticker1-${item}-${i}`} className="tl-ticker-item">
+                <em>●</em>&nbsp;&nbsp;{item}
               </span>
             ))}
           </div>
@@ -625,6 +658,16 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
             ))}
           </div>
         </section>
+
+        <div className="tl-ticker tl-ticker-2" aria-hidden="true">
+          <div className="tl-ticker-track">
+            {tickerDoubled.map((item, i) => (
+              <span key={`ticker2-${item}-${i}`} className="tl-ticker-item">
+                <em>◆</em>&nbsp;&nbsp;{item}
+              </span>
+            ))}
+          </div>
+        </div>
 
         <section className="tl-closing" data-reveal>
           <div className="tl-wrap">
