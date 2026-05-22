@@ -303,23 +303,23 @@ html.dark [data-portal="kitchen"] {
    ════════════════════════════════════════════════════════════════════ */
 
 :root {
-  /* Landing palette — Premium Lavender & Dark Charcoal */
-  --tray-bg:      #E6E6FA;   /* Luxurious Lavender */
-  --tray-surface: #D4D4F0;   /* Richer lavender card/surface */
-  --tray-ink:     #333333;   /* Pure Charcoal text/ink */
-  --tray-muted:   #5E5E5E;   /* Muted charcoal */
-  --tray-clay:    #5A4FCF;   /* Radiant Iris/Indigo primary accent */
-  --tray-green:   #3F725D;   /* Emerald Sage secondary accent */
-  --tray-border:  rgba(51, 51, 51, 0.12);
-  --tray-cream:   #FAF9FE;   /* Ultra-soft cream-lavender white */
-  --tray-shadow:  rgba(51, 51, 51, 0.08);
+  /* Landing palette — Theme H: Vintage Editorial Pulp */
+  --tray-bg:      #F4EFE6;
+  --tray-surface: #E8DFD0;
+  --tray-ink:     #1A1A19;
+  --tray-muted:   #78716C;
+  --tray-clay:    #E60000;
+  --tray-green:   #16A34A;
+  --tray-border:  rgba(26, 26, 25, 0.12);
+  --tray-cream:   #F4EFE6;
+  --tray-shadow:  rgba(26, 26, 25, 0.08);
 
-  /* Condensed display (Druk-like) — Barlow Condensed Black */
-  --font-display-cond: var(--font-barlow), system-ui, sans-serif;
+  /* Condensed display (Druk-like) — Fraunces for Font Pairing 4 Display */
+  --font-display-cond: var(--font-fraunces), serif;
 
   /* Semantic font shortcuts (landing + app) */
-  --font-editorial: var(--font-fraunces), var(--font-cormorant), Georgia, serif;
-  --font-ui:        var(--font-geist), var(--font-inter), system-ui, sans-serif;
+  --font-editorial: var(--font-fraunces), serif;
+  --font-ui:        var(--font-barlow), system-ui, sans-serif;
   --font-code:      var(--font-dm-mono), var(--font-jetbrains), ui-monospace, monospace;
 }
 
@@ -343,8 +343,8 @@ html.dark [data-portal="kitchen"] {
 .tray-page {
   min-height: 100svh;
   background:
-    radial-gradient(circle at 15% 10%, rgba(90, 79, 207, 0.12), transparent 30rem),
-    radial-gradient(circle at 85% 20%, rgba(63, 114, 93, 0.09), transparent 28rem),
+    radial-gradient(circle at 15% 10%, rgba(230, 0, 0, 0.08), transparent 30rem),
+    radial-gradient(circle at 85% 20%, rgba(22, 163, 74, 0.06), transparent 28rem),
     var(--tray-bg);
   color: var(--tray-ink);
 }
