@@ -11,7 +11,7 @@ import { PiranhaPortalsSection } from "@/components/landing/sections/PiranhaPort
 import { CampusModelSection }    from "@/components/landing/sections/CampusModelSection";
 import { LandingIntro }          from "@/components/landing/LandingIntro";
 import { LandingMotion }         from "@/components/landing/landing-motion";
-import { KubrickWipe }           from "@/components/landing/KubrickWipe";
+import { LandingLineLeave }      from "@/components/landing/landing-line-leave";
 import {
   AnimatedNav,
   SectionReveal,
@@ -47,7 +47,6 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
       <ScrollProgress />
       <LandingIntro />
       <LandingMotion />
-      <KubrickWipe />
 
       {/* ── NAV ─────────────────────────────────────────────────────────── */}
       <input type="checkbox" id="tl-ham" className="sr-only peer" aria-hidden />
@@ -61,7 +60,8 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
           <BrandMark />
 
           {/* Desktop nav links */}
-          <nav className="hidden items-center gap-8 lg:flex" aria-label="Main navigation">
+          <nav className="hidden items-center gap-2 lg:flex relative px-2.5 py-1 rounded-full border border-[var(--tray-border)] bg-[var(--tray-surface)]/25 backdrop-blur-md" aria-label="Main navigation">
+            <div className="tl-nav-pill absolute rounded-full bg-[var(--tray-surface)]/60 pointer-events-none z-0 opacity-0" style={{ height: "calc(100% - 8px)", top: "4px" }} />
             {[
               ["Product",  "#portals"],
               ["Campus",   "#campus"],
@@ -70,7 +70,7 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
               <a
                 key={label}
                 href={href}
-                className="font-code text-xs uppercase tracking-[0.2em] text-[var(--tray-muted)] transition hover:text-[var(--tray-ink)]"
+                className="font-code text-xs uppercase tracking-[0.2em] text-[var(--tray-muted)] transition-colors duration-200 hover:text-[var(--tray-ink)] relative z-10 px-4.5 py-2.5 rounded-full"
               >
                 {label}
               </a>
@@ -175,9 +175,10 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
         <PiranhaPortalsSection />
         <TrustSection />
         <CampusModelSection campusName={campusName} />
+        <LandingLineLeave />
 
         {/* ── REALTIME SYNC — animated pipeline visual ─────────────── */}
-        <SectionReveal id="sync" className="px-5 py-24 sm:px-8 lg:px-10">
+        <SectionReveal id="sync" className="px-5 py-24 sm:px-8 lg:px-10 lg:min-h-screen lg:flex lg:flex-col lg:justify-center lg:py-24">
           <motion.div className="mx-auto max-w-7xl">
             <RevealItem>
               <div className="mb-5 flex flex-wrap items-center gap-3">
@@ -222,7 +223,7 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
 
         {/* ── KITCHEN QUOTE — Cormorant Garamond for romantic serif feel ── */}
         <section
-          className="px-5 py-24 sm:px-8 lg:px-10"
+          className="px-5 py-24 sm:px-8 lg:px-10 lg:min-h-screen lg:flex lg:flex-col lg:justify-center lg:py-24"
           style={{ background: "var(--tray-ink)", color: "var(--tray-cream, #EDE5D2)" }}
         >
           <div className="mx-auto max-w-5xl">
@@ -260,7 +261,7 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
         </section>
 
         {/* ── PHONE TO PLATE (5 steps) — Fraunces numbers, Jakarta titles ── */}
-        <SectionReveal id="flow" as="div" className="px-5 py-24 sm:px-8 lg:px-10">
+        <SectionReveal id="flow" as="div" className="px-5 py-24 sm:px-8 lg:px-10 lg:min-h-screen lg:flex lg:flex-col lg:justify-center lg:py-24">
           <motion.div className="mx-auto max-w-7xl">
             <RevealItem variant="soft">
             <div className="mb-4 flex flex-wrap items-center gap-3">
@@ -369,7 +370,7 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
         </SectionReveal>
 
         {/* ── STACK — Plus Jakarta Sans for clean tech feel ─────────── */}
-        <SectionReveal id="stack" as="div" className="px-5 py-24 sm:px-8 lg:px-10">
+        <SectionReveal id="stack" as="div" className="px-5 py-24 sm:px-8 lg:px-10 lg:min-h-screen lg:flex lg:flex-col lg:justify-center lg:py-24">
           <div className="mx-auto max-w-7xl">
             <div className="mb-4 flex flex-wrap items-center gap-3">
               <p
@@ -471,7 +472,7 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
         </div>
 
         {/* ── CLOSING CTA ───────────────────────────────────────────── */}
-        <SectionReveal as="div" id="closing" className="relative overflow-hidden px-5 py-32 text-center sm:px-8 lg:px-10 tl-closing">
+        <SectionReveal as="div" id="closing" className="relative overflow-hidden px-5 py-32 text-center sm:px-8 lg:px-10 tl-closing lg:min-h-screen lg:flex lg:flex-col lg:justify-center lg:py-24">
           <div className="pointer-events-none absolute inset-0 -z-10">
             <div className="absolute left-1/2 top-0 h-96 w-96 -translate-x-1/2 rounded-full bg-[var(--tray-clay)]/15 blur-3xl" />
           </div>
@@ -524,9 +525,9 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
 
       {/* ── FOOTER ────────────────────────────────────────────────────── */}
       <footer className="relative overflow-hidden px-5 pb-8 pt-12 sm:px-8 lg:px-10">
-        {/* Ghost TRAY watermark — decreased size and aligned to bottom bar height */}
+        {/* Ghost TRAY watermark — aligned to bottom bar height */}
         <div
-          className="pointer-events-none absolute bottom-8 right-0 select-none"
+          className="pointer-events-none absolute bottom-8 right-0 select-none tl-footer-mark"
           style={{ overflow: "hidden" }}
         >
           <span
@@ -644,6 +645,17 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
           </div>
         </div>
       </footer>
+
+      {/* Global SVG Gooey Filter for Liquid UI elements */}
+      <svg xmlns="http://www.w3.org/2000/svg" version="1.1" style={{ display: "none" }}>
+        <defs>
+          <filter id="goo">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="5" result="blur" />
+            <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 18 -8" result="goo" />
+            <feBlend in="SourceGraphic" in2="goo" />
+          </filter>
+        </defs>
+      </svg>
     </div>
   );
 }

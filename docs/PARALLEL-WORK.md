@@ -86,6 +86,19 @@ Read AGENTS.md, docs/DEMO-SPEC.md, docs/PARALLEL-WORK.md. One file owner per lan
 
 ## Session log
 
+### 2026-05-23 — Sticky Stacking Scroll Panels, Watermark Alignment & Premium Micro-Interactions
+
+**References/Inspiration:** freefrontend.com (Gooey Liquid Radio Buttons, Resizing Tab Bar with Anchor Positioning).
+
+**Work done:**
+- **Sticky Section Stacking:** Removed the horizontal chapter-wipe screen transitions (`KubrickWipe`) and programmed a desktop-only (`min-width: 1024px`) sticky stacking panels scroll effect using GSAP ScrollTrigger. Pinned each top-level panel sequentially (`pinSpacing: false` and `end: "bottom top"`) so sections slide up and overlap each other cleanly. Set solid backgrounds and sequential z-indices to prevent overlap transparency.
+- **Lowered Footer Watermark:** Repositioned the absolute watermark container from `bottom-8` to `bottom-2` to align its baseline perfectly with the bottom bar text `Made for India's college campuses`.
+- **Interactive Context Section:** Fully implemented and styled the unmounted `LandingLineLeave` (`02b / Adaptivity`) section in `src/components/landing/landing-line-leave.tsx` and mounted it in `landing-page.tsx`. Added a Framer Motion `layoutId` spring sliding tab bar and a live adaptive preview card showing Takeaway vs Dine-in details.
+- **Double-Layered Magnetic Buttons:** Upgraded the global `magneticButton` script in `landing-motion.tsx` and `tray-motion.ts` to pull the outer border (18%/28%) and the inner text (10%/15%) at different ratios to create a 3D parallax depth effect.
+- **Floating Island Nav & Sliding Pill:** Restructured the desktop header navigation in `landing-page.tsx` as a floating island, and programmed a GSAP sliding indicator pill in `landing-motion.tsx` that tracks hover and scroll-spies active sections.
+- **Dual-Layer Gooey Liquid Buttons:** Integrated a hidden SVG gooey filter (`#goo`) at the bottom of the page and upgraded `LiquidButton.tsx` to combine two opposite-flowing wave paths under the gooey filter.
+- **Verified:** `pnpm typecheck` ✅, `pnpm demo:verify` ✅ — zero errors.
+
 ### 2026-05-23 — Kubrick-Inspired Cinematic Section Wipes + Full Animation Audit
 
 **References:** kubrick.life (Readymag storytelling site, cinematic chapter-break wipes between sections)
@@ -1033,3 +1046,95 @@ pm run typecheck passes. Restart dev if port 3000 hangs: NODE_OPTIONS=--max-old-
   - Removed the horizontal border line (`border-t border-[var(--tray-border)]`) from the bottom bar.
   - Removed the `v3.0 · 2026` version metadata from the bottom right as requested, leaving the clean tracking-wide `Made for India's college campuses` text in uppercase monospace `DM Mono` as the sole elegant footer bottom mark.
 - **Verified**: Running `pnpm typecheck` compiles completely clean with **0 errors**. Verified the visual layout in Chromium DevTools via live scrolling and screenshots.
+
+---
+
+## 2026-05-23 — Session: Frameless Live Showcase Cards & Widescreen Scaling
+
+**What changed:**
+- **Showcase Cards Layout (`PiranhaPortalsSection.tsx`)**:
+  - Reorganized card content to place the live website preview (`site-preview`) at the top, grouping heading and description below it (`site-meta`), followed by a clean right-aligned `LAUNCH DEMO →` link on a divider line.
+  - Set a fixed height of `220px` on the website preview containers, keeping the thumbnails perfectly aligned horizontally across all columns.
+  - Completely removed top labels (`STUDENT APP`, `KITCHEN VIEW`, `ADMIN CONSOLE`), index dots, and bottom device badges (`MOBILE • STUDENT`, etc.), making the cards extremely clean and matching Godly/Lapa Ninja showcase style.
+  - Maintained cream background blending into the landing page color.
+- **Dynamic Scale Custom Property (`PiranhaPortalsSection.tsx`)**:
+  - Implemented the CSS custom property `--scale` approach where the iframe's size is set to `calc(100% / var(--scale))` and scaled down by `scale(var(--scale))` using `origin-top-left`.
+  - Tuned the zoom levels per card (Student: 0.35, Kitchen: 0.4, Admin: 0.33) to render the websites in beautiful, readable desktop/tablet viewports.
+- **Responsive Iframe Enhancements (`student.html`, `kitchen.html`, `admin.html`)**:
+  - Added `overflow: hidden !important` to `body.in-iframe` in all three demo files to completely hide scrollbars and ensure a clean "live screenshot" presentation.
+  - Redesigned the student portal's `body.in-iframe` stylesheet: hid the search bar and section headers to save vertical space, laid out the canteen selection segments horizontally, and configured the menu items in a clean, space-saving 2-column grid.
+  - Removed forced mobile layout overrides from `admin.html` inside the iframe view so that the dashboard naturally displays in its full widescreen desktop layout.
+- **Verified**: Verified absolute type-safety (`pnpm typecheck` ✅) and static routing/link integrity (`pnpm run demo:verify` ✅) with zero errors. Live rendering verified via DevTools viewport screenshots.
+
+---
+
+## 2026-05-23 — Session: Dynamic Scroll Snapping & Watermark Baseline Alignment
+
+**What changed:**
+- **Dynamic Scroll Snapping (`landing-motion.tsx`)**:
+  - Removed the clunky desktop-only sticky section pinning/stacking overlays (`pinSpacing: false` on sections in normal flow) which caused overlapping text and layout clashes.
+  - Implemented a clean, ScrollTrigger-based scroll snapping mechanism. When a user scrolls and stops on desktop, it calculates the closest panel's `offsetTop` and smooth-scrolls the viewport to align it perfectly at the top, creating a premium full-screen snap transition.
+- **Full-Screen Desktop Sections (`TrayHero.tsx`, `PiranhaPortalsSection.tsx`, `TrustSection.tsx`, `CampusModelSection.tsx`, `landing-line-leave.tsx`, `landing-page.tsx`)**:
+  - Updated all major page sections on desktop to have the Tailwind classes `lg:min-h-screen lg:flex lg:flex-col lg:justify-center lg:py-0`, centering content vertically and making each section exactly 100vh tall to support perfect snapping.
+- **Footer Watermark & Baseline Alignment (`landing-page.tsx`, `landing-motion.tsx`)**:
+  - Positioned the ghost TRAY watermark container at `bottom-8` and added the class `tl-footer-mark` to align its baseline with the bottom bar text `Made for India's college campuses`.
+  - Updated the GSAP watermark parallax script to target the semantic `.tl-footer-mark` class, fixing the broken Tailwind class match query and ensuring the scroll-driven parallax movement behaves smoothly.
+- **Verified**: Compiles perfectly clean (`pnpm typecheck` ✅) and static verification checks pass with zero warnings (`pnpm demo:verify` ✅).
+
+---
+
+## 2026-05-23 — Session: Full Website Scaled Previews & Exact Mockup Card Styling
+
+**What changed:**
+- **Exact Card Mockup Styling (`PiranhaPortalsSection.tsx`)**:
+  - Redesigned card headers to match the user's photo exactly: added eyebrow labels (`STUDENT`, `KITCHEN`, `ADMIN` in uppercase sans) and status colored dots (blue, orange, green).
+  - Swapped headings to bold sans-serif titles (`Student`, `Kitchen staff`, `Canteen admin`).
+  - Added floating device badges (`STUDENT APP • MOBILE`, etc.) inside the top-left of each website preview container.
+  - Updated card descriptions to match the exact copy from the user's mockup.
+  - Center-aligned the monospaced `DEMO LOGIN · SHARED CREDENTIALS` uppercase line above the buttons for kitchen and admin.
+  - Replaced the outline links with solid, dark full-width pill buttons (e.g. `Open student demo`, `Sign in as kitchen staff`, `Sign in as admin`) with arrow icons (`→`) on the right.
+- **Showcase Cards Layout (`PiranhaPortalsSection.tsx`)**:
+  - Set the aspect ratio of the website preview container to `aspect-[4/3]`, which naturally keeps thumbnails aligned horizontally while increasing the height to ~285px to display more content.
+  - Adjusted the scale factors: Student: `0.9` (renders at `390px-420px` width, forcing the mobile responsive view), Kitchen: `0.45` (tablet widescreen), Admin: `0.38` (desktop widescreen).
+  - Deleted a duplicate website preview container block from the file.
+- **Static Demo Page CSS Refinements (`student.html`, `kitchen.html`, `admin.html`)**:
+  - Refactored `in-iframe` overrides to stop hiding headers, navigation menus, and sidebars, restoring the full website interfaces inside the cards.
+  - Keep the `.demo-stripe` instructions banner and browser scrollbars hidden inside the iframes.
+- **Verified**: Verified absolute typecheck (`pnpm typecheck` ✅) and static verification checks (`pnpm demo:verify` ✅) with zero errors. Visual layout verified using browser screenshots.
+
+---
+
+## 2026-05-23 — Session: Trust Section Card Redesign & Desktop Padding Normalization
+
+**What changed:**
+- **Trust Section Cards Redesign (`TrustSection.tsx`)**:
+  - Completely redesigned the cards inside the TrustSection to match the premium, structured typography and layout language of the Portals cards.
+  - Increased card padding from `p-6` to `p-8 sm:p-9` for a spacious, high-end editorial gallery card layout.
+  - Placed the card tag (e.g. `Direct to Bank`) as a bold uppercase eyebrow label (`font-code text-[0.68rem] font-bold uppercase tracking-[0.18em]`) directly below the icon container.
+  - Styled the card titles using the bold Barlow font (`font-barlow font-extrabold text-[1.45rem]`) with leading-snug alignment.
+  - Kept the descriptions in `font-geist text-[0.88rem] leading-[1.65]` with `opacity-75`.
+- **Desktop Padding Normalization (All Full-Screen Sections)**:
+  - Replaced the tight `lg:py-0` padding override with comfortable vertical padding `lg:py-24` on all full-screen snapping sections: [Hero](file:///c:/Users/ntena/Downloads/yyyy/src/components/landing/sections/TrayHero.tsx), [Portals](file:///c:/Users/ntena/Downloads/yyyy/src/components/landing/sections/PiranhaPortalsSection.tsx), [Trust](file:///c:/Users/ntena/Downloads/yyyy/src/components/landing/sections/TrustSection.tsx), [Campus Model](file:///c:/Users/ntena/Downloads/yyyy/src/components/landing/sections/CampusModelSection.tsx), [Adaptivity](file:///c:/Users/ntena/Downloads/yyyy/src/components/landing/landing-line-leave.tsx), and all custom sections inside [landing-page.tsx](file:///c:/Users/ntena/Downloads/yyyy/src/components/landing/landing-page.tsx). This guarantees that snapped full-screen panels never feel cramped or squished against the browser edges.
+- **Verified**: Typecheck compiled cleanly with zero errors (`pnpm typecheck` ✅) and static routing checks pass successfully (`pnpm demo:verify` ✅).
+
+---
+
+## 2026-05-23 — Session: Removed Watermark Parallax Displacement
+
+**What changed:**
+- **Watermark Static Alignment (`landing-motion.tsx`)**:
+  - Removed the GSAP `y: -70` parallax translation on the footer ghost watermark `.tl-footer-mark`. This keeps it stably positioned at `bottom-8` (matching the horizontal baseline level of `Made for India's college campuses`) instead of floating up and drifting away on scroll.
+- **Verified**: Typecheck compiles successfully (`pnpm typecheck` ✅) and static routing tests pass (`pnpm demo:verify` ✅).
+
+---
+
+## 2026-05-23 — Session: Removed Space in Hero Section Metric
+
+**What changed:**
+- **Hero Metric Spacer Clean (`TrayHero.tsx`)**:
+  - Removed the space in the `12 min` metric suffix (changing it from `" min"` to `"min"`). This aligns it with `240ms` and `0%` so there is no space between the numbers and their units, ensuring a consistent, compact presentation.
+- **Verified**: Typecheck compiles successfully (`pnpm typecheck` ✅) and static routing tests pass (`pnpm demo:verify` ✅).
+
+
+
+

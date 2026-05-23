@@ -48,17 +48,27 @@ export function LiquidButton({ href, children, icon, className, style }: LiquidB
           transition: bottom 0.65s cubic-bezier(0.76, 0, 0.24, 1);
           display: flex;
           flex-direction: column;
+          filter: url('#goo');
         }
         .liquid-wave-svg {
           width: 100%;
-          height: 14px;
-          margin-top: -13px;
+          height: 16px;
           fill: var(--tray-clay);
-          animation: waveFlow 1.8s infinite linear;
+          position: absolute;
+        }
+        .liquid-wave-1 {
+          margin-top: -15px;
+          animation: waveFlow1 2.2s infinite linear;
+          opacity: 0.85;
+        }
+        .liquid-wave-2 {
+          margin-top: -12px;
+          animation: waveFlow2 1.6s infinite linear;
         }
         .liquid-wave-fill {
           flex: 1;
           width: 100%;
+          margin-top: 1px;
         }
         .liquid-btn:hover {
           border-color: var(--tray-clay);
@@ -73,17 +83,23 @@ export function LiquidButton({ href, children, icon, className, style }: LiquidB
         .liquid-btn:hover .liquid-btn-wave {
           bottom: 0%;
         }
-        @keyframes waveFlow {
-          0% { transform: translateX(0) translateY(0); }
-          50% { transform: translateX(-10px) translateY(-1px); }
-          100% { transform: translateX(0) translateY(0); }
+        @keyframes waveFlow1 {
+          0% { transform: translateX(0); }
+          100% { transform: translateX(-24px); }
+        }
+        @keyframes waveFlow2 {
+          0% { transform: translateX(0); }
+          100% { transform: translateX(24px); }
         }
       `}} />
       <Link href={href} className={`liquid-btn ${className || ""}`} style={style} data-magnetic>
         <span className="liquid-btn-text">{children}</span>
         <div className="liquid-btn-wave">
-          <svg viewBox="0 0 120 28" className="liquid-wave-svg" preserveAspectRatio="none">
+          <svg viewBox="0 0 120 28" className="liquid-wave-svg liquid-wave-1" preserveAspectRatio="none">
             <path d="M0,28 C30,28 30,14 60,14 C90,14 90,28 120,28 L120,28 L0,28 Z" />
+          </svg>
+          <svg viewBox="0 0 120 28" className="liquid-wave-svg liquid-wave-2" preserveAspectRatio="none">
+            <path d="M0,28 C30,28 30,18 60,18 C90,18 90,28 120,28 L120,28 L0,28 Z" />
           </svg>
           <div className="liquid-wave-fill" style={{ background: "var(--tray-clay)" }}></div>
         </div>

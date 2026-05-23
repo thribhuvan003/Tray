@@ -216,17 +216,30 @@ export function drawSvgPath(path: SVGPathElement, options?: ScrollTrigger.Vars) 
 export function magneticButton(button: HTMLElement) {
   if (prefersReducedMotion()) return () => {};
 
+  const innerText = button.querySelector("span, .liquid-btn-text, a > span, button > span") as HTMLElement | null;
+
   const onMove = (event: MouseEvent) => {
     const rect = button.getBoundingClientRect();
     const x = event.clientX - rect.left - rect.width / 2;
     const y = event.clientY - rect.top - rect.height / 2;
 
+    // Outer button container translates by 18%
     gsap.to(button, {
       x: x * 0.18,
       y: y * 0.18,
       duration: 0.35,
       ease: "power3.out",
     });
+
+    // Inner text translates slightly (10%) inside the button to create a 3D parallax depth feel
+    if (innerText) {
+      gsap.to(innerText, {
+        x: x * 0.1,
+        y: y * 0.1,
+        duration: 0.35,
+        ease: "power3.out",
+      });
+    }
   };
 
   const onLeave = () => {
@@ -236,6 +249,14 @@ export function magneticButton(button: HTMLElement) {
       duration: 0.45,
       ease: "elastic.out(1, 0.35)",
     });
+    if (innerText) {
+      gsap.to(innerText, {
+        x: 0,
+        y: 0,
+        duration: 0.45,
+        ease: "elastic.out(1, 0.35)",
+      });
+    }
   };
 
   button.addEventListener("mousemove", onMove);

@@ -96,6 +96,55 @@ export function LandingMotion() {
             });
           }
 
+          // ── DYNAMIC SCROLL SNAPPING (DESKTOP ONLY) ───────────────────
+          const isDesktop = typeof window !== "undefined" && window.innerWidth >= 1024;
+          if (isDesktop && !reduced) {
+            const panels = [
+              root.querySelector("main > section:first-of-type"), // Hero
+              root.querySelector("#portals"),
+              root.querySelector("#trust"),
+              root.querySelector("#campus"),
+              root.querySelector("#where"),
+              root.querySelector("#sync"),
+              Array.from(root.querySelectorAll("main > section")).find((s) => 
+                (s.getAttribute("style") ?? "").includes("tray-ink")
+              ), // Quote section
+              root.querySelector("#flow"),
+              root.querySelector("#stack"),
+              root.querySelector("#closing"),
+            ].filter(Boolean) as HTMLElement[];
+
+            // Snapping to panel tops for a dynamic screen-takeover scroll transition
+            ScrollTrigger.create({
+              trigger: "main",
+              start: "top top",
+              end: "bottom bottom",
+              snap: {
+                snapTo: (value) => {
+                  const totalHeight = document.documentElement.scrollHeight - window.innerHeight;
+                  const currentScroll = value * totalHeight;
+                  
+                  // Find the closest panel offsetTop
+                  let closestPanelOffset = panels[0].offsetTop;
+                  let minDiff = Math.abs(currentScroll - closestPanelOffset);
+                  
+                  panels.forEach((panel) => {
+                    const diff = Math.abs(currentScroll - panel.offsetTop);
+                    if (diff < minDiff) {
+                      minDiff = diff;
+                      closestPanelOffset = panel.offsetTop;
+                    }
+                  });
+                  
+                  return closestPanelOffset / totalHeight;
+                },
+                duration: { min: 0.25, max: 0.6 },
+                delay: 0.05,
+                ease: "power2.out",
+              }
+            });
+          }
+
           // ═══════════════════════════════════════════════════════════════
           // 1. HERO — clip-path curtain word reveal
           //    Safe: .tl-word spans are plain HTML, no Framer on them.
@@ -538,18 +587,14 @@ export function LandingMotion() {
           // ═══════════════════════════════════════════════════════════════
           // 12. FOOTER — TRAY watermark parallax + link wave-in
           // ═══════════════════════════════════════════════════════════════
-          // Specific selector: the footer's bottom-8 right-0 TRAY mark wrapper
+          // Specific selector: the footer's TRAY mark wrapper
           const footerMark = root.querySelector<HTMLElement>(
-            "footer [class*='bottom-8'][class*='right-0']"
+            "footer .tl-footer-mark"
           );
           if (footerMark) {
             gsap.from(footerMark, {
               scrollTrigger: { trigger: "footer", start: "top 95%" },
-              opacity: 0, scale: 0.88, duration: 1.5, ease: "power3.out",
-            });
-            gsap.to(footerMark, {
-              y: -70, ease: "none",
-              scrollTrigger: { trigger: "footer", start: "top bottom", end: "bottom top", scrub: 1.8 },
+              opacity: 0, scale: 0.94, duration: 1.5, ease: "power3.out",
             });
           }
 
@@ -569,14 +614,31 @@ export function LandingMotion() {
           //     components (those are motion.a with their own Framer hover).
           // ═══════════════════════════════════════════════════════════════
           root.querySelectorAll<HTMLElement>("[data-magnetic]").forEach((btn) => {
+            const innerText = btn.querySelector("span, .liquid-btn-text, a > span, button > span") as HTMLElement | null;
+
             const onMove = (e: MouseEvent) => {
               const r = btn.getBoundingClientRect();
               const dx = (e.clientX - (r.left + r.width / 2)) * 0.28;
               const dy = (e.clientY - (r.top + r.height / 2)) * 0.28;
+              
+              // Outer button container translates by 28% of cursor offset
               gsap.to(btn, { x: dx, y: dy, duration: 0.42, ease: "power2.out" });
+              
+              // Inner text translates slightly less (15% offset) to create 3D parallax feel
+              if (innerText) {
+                gsap.to(innerText, {
+                  x: dx * 0.15,
+                  y: dy * 0.15,
+                  duration: 0.42,
+                  ease: "power2.out",
+                });
+              }
             };
             const onLeave = () => {
               gsap.to(btn, { x: 0, y: 0, duration: 0.7, ease: "elastic.out(1, 0.4)" });
+              if (innerText) {
+                gsap.to(innerText, { x: 0, y: 0, duration: 0.7, ease: "elastic.out(1, 0.4)" });
+              }
             };
             btn.addEventListener("mousemove", onMove);
             btn.addEventListener("mouseleave", onLeave);
@@ -607,6 +669,66 @@ export function LandingMotion() {
               scrollTrigger: { trigger: parent, start: "top 88%", once: true },
             });
           });
+
+          // ═══════════════════════════════════════════════════════════════
+          // 15. GLOBAL — Navigation Sliding Indicator Pill & Scroll Spy
+          // ═══════════════════════════════════════════════════════════════
+          const nav = root.querySelector<HTMLElement>("nav[aria-label='Main navigation']");
+          const pill = nav?.querySelector<HTMLElement>(".tl-nav-pill");
+          const links = nav?.querySelectorAll<HTMLAnchorElement>("a");
+
+          if (nav && pill && links?.length) {
+            let activeLink: HTMLAnchorElement | null = null;
+
+            const updatePill = (link: HTMLAnchorElement, immediate = false) => {
+              gsap.to(pill, {
+                x: link.offsetLeft,
+                width: link.offsetWidth,
+                opacity: 1,
+                duration: immediate ? 0 : 0.35,
+                ease: "power2.out",
+                overwrite: "auto",
+              });
+            };
+
+            const hidePill = () => {
+              if (activeLink) {
+                updatePill(activeLink);
+              } else {
+                gsap.to(pill, { opacity: 0, duration: 0.3, ease: "power2.out", overwrite: "auto" });
+              }
+            };
+
+            links.forEach((link) => {
+              link.addEventListener("mouseenter", () => updatePill(link));
+            });
+
+            nav.addEventListener("mouseleave", hidePill);
+
+            // Scroll spy triggers for active state
+            const sections = ["#portals", "#campus", "#stack"];
+            sections.forEach((id) => {
+              const sec = root.querySelector(id);
+              if (!sec) return;
+              const targetLink = Array.from(links).find((l) => l.getAttribute("href") === id);
+              if (!targetLink) return;
+
+              ScrollTrigger.create({
+                trigger: sec,
+                start: "top 40%",
+                end: "bottom 40%",
+                onToggle: (self) => {
+                  if (self.isActive && !killed) {
+                    activeLink = targetLink;
+                    updatePill(targetLink);
+                  } else if (!self.isActive && activeLink === targetLink && !killed) {
+                    activeLink = null;
+                    hidePill();
+                  }
+                },
+              });
+            });
+          }
 
         }); // end gsap.context
 

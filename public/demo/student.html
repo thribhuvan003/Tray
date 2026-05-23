@@ -288,8 +288,6 @@
       display: none !important;
     }
     body.in-iframe .demo-stripe,
-    body.in-iframe .topbar,
-    body.in-iframe .cat-nav,
     body.in-iframe .cart-sidebar {
       display: none !important;
     }
@@ -299,6 +297,52 @@
     body.in-iframe .content {
       padding: 12px !important;
       max-width: 100% !important;
+      display: flex !important;
+      flex-direction: column !important;
+      gap: 10px !important;
+    }
+    body.in-iframe .menu-controls {
+      display: flex !important;
+      flex-direction: row !important;
+      flex-wrap: nowrap !important;
+      gap: 10px !important;
+      margin-bottom: 0 !important;
+      padding: 0 !important;
+      background: transparent !important;
+      border: none !important;
+      box-shadow: none !important;
+    }
+    body.in-iframe #canteenSegments {
+      display: flex !important;
+      flex-direction: row !important;
+      flex-wrap: nowrap !important;
+      gap: 8px !important;
+      overflow-x: auto !important;
+      width: 100% !important;
+      scrollbar-width: none !important;
+    }
+    body.in-iframe #canteenSegments::-webkit-scrollbar {
+      display: none !important;
+    }
+    body.in-iframe .canteen-segment {
+      flex: 1 !important;
+      min-width: 120px !important;
+      padding: 8px 12px !important;
+      font-size: 13px !important;
+    }
+    body.in-iframe .canteen-segment small {
+      display: none !important;
+    }
+    body.in-iframe .menu-grid {
+      display: grid !important;
+      grid-template-columns: repeat(2, 1fr) !important;
+      gap: 12px !important;
+      overflow: hidden !important;
+      flex: 1 !important;
+    }
+    body.in-iframe .menu-card {
+      padding: 12px !important;
+      height: 100% !important;
     }
   </style>
   <script>

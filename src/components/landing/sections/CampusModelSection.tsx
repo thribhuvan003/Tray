@@ -133,7 +133,7 @@ export function CampusModelSection({ campusName }: { campusName?: string | null 
   };
 
   return (
-    <SectionReveal as="div" id="campus" className="px-5 pt-36 pb-28 sm:px-8 lg:px-10 bg-[#FAF8F5]">
+    <SectionReveal as="div" id="campus" className="px-5 pt-36 pb-28 sm:px-8 lg:px-10 bg-[#FAF8F5] lg:min-h-screen lg:flex lg:flex-col lg:justify-center lg:py-24">
       <motion.div className="mx-auto max-w-7xl">
         {/* Heading panel */}
         <div className="max-w-4xl mb-16">

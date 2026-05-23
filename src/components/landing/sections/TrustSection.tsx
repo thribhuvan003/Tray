@@ -27,7 +27,7 @@ export function TrustSection() {
   ] as const;
 
   return (
-    <section id="trust" className="px-5 py-20 sm:px-8 lg:px-10 border-b border-[var(--tray-border)]">
+    <section id="trust" className="px-5 py-20 sm:px-8 lg:px-10 border-b border-[var(--tray-border)] lg:min-h-screen lg:flex lg:flex-col lg:justify-center lg:py-24">
       <div className="mx-auto max-w-7xl">
         <RevealItem initial="hidden" whileInView="show" viewport={{ once: true, amount: 0.2 }}>
           <div className="mb-4 flex flex-wrap items-center gap-3">
@@ -85,36 +85,37 @@ export function TrustSection() {
               }}
             >
               <HoverCard
-                className="flex h-full flex-col justify-between rounded-[2rem] border p-6 transition-all"
+                className="flex h-full flex-col justify-between rounded-[2.25rem] border p-8 sm:p-9 transition-all"
                 style={{
                   border: "1px solid var(--tray-border)",
                   background: "rgba(255,255,255,0.48)",
                 }}
               >
-                <div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[var(--tray-surface)] border border-[var(--tray-border)]">
-                      {item.icon}
-                    </div>
-                    <span
-                      className="rounded-full px-3 py-1 text-[0.72rem] font-code font-bold uppercase tracking-[0.16em]"
-                      style={{
-                        background: "rgba(26,26,25,0.05)",
-                        color: "var(--tray-muted)",
-                        border: "1px solid var(--tray-border)",
-                      }}
-                    >
-                      {item.tag}
-                    </span>
+                <div className="flex flex-col h-full">
+                  {/* Top: Icon */}
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[var(--tray-surface)] border border-[var(--tray-border)] mb-6">
+                    {item.icon}
                   </div>
+
+                  {/* Eyebrow / Tag */}
+                  <span
+                    className="font-code text-[0.68rem] font-bold uppercase tracking-[0.18em]"
+                    style={{ color: "var(--tray-muted)" }}
+                  >
+                    {item.tag}
+                  </span>
+
+                  {/* Title */}
                   <h3
-                    className="mt-6 text-[1.2rem] font-semibold tracking-tight"
-                    style={{ fontFamily: "var(--font-jakarta)" }}
+                    className="mt-2.5 mb-4 text-[1.45rem] font-extrabold tracking-tight text-neutral-900 leading-snug"
+                    style={{ fontFamily: "var(--font-barlow)" }}
                   >
                     {item.title}
                   </h3>
+
+                  {/* Description */}
                   <p
-                    className="mt-3 text-[0.88rem] leading-[1.65] opacity-65"
+                    className="text-[0.88rem] leading-[1.65] text-neutral-600 opacity-75"
                     style={{ fontFamily: "var(--font-geist)" }}
                   >
                     {item.desc}

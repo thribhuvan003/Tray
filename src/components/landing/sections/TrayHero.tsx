@@ -37,7 +37,7 @@ const HERO_CHIPS = [
 ];
 
 const METRICS = [
-  { end: 12, suffix: " min", label: "saved per lunch" },
+  { end: 12, suffix: "min", label: "saved per lunch" },
   { end: 240, suffix: "ms", label: "realtime sync" },
   { end: 0, suffix: "%", label: "Tray commission" },
 ];
@@ -89,7 +89,7 @@ export function TrayHero() {
 
   return (
     <motion.section
-      className="relative isolate px-5 pb-12 pt-14 sm:px-8 sm:pt-20 lg:px-10 lg:pb-20 lg:pt-28"
+      className="relative isolate px-5 pb-12 pt-14 sm:px-8 sm:pt-20 lg:px-10 lg:min-h-screen lg:flex lg:flex-col lg:justify-center lg:py-24"
       variants={staggerContainer}
       initial="hidden"
       animate="show"
