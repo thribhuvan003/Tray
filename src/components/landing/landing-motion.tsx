@@ -3,10 +3,27 @@
 import { useEffect } from "react";
 import { triggerDemoEntry } from "@/components/landing/demo-entry-transition";
 
+/**
+ * LandingMotion — GSAP + Lenis scroll engine for the Tray landing page.
+ *
+ * CONFLICT RULES (strictly enforced):
+ *  - PiranhaPortalsSection owns: [data-portal-card] entrance, [data-portals-heading] word reveal.
+ *    → landing-motion ONLY adds mouse-tilt (event listeners, no scroll conflict).
+ *  - TrustSection owns: motion.div card entrance (Framer whileInView opacity/y/scale).
+ *    → landing-motion targets the plain <h2>, <p>, and <svg> icons only.
+ *  - HoverCard (used in Stack) owns: motion.div whileHover 3D tilt.
+ *    → landing-motion adds entrance animation only (one-shot from, finishes before hover).
+ *    → NO mouse-tilt added to HoverCard elements (Framer already handles it).
+ *  - CampusModelSection: canteen cards are motion.div animated by Framer.
+ *    → landing-motion targets the plain outer .grid wrapper only.
+ *  - SyncPipelineVisual: Framer Motion internally.
+ *    → landing-motion targets the section h2 and p only.
+ *  - RevealItem / SectionReveal: animate the motion.div wrapper — children (h2, p) are plain.
+ *    → landing-motion animating h2/p directly is safe (no overlap with Framer).
+ */
 export function LandingMotion() {
   useEffect(() => {
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
     if (reduced) {
       document.querySelectorAll(".tray-landing [data-reveal]").forEach((el) => {
         el.classList.add("tl-visible");
@@ -16,12 +33,17 @@ export function LandingMotion() {
 
     let killed = false;
     let ctx: any = null;
-    type LenisLike = { on(e: string, cb: () => void): void; raf(t: number): void; destroy(): void };
+    type LenisLike = {
+      on(e: string, cb: () => void): void;
+      raf(t: number): void;
+      destroy(): void;
+      scrollTo(target: any, opts?: any): void;
+    };
     let lenisInstance: LenisLike | null = null;
-    const btnHandlers: Array<[HTMLElement, (e: MouseEvent) => void, () => void]> = [];
+    // Cleanup arrays for event listeners
+    const tiltCleanups: Array<() => void> = [];
     const roleCardHandlers: Array<[HTMLElement, (e: MouseEvent) => void]> = [];
 
-    // ── Function to initialize all animations ────────────────────────────────
     const initAnimations = () => {
       if (killed) return;
 
@@ -33,31 +55,34 @@ export function LandingMotion() {
         if (killed) return;
         gsap.registerPlugin(ScrollTrigger);
 
-        // Lenis smooth scroll (outside gsap.context — it's async)
+        // ── Lenis smooth scroll ──────────────────────────────────────────
         try {
           const LenisModule = await import("lenis");
           if (!killed) {
-            const Lenis = ((LenisModule as Record<string, unknown>).default ?? LenisModule) as new (opts: Record<string, unknown>) => LenisLike;
+            const Lenis = (
+              (LenisModule as Record<string, unknown>).default ?? LenisModule
+            ) as new (opts: Record<string, unknown>) => LenisLike;
             lenisInstance = new Lenis({
-              duration: 2.2,
+              duration: 1.6,
               easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
               smoothWheel: true,
-              wheelMultiplier: 0.55,
+              wheelMultiplier: 0.72,
             });
             lenisInstance.on("scroll", ScrollTrigger.update);
             const li = lenisInstance;
             gsap.ticker.add((time: number) => { li.raf(time * 1000); });
             gsap.ticker.lagSmoothing(0);
           }
-        } catch {
-          /* Lenis unavailable — continue with native scroll */
-        }
+        } catch { /* native scroll fallback */ }
 
         if (killed) return;
 
         ctx = gsap.context(() => {
-          // Scroll progress bar
-          const bar = document.querySelector<HTMLElement>(".tl-progress-bar");
+          const root = document.querySelector<HTMLElement>(".tray-landing");
+          if (!root) return;
+
+          // ── SCROLL PROGRESS BAR ───────────────────────────────────────
+          const bar = root.querySelector<HTMLElement>(".tl-progress-bar");
           if (bar) {
             gsap.to(bar, {
               width: "100%",
@@ -71,358 +96,521 @@ export function LandingMotion() {
             });
           }
 
-          const root = document.querySelector<HTMLElement>(".tray-landing");
-          if (!root) return;
-
-          // ── 1. TrayHero: clean focus-pull word stagger reveal (non-destructive) ──
+          // ═══════════════════════════════════════════════════════════════
+          // 1. HERO — clip-path curtain word reveal
+          //    Safe: .tl-word spans are plain HTML, no Framer on them.
+          // ═══════════════════════════════════════════════════════════════
           gsap.from(".tray-landing .tl-h1 .tl-word", {
-            y: 35,
-            filter: "blur(12px)",
+            clipPath: "inset(100% 0% 0% 0%)",
+            y: 24,
             opacity: 0,
-            stagger: 0.12,
-            duration: 1.4,
+            stagger: 0.09,
+            duration: 1.05,
             ease: "power4.out",
             delay: 0.1,
           });
 
           gsap.from(".tray-landing .tl-nav-inner > *", {
-            y: -30,
+            y: -28,
             opacity: 0,
-            filter: "blur(5px)",
-            stagger: 0.08,
-            duration: 0.8,
+            stagger: 0.06,
+            duration: 0.7,
             ease: "power3.out",
-            delay: 0.0,
           });
 
-          // Parallax organic orbital movement for background blobs
-          const blobA = document.querySelector("[data-blob-a]") as HTMLElement;
-          const blobB = document.querySelector("[data-blob-b]") as HTMLElement;
+          // Blob parallax
+          const blobA = root.querySelector("[data-blob-a]") as HTMLElement | null;
+          const blobB = root.querySelector("[data-blob-b]") as HTMLElement | null;
           if (blobA) {
             gsap.to(blobA, {
-              yPercent: -25,
-              xPercent: 15,
-              scrollTrigger: {
-                trigger: ".tray-landing",
-                start: "top top",
-                end: "bottom top",
-                scrub: 1.2,
-              }
+              yPercent: -30, xPercent: 12,
+              ease: "none",
+              scrollTrigger: { trigger: root, start: "top top", end: "80% top", scrub: 1.4 },
             });
           }
           if (blobB) {
             gsap.to(blobB, {
-              yPercent: 20,
-              xPercent: -15,
-              scrollTrigger: {
-                trigger: ".tray-landing",
-                start: "top top",
-                end: "bottom top",
-                scrub: 1.2,
-              }
+              yPercent: 22, xPercent: -12,
+              ease: "none",
+              scrollTrigger: { trigger: root, start: "top top", end: "80% top", scrub: 1.2 },
             });
           }
 
-          // ── 2. CampusTicker: Scroll-Velocity Skew Marquee ──
+          // ═══════════════════════════════════════════════════════════════
+          // 2. CAMPUS TICKER — velocity skew + enter from opposite edges
+          //    Safe: data-ticker-wrapper is a plain div.
+          // ═══════════════════════════════════════════════════════════════
+          const tickerWrappers = root.querySelectorAll<HTMLElement>("[data-ticker-wrapper]");
+
           ScrollTrigger.create({
-            trigger: ".tray-landing .tl-ticker, [data-ticker-wrapper]",
+            trigger: "[data-ticker-wrapper]",
             start: "top bottom",
             end: "bottom top",
             onUpdate: (self) => {
               if (killed) return;
-              const velocity = self.getVelocity();
-              const skewAngle = gsap.utils.clamp(-12, 12, velocity * 0.0045);
-              gsap.to(".tray-landing [data-ticker-wrapper]", {
-                skewX: skewAngle,
-                duration: 0.4,
-                ease: "power2.out",
-                overwrite: "auto",
+              const v = self.getVelocity();
+              const skew = gsap.utils.clamp(-9, 9, v * 0.004);
+              tickerWrappers.forEach((w, i) => {
+                gsap.to(w, {
+                  skewX: i % 2 === 0 ? skew : -skew,
+                  duration: 0.4, ease: "power2.out", overwrite: "auto",
+                });
               });
             },
           });
 
-          // Serene ticker entrance
-          gsap.from(".tray-landing [data-ticker-wrapper]", {
-            scrollTrigger: { trigger: ".tray-landing .tl-ticker, .tray-landing [data-ticker-wrapper]", start: "top 100%" },
-            scaleX: 0.9,
-            skewX: 8,
-            opacity: 0,
-            stagger: 0.15,
-            duration: 1.35,
-            ease: "power4.out",
+          tickerWrappers.forEach((wrapper, i) => {
+            gsap.from(wrapper, {
+              scrollTrigger: { trigger: wrapper, start: "top 102%" },
+              x: i % 2 === 0 ? -55 : 55,
+              opacity: 0, duration: 1.2, ease: "power4.out",
+            });
           });
 
-          // ── 5. TrustSection: Bento Card Sweep Reveals & Snap-Rotate Icons ──
-          const trustCards = root.querySelectorAll<HTMLElement>("#trust .grid > div");
-          if (trustCards.length) {
-            gsap.from(trustCards, {
-              scrollTrigger: {
-                trigger: "#trust",
-                start: "top 80%",
-              },
-              clipPath: "polygon(0 0, 0 0, 0 100%, 0% 100%)",
-              y: 40,
-              opacity: 0,
-              stagger: 0.12,
-              duration: 1.15,
-              ease: "power4.out",
-            });
-
-            // Snap icon rotates
-            const trustIcons = root.querySelectorAll<HTMLElement>("#trust svg");
-            gsap.from(trustIcons, {
-              scrollTrigger: {
-                trigger: "#trust",
-                start: "top 78%",
-              },
-              rotate: -90,
-              scale: 0.3,
-              stagger: 0.12,
-              duration: 1.15,
-              ease: "back.out(2)",
-            });
-          }
-
-          // ── 6. CampusModelSection: Aperture Expansion & Row Deal ──
-          const leftGrid = root.querySelector<HTMLElement>("#campus .grid");
-          if (leftGrid) {
-            gsap.fromTo(
-              leftGrid,
-              { clipPath: "circle(0% at 50% 50%)" },
-              {
-                clipPath: "circle(100% at 50% 50%)",
-                duration: 1.45,
-                ease: "power3.inOut",
+          // ═══════════════════════════════════════════════════════════════
+          // 3. PORTALS — heading parallax + mouse tilt only.
+          //    PiranhaPortalsSection.tsx owns the card entrance and heading word reveal.
+          //    DO NOT add entrance animations to [data-portal-card] here.
+          // ═══════════════════════════════════════════════════════════════
+          const portalSection = root.querySelector<HTMLElement>("#portals");
+          if (portalSection) {
+            // Heading scrub parallax (to, not from → no conflict)
+            const portalH2 = portalSection.querySelector<HTMLElement>("h2");
+            if (portalH2) {
+              gsap.to(portalH2, {
+                y: -50, ease: "none",
                 scrollTrigger: {
-                  trigger: "#campus",
-                  start: "top 82%",
+                  trigger: portalSection,
+                  start: "top bottom", end: "bottom top", scrub: 2,
                 },
-              }
-            );
-          }
+              });
+            }
 
-          // Right-side Role cards deck deal-in
-          const roleCards = root.querySelectorAll<HTMLElement>("#campus .role-access-card");
-          if (roleCards.length) {
-            gsap.from(roleCards, {
-              scrollTrigger: {
-                trigger: "#campus",
-                start: "top 78%",
-              },
-              x: 100,
-              rotate: -8,
-              opacity: 0,
-              stagger: 0.12,
-              duration: 1.1,
-              ease: "back.out(1.4)",
-            });
-          }
-
-          // ── 7. Real-Time Sync: SVG Path-Draw & Node Pulse ──
-          const syncCards = root.querySelectorAll<HTMLElement>("#sync .grid > div");
-          if (syncCards.length) {
-            gsap.from(syncCards, {
-              scrollTrigger: {
-                trigger: "#sync",
-                start: "top 82%",
-              },
-              scale: 0.85,
-              y: 50,
-              opacity: 0,
-              stagger: 0.12,
-              duration: 1.25,
-              ease: "elastic.out(1, 0.75)",
-            });
-          }
-
-          // ── 8. Kitchen Quote: Editorial Focus-Pull Mask Reveal ──
-          const quote = root.querySelector<HTMLElement>(".tray-landing blockquote");
-          if (quote) {
-            gsap.from(quote, {
-              scrollTrigger: {
-                trigger: quote,
-                start: "top 88%",
-              },
-              y: 50,
-              filter: "blur(12px)",
-              opacity: 0,
-              scale: 0.95,
-              duration: 1.45,
-              ease: "power4.out",
-            });
-          }
-
-          // ── 9. Phone to Plate Section: Y-Axis Book-Flip & Spin Numerals ──
-          const flowCards = root.querySelectorAll<HTMLElement>("#flow .grid > div");
-          if (flowCards.length) {
-            gsap.fromTo(
-              flowCards,
-              { rotateY: -45, x: 60, opacity: 0 },
-              {
-                scrollTrigger: {
-                  trigger: "#flow",
-                  start: "top 90%",
-                },
-                rotateY: 0,
-                x: 0,
-                opacity: 1,
-                stagger: 0.1,
-                duration: 1.35,
-                ease: "power4.out",
-                transformPerspective: 1200,
-                clearProps: "all",
-              }
-            );
-
-            // Numeric elastic spins
-            const flowNums = root.querySelectorAll<HTMLElement>("#flow .grid > div > span:first-child");
-            gsap.fromTo(
-              flowNums,
-              { rotateY: 360, scale: 0.4, opacity: 0 },
-              {
-                scrollTrigger: {
-                  trigger: "#flow",
-                  start: "top 90%",
-                },
-                rotateY: 0,
-                scale: 1,
-                opacity: 1,
-                stagger: 0.1,
-                duration: 1.25,
-                ease: "back.out(2.2)",
-                clearProps: "all",
-              }
-            );
-          }
-
-          // ── 10. Boring Tech Stack Section: Elastic Pop-ins & Mouse Tilt ──
-          const techCards = root.querySelectorAll<HTMLElement>("#stack .grid > div");
-          if (techCards.length) {
-            gsap.from(techCards, {
-              scrollTrigger: {
-                trigger: "#stack",
-                start: "top 82%",
-              },
-              scale: 0.65,
-              y: 40,
-              opacity: 0,
-              stagger: 0.08,
-              duration: 1.15,
-              ease: "back.out(1.8)",
-            });
-
-            // Add smooth 3D tilt tracking for stack cards on hover
-            techCards.forEach((card) => {
+            // Mouse-tracking 3D tilt — event listeners only, no scroll trigger
+            root.querySelectorAll<HTMLElement>("[data-portal-card]").forEach((card) => {
               const onMove = (e: MouseEvent) => {
                 const r = card.getBoundingClientRect();
-                const nx = ((e.clientX - r.left) / r.width  - 0.5) * 2;
-                const ny = ((e.clientY - r.top)  / r.height - 0.5) * 2;
+                const nx = ((e.clientX - r.left) / r.width - 0.5) * 2;
+                const ny = ((e.clientY - r.top) / r.height - 0.5) * 2;
                 gsap.to(card, {
-                  rotateY: nx * 12,
-                  rotateX: -ny * 10,
-                  scale: 1.04,
-                  transformPerspective: 1000,
-                  duration: 0.35,
-                  ease: "power2.out",
+                  rotateY: nx * 8, rotateX: -ny * 6, scale: 1.025,
+                  transformPerspective: 900, duration: 0.4, ease: "power2.out",
                 });
               };
               const onLeave = () => {
-                gsap.to(card, {
-                  rotateX: 0,
-                  rotateY: 0,
-                  scale: 1,
-                  duration: 0.55,
-                  ease: "power3.out",
-                });
+                gsap.to(card, { rotateX: 0, rotateY: 0, scale: 1, duration: 0.65, ease: "power3.out" });
               };
               card.addEventListener("mousemove", onMove);
               card.addEventListener("mouseleave", onLeave);
-              btnHandlers.push([card, onMove, onLeave]);
+              tiltCleanups.push(() => {
+                card.removeEventListener("mousemove", onMove);
+                card.removeEventListener("mouseleave", onLeave);
+              });
             });
           }
 
-          // ── 11. Closing CTA Section: Monumental Compression ──
-          const closingHeading = root.querySelector<HTMLElement>("#closing h2");
-          if (closingHeading) {
-            gsap.from(closingHeading, {
+          // ═══════════════════════════════════════════════════════════════
+          // 4. TRUST — h2, p text, and svg icons only.
+          //    The motion.div card wrappers (opacity/y/scale) are owned by Framer.
+          //    We only animate elements Framer is NOT touching.
+          // ═══════════════════════════════════════════════════════════════
+          const trustSection = root.querySelector<HTMLElement>("#trust");
+          if (trustSection) {
+            // h2 is inside RevealItem (motion.div wrapper) but h2 itself is plain HTML → safe
+            const trustH2 = trustSection.querySelector<HTMLElement>("h2");
+            if (trustH2) {
+              gsap.to(trustH2, {
+                y: -38, ease: "none",
+                scrollTrigger: {
+                  trigger: trustSection, start: "top bottom", end: "bottom top", scrub: 2,
+                },
+              });
+            }
+
+            // SVG icons — plain SVG elements, not motion components → safe
+            const icons = trustSection.querySelectorAll<SVGElement>("svg");
+            gsap.from(icons, {
+              scrollTrigger: { trigger: trustSection, start: "top 72%" },
+              rotate: -110, scale: 0.2, opacity: 0,
+              stagger: 0.15, duration: 1.0, ease: "back.out(2.5)",
+            });
+          }
+
+          // ═══════════════════════════════════════════════════════════════
+          // 5. CAMPUS MODEL — outer grid iris expand + h2 parallax only.
+          //    Canteen cards are motion.div → skip them.
+          //    .role-access-card class doesn't exist in DOM → no targeting.
+          //    The outer ".grid" is a plain <div> → safe for clip-path.
+          // ═══════════════════════════════════════════════════════════════
+          const campusSection = root.querySelector<HTMLElement>("#campus");
+          if (campusSection) {
+            // Outer 2-col grid is plain <div className="grid gap-12 lg:grid-cols-...">
+            const campusGrid = campusSection.querySelector<HTMLElement>(".grid");
+            if (campusGrid) {
+              gsap.fromTo(
+                campusGrid,
+                { clipPath: "circle(0% at 50% 50%)", opacity: 0 },
+                {
+                  clipPath: "circle(100% at 50% 50%)", opacity: 1,
+                  duration: 1.5, ease: "power3.inOut",
+                  scrollTrigger: { trigger: campusSection, start: "top 80%" },
+                }
+              );
+            }
+
+            const campusH2 = campusSection.querySelector<HTMLElement>("h2");
+            if (campusH2) {
+              gsap.to(campusH2, {
+                y: -42, ease: "none",
+                scrollTrigger: {
+                  trigger: campusSection, start: "top bottom", end: "bottom top", scrub: 1.8,
+                },
+              });
+            }
+          }
+
+          // ═══════════════════════════════════════════════════════════════
+          // 6. REALTIME SYNC — h2 scale-blur entrance + lede p only.
+          //    SyncPipelineVisual and its children are Framer Motion → skip .grid > div.
+          // ═══════════════════════════════════════════════════════════════
+          const syncSection = root.querySelector<HTMLElement>("#sync");
+          if (syncSection) {
+            const syncH2 = syncSection.querySelector<HTMLElement>("h2");
+            if (syncH2) {
+              gsap.fromTo(
+                syncH2,
+                { scale: 1.08, opacity: 0, filter: "blur(8px)" },
+                {
+                  scale: 1, opacity: 1, filter: "blur(0px)",
+                  duration: 1.2, ease: "power3.out",
+                  scrollTrigger: { trigger: syncSection, start: "top 80%" },
+                }
+              );
+              gsap.to(syncH2, {
+                y: -35, ease: "none",
+                scrollTrigger: {
+                  trigger: syncSection, start: "top bottom", end: "bottom top", scrub: 2,
+                },
+              });
+            }
+
+            // The lede <p> is inside a RevealItem (motion.div wrapper), but the p is plain HTML → safe
+            const syncLede = syncSection.querySelector<HTMLElement>("p");
+            if (syncLede) {
+              gsap.from(syncLede, {
+                scrollTrigger: { trigger: syncSection, start: "top 76%" },
+                opacity: 0, y: 18, filter: "blur(8px)",
+                duration: 1.0, ease: "power3.out", delay: 0.25,
+              });
+            }
+          }
+
+          // ═══════════════════════════════════════════════════════════════
+          // 7. KITCHEN QUOTE — clip-path wipe entrance + reader zoom scrub
+          //    The dark section and blockquote are plain HTML → fully safe.
+          // ═══════════════════════════════════════════════════════════════
+          // Selector: the dark section with tray-ink background
+          const quoteSection = Array.from(
+            root.querySelectorAll<HTMLElement>("section")
+          ).find((s) => (s.getAttribute("style") ?? "").includes("tray-ink"));
+          const quote = root.querySelector<HTMLElement>(".tray-landing blockquote");
+
+          if (quoteSection && quote) {
+            gsap.fromTo(
+              quote,
+              { clipPath: "inset(100% 0% 0% 0%)", y: 40 },
+              {
+                clipPath: "inset(0% 0% 0% 0%)", y: 0,
+                duration: 1.45, ease: "power4.out",
+                scrollTrigger: { trigger: quoteSection, start: "top 82%" },
+              }
+            );
+
+            // Subtle zoom as you read through (scale 1 → 1.04, scrub)
+            gsap.to(quote, {
+              scale: 1.04, ease: "none",
               scrollTrigger: {
-                trigger: "#closing",
-                start: "top 85%",
+                trigger: quoteSection,
+                start: "top top", end: "bottom top", scrub: 1.6,
               },
-              letterSpacing: "0.22em",
-              scale: 0.9,
-              filter: "blur(8px)",
-              opacity: 0,
-              duration: 1.35,
-              ease: "power4.out",
             });
+
+            const quoteEyebrow = quoteSection.querySelector<HTMLElement>("p");
+            if (quoteEyebrow) {
+              gsap.from(quoteEyebrow, {
+                scrollTrigger: { trigger: quoteSection, start: "top 85%" },
+                x: -28, opacity: 0, duration: 0.8, ease: "power3.out",
+              });
+            }
+
+            const quoteCite = quoteSection.querySelector<HTMLElement>("footer");
+            if (quoteCite) {
+              gsap.from(quoteCite, {
+                scrollTrigger: { trigger: quoteSection, start: "top 78%" },
+                x: 28, opacity: 0, duration: 0.8, ease: "power3.out", delay: 0.3,
+              });
+            }
           }
 
-          const closingCTA = root.querySelectorAll<HTMLElement>("#closing a, #closing p");
-          if (closingCTA.length) {
-            gsap.from(closingCTA, {
-              scrollTrigger: {
-                trigger: "#closing",
-                start: "top 82%",
-              },
-              y: 35,
-              opacity: 0,
-              stagger: 0.1,
-              duration: 0.95,
-              ease: "back.out(1.6)",
-            });
+          // ═══════════════════════════════════════════════════════════════
+          // 8. FLOW (#flow) — card-deal rotateY stagger + numeral elastic spin
+          //    The step cards are plain <div> elements (NOT motion.div) → fully safe.
+          // ═══════════════════════════════════════════════════════════════
+          const flowSection = root.querySelector<HTMLElement>("#flow");
+          if (flowSection) {
+            const flowH2 = flowSection.querySelector<HTMLElement>("h2");
+            if (flowH2) {
+              // h2 is inside RevealItem (motion.div), but h2 itself is plain → safe
+              gsap.from(flowH2, {
+                scrollTrigger: { trigger: flowSection, start: "top 82%" },
+                clipPath: "inset(0% 100% 0% 0%)", opacity: 0,
+                duration: 1.1, ease: "power4.inOut",
+              });
+              gsap.to(flowH2, {
+                y: -38, ease: "none",
+                scrollTrigger: {
+                  trigger: flowSection, start: "top bottom", end: "bottom top", scrub: 2,
+                },
+              });
+            }
+
+            // Plain <div> step cards — card-deal flip
+            const flowCards = flowSection.querySelectorAll<HTMLElement>(".mt-14 > div");
+            if (flowCards.length) {
+              gsap.fromTo(
+                flowCards,
+                { rotateY: -50, x: 70, opacity: 0, transformPerspective: 1200 },
+                {
+                  scrollTrigger: { trigger: flowSection, start: "top 88%" },
+                  rotateY: 0, x: 0, opacity: 1,
+                  stagger: 0.1, duration: 1.25, ease: "power4.out",
+                  clearProps: "rotateY,x,opacity,transformPerspective",
+                }
+              );
+
+              // Step number spans — elastic spin
+              const flowNums = flowSection.querySelectorAll<HTMLElement>(".mt-14 > div > span:first-child");
+              gsap.fromTo(
+                flowNums,
+                { rotateY: 270, scale: 0.4, opacity: 0 },
+                {
+                  scrollTrigger: { trigger: flowSection, start: "top 88%" },
+                  rotateY: 0, scale: 1, opacity: 1,
+                  stagger: 0.1, duration: 1.1, ease: "back.out(2.2)",
+                  clearProps: "all",
+                }
+              );
+            }
           }
 
-          // ── 12. Footer Section: clean TRAY Parallax (non-destructive) ──
-          const footerMark = root.querySelector<HTMLElement>(".tl-footer-mark span");
+          // ═══════════════════════════════════════════════════════════════
+          // 9. STACK (#stack) — center-out elastic pop entrance
+          //    HoverCard is motion.div with its own whileHover 3D tilt.
+          //    → Entrance: GSAP one-shot (finishes before any hover interaction) → safe.
+          //    → Mouse tilt: SKIP (HoverCard Framer already handles it).
+          //    Stack section has no SectionReveal wrapper on the grid — plain <div>.
+          // ═══════════════════════════════════════════════════════════════
+          const stackSection = root.querySelector<HTMLElement>("#stack");
+          if (stackSection) {
+            const stackH2 = stackSection.querySelector<HTMLElement>("h2");
+            if (stackH2) {
+              gsap.from(stackH2, {
+                scrollTrigger: { trigger: stackSection, start: "top 82%" },
+                y: 50, opacity: 0, clipPath: "inset(0% 0% 100% 0%)",
+                duration: 1.1, ease: "power4.out",
+              });
+              gsap.to(stackH2, {
+                y: -36, ease: "none",
+                scrollTrigger: {
+                  trigger: stackSection, start: "top bottom", end: "bottom top", scrub: 2,
+                },
+              });
+            }
+
+            const stackLede = stackSection.querySelector<HTMLElement>("p");
+            if (stackLede) {
+              gsap.from(stackLede, {
+                scrollTrigger: { trigger: stackSection, start: "top 78%" },
+                opacity: 0, y: 16, duration: 0.85, ease: "power3.out", delay: 0.1,
+              });
+            }
+
+            // The HoverCard motion.div grid children — entrance only (one-shot from)
+            const techCards = stackSection.querySelectorAll<HTMLElement>(".grid.grid-cols-2 > *, .grid.grid-cols-4 > *");
+            if (techCards.length) {
+              gsap.from(techCards, {
+                scrollTrigger: { trigger: stackSection, start: "top 80%" },
+                scale: 0.55, opacity: 0,
+                stagger: { amount: 0.65, from: "center" },
+                duration: 0.95, ease: "back.out(2)",
+              });
+            }
+          }
+
+          // ═══════════════════════════════════════════════════════════════
+          // 10. REALTIME STRIP (~240ms) — number count-up on enter
+          //     Find by text content (most reliable, avoids fragile style selectors).
+          // ═══════════════════════════════════════════════════════════════
+          const allSpans = Array.from(root.querySelectorAll<HTMLElement>("span"));
+          const bigNum = allSpans.find((s) => s.textContent?.trim() === "~240ms") ?? null;
+          if (bigNum) {
+            const obj = { val: 0 };
+            const trigger = bigNum.closest("[class*='rounded']") as HTMLElement ?? bigNum;
+            gsap.to(obj, {
+              val: 240, duration: 1.5, ease: "power3.out",
+              scrollTrigger: { trigger, start: "top 85%", once: true },
+              onUpdate: () => { bigNum.textContent = `~${Math.round(obj.val)}ms`; },
+              onComplete: () => { bigNum.textContent = "~240ms"; },
+            });
+
+            // Flanking labels slide in from sides
+            const stripFlex = bigNum.closest("[class*='flex-wrap']");
+            if (stripFlex) {
+              const stripItems = stripFlex.querySelectorAll<HTMLElement>("[class*='items-center']");
+              gsap.from(stripItems, {
+                x: (i: number) => (i === 0 ? -36 : 36),
+                opacity: 0, stagger: 0.08, duration: 0.85, ease: "power3.out",
+                scrollTrigger: { trigger, start: "top 85%", once: true },
+              });
+            }
+          }
+
+          // ═══════════════════════════════════════════════════════════════
+          // 11. CLOSING CTA (#closing) — letter-spacing compression stamp
+          //     h2 is plain HTML (RevealItem wraps it, not the h2 itself) → safe.
+          //     MotionCTA is motion.a with whileHover/whileTap for press — we do
+          //     one-shot entrance (from, finishes before hover) → safe.
+          // ═══════════════════════════════════════════════════════════════
+          const closingSection = root.querySelector<HTMLElement>("#closing");
+          if (closingSection) {
+            const closingH2 = closingSection.querySelector<HTMLElement>("h2");
+            if (closingH2) {
+              gsap.fromTo(
+                closingH2,
+                { letterSpacing: "0.2em", scale: 0.9, filter: "blur(10px)", opacity: 0 },
+                {
+                  letterSpacing: "-0.02em", scale: 1, filter: "blur(0px)", opacity: 1,
+                  duration: 1.55, ease: "power4.out",
+                  scrollTrigger: { trigger: closingSection, start: "top 82%" },
+                }
+              );
+              gsap.to(closingH2, {
+                y: -28, ease: "none",
+                scrollTrigger: {
+                  trigger: closingSection, start: "top bottom", end: "bottom top", scrub: 2.5,
+                },
+              });
+            }
+
+            // Glow orb — more specific selector: the blur-3xl rounded-full element
+            const closingGlow = closingSection.querySelector<HTMLElement>("[class*='blur-3xl']");
+            if (closingGlow) {
+              gsap.fromTo(
+                closingGlow,
+                { scale: 0.2, opacity: 0 },
+                {
+                  scale: 1, opacity: 1, duration: 2.0, ease: "power3.out",
+                  scrollTrigger: { trigger: closingSection, start: "top 88%" },
+                }
+              );
+            }
+
+            // Body copy (plain p) and CTA buttons (MotionCTA = motion.a, one-shot from → safe)
+            const closingP = closingSection.querySelector<HTMLElement>("p");
+            if (closingP) {
+              gsap.from(closingP, {
+                scrollTrigger: { trigger: closingSection, start: "top 80%" },
+                opacity: 0, y: 20, filter: "blur(6px)",
+                duration: 0.95, ease: "power3.out", delay: 0.2,
+              });
+            }
+
+            const closingCTAs = closingSection.querySelectorAll<HTMLElement>("a");
+            if (closingCTAs.length) {
+              gsap.from(closingCTAs, {
+                scrollTrigger: { trigger: closingSection, start: "top 78%" },
+                y: 38, opacity: 0, scale: 0.94,
+                stagger: 0.12, duration: 0.95, ease: "back.out(1.6)", delay: 0.35,
+              });
+            }
+          }
+
+          // ═══════════════════════════════════════════════════════════════
+          // 12. FOOTER — TRAY watermark parallax + link wave-in
+          // ═══════════════════════════════════════════════════════════════
+          // Specific selector: the footer's bottom-8 right-0 TRAY mark wrapper
+          const footerMark = root.querySelector<HTMLElement>(
+            "footer [class*='bottom-8'][class*='right-0']"
+          );
           if (footerMark) {
+            gsap.from(footerMark, {
+              scrollTrigger: { trigger: "footer", start: "top 95%" },
+              opacity: 0, scale: 0.88, duration: 1.5, ease: "power3.out",
+            });
             gsap.to(footerMark, {
-              scrollTrigger: {
-                trigger: ".tl-footer",
-                scrub: 1.6,
-                start: "top bottom",
-                end: "bottom top",
-              },
-              y: -100,
-              ease: "none",
+              y: -70, ease: "none",
+              scrollTrigger: { trigger: "footer", start: "top bottom", end: "bottom top", scrub: 1.8 },
             });
           }
 
-          // Link waves
-          const footerLinks = root.querySelectorAll<HTMLElement>(".tl-footer li, .tl-footer p, .tl-footer h4, .tl-footer-contact, .tl-footer a.group");
+          const footerLinks = root.querySelectorAll<HTMLElement>(
+            "footer li, footer > div > div a, footer .tl-footer-link-item"
+          );
           if (footerLinks.length) {
             gsap.from(footerLinks, {
-              scrollTrigger: {
-                trigger: ".tl-footer",
-                start: "top 95%",
-              },
-              y: 20,
-              opacity: 0,
-              stagger: 0.04,
-              duration: 0.85,
-              ease: "power3.out",
+              scrollTrigger: { trigger: "footer", start: "top 92%" },
+              y: 20, opacity: 0, stagger: 0.04, duration: 0.8, ease: "power3.out",
             });
           }
 
-          // ── Magnetic Large Buttons (tactile interactive feel) ──
-          root.querySelectorAll<HTMLElement>(".tl-btn-pri.tl-btn-lg, .tl-btn-ghost.tl-btn-lg, [data-magnetic], .tl-btn").forEach((btn) => {
+          // ═══════════════════════════════════════════════════════════════
+          // 13. GLOBAL — Magnetic CTA buttons (landing-specific CTAs only)
+          //     Target only plain <a> elements with tl-btn class, NOT MotionCTA
+          //     components (those are motion.a with their own Framer hover).
+          // ═══════════════════════════════════════════════════════════════
+          root.querySelectorAll<HTMLElement>("[data-magnetic]").forEach((btn) => {
             const onMove = (e: MouseEvent) => {
               const r = btn.getBoundingClientRect();
-              const dx = (e.clientX - (r.left + r.width  / 2)) * 0.28;
-              const dy = (e.clientY - (r.top  + r.height / 2)) * 0.28;
-              gsap.to(btn, { x: dx, y: dy, duration: 0.45, ease: "power2.out" });
+              const dx = (e.clientX - (r.left + r.width / 2)) * 0.28;
+              const dy = (e.clientY - (r.top + r.height / 2)) * 0.28;
+              gsap.to(btn, { x: dx, y: dy, duration: 0.42, ease: "power2.out" });
             };
             const onLeave = () => {
               gsap.to(btn, { x: 0, y: 0, duration: 0.7, ease: "elastic.out(1, 0.4)" });
             };
             btn.addEventListener("mousemove", onMove);
             btn.addEventListener("mouseleave", onLeave);
-            btnHandlers.push([btn, onMove, onLeave]);
+            tiltCleanups.push(() => {
+              btn.removeEventListener("mousemove", onMove);
+              btn.removeEventListener("mouseleave", onLeave);
+            });
           });
 
-        });
+          // ═══════════════════════════════════════════════════════════════
+          // 14. GLOBAL — Section eyebrow divider line draw
+          //     Inject a hairline below every section's .font-code eyebrow label.
+          // ═══════════════════════════════════════════════════════════════
+          root.querySelectorAll<HTMLElement>(
+            "#portals .font-code, #campus .font-code, #sync .font-code, " +
+            "#trust .font-code, #flow .font-code, #stack .font-code, #closing .font-code"
+          ).forEach((eyebrow) => {
+            const parent = eyebrow.parentElement;
+            if (!parent || parent.querySelector(".tl-divider-line")) return;
+            const line = document.createElement("div");
+            line.className = "tl-divider-line";
+            line.style.cssText =
+              "height:1px;background:currentColor;width:0%;opacity:0.13;" +
+              "margin-top:10px;transform-origin:left;will-change:width;";
+            parent.appendChild(line);
+            gsap.to(line, {
+              width: "100%", duration: 1.5, ease: "power3.inOut",
+              scrollTrigger: { trigger: parent, start: "top 88%", once: true },
+            });
+          });
 
-        // ── Demo role card entry transitions ─────────────────────────────
+        }); // end gsap.context
+
+        // ── Demo role card click transitions ─────────────────────────────
         const ROLE_LABELS: Record<string, string> = {
           student: "Student portal",
           kitchen: "Kitchen view",
@@ -433,33 +621,25 @@ export function LandingMotion() {
           const label = ROLE_LABELS[r];
           if (!label || !card.href || card.tagName !== "A") return;
           const href = card.href;
-          const handler = (e: MouseEvent) => {
-            e.preventDefault();
-            triggerDemoEntry(href, label);
-          };
+          const handler = (e: MouseEvent) => { e.preventDefault(); triggerDemoEntry(href, label); };
           card.addEventListener("click", handler as EventListener);
           roleCardHandlers.push([card as HTMLElement, handler as (e: MouseEvent) => void]);
         });
 
       })();
-    };
+    }; // end initAnimations
 
-    // ── Global anchor link smooth scroll listener ────────────────────────────
+    // ── Smooth anchor scroll ──────────────────────────────────────────────
     const handleAnchorClick = (e: MouseEvent) => {
-      const target = e.target as HTMLElement;
-      const link = target.closest("a");
+      const link = (e.target as HTMLElement).closest("a");
       if (!link) return;
-      
       const href = link.getAttribute("href");
-      if (href && href.startsWith("#")) {
+      if (href?.startsWith("#")) {
         const targetEl = document.querySelector(href);
         if (targetEl) {
           e.preventDefault();
           if (lenisInstance) {
-            (lenisInstance as any).scrollTo(targetEl, {
-              offset: -40,
-              duration: 1.5,
-            });
+            (lenisInstance as any).scrollTo(targetEl, { offset: -40, duration: 1.5 });
           } else {
             targetEl.scrollIntoView({ behavior: "smooth" });
           }
@@ -468,30 +648,21 @@ export function LandingMotion() {
     };
     document.addEventListener("click", handleAnchorClick);
 
-    // ── Coordinate with LandingIntro preloader exit ──────────────────────────
+    // ── Coordinate with LandingIntro preloader ────────────────────────────
     let introListener: (() => void) | null = null;
     if ((window as any).__trayIntroStarted) {
       initAnimations();
     } else {
-      introListener = () => {
-        initAnimations();
-      };
+      introListener = () => { initAnimations(); };
       window.addEventListener("tray-intro-start", introListener);
     }
 
     return () => {
       killed = true;
       document.removeEventListener("click", handleAnchorClick);
-      if (introListener) {
-        window.removeEventListener("tray-intro-start", introListener);
-      }
-      roleCardHandlers.forEach(([el, fn]) => {
-        el.removeEventListener("click", fn as EventListener);
-      });
-      btnHandlers.forEach(([el, onMove, onLeave]) => {
-        el.removeEventListener("mousemove", onMove);
-        el.removeEventListener("mouseleave", onLeave);
-      });
+      if (introListener) window.removeEventListener("tray-intro-start", introListener);
+      tiltCleanups.forEach((fn) => fn());
+      roleCardHandlers.forEach(([el, fn]) => el.removeEventListener("click", fn as EventListener));
       if (lenisInstance) lenisInstance.destroy();
       if (ctx) ctx.revert();
     };

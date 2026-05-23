@@ -11,6 +11,7 @@ import { PiranhaPortalsSection } from "@/components/landing/sections/PiranhaPort
 import { CampusModelSection }    from "@/components/landing/sections/CampusModelSection";
 import { LandingIntro }          from "@/components/landing/LandingIntro";
 import { LandingMotion }         from "@/components/landing/landing-motion";
+import { KubrickWipe }           from "@/components/landing/KubrickWipe";
 import {
   AnimatedNav,
   SectionReveal,
@@ -46,6 +47,7 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
       <ScrollProgress />
       <LandingIntro />
       <LandingMotion />
+      <KubrickWipe />
 
       {/* ── NAV ─────────────────────────────────────────────────────────── */}
       <input type="checkbox" id="tl-ham" className="sr-only peer" aria-hidden />

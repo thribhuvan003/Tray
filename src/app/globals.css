@@ -386,15 +386,22 @@ html.dark [data-portal="kitchen"] {
 .tray-no-scrollbar::-webkit-scrollbar { display: none; }
 .tray-no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-/* Split-word masking for GSAP word-reveal */
+/* Split-word masking for GSAP word-reveal + clip-path curtain pull */
 .split-word {
   display: inline-block;
-  overflow: hidden;
+  overflow: hidden;       /* Required for clip-path inset curtain reveal */
   vertical-align: top;
 }
 .split-word > span {
   display: inline-block;
-  will-change: transform, opacity;
+  will-change: transform, opacity, clip-path;
+}
+
+/* tl-word: used on hero h1 spans — also needs overflow:hidden for curtain */
+.tl-word {
+  display: inline-block;
+  overflow: visible;      /* tl-word clips on itself, no wrapper needed */
+  will-change: transform, opacity, clip-path;
 }
 
 /* Split-character masking for GSAP word-reveal */
@@ -468,4 +475,113 @@ html.dark [data-portal="kitchen"] {
 .tl-intro-seen #preloader-wrapper {
   display: none !important;
   pointer-events: none !important;
+}
+
+/* ── Enhanced scroll animation support ──────────────────────────────── */
+
+/* Section headings: GPU-composited parallax layer */
+#portals h2,
+#campus h2,
+#sync h2,
+#flow h2,
+#stack h2,
+#trust h2,
+#closing h2 {
+  will-change: transform;
+}
+
+/* Portal cards: hardware-accelerated 3D tilt */
+[data-portal-card] {
+  will-change: transform;
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/* Portal card glow on hover — matches dot color */
+[data-portal-card]:hover {
+  box-shadow:
+    0 24px 64px rgba(26, 22, 20, 0.08),
+    0 8px 24px rgba(26, 22, 20, 0.04);
+}
+
+/* Flow step cards: smooth color transition */
+#flow .grid > div {
+  will-change: transform;
+  transition-property: background-color, color, border-color, box-shadow, transform;
+  transition-duration: 300ms;
+  transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Closing section heading: GPU compositing for letter-spacing animation */
+#closing h2 {
+  will-change: letter-spacing, filter, opacity, transform;
+  transform-origin: 50% 50%;
+}
+
+/* Animated divider lines injected by landing-motion.tsx */
+.tl-divider-line {
+  will-change: width;
+}
+
+/* Realtime strip: smooth bounce on the number */
+.tl-realtime-number {
+  font-variant-numeric: tabular-nums;
+  will-change: contents;
+}
+
+/* Stack cards: GPU-accelerated 3D tilt */
+#stack .grid > div {
+  will-change: transform;
+  transform-style: preserve-3d;
+}
+
+/* Trust cards: clip-path animation GPU hint */
+#trust .grid > div {
+  will-change: clip-path, transform, opacity;
+}
+
+/* Blockquote quote section: parallax and reveal */
+.tray-landing blockquote {
+  will-change: transform, opacity, filter;
+}
+
+/* Section reveal animation for [data-reveal] elements */
+.tray-landing [data-reveal] {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1), transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.tray-landing [data-reveal].tl-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Scroll-based section fade-in for reduced motion users */
+@media (prefers-reduced-motion: reduce) {
+  .tray-landing [data-reveal] {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+
+  #portals h2,
+  #campus h2,
+  #sync h2,
+  #flow h2,
+  #stack h2,
+  #trust h2,
+  #closing h2,
+  [data-portal-card],
+  #flow .grid > div,
+  #stack .grid > div,
+  #trust .grid > div,
+  .tray-landing blockquote {
+    will-change: auto;
+  }
+}
+
+/* Campus model section: smooth hover interactions */
+#campus .grid {
+  will-change: clip-path;
 }

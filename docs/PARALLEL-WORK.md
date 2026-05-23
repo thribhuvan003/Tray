@@ -86,6 +86,74 @@ Read AGENTS.md, docs/DEMO-SPEC.md, docs/PARALLEL-WORK.md. One file owner per lan
 
 ## Session log
 
+### 2026-05-23 — Kubrick-Inspired Cinematic Section Wipes + Full Animation Audit
+
+**References:** kubrick.life (Readymag storytelling site, cinematic chapter-break wipes between sections)
+
+**New component:** `src/components/landing/KubrickWipe.tsx`
+- Fixed-position full-viewport panel (ink/clay/cream per section) mounted via GSAP ScrollTrigger scrub
+- Sweeps `xPercent: -105 → 0 → 105` as user crosses each section boundary — exactly like Kubrick.life's chapter transitions
+- Each section gets its own color + editorial chapter label (e.g. `01 / The System`, `02 / Trust`)
+- `scrub: 0.6` gives tactile, scroll-speed control over the wipe — feels like turning a film reel
+- `prefers-reduced-motion`: skipped entirely
+- Mounted in `landing-page.tsx` after `<LandingMotion />`
+
+**Animation conflict audit + fix (`landing-motion.tsx` rewritten):**
+- Documented all Framer Motion ownership boundaries in JSDoc comments
+- Removed duplicate portal card entrance (PiranhaPortalsSection.tsx owns it via useGSAP)
+- Removed Framer-conflicting Trust card fly-in (motion.div owns opacity/y/scale)
+- Fixed `.role-access-card` selector (class doesn't exist → was silently doing nothing)
+- Removed HoverCard mouse-tilt GSAP (HoverCard is motion.div with its own whileHover)
+- Fixed `~240ms` selector from fragile `[style*='clamp']` to reliable `.find(s => s.textContent === "~240ms")`
+- Fixed closing glow selector from `.absolute` (too generic) to `[class*='blur-3xl']`
+- Fixed footer mark selector from generic `[class*='bottom']` to specific `[class*='bottom-8'][class*='right-0']`
+- TrayHero already owns blob parallax and magnetic buttons via useGSAP — landing-motion.tsx no longer duplicates these
+
+**Verified:** `pnpm typecheck` ✅, `npm run demo:verify` ✅ — zero errors.
+
+### 2026-05-23 — Inspiration-Driven Section-by-Section Scroll Animation Overhaul
+
+**References browsed:** UX Planet scroll patterns article, scroll-driven-animations.style (full demo catalog), Godly.website, Lapa.ninja.
+
+**Work done (landing-motion.tsx + globals.css — sections structure UNTOUCHED):**
+
+Complete rewrite of `landing-motion.tsx` — each section now has its own distinct, named animation pattern adapted from the inspirations:
+
+| Section | Pattern Used | Inspired By |
+|---------|-------------|-------------|
+| **Hero** | Clip-path curtain pull-up (`inset(100%→0%)`) per word + hero chip cascade | Awwwards word-curtain reveal |
+| **Ticker** | Scroll-velocity skew + rows slide in from opposite edges | scroll-driven-animations.style "Reverse-Scrolling Columns" |
+| **Portals (#portals)** | Camera-iris aperture `clip-path: inset(12%→0%)` per card + 3D perspective mouse tilt | UX Planet "Card zoom to fill screen" + cover flow |
+| **Trust (#trust)** | Fly-in from 3 directions — card1 from left, card2 from bottom, card3 from right | scroll-driven-animations.style "Fly-in Fly-out Contact List" |
+| **Campus (#campus)** | Iris expand `circle(0%→100%)` on left grid + Cover Flow `rotateY(-35°→0°)` on role cards | scroll-driven-animations.style "Cover Flow" + "Image Reveal" |
+| **Sync (#sync)** | Scale-down entrance (`scale 1.08→1` + `blur(8px)→0`) + elastic cascade | Sequential pipeline cascade |
+| **Kitchen Quote** | Clip-path bottom wipe (`inset(100%→0%)`) + scroll-scrub scale zoom reader | UX Planet "Content zooms" + sticky reader |
+| **Flow (#flow)** | Card-deal `rotateY(-55°→0°)` stagger + elastic numeral spin | scroll-driven-animations.style "Stacking Cards" + Cover Flow |
+| **Stack (#stack)** | Center-out elastic pop `scale(0.5→1)` from center + 3D mouse tilt | Awwwards/Godly tech stack pop |
+| **~240ms strip** | Number count-up animation on entry | Reading progress adapted |
+| **Closing (#closing)** | Letter-spacing compression `0.22em→-0.02em` + glow scale pulse | Awwwards monumental stamp reveal |
+| **Footer** | TRAY watermark parallax scrub + link wave-in | Parallax footer mark |
+
+- **Global:** Section eyebrow divider line draw (0%→100% width) on every section entry. Magnetic button pull on all CTAs. Lenis duration `1.6`, `wheelMultiplier: 0.72`.
+- **CSS (globals.css):** Added `.tl-word { overflow:visible; will-change:clip-path }` for hero curtain reveal; updated `.split-word > span` will-change to include `clip-path`.
+- **Verified:** `pnpm typecheck` ✅, `npm run demo:verify` ✅ — zero errors.
+
+### 2026-05-23 — Premium Scroll Animations & Scrolling Effects (landing-motion.tsx)
+
+**Work done:**
+- Upgraded `landing-motion.tsx` with 7 new premium scroll animation layers — sections structure unchanged:
+  - **Section heading parallax scrub**: Every major h2 (`#portals`, `#campus`, `#sync`, `#flow`, `#stack`, `#trust`, `#closing`) gets a gentle -40px Y parallax as the user scrolls through each section (Zajno/Awwwards style, `scrub: 1.8`).
+  - **Horizontal line-draw per section**: Animated 0% → 100% width hairline divider injected after each section eyebrow label on scroll entry (`power3.inOut`, 1.4s duration).
+  - **Portal cards 3D perspective stagger**: Cards enter with `rotateX(14deg)` perspective flip + `y(80)` stagger, then get mouse-tracking 3D tilt on hover (7° Y, 6° X, `scale(1.025)`).
+  - **Kitchen quote parallax**: Dark quote block floats upward (-30px) as you scroll past it, plus enhanced entrance (scale + opacity + y, 1.55s).
+  - **Realtime strip counter animation**: The `~240ms` number counts from 0 up to 240 when the strip enters the viewport, with flanking labels sliding in from opposite sides.
+  - **Closing CTA letter-spacing compression**: Headline enters from `letter-spacing: 0.18em` + `scale(0.92)` + blur collapsing to `-0.02em` tight tracking (Awwwards-style monumental compression, 1.55s `power4.out`).
+  - **Closing glow scale-in**: The ambient glow orb in the closing section fades in from `scale(0.3)` to `1.0`.
+  - **Footer mark fade-in**: Footer TRAY watermark fades + scales in from `scale(0.88)` when the footer enters view.
+- Tuned Lenis `duration: 1.8` and `wheelMultiplier: 0.65` for a smoother but still responsive scroll feel.
+- Added comprehensive CSS in `globals.css`: `will-change` hints, `transform-style: preserve-3d` for 3D cards, GPU compositing layers for all animated elements, `prefers-reduced-motion` disables `will-change` to save memory.
+- Verified: `pnpm typecheck` ✅, `npm run demo:verify` ✅ — zero errors.
+
 ### 2026-05-23 — High-Fidelity Device Mockups & Retina-Grade Preview Scaling
 
 **Work done:**

@@ -13,36 +13,39 @@ const portals = [
     index: "01",
     role: "STUDENT",
     dotColor: "#2E80EF",
-    title: "Student",
-    description: "Order from any canteen in the campus. Pay by UPI. Track live. Show OTP.",
-    deviceBadge: "STUDENT APP · MOBILE",
+    topLabel: "STUDENT APP",
+    title: "Order from any canteen.",
+    description: "Choose canteen, browse menu, pay by UPI, track your order live, collect with a 4-digit OTP.",
+    deviceBadge: "MOBILE • STUDENT",
     previewSrc: "/demo/student.html",
     loginRole: "student",
-    buttonLabel: "Open student demo",
+    buttonLabel: "LAUNCH DEMO",
     showCredentials: false,
   },
   {
     index: "02",
     role: "KITCHEN",
     dotColor: "#B8531A",
-    title: "Kitchen staff",
-    description: "Manage one canteen's live queue. Accept, prep, hand over with OTP.",
-    deviceBadge: "KITCHEN VIEW · TABLET",
+    topLabel: "KITCHEN VIEW",
+    title: "Run the live queue.",
+    description: "New tickets land instantly, prep timers count down, OTP handover clears the order — no paper, no shouting.",
+    deviceBadge: "TABLET • KITCHEN",
     previewSrc: "/demo/kitchen.html",
     loginRole: "kitchen",
-    buttonLabel: "Sign in as kitchen staff",
+    buttonLabel: "LAUNCH DEMO",
     showCredentials: true,
   },
   {
     index: "03",
     role: "ADMIN",
     dotColor: "#16A34A",
-    title: "Canteen admin",
-    description: "Menu, orders, staff, and daily revenue. Full audit log included.",
-    deviceBadge: "ADMIN CONSOLE · DESKTOP",
+    topLabel: "ADMIN CONSOLE",
+    title: "See the whole operation.",
+    description: "Live orders, daily revenue, menu edits, staff access, full audit log — one screen, every metric.",
+    deviceBadge: "DESKTOP • ADMIN",
     previewSrc: "/demo/admin.html",
     loginRole: "owner",
-    buttonLabel: "Sign in as admin",
+    buttonLabel: "LAUNCH DEMO",
     showCredentials: true,
   },
 ] as const;
@@ -197,81 +200,82 @@ export function PiranhaPortalsSection() {
             <article
               key={portal.index}
               data-portal-card
-              className="motion-card group flex flex-col justify-between p-8 sm:p-9 select-none transition-all duration-300 rounded-[2rem] border border-neutral-200 bg-white relative overflow-hidden gap-6 shadow-sm hover:shadow-md"
+              className="motion-card group flex flex-col justify-between p-8 sm:p-9 select-none transition-all duration-300 rounded-[2rem] border border-neutral-300/40 bg-[var(--tray-cream,#EDE5D2)] relative overflow-hidden gap-6 shadow-sm hover:shadow-xl hover:shadow-neutral-300/20 hover:-translate-y-1.5"
             >
               {/* Monospace dot-grid background inside the card */}
               <div className="pointer-events-none absolute inset-0 opacity-[0.02] [background-image:radial-gradient(circle_at_1px_1px,currentColor_1px,transparent_0)] [background-size:14px_14px] text-neutral-800" />
 
               {/* Text block sit ABOVE the mockup */}
-              <div className="relative z-10 flex flex-col gap-1.5">
-                {/* Header row */}
-                <div className="flex items-center justify-between">
-                  <span className="text-[0.62rem] font-code font-bold uppercase tracking-[0.2em] text-neutral-400">
-                    {portal.role}
-                  </span>
-                  <span className="flex items-center">
-                    <span
-                      className="h-2.5 w-2.5 rounded-full animate-pulse shadow-[0_0_8px_currentColor]"
-                      style={{ background: portal.dotColor, color: portal.dotColor }}
-                    />
-                  </span>
-                </div>
-
-                {/* Heading (Bold Sans-Serif) */}
-                <h3 className="text-[1.85rem] sm:text-[2rem] font-sans font-black tracking-tight text-neutral-900 leading-[1.1] mt-2">
+              <div className="relative z-10 flex flex-col gap-3">
+                {/* Heading (Display Serif Italic) */}
+                <h3
+                  className="text-[1.85rem] sm:text-[2.1rem] leading-[1.15] text-neutral-900 font-medium tracking-tight mt-2"
+                  style={{ fontFamily: "var(--font-fraunces)", fontStyle: "italic" }}
+                >
                   {portal.title}
                 </h3>
-              </div>
 
-              {/* Mockup Frame with overlapping badge */}
-              <div className="relative w-full my-2">
-                {/* Absolute overlapping badge */}
-                <div className="absolute top-4 left-4 z-20 bg-white/95 backdrop-blur-sm border border-neutral-200/80 rounded-full px-3.5 py-1.5 shadow-sm">
-                  <span className="text-[0.58rem] font-code font-bold uppercase tracking-wider text-neutral-700">
-                    {portal.deviceBadge}
-                  </span>
-                </div>
-
-                <div className="relative overflow-hidden rounded-2xl border border-neutral-200/80 w-full aspect-[4/3] bg-black/5 flex flex-col shadow-lg transition-transform duration-300 group-hover:scale-[1.01] group-hover:-translate-y-0.5">
-                  <div className="relative flex-1 w-full overflow-hidden bg-white">
-                    <iframe
-                      src={portal.previewSrc}
-                      title={`${portal.role} Live Preview`}
-                      loading="lazy"
-                      sandbox="allow-scripts allow-same-origin"
-                      scrolling="yes"
-                      tabIndex={-1}
-                      aria-hidden="true"
-                      className="absolute top-0 left-0 border-0 pointer-events-none select-none"
-                      style={{
-                        width: "160%",
-                        height: "160%",
-                        transform: "scale(0.625)",
-                        transformOrigin: "top left",
-                      }}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Description & Demo Credentials & Button Below Mockup */}
-              <div className="relative z-10 flex flex-col gap-4 mt-auto">
+                {/* Description */}
                 <p className="opacity-70 text-[0.88rem] leading-[1.65] font-sans text-neutral-600">
                   {portal.description}
                 </p>
 
                 {portal.showCredentials && (
-                  <span className="text-[0.62rem] font-code font-extrabold tracking-[0.16em] text-neutral-400 uppercase block -mt-1">
+                  <span className="text-[0.62rem] font-code font-extrabold tracking-[0.16em] text-neutral-400 uppercase block">
                     DEMO LOGIN · SHARED CREDENTIALS
                   </span>
                 )}
+              </div>
 
+              {/* Website Preview Container (Curved Edge Website Viewport, no chassis) */}
+              <div className="relative w-full aspect-[4/3] rounded-2xl border border-neutral-300/40 bg-white overflow-hidden shadow-sm my-2 transition-all duration-300">
+                {portal.role === "STUDENT" ? (
+                  /* Student App: Mobile layout rendered with high-density scale */
+                  <iframe
+                    src={portal.previewSrc}
+                    title={`${portal.title} Live Preview`}
+                    loading="lazy"
+                    sandbox="allow-scripts allow-same-origin"
+                    scrolling="no"
+                    tabIndex={-1}
+                    aria-hidden="true"
+                    className="absolute inset-0 w-[130%] h-[130%] origin-top-left scale-[0.76923] border-0"
+                  />
+                ) : portal.role === "KITCHEN" ? (
+                  /* Kitchen App: Tablet view shown big */
+                  <iframe
+                    src={portal.previewSrc}
+                    title={`${portal.title} Live Preview`}
+                    loading="lazy"
+                    sandbox="allow-scripts allow-same-origin"
+                    scrolling="no"
+                    tabIndex={-1}
+                    aria-hidden="true"
+                    className="absolute inset-0 w-[200%] h-[200%] origin-top-left scale-[0.5] border-0"
+                  />
+                ) : (
+                  /* Admin App: Desktop view shown big */
+                  <iframe
+                    src={portal.previewSrc}
+                    title={`${portal.title} Live Preview`}
+                    loading="lazy"
+                    sandbox="allow-scripts allow-same-origin"
+                    scrolling="no"
+                    tabIndex={-1}
+                    aria-hidden="true"
+                    className="absolute inset-0 w-[333.33%] h-[333.33%] origin-top-left scale-[0.3] border-0"
+                  />
+                )}
+              </div>
+
+              {/* Footer row */}
+              <div className="relative z-10 flex items-center justify-end border-t border-neutral-200/60 pt-4 mt-auto">
                 <a
                   href={portal.previewSrc}
-                  className="inline-flex items-center justify-between w-full py-3.5 px-6 rounded-xl text-[0.72rem] font-code font-bold uppercase tracking-wider transition-all duration-300 bg-neutral-900 text-white hover:bg-neutral-800 active:scale-[0.98] shadow-sm mt-2"
+                  className="inline-flex items-center gap-1 font-code text-[0.68rem] font-bold uppercase tracking-wider text-neutral-800 hover:text-neutral-950 transition-colors"
                 >
-                  <span>{portal.buttonLabel}</span>
-                  <span className="text-sm font-sans font-black">&rarr;</span>
+                  <span>LAUNCH DEMO</span>
+                  <span className="text-xs font-sans font-black">&rarr;</span>
                 </a>
               </div>
             </article>
