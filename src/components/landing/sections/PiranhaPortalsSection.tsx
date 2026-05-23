@@ -591,7 +591,7 @@ function InteractivePortalCard({ portal, idx, portalRefs }: InteractivePortalCar
               ref={iframeRef}
               src={portal.previewSrc}
               title={`${portal.title} Live Preview`}
-              loading="lazy"
+              loading="eager"
               sandbox="allow-scripts allow-same-origin"
               scrolling="no"
               tabIndex={isSandbox ? 0 : -1}

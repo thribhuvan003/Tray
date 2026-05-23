@@ -1573,7 +1573,10 @@ pm run typecheck passes. Restart dev if port 3000 hangs: NODE_OPTIONS=--max-old-
   - Calibrated card frame dimension variables: Student frame remains widescreen responsive desktop (`virtualWidth = 1024`, `scrollPx = 0`).
   - Kitchen card frame calibrated to mirror `zzz (Remix)/index.html` values (`virtualWidth = 1440`, `scrollPx = 0`) to render the full dashboard—including the left sidebar, the middle orders queue, and the right "Today's Specials" list, allowing visitors to inspect all panels.
   - Admin Console card calibrated to show the top 75% widescreen dashboard including the header and KPI cards, and naturally cut off the recent orders table at the bottom of the card frame (`virtualWidth = 1300`, `scrollPx = 0`).
+- **Eager Loading Performance Optimization (`PiranhaPortalsSection.tsx`)**:
+  - Replaced `loading="lazy"` with `loading="eager"` on all portal showcase `iframe` elements. This forces the browser to load, render, and cache the lightweight static mockups (`student.html`, `kitchen.html`, `admin.html`) immediately in the background upon page load rather than waiting for scroll entry. This completely eliminates the loading delay and spinner duration when the user scrolls down to inspect the cards.
 - **Verified**: Verified that both `pnpm typecheck` ✅ and `pnpm demo:verify` ✅ passed with **0 errors**.
+
 
 
 
