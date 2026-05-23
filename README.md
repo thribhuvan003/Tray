@@ -11,6 +11,23 @@ A unified, real-time ordering and kitchen management system. Students order from
 
 Tray is built from the ground up to solve fragmented, multi-vendor ordering ecosystems. By mapping dynamic subdomains to PostgreSQL Row Level Security (RLS), a single instance of Tray can manage an entire network of canteens, kitchens, and payment streams.
 
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Client as Student Phone / Browser
+    participant Middleware as Next.js Middleware
+    participant Database as Supabase Postgres (RLS)
+
+    Client->>Middleware: Request to aditya.localhost:3000/menu
+    Note over Middleware: Parse subdomain or query params
+    Note over Middleware: Inject "x-tenant-slug: aditya"
+    Middleware->>Database: Queries data (passes header)
+    Note over Database: pre_request hook sets app.current_tenant
+    Note over Database: Row-Level Security checks app.current_tenant matches tenant_id
+    Database->>Middleware: Scoped data returned
+    Middleware->>Client: Rendered page
+```
+
 ### 🏫 The Campus Edition (Current Focus)
 Right now, this codebase is tailored and configured for **Indian college campuses**.
 * One college subdomain (e.g., `aditya.trayy.in`) acts as the tenant.
@@ -99,7 +116,16 @@ cp .env.example .env.local
 ```
 Fill in the Supabase API keys in `.env.local` (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`). 
 
-*(Optional features like Razorpay or Resend can be left blank; the application will automatically fall back to simulation mode locally).*
+---
+
+## 💡 Offline Sandbox Mode vs. Live Production Backend
+
+For easier client demonstrations, local debugging, and review, Tray features a **Dual-Mode Architecture**:
+
+* **Offline Sandbox (Simulation Mode)**: Optional integration APIs (like Razorpay payments or Resend email delivery) can be left unconfigured or blank in your `.env.local`. The application will automatically route requests through sandbox simulations, allowing you to test the checkout flow, view order transitions, and check email notifications offline.
+* **Live Production Backend**: When valid credentials and connection keys are supplied, the application connects directly to Supabase with full RLS protection, real Razorpay webhooks, and live SMS/OTP delivery.
+
+---
 
 ### 3. Sync Database Schema
 Push the PostgreSQL migrations to your local instance:
@@ -112,7 +138,13 @@ Launch Next.js:
 ```bash
 pnpm dev
 ```
-Open **[http://aditya.localhost:3000](http://aditya.localhost:3000)** (or **`http://localhost:3000/?tenant=aditya`**) to view the pre-seeded Aditya College Canteen.
+Open **[http://aditya.localhost:3000](http://aditya.localhost:3000)** to view the pre-seeded Aditya College Canteen.
+
+#### 🔧 Subdomain Troubleshooting
+If your operating system or network configuration does not automatically resolve subdomains on `localhost` (e.g. `aditya.localhost`), you can use the built-in query-parameter override in your browser:
+**[http://localhost:3000/?tenant=aditya](http://localhost:3000/?tenant=aditya)**.
+
+---
 
 ---
 
