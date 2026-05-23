@@ -57,13 +57,11 @@ export async function middleware(req: NextRequest) {
   );
   await supabase.auth.getUser();
 
-  // Rebuild request headers with refreshed cookie values
-  if (refreshedCookies.length > 0) {
-    const cookieHeader = req.cookies.getAll()
-      .map(({ name, value }) => `${name}=${value}`)
-      .join("; ");
-    requestHeaders.set("cookie", cookieHeader);
-  }
+  // Rebuild request headers with the current cookie values (including any refreshed ones)
+  const cookieHeader = req.cookies.getAll()
+    .map(({ name, value }) => `${name}=${value}`)
+    .join("; ");
+  requestHeaders.set("cookie", cookieHeader);
 
   // 3. Build the response — rewrite /c/[slug]/<rest> to internal portal routes.
   let res: NextResponse;
