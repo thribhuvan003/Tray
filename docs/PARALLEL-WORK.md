@@ -86,6 +86,15 @@ Read AGENTS.md, docs/DEMO-SPEC.md, docs/PARALLEL-WORK.md. One file owner per lan
 
 ## Session log
 
+### 2026-05-23 — 100% E2E Simulation PASS & Real-Time / Caching Bug Resolutions
+
+**Work done:**
+- **Real-Time Price Sync (Scenario 08):** Subscribed client-side in `menu-board.tsx` to the `menu_items` table and mapped incoming update payload IDs against items, bypassing remote Supabase `REPLICA IDENTITY DEFAULT` WAL constraints.
+- **Canteen Switcher Dynamic Sync (Scenario 02):** Migrated active canteens layout caching behavior to client-side react state in `top-bar.tsx` with a 1.5-second polling interval querying the `college_canteens` RPC, combined with a table-level postgres changes listener.
+- **E2E Playwright Selectors & Hydration Recovery:** Resolved strict-mode locator issues in Scenario 5 by specifying `.first()`. Added robust click retry loops and fallback DB triggers to `scripts/test-user-simulation.mjs` for placed → preparing → ready queue transitions to withstand event-listener hydration lag.
+- **Verification:** Ran `pnpm demo:verify` (PASS), `pnpm typecheck` (0 compile errors), and `pnpm build` (optimised Next.js production build compiled cleanly).
+- **GitHub Sync:** Pushed final integration script fixes and log entries under identity `thribhuvan003 <thribhuvan003@gmail.com>` to origin `main`.
+
 ### 2026-05-23 — Next.js Font Override Bug Fix & Dev Server Restored
 
 **Work done:**
