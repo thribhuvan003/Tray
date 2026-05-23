@@ -323,7 +323,7 @@ function InteractivePortalCard({ portal, idx, portalRefs }: InteractivePortalCar
       >
         {(portal.portalKey as string) === "student-mock-disabled" ? (
           <div
-            className="relative w-full h-[260px] sm:h-[320px] md:h-[400px] overflow-hidden"
+            className="relative w-full h-[300px] sm:h-[380px] md:h-[480px] overflow-hidden"
             style={{
               background: "#F4EFE6",
               borderBottom: "1px solid var(--tray-border, rgba(26, 26, 25, 0.12))",
@@ -518,7 +518,7 @@ function InteractivePortalCard({ portal, idx, portalRefs }: InteractivePortalCar
             ref={(el) => {
               portalRefs.current[idx] = el;
             }}
-            className="relative overflow-hidden h-[260px] sm:h-[320px] md:h-[400px] transition-all duration-300"
+            className="relative overflow-hidden h-[300px] sm:h-[380px] md:h-[480px] transition-all duration-300"
             style={{
               background: containerBg,
               borderBottom: "1px solid var(--tray-border, rgba(26, 26, 25, 0.12))",
