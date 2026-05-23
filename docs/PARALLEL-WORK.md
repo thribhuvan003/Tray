@@ -86,6 +86,14 @@ Read AGENTS.md, docs/DEMO-SPEC.md, docs/PARALLEL-WORK.md. One file owner per lan
 
 ## Session log
 
+### 2026-05-23 — Repository Audit, Architecture Diagrams & Documentation Overhaul
+
+**Work done:**
+- **Repository Audit:** Completed a comprehensive Google senior-developer review of Tray's setup workflow, codebase directory layout, multi-tenant Postgres RLS architecture, and validation pipeline.
+- **Architecture Visuals & Documentation:** Added a high-fidelity Mermaid sequence diagram illustrating the middleware subdomain resolution and PostgREST session hook tenancy isolation pipeline. Documented local subdomain troubleshooting overrides (`?tenant=aditya`) and simulation vs. production backend modes in the `README.md`.
+- **Pruned Empty Directory:** Deleted the obsolete empty `design-system/` folder from the root of the repository.
+- **Verification & GitHub Sync:** Verified 100% test passing status with `pnpm typecheck` and `pnpm demo:verify`. Committed and pushed clean changes directly to GitHub main.
+
 ### 2026-05-23 — Portals Showcase & Cards Preview Light Theme Redesign
 
 **Work done:**
