@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import type { ResolvedTenant, CollegeCanteen } from "@/lib/tenant";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { CanteenSwitcher, type CanteenOption } from "@/components/portal-student/canteen-switcher";
+import { getBrowserClient } from "@/lib/supabase/browser";
 
 function currentServiceLabel(): string {
   const h = new Date(Date.now() + 5.5 * 3600000).getUTCHours();
@@ -36,10 +37,83 @@ export function StudentTopBar({ tenant, siblings = [] }: Props) {
     return () => clearInterval(id);
   }, []);
 
+  const [activeCanteens, setActiveCanteens] = useState<CollegeCanteen[]>(siblings);
+
+  useEffect(() => {
+    const sb = getBrowserClient();
+    
+    async function fetchFreshSiblings() {
+      console.log("🔍 FETCH_FRESH_SIBLINGS RUNNING for college_slug:", tenant.college_slug);
+      if (!tenant.college_slug) {
+        console.log("⚠️ FETCH_FRESH_SIBLINGS aborted: college_slug is empty!");
+        return;
+      }
+      const { data, error } = await (sb as any).rpc("college_canteens", { p_college_slug: tenant.college_slug });
+      console.log("🔍 FETCH_FRESH_SIBLINGS RPC RESULT:", { count: data?.length, error });
+      if (!error && data) {
+        // Fetch sibling dish counts dynamically on client-side
+        const { data: counts } = await (sb as any)
+          .from("menu_items")
+          .select("id, tenants!inner(slug)")
+          .eq("status", "live");
+
+        const canteensList = data as unknown as CollegeCanteen[];
+        if (counts) {
+          const dishCountsMap: Record<string, number> = {};
+          for (const item of counts) {
+            const s = (item.tenants as any)?.slug;
+            if (s) {
+              dishCountsMap[s] = (dishCountsMap[s] || 0) + 1;
+            }
+          }
+          for (const sib of canteensList) {
+            sib.dishCount = dishCountsMap[sib.slug] ?? 0;
+          }
+        }
+        setActiveCanteens(canteensList);
+      }
+    }
+    
+    // Fetch immediately on mount
+    fetchFreshSiblings();
+
+    // Poll every 1.5 seconds to guarantee updates on remote databases
+    // where the realtime publication has not yet been applied to the tenants table
+    const intervalId = setInterval(fetchFreshSiblings, 1500);
+
+    // Subscribe to all insertions, updates, or deletes on tenants table
+    // to dynamically refresh sibling canteens switcher list.
+    const tenantsCh = sb
+      .channel("realtime-tenants-global-switcher")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "tenants" },
+        async (payload) => {
+          const newCollegeName = (payload.new as any)?.college_name;
+          const oldCollegeName = (payload.old as any)?.college_name;
+          
+          const isOurCollege = 
+            newCollegeName === tenant.college_name ||
+            oldCollegeName === tenant.college_name;
+            
+          if (isOurCollege) {
+            await fetchFreshSiblings();
+            router.refresh();
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      clearInterval(intervalId);
+      sb.removeChannel(tenantsCh);
+    };
+  }, [tenant.college_slug, tenant.college_name, router]);
+
   // Convert CollegeCanteen[] to CanteenOption[] for the switcher
   const canteenOptions = useMemo<CanteenOption[]>(() => {
-    if (siblings.length === 0) return [];
-    return siblings.map((c) => ({
+    if (activeCanteens.length === 0) return [];
+    return activeCanteens.map((c) => ({
       id: c.slug,
       name: c.name,
       location: [c.building, c.zone].filter(Boolean).join(" · ") || null,
@@ -49,7 +123,7 @@ export function StudentTopBar({ tenant, siblings = [] }: Props) {
         ? Math.min(20, Math.max(3, 3 + c.pending_orders_count))
         : undefined,
     }));
-  }, [siblings]);
+  }, [activeCanteens]);
 
   function handleCanteenSelect(canteen: CanteenOption) {
     if (canteen.id !== tenant.slug) {

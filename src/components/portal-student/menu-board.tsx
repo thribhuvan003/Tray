@@ -45,14 +45,26 @@ export function MenuBoard({ categories, items, tenantId, tenantSlug, siblings = 
   useEffect(() => {
     const sb = getBrowserClient();
     
-    // Subscribe to menu_items changes for this tenant
+    // Subscribe to menu_items changes with robust client-side filter
+    // to bypass PostgreSQL REPLICA IDENTITY DEFAULT constraints
     const menuCh = sb
       .channel(`realtime-menu-${tenantId}`)
       .on(
         "postgres_changes",
-        { event: "*", schema: "public", table: "menu_items", filter: `tenant_id=eq.${tenantId}` },
-        () => {
-          router.refresh();
+        { event: "*", schema: "public", table: "menu_items" },
+        (payload) => {
+          const newId = (payload.new as any)?.id;
+          const oldId = (payload.old as any)?.id;
+          const newTenantId = (payload.new as any)?.tenant_id;
+          
+          const isOurItem = 
+            (newId && items.some(it => it.id === newId)) ||
+            (oldId && items.some(it => it.id === oldId)) ||
+            (newTenantId === tenantId);
+            
+          if (isOurItem) {
+            router.refresh();
+          }
         }
       )
       .subscribe();
@@ -73,7 +85,7 @@ export function MenuBoard({ categories, items, tenantId, tenantSlug, siblings = 
       sb.removeChannel(menuCh);
       sb.removeChannel(tenantCh);
     };
-  }, [tenantId, router]);
+  }, [tenantId, router, items]);
 
   useEffect(() => {
     const handleVisibility = () => {

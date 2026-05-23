@@ -311,9 +311,7 @@ async function main() {
     const studentCtx = await browser.newContext({ viewport: { width: 1280, height: 900 } });
     const studentPage = await studentCtx.newPage();
     studentPage.on("console", (msg) => {
-      if (msg.type() === "error") {
-        console.log(`  ⚠️ [BROWSER ERROR] Student Page: ${msg.text()}`);
-      }
+      console.log(`  🖥️ [BROWSER CONSOLE] Student Page: ${msg.text()}`);
     });
 
     // Login as student
@@ -497,7 +495,7 @@ async function main() {
 
     // Realtime global tenants channel should trigger client-side re-render
     info("Waiting for canteen switcher list to dynamically update…");
-    await studentPage.waitForTimeout(3000);
+    await southBlockTextBefore.waitFor({ state: "visible", timeout: 10000 }).catch(() => {});
     await screenshot(studentPage, "52-switcher-drawer-after");
 
     const isSouthBlockVisibleAfter = await southBlockTextBefore.isVisible().catch(() => false);

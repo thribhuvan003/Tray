@@ -128,7 +128,6 @@ export function PiranhaPortalsSection() {
   return (
     <section
       ref={rootRef}
-      id="portals"
       className="relative overflow-hidden px-5 py-24 sm:px-8 lg:px-10 lg:min-h-screen lg:flex lg:flex-col lg:justify-center lg:py-24"
       style={{ background: "var(--bg, #0e0a06)", color: "var(--ink, #f5efe4)" }}
     >
@@ -177,7 +176,8 @@ export function PiranhaPortalsSection() {
 
         {/* 3-Column Portal Grid — matches user screenshots */}
         <div
-          className="grid grid-cols-1 lg:grid-cols-3 gap-[18px] mt-14 w-full"
+          id="portals"
+          className="grid grid-cols-1 lg:grid-cols-3 gap-[18px] mt-14 w-full scroll-mt-24"
           style={{ perspective: "1200px" }}
         >
           {portals.map((portal, idx) => (

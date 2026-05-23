@@ -37,8 +37,8 @@ const HERO_CHIPS = [
 ];
 
 const METRICS = [
-  { end: 12, suffix: "min", label: "saved per lunch" },
-  { end: 240, suffix: "ms", label: "realtime sync" },
+  { end: 12, suffix: " min", label: "saved per lunch" },
+  { end: 240, suffix: " ms", label: "realtime sync" },
   { end: 0, suffix: "%", label: "Tray commission" },
 ];
 
