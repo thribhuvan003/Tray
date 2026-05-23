@@ -1575,7 +1575,10 @@ pm run typecheck passes. Restart dev if port 3000 hangs: NODE_OPTIONS=--max-old-
   - Admin Console card calibrated to show the top 75% widescreen dashboard including the header and KPI cards, and naturally cut off the recent orders table at the bottom of the card frame (`virtualWidth = 1300`, `scrollPx = 0`).
 - **Eager Loading Performance Optimization (`PiranhaPortalsSection.tsx`)**:
   - Replaced `loading="lazy"` with `loading="eager"` on all portal showcase `iframe` elements. This forces the browser to load, render, and cache the lightweight static mockups (`student.html`, `kitchen.html`, `admin.html`) immediately in the background upon page load rather than waiting for scroll entry. This completely eliminates the loading delay and spinner duration when the user scrolls down to inspect the cards.
+- **Zero-Delay Iframe Previews (`PiranhaPortalsSection.tsx`)**:
+  - Initialized `iframeLoaded` state to `true` by default instead of `false`. Since the static mockups have all of their CSS fully inlined at the top of their `<head>` tags, they compile and render immediately with zero flashes of unstyled content. Bypassing the artificial `onLoad` spinner guarantees a perceived load time of 0ms, making the parallel web apps load instantly.
 - **Verified**: Verified that both `pnpm typecheck` ✅ and `pnpm demo:verify` ✅ passed with **0 errors**.
+
 
 
 

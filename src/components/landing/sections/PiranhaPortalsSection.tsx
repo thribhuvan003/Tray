@@ -59,7 +59,7 @@ interface InteractivePortalCardProps {
 
 function InteractivePortalCard({ portal, idx, portalRefs }: InteractivePortalCardProps) {
   const [mounted, setMounted] = React.useState(false);
-  const [iframeLoaded, setIframeLoaded] = React.useState(false);
+  const [iframeLoaded, setIframeLoaded] = React.useState(true);
   const [isSandbox, setIsSandbox] = React.useState(false);
   const [syncMessage, setSyncMessage] = React.useState<string | null>(null);
 
