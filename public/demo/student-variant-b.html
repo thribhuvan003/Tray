@@ -114,7 +114,7 @@
     .btn-add-initial:hover{background:var(--accent-glow)}.btn-add-initial:active{transform:scale(.97)}
     .menu-card.has-qty .btn-add-initial{display:none}.menu-card.has-qty .qty-control{display:flex}.menu-card:not(.has-qty) .qty-control{display:none}    
     
-    .cart-sidebar{display:none;width:var(--cart-w);flex-shrink:0;border-left:1px solid var(--border);background:#ffffff;flex-direction:column;position:sticky;top:var(--topbar-h);height:calc(100dvh - var(--topbar-h));align-self:flex-start}
+    .cart-sidebar{display:none;width:var(--cart-w);flex-shrink:0;border:1px solid var(--border);border-radius:var(--radius, 14px);background:#ffffff;flex-direction:column;position:sticky;top:calc(var(--topbar-h) + 16px);height:calc(100dvh - var(--topbar-h) - 32px);align-self:flex-start;margin:16px 16px 16px 8px;box-shadow:0 4px 20px rgba(0,0,0,0.04),0 1px 3px rgba(0,0,0,0.02);overflow:hidden}
     @media(min-width:900px){.cart-sidebar{display:flex}}
     .cart-sidebar__head{padding:20px 20px 12px;border-bottom:1px solid var(--border)}
     .cart-sidebar__head h3{margin:0;font-family:var(--font-display);font-size:1.5rem;font-weight:400;line-height:1.12}
@@ -446,6 +446,12 @@
     }
     body.in-iframe .cart-sidebar {
       display: flex !important;
+      margin: 12px 12px 12px 6px !important;
+      height: calc(100% - 24px) !important;
+      top: 12px !important;
+      border-radius: 12px !important;
+      border: 1px solid var(--border) !important;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.03) !important;
     }
     body.in-iframe .main {
       padding: 0 !important;
@@ -875,7 +881,7 @@ function renderMenu(){
     var q=getQty(it.id);var hasQty=q>0;
     var sp=it.cat==="specials"||it.isLiveSpecial;
     var isBestSeller = it.name.indexOf("Biryani") !== -1 || it.name.indexOf("Coffee") !== -1 || it.name.indexOf("Dosa") !== -1;
-    html+='<article class="menu-card'+(hasQty?" has-qty":"")+'" data-id="'+it.id+'"><div class="menu-card__visual">'+it.icon+'</div><div class="menu-card__body"><div class="menu-card__top"><h3 class="menu-card__title">'+it.name+'</h3><div style="display:flex;align-items:center;gap:6px">'+(isBestSeller?'<span class="best-seller-tag">Best Seller</span>':'')+'<span class="diet-dot diet-dot--'+(it.diet==="nv"?"nv":"veg")+'" title="'+(it.diet==="nv"?"Non-vegetarian":"Vegetarian")+'" aria-label="'+(it.diet==="nv"?"Non-vegetarian":"Vegetarian")+'"></span></div></div><p class="menu-card__desc">'+it.desc+'</p><div class="menu-card__foot"><span class="price">'+fmt(it.price)+'</span>'+(sp?'<span style="font-family:var(--mono);font-size:10.5px;color:var(--veg);font-weight:600;letter-spacing:0.04em">★ SPECIAL</span>':'')+'<button type="button" class="btn-add-initial" data-action="add" data-id="'+it.id+'">+ Add</button><div class="qty-control"><button type="button" class="qty-btn qty-minus" data-action="minus" data-id="'+it.id+'" aria-label="Remove one">−</button><span class="qty-val">'+q+'</span><button type="button" class="qty-btn qty-btn--add" data-action="plus" data-id="'+it.id+'" aria-label="Add one">+</button></div></div></div></article>';
+    html+='<article class="menu-card'+(hasQty?" has-qty":"")+'" data-id="'+it.id+'"><div class="menu-card__visual">'+(it.emoji || it.icon || "🍽")+'</div><div class="menu-card__body"><div class="menu-card__top"><h3 class="menu-card__title">'+it.name+'</h3><div style="display:flex;align-items:center;gap:6px">'+(isBestSeller?'<span class="best-seller-tag">Best Seller</span>':'')+'<span class="diet-dot diet-dot--'+(it.diet==="nv"?"nv":"veg")+'" title="'+(it.diet==="nv"?"Non-vegetarian":"Vegetarian")+'" aria-label="'+(it.diet==="nv"?"Non-vegetarian":"Vegetarian")+'"></span></div></div><p class="menu-card__desc">'+it.desc+'</p><div class="menu-card__foot"><span class="price">'+fmt(it.price)+'</span>'+(sp?'<span style="font-family:var(--mono);font-size:10.5px;color:var(--veg);font-weight:600;letter-spacing:0.04em">★ SPECIAL</span>':'')+'<button type="button" class="btn-add-initial" data-action="add" data-id="'+it.id+'">+ Add</button><div class="qty-control"><button type="button" class="qty-btn qty-minus" data-action="minus" data-id="'+it.id+'" aria-label="Remove one">−</button><span class="qty-val">'+q+'</span><button type="button" class="qty-btn qty-btn--add" data-action="plus" data-id="'+it.id+'" aria-label="Add one">+</button></div></div></div></article>';
   });
   document.getElementById("menuGrid").innerHTML=html;document.getElementById("itemCount").textContent=items.length+(items.length===1?" dish":" dishes");
   renderSpecialsCarousel();

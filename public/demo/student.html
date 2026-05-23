@@ -114,7 +114,7 @@
     .btn-add-initial:hover{background:var(--accent-glow)}.btn-add-initial:active{transform:scale(.97)}
     .menu-card.has-qty .btn-add-initial{display:none}.menu-card.has-qty .qty-control{display:flex}.menu-card:not(.has-qty) .qty-control{display:none}    
     
-    .cart-sidebar{display:none;width:var(--cart-w);flex-shrink:0;border-left:1px solid var(--border);background:#ffffff;flex-direction:column;position:sticky;top:var(--topbar-h);height:calc(100dvh - var(--topbar-h));align-self:flex-start}
+    .cart-sidebar{display:none;width:var(--cart-w);flex-shrink:0;border:1px solid var(--border);border-radius:var(--radius, 14px);background:#ffffff;flex-direction:column;position:sticky;top:calc(var(--topbar-h) + 16px);height:calc(100dvh - var(--topbar-h) - 32px);align-self:flex-start;margin:16px 16px 16px 8px;box-shadow:0 4px 20px rgba(0,0,0,0.04),0 1px 3px rgba(0,0,0,0.02);overflow:hidden}
     @media(min-width:900px){.cart-sidebar{display:flex}}
     .cart-sidebar__head{padding:20px 20px 12px;border-bottom:1px solid var(--border)}
     .cart-sidebar__head h3{margin:0;font-family:var(--font-display);font-size:1.5rem;font-weight:400;line-height:1.12}
@@ -447,6 +447,12 @@
     }
     body.in-iframe .cart-sidebar {
       display: flex !important;
+      margin: 12px 12px 12px 6px !important;
+      height: calc(100% - 24px) !important;
+      top: 12px !important;
+      border-radius: 12px !important;
+      border: 1px solid var(--border) !important;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.03) !important;
     }
     body.in-iframe .main {
       padding: 0 !important;
@@ -482,6 +488,118 @@
       display: grid !important;
       grid-template-columns: repeat(2, 1fr) !important;
       gap: 14px !important;
+    }
+    #canteenSelect { display: none !important; }
+
+    /* Custom Dropdown for Canteen Switcher */
+    .canteen-dropdown {
+      position: relative;
+      margin-top: 8px;
+      width: 100%;
+    }
+    .canteen-dropdown__trigger {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      padding: 11px 16px;
+      border-radius: 12px;
+      border: 1px solid var(--border, rgba(26,26,25,.12));
+      background: var(--demo-choice-bg, #ffffff);
+      color: var(--text, #1A1A19);
+      font-family: var(--font-ui);
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: border-color .2s, background .2s, box-shadow .2s;
+      text-align: left;
+    }
+    .canteen-dropdown__trigger:hover {
+      border-color: rgba(26, 26, 25, 0.25);
+      background: var(--demo-choice-bg-hover, #f4efe6);
+    }
+    .canteen-dropdown__trigger:focus-visible {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+    .canteen-dropdown__trigger-text {
+      flex: 1;
+    }
+    .canteen-dropdown__trigger-chevron {
+      width: 16px;
+      height: 16px;
+      margin-left: 8px;
+      flex-shrink: 0;
+      opacity: 0.7;
+      transition: transform 0.3s var(--ease);
+    }
+    .canteen-dropdown.is-open .canteen-dropdown__trigger-chevron {
+      transform: rotate(180deg);
+    }
+    .canteen-dropdown__menu {
+      position: absolute;
+      top: calc(100% + 6px);
+      left: 0;
+      right: 0;
+      z-index: 120;
+      background: #FAF8F5;
+      border: 1px solid rgba(26,26,25,.15);
+      border-radius: 14px;
+      box-shadow: 0 10px 30px rgba(26,26,25,0.08), 0 1px 3px rgba(0,0,0,0.02);
+      overflow: hidden;
+      padding: 6px;
+      opacity: 0;
+      transform: translateY(-8px) scale(0.98);
+      pointer-events: none;
+      transition: opacity 0.25s var(--ease), transform 0.25s var(--ease);
+    }
+    .canteen-dropdown.is-open .canteen-dropdown__menu {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+      pointer-events: auto;
+    }
+    .canteen-dropdown__option {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 8px;
+      font-family: var(--font-ui);
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text, #1A1A19);
+      cursor: pointer;
+      background: transparent;
+      border: none;
+      transition: background .15s, color .15s;
+      text-align: left;
+    }
+    .canteen-dropdown__option:hover {
+      background: var(--bg-2, #E8DFD0);
+    }
+    .canteen-dropdown__option.is-selected {
+      background: rgba(51, 65, 85, .08);
+      color: var(--accent, #334155);
+      font-weight: 600;
+    }
+    .canteen-dropdown__option-check {
+      width: 14px;
+      height: 14px;
+      color: var(--accent);
+      opacity: 0;
+      transition: opacity 0.15s;
+      flex-shrink: 0;
+    }
+    .canteen-dropdown__option.is-selected .canteen-dropdown__option-check {
+      opacity: 1;
+    }
+    @media(max-width:640px){
+      .canteen-dropdown__trigger {
+        min-height: 44px;
+        padding: 12px 14px;
+      }
     }
   </style>
   <script>
@@ -687,7 +805,7 @@
   <script>
 (function(){
 var $$ = function(q){return document.querySelectorAll(q);};
-var currentCanteenId="aditya";var activeCat="all";var searchQuery="";var serviceMode="takeaway";var vegOnly=false;var tableLabel="";var pickupOtp="";var orderId="";var cart={};var payInterval=null,trackInterval=null;
+var currentCanteenId="aditya";var currentView="menu";var activeCat="all";var searchQuery="";var serviceMode="takeaway";var vegOnly=false;var tableLabel="";var pickupOtp="";var orderId="";var cart={};var payInterval=null,trackInterval=null;
 var REDUCED=false;try{REDUCED=window.matchMedia('(prefers-reduced-motion: reduce)').matches;}catch(_){}
 
 var TD=window.TRAY_DEMO;
@@ -728,6 +846,113 @@ function initCanteenSelect(){
     KITCHEN_INBOX_KEY="tray_kitchen_inbox_"+currentCanteenId;
     loadCanteenData(id);syncSegs(id);
   });
+
+  // Create custom dropdown container
+  var container = document.createElement("div");
+  container.className = "canteen-dropdown";
+  container.id = "canteenDropdown";
+
+  var trigger = document.createElement("button");
+  trigger.type = "button";
+  trigger.className = "canteen-dropdown__trigger";
+  trigger.id = "canteenDropdownTrigger";
+  trigger.setAttribute("aria-haspopup", "listbox");
+  trigger.setAttribute("aria-expanded", "false");
+
+  var triggerText = document.createElement("span");
+  triggerText.className = "canteen-dropdown__trigger-text";
+  triggerText.id = "canteenDropdownTriggerText";
+  triggerText.textContent = TD.CANTEENS[currentCanteenId].name;
+
+  var triggerChevron = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  triggerChevron.setAttribute("class", "canteen-dropdown__trigger-chevron");
+  triggerChevron.setAttribute("viewBox", "0 0 24 24");
+  triggerChevron.setAttribute("fill", "none");
+  triggerChevron.setAttribute("stroke", "currentColor");
+  triggerChevron.setAttribute("stroke-width", "2.5");
+  triggerChevron.setAttribute("stroke-linecap", "round");
+  triggerChevron.setAttribute("stroke-linejoin", "round");
+
+  var polyline = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
+  polyline.setAttribute("points", "6 9 12 15 18 9");
+  triggerChevron.appendChild(polyline);
+
+  trigger.appendChild(triggerText);
+  trigger.appendChild(triggerChevron);
+
+  var menu = document.createElement("div");
+  menu.className = "canteen-dropdown__menu";
+  menu.setAttribute("role", "listbox");
+  menu.id = "canteenDropdownMenu";
+
+  Object.keys(TD.CANTEENS).forEach(function(id){
+    var optionBtn = document.createElement("button");
+    optionBtn.type = "button";
+    optionBtn.className = "canteen-dropdown__option" + (id === currentCanteenId ? " is-selected" : "");
+    optionBtn.setAttribute("data-value", id);
+    optionBtn.setAttribute("role", "option");
+
+    var optionText = document.createElement("span");
+    optionText.textContent = TD.CANTEENS[id].name;
+
+    var checkSvg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    checkSvg.setAttribute("class", "canteen-dropdown__option-check");
+    checkSvg.setAttribute("viewBox", "0 0 24 24");
+    checkSvg.setAttribute("fill", "none");
+    checkSvg.setAttribute("stroke", "currentColor");
+    checkSvg.setAttribute("stroke-width", "3");
+    checkSvg.setAttribute("stroke-linecap", "round");
+    checkSvg.setAttribute("stroke-linejoin", "round");
+
+    var checkPolyline = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
+    checkPolyline.setAttribute("points", "20 6 9 17 4 12");
+    checkSvg.appendChild(checkPolyline);
+
+    optionBtn.appendChild(optionText);
+    optionBtn.appendChild(checkSvg);
+
+    optionBtn.addEventListener("click", function(e){
+      e.stopPropagation();
+      var newId = id;
+      currentCanteenId = newId;
+      KITCHEN_INBOX_KEY = "tray_kitchen_inbox_" + currentCanteenId;
+      sel.value = newId;
+      sel.dispatchEvent(new Event('change'));
+      container.classList.remove("is-open");
+      trigger.setAttribute("aria-expanded", "false");
+    });
+
+    menu.appendChild(optionBtn);
+  });
+
+  container.appendChild(trigger);
+  container.appendChild(menu);
+
+  // Insert custom dropdown after the native select
+  sel.parentNode.insertBefore(container, sel.nextSibling);
+
+  // Click handler to toggle dropdown
+  trigger.addEventListener("click", function(e){
+    e.stopPropagation();
+    var isOpen = container.classList.toggle("is-open");
+    trigger.setAttribute("aria-expanded", String(isOpen));
+  });
+
+  // Close when clicking outside
+  document.addEventListener("click", function(e){
+    if (!container.contains(e.target)) {
+      container.classList.remove("is-open");
+      trigger.setAttribute("aria-expanded", "false");
+    }
+  });
+
+  // Close on Escape key
+  document.addEventListener("keydown", function(e){
+    if (e.key === "Escape") {
+      container.classList.remove("is-open");
+      trigger.setAttribute("aria-expanded", "false");
+    }
+  });
   
   var segs=document.getElementById("canteenSegments");if(!segs)return;
   segs.innerHTML="";
@@ -742,9 +967,20 @@ function initCanteenSelect(){
     loadCanteenData(id);syncSegs(id);
   });
 }
+function updateCustomDropdown(id){
+  var triggerText = document.getElementById("canteenDropdownTriggerText");
+  if (triggerText && TD.CANTEENS[id]) {
+    triggerText.textContent = TD.CANTEENS[id].name;
+  }
+  $$(".canteen-dropdown__option").forEach(function(opt){
+    var optVal = opt.getAttribute("data-value");
+    opt.classList.toggle("is-selected", optVal === id);
+  });
+}
 function syncSegs(id){
   $$(".canteen-segment").forEach(function(btn){btn.classList.toggle("is-active",btn.getAttribute("data-canteen")===id);});
   var sel=document.getElementById("canteenSelect");if(sel)sel.value=id;
+  updateCustomDropdown(id);
 }
 
 function loadCanteenData(id){
@@ -819,7 +1055,7 @@ function renderMenu(){
   filtered.forEach(function(it){
     var q=getQty(it.id);var hasQty=q>0;
     var sp=it.cat==="specials"||it.isLiveSpecial;
-    html+='<article class="menu-card'+(hasQty?" has-qty":"")+'" data-id="'+it.id+'"><div class="menu-card__visual">'+it.icon+'</div><div class="menu-card__body"><div class="menu-card__top"><h3 class="menu-card__title">'+it.name+'</h3><span class="diet-dot diet-dot--'+(it.diet==="nv"?"nv":"veg")+'" title="'+(it.diet==="nv"?"Non-vegetarian":"Vegetarian")+'" aria-label="'+(it.diet==="nv"?"Non-vegetarian":"Vegetarian")+'"></span></div><p class="menu-card__desc">'+it.desc+'</p><div class="menu-card__foot"><span class="price">'+fmt(it.price)+'</span>'+(sp?'<span style="font-family:var(--mono);font-size:10.5px;color:var(--veg);font-weight:600;letter-spacing:0.04em">★ SPECIAL</span>':'')+'<button type="button" class="btn-add-initial" data-action="add" data-id="'+it.id+'">+ Add</button><div class="qty-control"><button type="button" class="qty-btn qty-minus" data-action="minus" data-id="'+it.id+'" aria-label="Remove one">−</button><span class="qty-val">'+q+'</span><button type="button" class="qty-btn qty-btn--add" data-action="plus" data-id="'+it.id+'" aria-label="Add one">+</button></div></div></div></article>';
+    html+='<article class="menu-card'+(hasQty?" has-qty":"")+'" data-id="'+it.id+'"><div class="menu-card__visual">'+(it.emoji || it.icon || "🍽")+'</div><div class="menu-card__body"><div class="menu-card__top"><h3 class="menu-card__title">'+it.name+'</h3><span class="diet-dot diet-dot--'+(it.diet==="nv"?"nv":"veg")+'" title="'+(it.diet==="nv"?"Non-vegetarian":"Vegetarian")+'" aria-label="'+(it.diet==="nv"?"Non-vegetarian":"Vegetarian")+'"></span></div><p class="menu-card__desc">'+it.desc+'</p><div class="menu-card__foot"><span class="price">'+fmt(it.price)+'</span>'+(sp?'<span style="font-family:var(--mono);font-size:10.5px;color:var(--veg);font-weight:600;letter-spacing:0.04em">★ SPECIAL</span>':'')+'<button type="button" class="btn-add-initial" data-action="add" data-id="'+it.id+'">+ Add</button><div class="qty-control"><button type="button" class="qty-btn qty-minus" data-action="minus" data-id="'+it.id+'" aria-label="Remove one">−</button><span class="qty-val">'+q+'</span><button type="button" class="qty-btn qty-btn--add" data-action="plus" data-id="'+it.id+'" aria-label="Add one">+</button></div></div></div></article>';
   });
   document.getElementById("menuGrid").innerHTML=html;document.getElementById("itemCount").textContent=items.length+(items.length===1?" dish":" dishes");
   renderSpecialsCarousel();

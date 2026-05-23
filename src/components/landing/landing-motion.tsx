@@ -114,35 +114,7 @@ export function LandingMotion() {
               root.querySelector("#closing"),
             ].filter(Boolean) as HTMLElement[];
 
-            // Snapping to panel tops for a dynamic screen-takeover scroll transition
-            ScrollTrigger.create({
-              trigger: "main",
-              start: "top top",
-              end: "bottom bottom",
-              snap: {
-                snapTo: (value) => {
-                  const totalHeight = document.documentElement.scrollHeight - window.innerHeight;
-                  const currentScroll = value * totalHeight;
-                  
-                  // Find the closest panel offsetTop
-                  let closestPanelOffset = panels[0].offsetTop;
-                  let minDiff = Math.abs(currentScroll - closestPanelOffset);
-                  
-                  panels.forEach((panel) => {
-                    const diff = Math.abs(currentScroll - panel.offsetTop);
-                    if (diff < minDiff) {
-                      minDiff = diff;
-                      closestPanelOffset = panel.offsetTop;
-                    }
-                  });
-                  
-                  return closestPanelOffset / totalHeight;
-                },
-                duration: { min: 0.25, max: 0.6 },
-                delay: 0.05,
-                ease: "power2.out",
-              }
-            });
+            // Snapping to panel tops is disabled to prevent scroll fighting/jumping when the user scrolls.
           }
 
           // ═══════════════════════════════════════════════════════════════

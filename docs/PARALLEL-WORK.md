@@ -86,6 +86,35 @@ Read AGENTS.md, docs/DEMO-SPEC.md, docs/PARALLEL-WORK.md. One file owner per lan
 
 ## Session log
 
+### 2026-05-24 — Cart Sidebar Premium Layout Redesign (Main & Variant A)
+
+**Work done:**
+- **Rounded & Floating Cart Sidebar Layout (`public/demo/student.html` and `public/demo/student-variant-a.html`):** Updated the `.cart-sidebar` CSS rule to use a 1px solid border (`var(--border)`), curved border-radius (`var(--radius, 14px)`), and a floating design with adjusted top positioning (`calc(var(--topbar-h) + 16px)`), height (`calc(100dvh - var(--topbar-h) - 32px)`), margins (`16px 16px 16px 8px`), a soft premium box-shadow (`0 4px 20px rgba(0,0,0,0.04), 0 1px 3px rgba(0,0,0,0.02)`), and `overflow: hidden` to ensure children do not overflow the rounded corners.
+- **Responsive iframe Sidebar Polish:** Refactored the `body.in-iframe .cart-sidebar` rule to support the rounded, floating theme inside frames, adding appropriate margins, height, top offset, border-radius, border, and box-shadow styling.
+- **Verification:** Verified files to ensure correct formatting and that changes are properly applied.
+
+### 2026-05-24 — Cart Sidebar Premium Layout Redesign (Variant B)
+
+**Work done:**
+- **Rounded & Floating Cart Sidebar Layout (`public/demo/student-variant-b.html`):** Updated the `.cart-sidebar` CSS rule to use a 1px solid border (`var(--border)`), curved border-radius (`var(--radius, 14px)`), and a floating design with adjusted top positioning (`calc(var(--topbar-h) + 16px)`), height (`calc(100dvh - var(--topbar-h) - 32px)`), margins (`16px 16px 16px 8px`), a soft premium box-shadow (`0 4px 20px rgba(0,0,0,0.04), 0 1px 3px rgba(0,0,0,0.02)`), and `overflow: hidden` to ensure children do not overflow the rounded corners.
+- **Responsive iframe Sidebar Polish:** Refactored the `body.in-iframe .cart-sidebar` rule to support the rounded, floating theme inside frames, adding appropriate margins, height, top offset, border-radius, border, and box-shadow styling.
+- **Verification:** Inspected `student-variant-b.html` to verify changes are properly applied.
+
+### 2026-05-24 — Cart Sidebar Premium Layout Redesign (Variant C)
+
+**Work done:**
+- **Rounded & Floating Cart Sidebar Layout (`public/demo/student-variant-c.html`):** Updated the `.cart-sidebar` CSS rule to use a 1px solid line border (`var(--line)`), curved border-radius (`var(--radius, 14px)`), and a floating design with adjusted top positioning (`calc(var(--topbar-h) + 16px)`), height (`calc(100dvh - var(--topbar-h) - 32px)`), margins (`16px 16px 16px 8px`), a soft premium box-shadow (`0 4px 20px rgba(0,0,0,0.04), 0 1px 3px rgba(0,0,0,0.02)`), and `overflow: hidden` to ensure children do not overflow the rounded corners.
+- **Responsive iframe Sidebar Polish:** Refactored the `body.in-iframe .cart-sidebar` rule to support the rounded, floating theme inside frames, adding appropriate margins, height, top offset, border-radius, border, and box-shadow styling.
+- **Verification:** Inspected `student-variant-c.html` to verify changes are properly applied.
+
+### 2026-05-23 — Premium Custom Canteen Dropdown for Student Demo
+
+**Work done:**
+- **Custom Dropdown Implementation (`public/demo/student.html`):** Visually hid the native `<select>` element (`#canteenSelect`) to preserve all existing JS change listeners, storage event synchronization, and state behaviors. Replaced its UI with a premium, curvy custom dropdown component next to it.
+- **Visual Design & Transitions:** Designed the custom dropdown trigger button and option list to match the "Monsoon Paper" theme. Used a light cream background (`#FAF8F5`), curvy border-radii (`12px` / `14px`), slate gray accents (`#334155`), and subtle box-shadows. Programmed smooth slide-down and fade-in transitions using CSS transitions (`transform: translateY(-8px) scale(0.98)` to `translateY(0) scale(1)` with opacity toggles on `.is-open`).
+- **Synchronisation & Interactivity:** Configured option buttons to trigger a native `change` event on the hidden select to seamlessly update the cart, menu grid, and specials. Updated `syncSegs(id)` to synchronize the trigger label and list checkmarks when canteens change via segment tabs or storage sync. Wired outside clicks and `Escape` key events to auto-close the dropdown.
+- **Verification:** Ran `npm run demo:verify` and `npm run demo:verify:e2e` to ensure all static and automated browser tests pass cleanly.
+
 ### 2026-05-23 — Repository Audit, Architecture Diagrams & Documentation Overhaul
 
 **Work done:**
@@ -1483,4 +1512,25 @@ pm run typecheck passes. Restart dev if port 3000 hangs: NODE_OPTIONS=--max-old-
   5. **Canteen Switcher Dynamic list (FAIL):** Identified that the active canteen switcher selector does *not* listen to global realtime tenant insertion triggers, requiring a manual page refresh.
   6. **Real-time Price Sync (FAIL):** Identified that menu items price changes in the DB do *not* propagate dynamically to active student menus without a hard refresh.
 
+---
+
+### 2026-05-23 — Session: Removed Preloader Black Screen Delay & Fixed Scroll Snapping Jumping
+
+**Work done:**
+- **Preloader Bypass Fix (`LandingIntro.tsx` & `globals.css`)**:
+  - Fixed syntax error in `src/components/landing/LandingIntro.tsx` by removing the extra closing curly brace at the end of the file.
+  - Eliminated the 1–2 seconds black screen delay on landing page loading by setting the default opacity of `.tray-landing-wrapper` from `0` to `1` in `src/app/globals.css`. This ensures that the landing page visual elements render immediately on first paint without having to wait for React client-side hydration and intro transition callbacks.
+- **Scroll Snapping Removal (`landing-motion.tsx`)**:
+  - Removed the ScrollTrigger-based scroll snapping logic that hijacked desktop viewports. This fixes the issue where slight mousewheel/trackpad scroll-down inputs would fight the user and snap/scroll the page back up to the top of the current section.
+- **Visual & Stability Verification**:
+  - Ran automated QA verification in the browser on port 3000 to confirm instant above-the-fold renders, clean console messages (0 errors/warnings), and robust scrolling stability (where programmatically scrolling to 500px retains the exact scroll offset without rubber-banding or snapping back).
+- **Verified**: Next.js compilation compiles clean, and visual check passes.
+
+---
+
+### 2026-05-23 — Showcase Cards 3D Tilt Glare Overlay Adjustments
+
+**Work done:**
+- **Adjusted 3D Glare & Spotlight Depth (`PiranhaPortalsSection.tsx`):** Added explicit `z: 30` to the spotlight overlay and `z: 40` to the diagonal glare reflection line within the custom Framer Motion interactive cards. This ensures that the dynamic spotlight glow and sweeping diagonal reflection sweep correctly *over* the 3D-translated inner elements (text at `z: 15` and preview mockup frame at `z: 25`) instead of being clipped behind them in the 3D space.
+- **Verification:** Ran `pnpm typecheck` (passed with 0 type errors), and validated static prototypes with `pnpm demo:verify` (all 4 pages pass). Verified compile checks for the Next.js production build (`pnpm build`).
 

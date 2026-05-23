@@ -475,8 +475,7 @@ html.dark [data-portal="kitchen"] {
 
 /* ── Preloader FOUC/Hydration Flash Guard ── */
 .tray-landing-wrapper {
-  opacity: 0;
-  transition: opacity 0.5s ease-in-out;
+  opacity: 1;
 }
 
 .tl-intro-seen .tray-landing-wrapper,
