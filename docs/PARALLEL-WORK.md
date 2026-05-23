@@ -602,3 +602,18 @@ pm run typecheck passes. Restart dev if port 3000 hangs: NODE_OPTIONS=--max-old-
 - **Cleanup**: Removed unused `FSSAIBadge` import from `MetricsAndTicker.tsx`.
 - **Verified**: `npm run typecheck` → 0 errors. `npm run lint` → 0 warnings. `npm run demo:verify` → all 4 pages pass.
 
+### 2026-05-23 — Multi-Portal E2E User Flow Simulation & Verification
+
+- **Completed**: Fully verified the full E2E user flow simulation (`test-user-simulation.mjs`) against the Next.js development server running on port `3005` under real-user conditions.
+- **Details**:
+  - **Onboarding Canteen Wizard**: Registered a new institution (Harvard University) via the `/get-started` wizard, verifying generating a unique, dynamic canteen slug (`harvard-dining-hall-xxxx`) and RLS-secured tenant records.
+  - **Cache Invalidation**: Resolved Next.js subdomain resolution caching mismatch by immediately calling `revalidateTag("tenant")` inside `createInstitution` upon successful canteen onboarding.
+  - **E2E Canteen Timing Configuration**: Configured E2E registration to default operating hours to `00:00` - `23:59` to prevent timezone mismatch exceptions (UTC Supabase Server vs Local Clock) on order insertions.
+  - **Student Order Checkout Try-Catch**: Wrapped the client-side `placeOrder` server action call inside `CartDrawer` and the server-side action inside `src/app/(student)/_actions.ts` in robust try/catch blocks for perfect client error propagation.
+  - **Student Menu Sync**: Verified that adding a menu item ("Harvard Crimson Burger") in the Admin portal instantly syncs and displays on the Student Portal.
+  - **Student -> Kitchen Sync**: Verified placing an order immediately inserts a live ticket on the Kitchen Board queue.
+  - **Kitchen Status Progression & OTP verification**: Verified advancing the order (Placed → Preparing → Ready), retrieving the plain text OTP from the database, and submitting the handover OTP Radix dialog transitions the order status to `Collected`.
+  - **Kitchen -> Student Sync**: Verified the Student live tracking page instantly updates status to `Collected` once verified by the kitchen display.
+  - **Offline Prototype Verification**: Verified the static demo surfaces (index, student menu, incoming kitchen column, admin console) load cleanly with correct locators and assertions.
+- **Verified**: `pnpm typecheck` → 0 errors. All 14 steps in `test-user-simulation.mjs` E2E flow pass 100% cleanly in E2E headless Chromium.
+

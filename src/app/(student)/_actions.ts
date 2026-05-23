@@ -140,7 +140,8 @@ export async function placeOrder(
   orderType: OrderType = "takeaway",
   tableLabel: string | null = null
 ): Promise<PlaceResult> {
-  if (!lines || lines.length === 0) return { ok: false, error: "Cart is empty", code: "EMPTY" };
+  try {
+    if (!lines || lines.length === 0) return { ok: false, error: "Cart is empty", code: "EMPTY" };
 
   const h = await headers();
   const slug = h.get("x-tenant-slug") ?? "aditya";
@@ -276,6 +277,10 @@ export async function placeOrder(
 
   revalidatePath(`/c/${tenant.slug}/menu`);
   return { ok: true, orderId: order.id, razorpayOrderId: rzp.id, simulated: rzp.simulated };
+  } catch (error: any) {
+    console.error("SERVER ACTION PLACE_ORDER ERROR:", error);
+    return { ok: false, error: error?.message ?? "An unexpected error occurred" };
+  }
 }
 
 export async function simulatePaymentCapture(orderId: string): Promise<{ ok: boolean; error?: string }> {

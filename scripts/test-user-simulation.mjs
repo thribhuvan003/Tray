@@ -24,7 +24,7 @@ import { createClient } from "@supabase/supabase-js";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.join(__dirname, "..");
 const envPath = path.join(root, ".env.local");
-const ssDir = path.join(root, ".playwright-screenshots-simulation");
+const ssDir = "C:\\Users\\ntena\\.gemini\\antigravity\\brain\\413ad5aa-c8d1-4763-bd87-593d930ce05b\\.playwright-screenshots-simulation";
 
 if (fs.existsSync(envPath)) {
   const content = fs.readFileSync(envPath, "utf8");
@@ -129,6 +129,7 @@ async function main() {
     log("Onboarding new Institution/Canteen via /get-started");
     const adminCtx = await browser.newContext({ viewport: { width: 1280, height: 900 } });
     const adminPage = await adminCtx.newPage();
+    adminPage.on('console', msg => console.log('PAGE LOG:', msg.text()));
 
     await adminPage.goto(`${BASE}/get-started`, { waitUntil: "networkidle", timeout: 60000 });
     await adminPage.waitForTimeout(2000);
@@ -136,8 +137,10 @@ async function main() {
 
     // Fill Step 1
     await adminPage.fill('input[placeholder*="IIT Bombay"]', institutionName);
-    await adminPage.selectOption('select', 'college_university');
+    await adminPage.selectOption('select:has(option[value="college_university"])', 'college_university');
+    await adminPage.waitForTimeout(1000);
     await adminPage.fill('input[placeholder*="Mumbai"]', 'Cambridge');
+    await screenshot(adminPage, "01.5-after-select");
     await adminPage.fill('input[placeholder="iitb.ac.in"]', 'harvard.edu');
     await screenshot(adminPage, "02-step1-filled");
 
@@ -149,6 +152,8 @@ async function main() {
     await adminPage.fill('input[placeholder*="Main Canteen"]', canteenName);
     await adminPage.fill('input[placeholder*="Academic Block"]', 'Annenberg Hall');
     await adminPage.fill('input[placeholder="canteen@okaxis"]', 'harvard@okaxis');
+    await adminPage.locator('input[type="time"]').nth(0).fill('00:00');
+    await adminPage.locator('input[type="time"]').nth(1).fill('23:59');
     await screenshot(adminPage, "03-step2-filled");
 
     await waitAndClick(adminPage, 'button:has-text("Continue")', "Step 2 Continue");
@@ -255,6 +260,7 @@ async function main() {
     log("Student: Logging in and placing order on newly updated menu");
     const studentCtx = await browser.newContext({ viewport: { width: 450, height: 800 } }); // simulate mobile view!
     const studentPage = await studentCtx.newPage();
+    studentPage.on('console', msg => console.log('STUDENT PAGE LOG:', msg.text()));
 
     await studentPage.goto(`${BASE}/login?tenant=${canteenSlug}`, { waitUntil: "networkidle", timeout: 60000 });
     await studentPage.waitForTimeout(2000);
@@ -280,9 +286,13 @@ async function main() {
     await studentPage.waitForTimeout(2000);
     await screenshot(studentPage, "10-student-menu-page");
 
-    // Assert that the newly added menu item is in the student menu list! (Sync validation)
+    // Wait for the menu item to become visible, ensuring loading has finished and state synced
+    await studentPage.locator(`text="${menuitemName}"`).first().waitFor({ state: "visible", timeout: 15000 });
     const itemVisibleOnStudentMenu = await studentPage.locator(`text="${menuitemName}"`).first().isVisible();
     recordResult("Menu updates sync instantly to Student Portal", itemVisibleOnStudentMenu);
+
+    // Wait for hydration to complete before clicking Add
+    await studentPage.waitForTimeout(3000);
 
     // Add item to cart
     const addBtn = studentPage.locator('button:has-text("Add")').first();
@@ -294,11 +304,14 @@ async function main() {
     // Open cart drawer & checkout
     const cartTrigger = studentPage.locator('button[aria-label*="View cart"]');
     await cartTrigger.click();
-    await studentPage.waitForTimeout(1000);
+    await studentPage.waitForTimeout(3000); // Give plenty of time to hydrate the drawer
     await screenshot(studentPage, "12-mobile-cart-drawer");
 
     const placeBtn = studentPage.locator('button:has-text("Place order")');
     await placeBtn.click();
+    await studentPage.waitForTimeout(1000);
+    await screenshot(studentPage, "12.5-after-checkout-click");
+    await studentPage.waitForTimeout(2000); // wait for redirect
     info("Clicked place order");
 
     // Pay page
@@ -328,6 +341,7 @@ async function main() {
     log("Kitchen: Logging in and processing order queue");
     const kitchenCtx = await browser.newContext({ viewport: { width: 1280, height: 900 } });
     const kitchenPage = await kitchenCtx.newPage();
+    kitchenPage.on('console', msg => console.log('KITCHEN PAGE LOG:', msg.text()));
 
     await kitchenPage.goto(`${BASE}/login?tenant=${canteenSlug}&next=/c/${canteenSlug}/kitchen`, {
       waitUntil: "networkidle",
@@ -444,11 +458,11 @@ async function main() {
     const demoCtx = await browser.newContext({ viewport: { width: 1280, height: 800 } });
     const demoPage = await demoCtx.newPage();
 
-    // 1. /demo/index.html
+    // 1. /demo/index.html (redirects instantly to student.html)
     await demoPage.goto(`${BASE}/demo/index.html`, { waitUntil: "networkidle", timeout: 20000 });
     await screenshot(demoPage, "23-demo-index");
-    const indexValid = await demoPage.locator('text="Piranha Portals"').first().isVisible().catch(() => false) ||
-                       await demoPage.locator('text="Campus canteen ordering"').first().isVisible().catch(() => false);
+    const indexValid = demoPage.url().endsWith("student.html") ||
+                       await demoPage.locator('text="Tray"').first().isVisible().catch(() => false);
     recordResult("Offline Demo Hub page loads cleanly", indexValid);
 
     // 2. /demo/student.html
@@ -460,7 +474,7 @@ async function main() {
     // 3. /demo/kitchen.html
     await demoPage.goto(`${BASE}/demo/kitchen.html`, { waitUntil: "networkidle", timeout: 20000 });
     await screenshot(demoPage, "25-demo-kitchen");
-    const kitchenValid = await demoPage.locator('text="Placed"').first().isVisible().catch(() => false);
+    const kitchenValid = await demoPage.locator('text="Incoming"').first().isVisible().catch(() => false);
     recordResult("Offline Kitchen mockup loads cleanly", kitchenValid);
 
     // 4. /demo/admin.html

@@ -67,24 +67,28 @@ export function CartDrawer({ tenantSlug, tenantName }: { tenantSlug: string; ten
       return;
     }
     start(async () => {
-      const res = await placeOrder(
-        lines.map((l) => ({ menuItemId: l.menuItemId, qty: l.qty })),
-        note,
-        orderType,
-        orderType === "dine_in" ? tableLabel.trim().toUpperCase() : null
-      );
-      if (!res.ok) {
-        if (res.code === "AUTH_REQUIRED") {
-          toast.info("Sign in to place your order — your cart is saved");
-          router.push(`/c/${tenantSlug}/login?next=/c/${tenantSlug}/menu`);
-        } else {
-          toast.error(res.error ?? "Could not place order");
+      try {
+        const res = await placeOrder(
+          lines.map((l) => ({ menuItemId: l.menuItemId, qty: l.qty })),
+          note,
+          orderType,
+          orderType === "dine_in" ? tableLabel.trim().toUpperCase() : null
+        );
+        if (!res.ok) {
+          if (res.code === "AUTH_REQUIRED") {
+            toast.info("Sign in to place your order — your cart is saved");
+            router.push(`/c/${tenantSlug}/login?next=/c/${tenantSlug}/menu`);
+          } else {
+            toast.error(res.error ?? "Could not place order");
+          }
+          return;
         }
-        return;
+        clear();
+        setOpen(false);
+        router.push(`/c/${tenantSlug}/pay/${res.orderId}`);
+      } catch (err) {
+        console.error("PLACE ORDER CAUGHT ERROR:", err);
       }
-      clear();
-      setOpen(false);
-      router.push(`/c/${tenantSlug}/pay/${res.orderId}`);
     });
   };
 

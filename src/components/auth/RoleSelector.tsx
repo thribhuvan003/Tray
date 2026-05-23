@@ -130,6 +130,10 @@ export function RoleSelector({
   const loginNext =
     selected === "kitchen"
       ? slug ? `/c/${slug}/kitchen` : "/kitchen"
+      : selected === "owner"
+      ? (next === "/" || next.endsWith("/menu") || next === "")
+        ? slug ? `/c/${slug}/admin/dashboard` : "/admin/dashboard"
+        : next
       : next;
 
   return (

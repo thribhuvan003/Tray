@@ -3,6 +3,7 @@
 import { getAdminClient } from "@/lib/supabase/admin";
 import { sendEmail } from "@/lib/email/resend";
 import { env } from "@/lib/env";
+import { revalidateTag } from "next/cache";
 
 function toSlug(name: string): string {
   return name
@@ -205,5 +206,6 @@ export async function createInstitution(
     console.error("[get-started] welcome email failed", e);
   });
 
+  revalidateTag("tenant");
   return { ok: true, canteenSlug };
 }

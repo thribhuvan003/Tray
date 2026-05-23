@@ -161,12 +161,15 @@ function TicketCard({
   onAction: (action: "start" | "ready" | "verify") => void;
   onReject?: (reason: string) => Promise<void>;
 }) {
-  const [elapsed, setElapsed] = useState(elapsedSeconds(order.placed_at));
+  const [mounted, setMounted] = useState(false);
+  const [elapsed, setElapsed] = useState(0);
   const [showReject, setShowReject] = useState(false);
   const [selectedReason, setSelectedReason] = useState("");
   const [rejecting, setRejecting] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
+    setElapsed(elapsedSeconds(order.placed_at));
     const id = setInterval(() => setElapsed(elapsedSeconds(order.placed_at)), 1000);
     return () => clearInterval(id);
   }, [order.placed_at]);
@@ -330,7 +333,7 @@ function TicketCard({
             }}
           >
             {order.status === "preparing" ? "◐ " : "⊙ "}
-            {fmtElapsed(elapsed)}
+            {mounted ? fmtElapsed(elapsed) : "--:--"}
           </span>
         )}
 
