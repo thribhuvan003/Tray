@@ -54,7 +54,7 @@ export default async function StudentLayout({ children }: { children: React.Reac
   return (
     <div
       data-portal="student"
-      className="min-h-screen bg-[color:var(--color-paper)] text-[color:var(--color-ink)] antialiased"
+      className="min-h-screen font-sans bg-[color:var(--color-paper)] text-[color:var(--color-ink)] antialiased"
     >
       <CartTenantSync slug={tenant.slug} />
       <OrderReadyListener userId={user?.id ?? null} tenantSlug={tenant.slug} />

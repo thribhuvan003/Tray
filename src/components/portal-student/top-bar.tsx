@@ -62,7 +62,7 @@ export function StudentTopBar({ tenant, siblings = [] }: Props) {
       className="sticky top-0 z-40 bg-[color:var(--color-paper)]/85 backdrop-blur-xl border-b border-[color:var(--color-line)]"
       style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
     >
-      <div className="mx-auto max-w-5xl px-4 sm:px-6 h-14 flex items-center justify-between gap-3">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-6 h-14 flex items-center justify-between gap-3">
         {/* Left: Tray logo → always goes to landing page */}
         <Link
           href="/"

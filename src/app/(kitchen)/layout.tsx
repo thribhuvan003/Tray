@@ -10,7 +10,7 @@ export default async function KitchenLayout({ children }: { children: React.Reac
   return (
     <div
       data-portal="kitchen"
-      className="min-h-screen bg-cream-200 text-tomato-900 relative overflow-x-hidden"
+      className="min-h-screen font-sans bg-cream-200 text-tomato-900 relative overflow-x-hidden"
     >
       <div className="paper-grain fixed inset-0 z-0" />
       <div className="relative z-10">{children}</div>

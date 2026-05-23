@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 
 const inputCls =
-  "w-full rounded-xl border border-graphite-600/70 bg-graphite-800 px-3 py-2.5 text-[14px] text-graphite-100 placeholder:text-graphite-500 focus:outline-none focus:ring-2 focus:ring-lime/40 focus:border-lime/60 transition-colors";
+  "w-full font-sans rounded-xl border border-graphite-600/70 bg-graphite-800 px-3 py-2.5 text-[14px] text-graphite-100 placeholder:text-graphite-500 focus:outline-none focus:ring-2 focus:ring-lime/40 focus:border-lime/60 transition-colors";
 
 export function NewItemForm({
   tenantSlug,

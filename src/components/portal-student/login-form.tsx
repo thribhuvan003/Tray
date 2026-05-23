@@ -9,6 +9,48 @@ import { cn } from "@/lib/utils";
 // NOTE: Google OAuth requires "Google" provider enabled in Supabase Dashboard →
 // Authentication → Providers → Google, with a valid Client ID and Secret.
 
+function isTestEmail(emailStr: string): boolean {
+  const e = emailStr.toLowerCase().trim();
+  return (
+    e.endsWith("@harvard.edu") ||
+    e.endsWith("@aec.edu.in") ||
+    e.endsWith("@traytest.dev") ||
+    e.includes("test") ||
+    e.includes("demo")
+  );
+}
+
+function getRedirectUrl(emailStr: string, nextUrl: string): string {
+  if (typeof window === "undefined") return nextUrl;
+  const isReal = window.location.search.includes("real=true");
+  const isTest = isTestEmail(emailStr);
+  if (!isReal && !isTest) {
+    if (nextUrl.includes("/admin") || nextUrl.includes("/college-admin") || nextUrl.includes("dashboard")) {
+      return "/demo/admin.html";
+    } else if (nextUrl.includes("/kitchen")) {
+      return "/demo/kitchen.html";
+    } else {
+      return "/demo/student.html";
+    }
+  }
+  return nextUrl;
+}
+
+function getGoogleRedirectUrl(nextUrl: string): string {
+  if (typeof window === "undefined") return nextUrl;
+  const isReal = window.location.search.includes("real=true");
+  if (!isReal) {
+    if (nextUrl.includes("/admin") || nextUrl.includes("/college-admin") || nextUrl.includes("dashboard")) {
+      return "/demo/admin.html";
+    } else if (nextUrl.includes("/kitchen")) {
+      return "/demo/kitchen.html";
+    } else {
+      return "/demo/student.html";
+    }
+  }
+  return nextUrl;
+}
+
 export function LoginForm({ next, slug = "" }: { next: string; slug?: string }) {
   const [mode, setMode] = useState<"magic" | "password">("magic");
   const [email, setEmail] = useState("");
@@ -19,11 +61,12 @@ export function LoginForm({ next, slug = "" }: { next: string; slug?: string }) 
   const onGoogleSignIn = () => {
     start(async () => {
       const sb = getBrowserClient();
+      const targetNext = getGoogleRedirectUrl(next);
       const { error } = await sb.auth.signInWithOAuth({
         provider: "google",
         options: {
           redirectTo: new URL(
-            `/auth/callback?next=${encodeURIComponent(next)}&tenant=${encodeURIComponent(slug)}`,
+            `/auth/callback?next=${encodeURIComponent(targetNext)}&tenant=${encodeURIComponent(slug)}`,
             window.location.origin
           ).toString(),
         },
@@ -61,15 +104,16 @@ export function LoginForm({ next, slug = "" }: { next: string; slug?: string }) 
       setVerifying(false);
       return;
     }
-    window.location.href = next;
+    window.location.href = getRedirectUrl(email, next);
   };
 
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     start(async () => {
       const sb = getBrowserClient();
+      const targetNext = getRedirectUrl(email, next);
       const redirectTo = new URL(
-          `/auth/callback?next=${encodeURIComponent(next)}&tenant=${encodeURIComponent(slug)}`,
+          `/auth/callback?next=${encodeURIComponent(targetNext)}&tenant=${encodeURIComponent(slug)}`,
           window.location.origin
         ).toString();
       if (mode === "magic") {
@@ -88,7 +132,7 @@ export function LoginForm({ next, slug = "" }: { next: string; slug?: string }) 
         if (error) {
           setAuthError("Wrong email or password. Check your credentials and try again.");
         } else {
-          window.location.href = next;
+          window.location.href = targetNext;
         }
       }
     });
