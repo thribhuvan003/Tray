@@ -49,9 +49,9 @@ Experience the full live synchronized flow with pre-seeded data under the Aditya
 
 | Portal / Role | Live URL | Focus & Design |
 | :--- | :--- | :--- |
-| **📱 Student Ordering** | [trayy.vercel.app/c/aditya/menu](https://trayy.vercel.app/c/aditya/menu) | Mobile-first menu browsing, cart curation, UPI payment simulation, & live order tracking. |
-| **👨‍🍳 Kitchen Board** | [trayy.vercel.app/c/aditya/kitchen](https://trayy.vercel.app/c/aditya/kitchen) | Real-time queue tickets, cooking timers, and OTP security verification gate. |
-| **📊 Admin Console** | [trayy.vercel.app/c/aditya/admin/dashboard](https://trayy.vercel.app/c/aditya/admin/dashboard) | Live sales KPIs, active orders table, menu editor, and audit logs. |
+| **📱 Student Ordering** | [trayy.vercel.app/demo/student.html](https://trayy.vercel.app/demo/student.html) | Mobile-first menu browsing, cart curation, UPI payment simulation, & live order tracking. |
+| **👨‍🍳 Kitchen Board** | [trayy.vercel.app/demo/kitchen.html](https://trayy.vercel.app/demo/kitchen.html) | Real-time queue tickets, cooking timers, and OTP security verification gate. |
+| **📊 Admin Console** | [trayy.vercel.app/demo/admin.html](https://trayy.vercel.app/demo/admin.html) | Live sales KPIs, active orders table, menu editor, and audit logs. |
 | **🏫 Campus Portal** | [trayy.vercel.app/college/aditya](https://trayy.vercel.app/college/aditya) | Consolidated reporting and merchant billing metrics. |
 | **💡 Interactive Sandbox** | [trayy.vercel.app/demo/index.html](https://trayy.vercel.app/demo/index.html) | Offline-capable high-fidelity HTML/CSS/JS prototype for client demonstrations. |
 
