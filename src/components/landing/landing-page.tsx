@@ -443,7 +443,7 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
               <span
                 className="leading-none tracking-[-0.04em]"
                 style={{
-                  fontFamily: "var(--font-barlow)",
+                  fontFamily: "var(--font-bebas)",
                   fontWeight: 900,
                   fontSize: "clamp(2rem, 4vw, 3.2rem)",
                   color: "var(--tray-clay)",

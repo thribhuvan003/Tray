@@ -212,7 +212,7 @@ export function TrayHero() {
                   <p
                     className="font-black leading-none tracking-tighter"
                     style={{
-                      fontFamily: "var(--font-barlow), sans-serif",
+                      fontFamily: "var(--font-bebas), sans-serif",
                       fontSize: "clamp(2.5rem, 5.5vw, 3.8rem)",
                       fontWeight: 900,
                       letterSpacing: "-0.05em",
