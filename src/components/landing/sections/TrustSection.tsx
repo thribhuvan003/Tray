@@ -1,7 +1,8 @@
 "use client";
 
-import { SectionReveal, RevealItem, HoverCard } from "@/lib/motion/tray-framer";
-import { ShieldCheck, Banknote, Landmark, Percent } from "lucide-react";
+import { SectionReveal, RevealItem, HoverCard, tm } from "@/lib/motion/tray-framer";
+import { ShieldCheck, Landmark, Percent } from "lucide-react";
+import { motion } from "framer-motion";
 
 export function TrustSection() {
   const trustItems = [
@@ -60,48 +61,69 @@ export function TrustSection() {
           </p>
         </RevealItem>
 
-        <div className="mt-12 grid gap-6 md:grid-cols-3">
+        {/* Staggered card reveals */}
+        <motion.div
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true, amount: 0.15 }}
+          variants={{
+            hidden: {},
+            show: {
+              transition: {
+                staggerChildren: 0.5
+              }
+            }
+          }}
+          className="mt-12 grid gap-6 md:grid-cols-3"
+        >
           {trustItems.map((item, index) => (
-            <HoverCard
+            <motion.div
               key={item.title}
-              className="flex h-full flex-col justify-between rounded-[2rem] border p-6 transition-all"
-              style={{
-                border: "1px solid var(--tray-border)",
-                background: "rgba(255,255,255,0.48)",
+              variants={{
+                hidden: { opacity: 0, y: 35, scale: 0.96 },
+                show: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.8, ease: tm.ease } }
               }}
             >
-              <div>
-                <div className="flex items-center justify-between">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[var(--tray-surface)] border border-[var(--tray-border)]">
-                    {item.icon}
+              <HoverCard
+                className="flex h-full flex-col justify-between rounded-[2rem] border p-6 transition-all"
+                style={{
+                  border: "1px solid var(--tray-border)",
+                  background: "rgba(255,255,255,0.48)",
+                }}
+              >
+                <div>
+                  <div className="flex items-center justify-between">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[var(--tray-surface)] border border-[var(--tray-border)]">
+                      {item.icon}
+                    </div>
+                    <span
+                      className="rounded-full px-3 py-1 text-[0.72rem] font-code font-bold uppercase tracking-[0.16em]"
+                      style={{
+                        background: "rgba(26,26,25,0.05)",
+                        color: "var(--tray-muted)",
+                        border: "1px solid var(--tray-border)",
+                      }}
+                    >
+                      {item.tag}
+                    </span>
                   </div>
-                  <span
-                    className="rounded-full px-3 py-1 text-[0.72rem] font-code font-bold uppercase tracking-[0.16em]"
-                    style={{
-                      background: "rgba(26,26,25,0.05)",
-                      color: "var(--tray-muted)",
-                      border: "1px solid var(--tray-border)",
-                    }}
+                  <h3
+                    className="mt-6 text-[1.2rem] font-semibold tracking-tight"
+                    style={{ fontFamily: "var(--font-jakarta)" }}
                   >
-                    {item.tag}
-                  </span>
+                    {item.title}
+                  </h3>
+                  <p
+                    className="mt-3 text-[0.88rem] leading-[1.65] opacity-65"
+                    style={{ fontFamily: "var(--font-geist)" }}
+                  >
+                    {item.desc}
+                  </p>
                 </div>
-                <h3
-                  className="mt-6 text-[1.2rem] font-semibold tracking-tight"
-                  style={{ fontFamily: "var(--font-jakarta)" }}
-                >
-                  {item.title}
-                </h3>
-                <p
-                  className="mt-3 text-[0.88rem] leading-[1.65] opacity-65"
-                  style={{ fontFamily: "var(--font-geist)" }}
-                >
-                  {item.desc}
-                </p>
-              </div>
-            </HoverCard>
+              </HoverCard>
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
       </div>
     </section>
   );

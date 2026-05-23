@@ -11,40 +11,39 @@ import {
 import { splitWords } from "@/lib/motion/tray-motion";
 import { RailwayScroller } from "./RailwayScroller";
 
-// Piranha-style cinematic section.
-// Title font: Barlow Condensed 900 (Druk-level uppercase impact).
-// Card titles: Fraunces — editorial serif contrast to the condensed title.
-// Metadata: DM Mono.
-// Desktop: pinned horizontal scroll with scrub progress bar.
-// Mobile: clean stacked cards with clip-reveal.
-
 const portals = [
   {
     index: "01",
-    label: "Student app",
-    title: "Order from any canteen.",
-    text: "Choose canteen, browse menu, pay by UPI, track your order live, collect with a 4-digit OTP.",
+    role: "STUDENT",
+    label: "Student",
+    deviceBadge: "STUDENT APP · LAPTOP",
     previewSrc: "/demo/student.html",
-    previewDevice: "Mobile · student",
-    accent: "var(--color-ocean-500, #6E86AB)",
+    previewDevice: "Student app · laptop",
+    accent: "var(--color-ocean-500, #2E80EF)",
+    text: "Order from any canteen in the campus. Pay by UPI. Track live. Show OTP.",
+    btnText: "Open student demo",
   },
   {
     index: "02",
-    label: "Kitchen view",
-    title: "Run the live queue.",
-    text: "New tickets land instantly, prep timers count down, OTP handover clears the order — no paper, no shouting.",
+    role: "KITCHEN",
+    label: "Kitchen staff",
+    deviceBadge: "KITCHEN VIEW · TABLET",
     previewSrc: "/demo/kitchen.html",
-    previewDevice: "Tablet · kitchen",
+    previewDevice: "Kitchen view · tablet",
     accent: "#B8531A",
+    text: "Manage one canteen's live queue. Accept, prep, hand over with OTP.",
+    btnText: "Sign in as kitchen staff",
   },
   {
     index: "03",
-    label: "Admin console",
-    title: "See the whole operation.",
-    text: "Live orders, daily revenue, menu edits, staff access, full audit log — one screen, every metric.",
+    role: "ADMIN",
+    label: "Canteen admin",
+    deviceBadge: "ADMIN CONSOLE · DESKTOP",
     previewSrc: "/demo/admin.html",
-    previewDevice: "Desktop · admin",
-    accent: "var(--tray-green)",
+    previewDevice: "Admin console · desktop",
+    accent: "var(--tray-green, #16A34A)",
+    text: "Menu, orders, staff, and daily revenue. Full audit log included.",
+    btnText: "Sign in as admin",
   },
 ] as const;
 
@@ -85,13 +84,12 @@ export function PiranhaPortalsSection() {
           const { desktop } = context.conditions as { desktop: boolean };
 
           if (desktop) {
-            const track    = root.querySelector("[data-portals-track]") as HTMLElement;
             const cards    = root.querySelectorAll("[data-portal-card]");
             const progress = root.querySelector("[data-portal-progress]") as HTMLElement;
 
-            gsap.set(cards, { y: 80, opacity: 0, rotate: 1.5 });
+            gsap.set(cards, { y: 80, opacity: 0 });
             gsap.to(cards, {
-              y: 0, opacity: 1, rotate: 0, duration: 0.9, stagger: 0.12, ease: "power3.out",
+              y: 0, opacity: 1, duration: 0.9, stagger: 0.12, ease: "power3.out",
               scrollTrigger: { trigger: root, start: "top 70%" },
             });
 
@@ -205,38 +203,25 @@ export function PiranhaPortalsSection() {
               style={{ outlineColor: portal.accent }}
             >
               <div className="flex flex-col flex-1 p-6">
-                <div
-                  className="mb-8 flex items-center justify-between text-[0.72rem] uppercase tracking-[0.24em]"
-                  style={{ fontFamily: "var(--font-dm-mono)", color: "var(--tray-muted)" }}
-                >
-                  <span>{portal.label}</span>
-                  <span
-                    className="flex items-center gap-1.5"
-                    style={{ color: portal.accent }}
-                  >
-                    <span className="h-1.5 w-1.5 rounded-full animate-pulse" style={{ background: portal.accent }} />
-                    {portal.index}
+                {/* Header row */}
+                <div className="flex items-center justify-between mb-4">
+                  <span className="text-[0.72rem] font-code font-bold uppercase tracking-[0.2em] text-white/50">
+                    {portal.role}
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <span className="h-2.5 w-2.5 rounded-full animate-pulse shadow-[0_0_8px_currentColor]" style={{ background: portal.accent, color: portal.accent }} />
                   </span>
                 </div>
-                <h3
-                  className="leading-[0.9] tracking-[-0.03em] mb-4"
-                  style={{
-                    fontFamily: "var(--font-cormorant)",
-                    fontWeight: 600,
-                    fontStyle: "italic",
-                    fontSize: "clamp(2.4rem, 3.8vw, 4rem)",
-                  }}
-                >
-                  {portal.title}
-                </h3>
-                <p className="text-[0.95rem] leading-7 opacity-65 font-geist mb-6">
-                  {portal.text}
-                </p>
 
-                {/* iframe preview */}
+                {/* Title */}
+                <h3 className="text-3xl font-black font-ui uppercase tracking-tight mb-5 text-white">
+                  {portal.label}
+                </h3>
+
+                {/* Live Preview Container (mockup) */}
                 <div
-                  className="relative overflow-hidden rounded-[2rem] mb-6 bg-white/5 border-none"
-                  style={{ height: 320 }}
+                  className="relative overflow-hidden rounded-[1.5rem] mb-5 bg-[#0a0a09] border border-white/10"
+                  style={{ height: 220 }}
                 >
                   <iframe
                     src={portal.previewSrc}
@@ -250,32 +235,43 @@ export function PiranhaPortalsSection() {
                       position: "absolute",
                       top: 0,
                       left: 0,
-                      width: "200%",
-                      height: "200%",
-                      transform: "scale(0.5)",
+                      width: "154%",
+                      height: "154%",
+                      transform: "scale(0.65)",
                       transformOrigin: "0 0",
                       border: 0,
                       pointerEvents: "none",
                     }}
                   />
+                  {/* Device Badge Overlay */}
                   <span
-                    className="absolute left-4 top-4 rounded-xl px-3 py-1.5 text-[0.7rem] font-code font-bold uppercase tracking-[0.12em] backdrop-blur-md"
+                    className="absolute left-4 top-4 rounded-xl px-3 py-1.5 text-[0.62rem] font-code font-bold uppercase tracking-[0.12em] backdrop-blur-md"
                     style={{
                       color: "var(--tray-cream)",
-                      background: "rgba(0,0,0,0.65)",
+                      background: "rgba(0,0,0,0.68)",
+                      border: "1px solid rgba(255,255,255,0.1)",
                     }}
                   >
-                    {portal.previewDevice}
+                    {portal.deviceBadge}
                   </span>
                 </div>
 
-                <div className="mt-auto pt-8 flex items-center justify-between">
-                  <span className="text-[0.72rem] font-code font-semibold uppercase tracking-[0.12em] opacity-40">
-                    {portal.previewDevice}
-                  </span>
-                  <span className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider opacity-70 group-hover:opacity-100 group-hover:text-white transition-all">
-                    Launch Demo <span className="transition-transform group-hover:translate-x-1">→</span>
-                  </span>
+                {/* Description */}
+                <p className="opacity-70 text-[0.9rem] leading-[1.6] font-geist mb-6">
+                  {portal.text}
+                </p>
+
+                {/* Button at the bottom */}
+                <div
+                  className="w-full rounded-full py-3.5 px-6 flex items-center justify-between text-sm font-semibold uppercase tracking-[0.08em] transition-all duration-300 mt-auto"
+                  style={{
+                    background: "rgba(255,255,255,0.08)",
+                    border: "1px solid rgba(255,255,255,0.1)",
+                    color: "var(--tray-cream)",
+                  }}
+                >
+                  <span className="group-hover/card:text-white transition-colors">{portal.btnText}</span>
+                  <span className="transition-transform group-hover/card:translate-x-1 duration-300">→</span>
                 </div>
               </div>
             </article>

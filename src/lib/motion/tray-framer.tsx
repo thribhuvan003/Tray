@@ -369,41 +369,41 @@ export function OrderJourneyVisual({ className }: { className?: string }) {
       className={`overflow-hidden rounded-[2rem] border ${className ?? ""}`}
       style={{ border: "1px solid var(--tray-border)", background: "rgba(255,255,255,0.60)", backdropFilter: "blur(12px)" }}
     >
-      <div className="border-b p-5" style={{ borderColor: "var(--tray-border)" }}>
-        <p className="text-[0.62rem] uppercase tracking-[0.28em]" style={{ fontFamily: "var(--font-dm-mono)", color: "var(--tray-muted)" }}>
+      <div className="border-b p-7" style={{ borderColor: "var(--tray-border)" }}>
+        <p className="text-[0.78rem] uppercase tracking-[0.28em]" style={{ fontFamily: "var(--font-dm-mono)", color: "var(--tray-muted)" }}>
           Live order
         </p>
         <div className="mt-1 flex items-center justify-between">
-          <p className="text-[0.95rem] font-semibold tracking-tight" style={{ fontFamily: "var(--font-jakarta)", color: "var(--tray-ink)" }}>
+          <p className="text-[1.2rem] font-semibold tracking-tight" style={{ fontFamily: "var(--font-jakarta)", color: "var(--tray-ink)" }}>
             Lunch order
           </p>
-          <span className="flex items-center gap-1.5 text-[0.62rem] uppercase tracking-[0.18em]" style={{ fontFamily: "var(--font-dm-mono)", color: "var(--tray-green, #2A6E3A)" }}>
+          <span className="flex items-center gap-1.5 text-[0.78rem] uppercase tracking-[0.18em]" style={{ fontFamily: "var(--font-dm-mono)", color: "var(--tray-green, #2A6E3A)" }}>
             <motion.span className="h-1.5 w-1.5 rounded-full" style={{ background: "var(--tray-green, #2A6E3A)" }} animate={{ scale: [1, 1.5, 1] }} transition={{ duration: 1.4, repeat: Infinity }} />
             Kitchen open
           </span>
         </div>
       </div>
 
-      <div className="space-y-2 p-4">
+      <div className="space-y-3.5 p-6">
         {["Paneer Roti", "Masala Chai", "Samosa"].map((item, i) => (
           <motion.div
             key={item}
             animate={{ opacity: i <= Math.min(step, 2) ? 1 : 0.45 }}
             transition={{ duration: 0.3 }}
-            className="flex items-center justify-between rounded-xl px-3 py-2"
+            className="flex items-center justify-between rounded-xl px-5 py-3.5"
             style={{ background: i <= Math.min(step, 2) ? "rgba(255,255,255,0.7)" : "rgba(87,87,87,0.06)", border: "1px solid var(--tray-border)" }}
           >
-            <span className="text-[0.82rem] font-medium" style={{ color: "var(--tray-ink)" }}>{item}</span>
+            <span className="text-[1.05rem] font-medium" style={{ color: "var(--tray-ink)" }}>{item}</span>
             <AnimatePresence mode="wait">
               {i <= Math.min(step, 2) ? (
                 <motion.span key="added" initial={{ scale: 0.6, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.7, opacity: 0 }} transition={{ duration: 0.2 }}
-                  className="rounded-full px-2 py-0.5 text-[0.58rem] font-semibold uppercase tracking-[0.14em]"
+                  className="rounded-full px-3 py-1 text-[0.7rem] font-semibold uppercase tracking-[0.14em]"
                   style={{ background: "rgba(42,110,58,0.12)", color: "var(--tray-green, #2A6E3A)", fontFamily: "var(--font-dm-mono)" }}>
                   Added ✓
                 </motion.span>
               ) : (
                 <motion.span key="add" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                  className="rounded-full px-2 py-0.5 text-[0.58rem] uppercase tracking-[0.14em]"
+                  className="rounded-full px-3 py-1 text-[0.7rem] uppercase tracking-[0.14em]"
                   style={{ background: "rgba(87,87,87,0.08)", color: "var(--tray-muted)", fontFamily: "var(--font-dm-mono)" }}>
                   Add
                 </motion.span>
@@ -413,7 +413,7 @@ export function OrderJourneyVisual({ className }: { className?: string }) {
         ))}
       </div>
 
-      <div className="m-4 rounded-[1.25rem] border overflow-hidden" style={{ background: current.state === "READY" ? "rgba(42,110,58,0.04)" : "rgba(255,255,255,0.50)", borderColor: current.state === "READY" ? "rgba(42,110,58,0.3)" : "var(--tray-border)", transition: "all 0.4s ease" }}>
+      <div className="m-6 rounded-[1.25rem] border overflow-hidden" style={{ background: current.state === "READY" ? "rgba(42,110,58,0.04)" : "rgba(255,255,255,0.50)", borderColor: current.state === "READY" ? "rgba(42,110,58,0.3)" : "var(--tray-border)", transition: "all 0.4s ease" }}>
         <AnimatePresence mode="wait">
           <motion.div
             key={current.state}
@@ -421,35 +421,35 @@ export function OrderJourneyVisual({ className }: { className?: string }) {
             animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
             exit={{ opacity: 0, y: -8, filter: "blur(6px)" }}
             transition={{ duration: 0.32, ease: tm.ease }}
-            className={current.state === "READY" ? "p-6" : "p-4"}
+            className={current.state === "READY" ? "p-8" : "p-6"}
           >
             {current.state === "READY" ? (
               <div className="flex flex-col items-center justify-center text-center relative overflow-hidden">
-                <span className="relative inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[0.72rem] font-bold tracking-[0.2em] uppercase text-[var(--tray-green)] bg-[var(--tray-green)]/[0.12] animate-bounce">
+                <span className="relative inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[0.88rem] font-bold tracking-[0.2em] uppercase text-[var(--tray-green)] bg-[var(--tray-green)]/[0.12] animate-bounce">
                   <span className="h-2 w-2 rounded-full bg-[var(--tray-green)] animate-ping" />
                   {current.label}
                 </span>
-                <div className="mt-4 font-mono font-black text-5xl tracking-widest text-[var(--tray-green)] animate-pulse">
+                <div className="mt-4 font-mono font-black text-6xl tracking-widest text-[var(--tray-green)] animate-pulse">
                   7 3 4 2
                 </div>
-                <p className="mt-3 text-[1rem] font-bold text-[var(--tray-ink)] uppercase tracking-wider">
+                <p className="mt-3 text-[1.25rem] font-bold text-[var(--tray-ink)] uppercase tracking-wider">
                   Ready for collection!
                 </p>
-                <p className="mt-1 text-[0.75rem] text-[var(--tray-muted)] font-medium">
+                <p className="mt-1 text-[0.9rem] text-[var(--tray-muted)] font-medium">
                   Show this OTP at the counter to claim your meal.
                 </p>
               </div>
             ) : (
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-[0.62rem] uppercase tracking-[0.24em]" style={{ fontFamily: "var(--font-dm-mono)", color: current.color }}>
+                  <p className="text-[0.78rem] uppercase tracking-[0.24em]" style={{ fontFamily: "var(--font-dm-mono)", color: current.color }}>
                     {current.label}
                   </p>
-                  <p className="mt-1 text-[0.95rem] font-semibold" style={{ fontFamily: "var(--font-jakarta)", color: "var(--tray-ink)" }}>
+                  <p className="mt-1 text-[1.2rem] font-semibold" style={{ fontFamily: "var(--font-jakarta)", color: "var(--tray-ink)" }}>
                     {current.title}
                   </p>
                 </div>
-                <span className="rounded-xl border px-3 py-1.5 text-[0.62rem] font-bold uppercase tracking-[0.14em]"
+                <span className="rounded-xl border px-4.5 py-2.5 text-[0.78rem] font-bold uppercase tracking-[0.14em]"
                   style={{ fontFamily: "var(--font-dm-mono)", background: "rgba(255,255,255,0.60)", color: current.color, borderColor: "var(--tray-border)" }}>
                   {current.state}
                 </span>
@@ -522,12 +522,20 @@ export function HoverCard({
   style,
 }: { children: ReactNode; className?: string; style?: React.CSSProperties }) {
   const [tilt, setTilt] = useState({ rotateX: 0, rotateY: 0 });
+  const [coords, setCoords] = useState({ x: 0, y: 0 });
+  const [isHovered, setIsHovered] = useState(false);
+
   const handleMouse = (e: React.MouseEvent<HTMLDivElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
-    const x = (e.clientX - rect.left) / rect.width - 0.5;
-    const y = (e.clientY - rect.top) / rect.height - 0.5;
-    setTilt({ rotateX: -y * 7, rotateY: x * 7 });
+    const x = (e.clientX - rect.left);
+    const y = (e.clientY - rect.top);
+    setCoords({ x, y });
+
+    const rx = (x / rect.width - 0.5);
+    const ry = (y / rect.height - 0.5);
+    setTilt({ rotateX: -ry * 7, rotateY: rx * 7 });
   };
+
   return (
     <motion.div
       variants={cardReveal}
@@ -539,13 +547,30 @@ export function HoverCard({
       }}
       animate={{ rotateX: tilt.rotateX, rotateY: tilt.rotateY }}
       onMouseMove={handleMouse}
-      onMouseLeave={() => setTilt({ rotateX: 0, rotateY: 0 })}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => {
+        setTilt({ rotateX: 0, rotateY: 0 });
+        setIsHovered(false);
+      }}
       whileTap={{ scale: 0.98 }}
       transition={{ duration: tm.fast, ease: tm.ease }}
       className={className}
-      style={{ ...style, transformStyle: "preserve-3d" }}
+      style={{ ...style, transformStyle: "preserve-3d", position: "relative", overflow: "hidden" }}
     >
-      {children}
+      {/* Dynamic Cursor Spotlight Reveal */}
+      {isHovered && (
+        <div
+          className="pointer-events-none absolute inset-0 transition-opacity duration-300"
+          style={{
+            background: `radial-gradient(160px circle at ${coords.x}px ${coords.y}px, rgba(230, 0, 0, 0.12), transparent 80%)`,
+            zIndex: 0,
+          }}
+        />
+      )}
+      {/* Content Container to sit above spotlight overlay */}
+      <div className="relative z-10 w-full h-full flex flex-col justify-between">
+        {children}
+      </div>
     </motion.div>
   );
 }

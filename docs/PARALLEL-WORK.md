@@ -645,3 +645,18 @@ pm run typecheck passes. Restart dev if port 3000 hangs: NODE_OPTIONS=--max-old-
   - The cards ("Direct UPI Settlements", "Bank-Grade Postgres RLS", "0% Order Commissions") now correctly animate from `opacity: 0` to `1` using GSAP's scroll trigger, fixing the bug where the cards were permanently blank/hidden.
 - **Verified**: Checked compilation with `pnpm typecheck` (0 errors) and validated static prototypes with `pnpm demo:verify` (all tests passed). Checked in browser via Chrome DevTools and confirmed the bento cards fade in and render beautifully.
 
+### 2026-05-23 — Hero Alignment, Straight Portals Scroller, Staggered Reveals, & Spotlight Highlights
+
+- **Completed**:
+  - **Hero Columns Top Alignment**: Aligned columns in the hero grid to the top (`lg:items-start`) and reduced the colossal title clamp font-size from `clamp(3.8rem, 10vw, 10.5rem)` to `clamp(2.8rem, 5.8vw, 6.2rem)` so it wraps cleanly without word splitting, sitting side-by-side with the visual card.
+  - **Enlarged Hero Visual**: Scaled up padding, typography, list rows, and elements in the `OrderJourneyVisual` component to occupy column space nicely.
+  - **Technology Stack Spotlight Highlights**: Implemented a relative cursor-Spotlight hover highlight in the `HoverCard` component. On pointer movement, a dynamic radial gradient in crimson (`rgba(230, 0, 0, 0.12)`) reveals itself inside the card bounds.
+  - **Straight Portals Scroller Track**: Replaced the curvy scroll path in `RailwayScroller.tsx` with a straight vertical line (`d="M 230 0 L 230 3200"`), removing card rotations, drifts, and kinetic tilts.
+  - **Enlarged Premium Portal Mockup Cards**: Enlarged scroller cards to `440px` and updated them to match the reference photo layout (header role badge, colored dot, bold title, device-badge overlay on preview iframe, text description, button at the bottom).
+  - **Mobile Portals Cards Consistency**: Synced the mobile stacked cards in `PiranhaPortalsSection.tsx` with the new layout structure.
+  - **Staggered Trust Cards Reveals**: Re-wired the entrance animation of the three Trust section cards using stagger variants to reveal sequentially with a `0.5s` delay between each other.
+  - **Auxia Link Hover Transition**: Added custom CSS styles for Auxia.io link physics in `globals.css` and wrapped footer links in `landing-page.tsx`. Links scale up a red indicator dot and translate `0.9rem` to the right on hover.
+- **Verified**:
+  - `pnpm typecheck` compiled successfully with `0` type errors.
+  - `pnpm demo:verify` passed successfully with `0` selector warnings.
+

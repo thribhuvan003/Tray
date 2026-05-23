@@ -101,7 +101,7 @@ export function TrayHero() {
         <div data-blob-b className="absolute -right-24 top-16 h-[32rem] w-[32rem] rounded-full will-change-transform" style={{ background: "rgba(42,110,58,0.12)", filter: "blur(6rem)" }} />
       </div>
 
-      <div className="relative mx-auto grid max-w-7xl gap-14 lg:grid-cols-[1.15fr_0.85fr] lg:items-center">
+      <div className="relative mx-auto grid max-w-7xl gap-14 lg:grid-cols-[1.15fr_0.85fr] lg:items-start">
         {/* Left: copy */}
         <div>
           {/* Eyebrow — first to animate in */}
@@ -126,7 +126,7 @@ export function TrayHero() {
             style={{
               fontFamily: "var(--font-barlow)",
               fontWeight: 900,
-              fontSize: "clamp(3.8rem, 10vw, 10.5rem)",
+              fontSize: "clamp(2.8rem, 5.8vw, 6.2rem)",
             }}
           >
             <span className="tl-word inline-block mr-[0.2em]">Multi-tenant</span>{" "}

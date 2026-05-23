@@ -1,29 +1,37 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
-import gsap from "gsap";
 import { prefersReducedMotion } from "@/lib/motion/tray-motion";
 
 const portals = [
   {
     index: "01",
-    label: "Student Portal",
-    badgeColor: "var(--tray-clay)",
-    text: "Order from any canteen with native UPI and live queue updates.",
+    role: "STUDENT",
+    label: "Student",
+    deviceBadge: "STUDENT APP · LAPTOP",
+    badgeColor: "var(--color-ocean-500, #2E80EF)",
+    text: "Order from any canteen in the campus. Pay by UPI. Track live. Show OTP.",
+    btnText: "Open student demo",
     href: "/demo/student.html",
   },
   {
     index: "02",
-    label: "Kitchen Board",
-    badgeColor: "var(--tray-green)",
-    text: "Fulfill orders instantly and broadcast menu specials in real time.",
+    role: "KITCHEN",
+    label: "Kitchen staff",
+    deviceBadge: "KITCHEN VIEW · TABLET",
+    badgeColor: "#B8531A",
+    text: "Manage one canteen's live queue. Accept, prep, hand over with OTP.",
+    btnText: "Sign in as kitchen staff",
     href: "/demo/kitchen.html",
   },
   {
     index: "03",
-    label: "Admin Console",
-    badgeColor: "var(--tray-ink)",
-    text: "Manage multiple canteens, monitor live insights, and configure menus.",
+    role: "ADMIN",
+    label: "Canteen admin",
+    deviceBadge: "ADMIN CONSOLE · DESKTOP",
+    badgeColor: "var(--tray-green, #16A34A)",
+    text: "Menu, orders, staff, and daily revenue. Full audit log included.",
+    btnText: "Sign in as admin",
     href: "/demo/admin.html",
   },
 ];
@@ -55,9 +63,9 @@ export function RailwayScroller() {
       pathEl.style.strokeDashoffset = `${svgPathLength}`;
 
       const cardData = [
-        { offset: 0.18, el: cardsRef.current[0], baseX: 0, baseY: 0, baseAngle: 0 },
-        { offset: 0.50, el: cardsRef.current[1], baseX: 0, baseY: 0, baseAngle: 0 },
-        { offset: 0.82, el: cardsRef.current[2], baseX: 0, baseY: 0, baseAngle: 0 },
+        { offset: 0.18, el: cardsRef.current[0], baseX: 0, baseY: 0 },
+        { offset: 0.50, el: cardsRef.current[1], baseX: 0, baseY: 0 },
+        { offset: 0.82, el: cardsRef.current[2], baseX: 0, baseY: 0 },
       ];
 
       const stationData = [
@@ -71,11 +79,8 @@ export function RailwayScroller() {
         if (!card.el) return;
         const dist = card.offset * svgPathLength;
         const pt = pathEl.getPointAtLength(dist);
-        const ptNext = pathEl.getPointAtLength(Math.min(dist + 6, svgPathLength));
         card.baseX = pt.x;
         card.baseY = pt.y;
-        const angleRad = Math.atan2(ptNext.y - pt.y, ptNext.x - pt.x);
-        card.baseAngle = angleRad * (180 / Math.PI) - 90;
       });
 
       stationData.forEach((st) => {
@@ -102,17 +107,13 @@ export function RailwayScroller() {
           const focusFactor = Math.max(0, 1 - absDist / 220);
           const easeFocus = Math.sin(focusFactor * Math.PI / 2);
           
-          const scale = 0.92 + easeFocus * 0.12;
-          const opacity = 0.25 + easeFocus * 0.75;
-          const driftX = (distanceToCenter / 220) * 20; 
-          const sway = (distanceToCenter / 220) * 12;
-          const kineticTilt = Math.max(-15, Math.min(15, velocity * 0.15));
-          const finalRotate = card.baseAngle + sway * (1 - easeFocus) + kineticTilt * easeFocus;
+          const scale = 0.92 + easeFocus * 0.08;
+          const opacity = 0.35 + easeFocus * 0.65;
 
           card.el.style.left = `${card.baseX}px`;
           card.el.style.top = `${card.baseY}px`;
           card.el.style.opacity = `${opacity}`;
-          card.el.style.transform = `translate(-50%, -50%) translate3d(${driftX}px, 0, 0) scale(${scale}) rotate(${finalRotate}deg)`;
+          card.el.style.transform = `translate(-50%, -50%) scale(${scale})`;
 
           if (absDist < 160) {
             card.el.classList.add("is-focused");
@@ -248,18 +249,18 @@ export function RailwayScroller() {
         }
         .railway-card {
           position: absolute;
-          width: 280px;
-          background: rgba(255,255,255,0.05);
-          border: 1px solid rgba(255,255,255,0.1);
-          border-radius: 20px;
-          padding: 20px;
-          box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+          width: 440px;
+          background: rgba(26, 26, 25, 0.95);
+          border: 1.5px solid rgba(255,255,255,0.08);
+          border-radius: 36px;
+          padding: 28px;
+          box-shadow: 0 12px 36px rgba(0,0,0,0.4);
           backdrop-filter: blur(16px);
           z-index: 5;
           left: 0;
           top: 0;
           transform: translate(-50%, -50%) scale(0.92);
-          opacity: 0.25;
+          opacity: 0.35;
           transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s, box-shadow 0.3s, transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
           color: var(--tray-cream);
           overflow: hidden;
@@ -268,7 +269,7 @@ export function RailwayScroller() {
           content: "";
           position: absolute;
           inset: 0;
-          background: linear-gradient(115deg, transparent 30%, rgba(255,255,255,0.08) 45%, rgba(255,255,255,0.18) 50%, rgba(255,255,255,0.08) 55%, transparent 70%);
+          background: linear-gradient(115deg, transparent 30%, rgba(255,255,255,0.04) 45%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.04) 55%, transparent 70%);
           transform: translateX(-100%);
           transition: transform 0.95s cubic-bezier(0.16, 1, 0.3, 1);
           pointer-events: none;
@@ -278,43 +279,31 @@ export function RailwayScroller() {
           transform: translateX(100%);
         }
         .railway-card:hover {
-          border-color: rgba(255, 255, 255, 0.25);
-          background: rgba(255, 255, 255, 0.08);
+          border-color: rgba(255, 255, 255, 0.18);
+          background: rgba(26, 26, 25, 0.98);
         }
         .railway-card.is-focused {
           opacity: 1;
-          border-color: var(--tray-clay);
-          background: rgba(255,255,255,0.08);
-          box-shadow: 0 16px 40px rgba(184, 83, 26, 0.16);
+          border-color: var(--tray-border);
+          background: rgba(26, 26, 25, 0.96);
+          box-shadow: 0 24px 60px rgba(0,0,0,0.5), 0 0 40px rgba(255,255,255,0.03);
         }
         .railway-card.is-focused:hover {
-          border-color: var(--tray-clay);
-          background: rgba(255,255,255,0.12);
-          box-shadow: 0 20px 48px rgba(184, 83, 26, 0.24);
+          border-color: rgba(255, 255, 255, 0.25);
+          box-shadow: 0 32px 80px rgba(0,0,0,0.6), 0 0 50px rgba(255,255,255,0.05);
         }
         .railway-card:active {
-          filter: brightness(0.9);
-        }
-        .railway-card-badge {
-          font-size: 0.58rem;
-          font-family: var(--font-dm-mono);
-          text-transform: uppercase;
-          padding: 4px 8px;
-          border-radius: 4px;
-          background: rgba(0,0,0,0.2);
-          font-weight: 700;
-          display: inline-block;
-          margin-bottom: 12px;
+          filter: brightness(0.95);
         }
       `}} />
 
       <div className="railway-scroller-box" ref={scrollerRef}>
         <div className="railway-canvas-container">
           <svg className="railway-svg-track" viewBox="0 0 460 3200" preserveAspectRatio="none">
-            <path className="railway-track-bed" d="M 230 0 C 420 300, 40 500, 230 800 C 420 1100, 40 1300, 230 1600 C 420 1900, 40 2100, 230 2400 C 420 2700, 40 2900, 230 3200" />
-            <path className="railway-sleepers" d="M 230 0 C 420 300, 40 500, 230 800 C 420 1100, 40 1300, 230 1600 C 420 1900, 40 2100, 230 2400 C 420 2700, 40 2900, 230 3200" />
-            <path className="railway-track-bg" d="M 230 0 C 420 300, 40 500, 230 800 C 420 1100, 40 1300, 230 1600 C 420 1900, 40 2100, 230 2400 C 420 2700, 40 2900, 230 3200" />
-            <path className="railway-track-glow" ref={pathRef} d="M 230 0 C 420 300, 40 500, 230 800 C 420 1100, 40 1300, 230 1600 C 420 1900, 40 2100, 230 2400 C 420 2700, 40 2900, 230 3200" />
+            <path className="railway-track-bed" d="M 230 0 L 230 3200" />
+            <path className="railway-sleepers" d="M 230 0 L 230 3200" />
+            <path className="railway-track-bg" d="M 230 0 L 230 3200" />
+            <path className="railway-track-glow" ref={pathRef} d="M 230 0 L 230 3200" />
             
             {[1, 2, 3].map((_, i) => (
               <g key={i} className="railway-station" ref={(el) => { stationsRef.current[i] = el; }}>
@@ -339,21 +328,26 @@ export function RailwayScroller() {
               }}
               className="railway-card cursor-pointer group/card select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
               ref={(el) => { cardsRef.current[i] = el; }}
-              style={{ outlineColor: p.badgeColor }}
             >
-              <div className="flex items-center justify-between mb-3">
-                <span className="railway-card-badge" style={{ color: p.badgeColor, marginBottom: 0 }}>
-                  {p.index} · {p.label}
+              {/* Header row */}
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-[0.72rem] font-code font-bold uppercase tracking-[0.2em] text-white/50">
+                  {p.role}
                 </span>
-                <span className="text-[0.65rem] font-code font-bold uppercase tracking-wider opacity-0 translate-x-[-4px] group-hover/card:opacity-75 group-hover/card:translate-x-0 transition-all text-white/80">
-                  Launch →
+                <span className="flex items-center gap-1.5">
+                  <span className="h-2.5 w-2.5 rounded-full animate-pulse shadow-[0_0_8px_currentColor]" style={{ background: p.badgeColor, color: p.badgeColor }} />
                 </span>
               </div>
 
-              {/* iframe preview */}
+              {/* Title */}
+              <h3 className="text-3xl font-black font-ui uppercase tracking-tight mb-5 text-white">
+                {p.label}
+              </h3>
+
+              {/* Live Preview Container (mockup) */}
               <div
-                className="relative overflow-hidden rounded-[1.25rem] mb-4 bg-white/5 border-none"
-                style={{ height: 180 }}
+                className="relative overflow-hidden rounded-[1.5rem] mb-5 bg-[#0a0a09] border border-white/10"
+                style={{ height: 220 }}
               >
                 <iframe
                   src={p.href}
@@ -367,20 +361,44 @@ export function RailwayScroller() {
                     position: "absolute",
                     top: 0,
                     left: 0,
-                    width: "200%",
-                    height: "200%",
-                    transform: "scale(0.5)",
+                    width: "154%",
+                    height: "154%",
+                    transform: "scale(0.65)",
                     transformOrigin: "0 0",
                     border: 0,
                     pointerEvents: "none",
                   }}
                 />
+                {/* Device Badge Overlay */}
+                <span
+                  className="absolute left-4 top-4 rounded-xl px-3 py-1.5 text-[0.62rem] font-code font-bold uppercase tracking-[0.12em] backdrop-blur-md"
+                  style={{
+                    color: "var(--tray-cream)",
+                    background: "rgba(0,0,0,0.68)",
+                    border: "1px solid rgba(255,255,255,0.1)",
+                  }}
+                >
+                  {p.deviceBadge}
+                </span>
               </div>
 
-              <h3 className="text-xl font-bold font-editorial mb-2" style={{ color: "var(--tray-cream)" }}>
-                {p.label}
-              </h3>
-              <p className="opacity-70 text-[0.8rem] leading-relaxed font-geist">{p.text}</p>
+              {/* Description */}
+              <p className="opacity-70 text-[0.9rem] leading-[1.6] font-geist mb-6 min-h-[3.2rem]">
+                {p.text}
+              </p>
+
+              {/* Button at the bottom */}
+              <div
+                className="w-full rounded-full py-3.5 px-6 flex items-center justify-between text-sm font-semibold uppercase tracking-[0.08em] transition-all duration-300"
+                style={{
+                  background: "rgba(255,255,255,0.08)",
+                  border: "1px solid rgba(255,255,255,0.1)",
+                  color: "var(--tray-cream)",
+                }}
+              >
+                <span className="group-hover/card:text-white transition-colors">{p.btnText}</span>
+                <span className="transition-transform group-hover/card:translate-x-1 duration-300">→</span>
+              </div>
             </div>
           ))}
         </div>

@@ -511,7 +511,10 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
                   ["Get started",   "/get-started"],
                 ].map(([label, href]) => (
                   <li key={label}>
-                    <Link href={href} className="opacity-75 hover:opacity-100 transition-opacity font-semibold">{label}</Link>
+                    <Link href={href} className="tl-footer-link-item opacity-75 font-semibold">
+                      <span className="tl-footer-link-circ" />
+                      <span className="tl-footer-link-text">{label}</span>
+                    </Link>
                   </li>
                 ))}
               </ul>
@@ -527,7 +530,10 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
                   ["Security",     "https://github.com/thribhuvan003/Tray/blob/main/SECURITY.md"],
                 ].map(([label, href]) => (
                   <li key={label}>
-                    <a href={href} target="_blank" rel="noreferrer" className="opacity-75 hover:opacity-100 transition-opacity font-semibold">{label}</a>
+                    <a href={href} target="_blank" rel="noreferrer" className="tl-footer-link-item opacity-75 font-semibold">
+                      <span className="tl-footer-link-circ" />
+                      <span className="tl-footer-link-text">{label}</span>
+                    </a>
                   </li>
                 ))}
               </ul>
