@@ -690,7 +690,7 @@ export function PiranhaPortalsSection() {
         let scrollPx = 0;
 
         if (portalKey === "kitchen") {
-          virtualWidth = 1440;
+          virtualWidth = 980;
           scrollPx = 0;
         } else if (portalKey === "admin") {
           virtualWidth = 1300;

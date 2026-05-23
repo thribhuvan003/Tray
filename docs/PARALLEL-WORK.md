@@ -1579,6 +1579,18 @@ pm run typecheck passes. Restart dev if port 3000 hangs: NODE_OPTIONS=--max-old-
   - Initialized `iframeLoaded` state to `true` by default instead of `false`. Since the static mockups have all of their CSS fully inlined at the top of their `<head>` tags, they compile and render immediately with zero flashes of unstyled content. Bypassing the artificial `onLoad` spinner guarantees a perceived load time of 0ms, making the parallel web apps load instantly.
 - **Verified**: Verified that both `pnpm typecheck` ✅ and `pnpm demo:verify` ✅ passed with **0 errors**.
 
+---
+
+### 2026-05-24 — Widescreen 3-Panel Kitchen View Card Overhaul (Senior Dev Verification)
+
+**Work done:**
+- **Overhauled iframe layout (`public/demo/kitchen.html`)**: Scoped new styles inside `body.in-iframe` to replace the vertical block stacked layout with a premium 3-panel widescreen side-by-side design matching the full-screen landscape experience.
+- **Squeezed middle active ticket lanes (`public/demo/kitchen.html`)**: Configured `.queue-cols` to repeat 3 columns of ticket lanes (`incoming`, `preparing`, `ready`) at a squeezed, compact `188px` wide (from standard `300px`). Hid the completed "Collected" column to maximize horizontal room.
+- **Specials panel side-by-side integration (`public/demo/kitchen.html`)**: Set `.queue-shell` to a custom CSS grid (`grid-template-columns: 1fr 210px`) so that the "Today's Specials" panel (`.right-panel`) sits side-by-side with the ticket board, making it fully visible inside the card instead of stacked at the bottom and cut off.
+- **Left Sidebar & Compact Header visibility (`public/demo/kitchen.html`)**: Compacted canteens dropdowns, page title, clock, and sound/walk-in action buttons in the `.page-head` topbar to save vertical room and avoid vertical scrolling. Scoped `.app` columns to `150px 1fr` to display the Left Sidebar next to the main content area.
+- **Calibrated virtualWidth scaling (`PiranhaPortalsSection.tsx`)**: Re-calibrated the kitchen portal virtual viewport width from `1020` to `980` in the iframe resizing function. Increasing the scale factor (`parentWidth / 980`) instantly boosted font weights, sizes, and icon readability, making the entire sidebar navigation, canteens switcher, and ticket items highly legible inside the landing page showcase card.
+- **Verification & Git Push**: Passed all automated checks (`pnpm typecheck` ✅, `pnpm demo:verify` ✅) and took before/after browser screenshots.
+
 
 
 
