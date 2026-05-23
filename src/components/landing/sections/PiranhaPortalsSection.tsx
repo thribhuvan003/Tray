@@ -129,7 +129,7 @@ export function PiranhaPortalsSection() {
     <section
       ref={rootRef}
       className="relative overflow-hidden px-5 py-24 sm:px-8 lg:px-10 lg:min-h-screen lg:flex lg:flex-col lg:justify-center lg:py-24"
-      style={{ background: "var(--bg, #0e0a06)", color: "var(--ink, #f5efe4)" }}
+      style={{ background: "var(--tray-bg, #F4EFE6)", color: "var(--tray-ink, #1A1A19)" }}
     >
       {/* Dot-grid */}
       <div className="pointer-events-none absolute inset-0 opacity-[0.06] [background-image:radial-gradient(circle_at_1px_1px,currentColor_1px,transparent_0)] [background-size:18px_18px]" />
@@ -150,7 +150,7 @@ export function PiranhaPortalsSection() {
               fontFamily: "var(--font-barlow)",
               fontWeight: 900,
               fontSize: "clamp(2.5rem, 6.5vw, 6.2rem)",
-              color: "var(--ink, #f5efe4)",
+              color: "var(--tray-ink, #1A1A19)",
             }}
           >
             <span className="split-word inline-block overflow-hidden">
@@ -165,7 +165,7 @@ export function PiranhaPortalsSection() {
           </h2>
 
           <p
-            className="mt-7 max-w-3xl text-[1.1rem] leading-8 opacity-58"
+            className="mt-7 max-w-3xl text-[1.1rem] leading-8 opacity-70"
             style={{ fontFamily: "var(--font-geist)" }}
           >
             One database, three purpose-built views. What a student orders is what the
@@ -184,10 +184,10 @@ export function PiranhaPortalsSection() {
             <article
               key={portal.index}
               data-portal-card
-              className="motion-card group flex flex-col select-none rounded-[18px] overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_20px_50px_rgba(0,0,0,0.5)]"
+              className="motion-card group flex flex-col select-none rounded-[18px] overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_20px_50px_rgba(26,26,25,0.08)]"
               style={{
-                background: "var(--bg-2, #161108)",
-                border: "1px solid rgba(245,239,228,0.08)",
+                background: "#ffffff",
+                border: "1px solid var(--tray-border, rgba(26, 26, 25, 0.12))",
               }}
             >
               {/* Portal Head — eyebrow + title */}
@@ -195,11 +195,11 @@ export function PiranhaPortalsSection() {
                 className="flex flex-col gap-2.5"
                 style={{
                   padding: "24px 24px 20px",
-                  borderBottom: "1px solid rgba(245,239,228,0.08)",
+                  borderBottom: "1px solid var(--tray-border, rgba(26, 26, 25, 0.12))",
                 }}
               >
                 <div className="flex justify-between items-center text-[10.5px] font-medium tracking-[0.14em]">
-                  <span style={{ fontFamily: "var(--font-geist-mono, monospace)", color: "var(--ink-3, #8a7960)" }}>
+                  <span style={{ fontFamily: "var(--font-geist-mono, monospace)", color: "var(--tray-muted, #78716C)" }}>
                     {portal.eyebrow}
                   </span>
                   <span className="flex items-center gap-1.5 font-bold" style={{ fontFamily: "var(--font-geist-mono, monospace)", color: portal.accentColor }}>
@@ -211,7 +211,7 @@ export function PiranhaPortalsSection() {
                   className="text-[clamp(1.35rem,3vw,2rem)] tracking-[-0.025em] leading-[1.08] m-0 font-normal italic"
                   style={{
                     fontFamily: "var(--font-instrument-serif, 'Instrument Serif', serif)",
-                    color: "var(--ink, #f5efe4)",
+                    color: "var(--tray-ink, #1A1A19)",
                   }}
                 >
                   {portal.title}
@@ -225,8 +225,8 @@ export function PiranhaPortalsSection() {
                 }}
                 className="relative overflow-hidden h-[260px] sm:h-[320px] md:h-[400px]"
                 style={{
-                  background: "var(--bg-3, #1f1810)",
-                  borderBottom: "1px solid rgba(245,239,228,0.08)",
+                  background: "var(--tray-surface, #E8DFD0)",
+                  borderBottom: "1px solid var(--tray-border, rgba(26, 26, 25, 0.12))",
                 }}
               >
                 <iframe
@@ -249,7 +249,7 @@ export function PiranhaPortalsSection() {
                 <p
                   className="text-[13.5px] leading-relaxed m-0 opacity-80"
                   style={{
-                    color: "var(--ink-2, #c8b89e)",
+                    color: "var(--tray-muted, #78716C)",
                     maxWidth: "34ch",
                     fontFamily: "var(--font-inter, var(--font-geist, sans-serif))",
                   }}
@@ -258,8 +258,8 @@ export function PiranhaPortalsSection() {
                 </p>
 
                 {/* Footer row */}
-                <div className="flex justify-between items-center mt-auto pt-4" style={{ borderTop: "1px solid rgba(245,239,228,0.08)" }}>
-                  <span className="text-[10px] font-medium tracking-[0.12em]" style={{ fontFamily: "var(--font-geist-mono, monospace)", color: "var(--ink-3, #8a7960)" }}>
+                <div className="flex justify-between items-center mt-auto pt-4" style={{ borderTop: "1px solid var(--tray-border, rgba(26, 26, 25, 0.12))" }}>
+                  <span className="text-[10px] font-medium tracking-[0.12em]" style={{ fontFamily: "var(--font-geist-mono, monospace)", color: "var(--tray-muted, #78716C)" }}>
                     {portal.deviceTag}
                   </span>
                   <a
