@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>Tray — Student Order (Variant A: Clean Minimal)</title>
+  <title>Tray — Student Order (Variant B: Rich Dashboard)</title>
   <meta name="theme-color" content="#f7f3ea" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -207,8 +207,7 @@
     .pickup-ribbon__text{font-size:14px;color:var(--text);line-height:1.45}
 
     body[data-view="menu"] .shell--menu{display:flex}
-    body:not([data-view="menu"]) .shell--menu{display:none}
-    body[data-view="menu"] .views-flow{display:none}
+    body:not([data-view="menu"]) .views-flow{display:none}
     body:not([data-view="menu"]) .views-flow{display:block;flex:1;padding:20px 16px}
     @media(min-width:900px){body:not([data-view="menu"]) .views-flow{padding:24px 28px}}
 
@@ -431,7 +430,7 @@
     .it{font-family:var(--font-serif);font-style:italic;font-weight:400}
     .dot{font-family:var(--font-serif);font-style:italic;font-weight:400;color:var(--accent);margin-left:-2px}
 
-    /* in-iframe cleanups (VARIANT A - 3-column layout remains fully visible) */
+    /* in-iframe cleanups (VARIANT B - 3-column layout remains fully visible with dashboard styling) */
     body.in-iframe {
       background: transparent !important;
       overflow: hidden !important;
@@ -483,6 +482,48 @@
       grid-template-columns: repeat(2, 1fr) !important;
       gap: 14px !important;
     }
+
+    /* Variant B Dashboard specific additions */
+    .topbar-info {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--muted);
+      border-right: 1px solid var(--border);
+      padding-right: 14px;
+    }
+    .best-seller-tag {
+      font-family: var(--mono);
+      font-size: 9px;
+      font-weight: 700;
+      color: #b45309;
+      background: #fef3c7;
+      padding: 2px 6px;
+      border-radius: 4px;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+    .checkout-alert-box {
+      margin-top: 14px;
+      padding: 12px;
+      background: var(--accent-dim);
+      border: 1px dashed rgba(51, 65, 85, 0.25);
+      border-radius: var(--radius-sm);
+      font-size: 12.5px;
+      color: var(--accent);
+      line-height: 1.4;
+      display: flex;
+      gap: 8px;
+      align-items: flex-start;
+    }
+    .checkout-alert-box svg {
+      width: 16px;
+      height: 16px;
+      margin-top: 2px;
+      flex-shrink: 0;
+    }
   </style>
   <script>
     (function() {
@@ -517,6 +558,11 @@
         <span class="brand__sub" id="topbarContext">Campus canteen · Takeaway</span>
       </a>
       <div class="topbar__actions">
+        <div class="topbar-info">
+          <span>Roll #1024</span>
+          <span>·</span>
+          <span>Bal: ₹450</span>
+        </div>
         <span class="pill-status is-live" id="openBadge">Open now</span>
         <button type="button" class="btn-icon" id="btnReset" title="Start over" aria-label="Start over">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
@@ -604,6 +650,12 @@
         <div class="cart-sidebar__foot">
           <div class="total-row"><span>Total</span><span id="totalDesktop">₹0</span></div>
           <button type="button" class="btn-primary" id="btnCheckoutDesktop" disabled>Place order →</button>
+          
+          <div class="checkout-alert-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="m9 12 2 2 4-4"/></svg>
+            <span>Verified by Razorpay API. Instantly synced to kitchen dashboard.</span>
+          </div>
+
           <button type="button" class="btn-ghost" id="btnClearCart">Clear cart</button>
         </div>
       </aside>
@@ -670,7 +722,7 @@
       </section>
     </div>
 
-    <!-- Mobile floating bar (hidden since sidebars are always visible inside iframe in desktop mode) -->
+    <!-- Mobile floating bar -->
     <div class="cart-bar" id="cartBar" hidden>
       <span class="cart-bar__count" id="cartBarCount">0</span>
       <div class="cart-bar__text">
@@ -758,18 +810,21 @@ function renderCategories(){
   var canteen=TD.getCanteen(currentCanteenId);
   var list=canteen?canteen.categories:[];
   var host=document.getElementById("catNavList");if(!host)return;
+  var catIcons={all:"🍱",mains:"🍛",south:"🥞",drinks:"🥤",snacks:"🍿"};
   var html="";
   list.forEach(function(c){
     var act=c.id===activeCat;
+    var icon=catIcons[c.id]||"🍽";
     var count = c.id==="all" ? allMenuItems().length : allMenuItems().filter(function(i){return i.cat===c.id;}).length;
-    html+='<li><button type="button" class="cat-btn'+(act?" is-active":"")+'" data-cat="'+c.id+'">'+c.label+'<span>'+count+' dishes</span></button></li>';
+    html+='<li><button type="button" class="cat-btn'+(act?" is-active":"")+'" data-cat="'+c.id+'">'+icon+' '+c.label+'<span>'+count+' dishes</span></button></li>';
   });
   host.innerHTML=html;
   
   var phtml="";
   list.forEach(function(c){
     var act=c.id===activeCat;
-    phtml+='<button type="button" class="pill-cat'+(act?" is-active":"")+'" data-cat="'+c.id+'" role="tab" aria-selected="'+act+'">'+c.label+'</button>';
+    var icon=catIcons[c.id]||"🍽";
+    phtml+='<button type="button" class="pill-cat'+(act?" is-active":"")+'" data-cat="'+c.id+'" role="tab" aria-selected="'+act+'">'+icon+' '+c.label+'</button>';
   });
   var pills=document.getElementById("catPills");if(pills)pills.innerHTML=phtml;
 }
@@ -819,7 +874,8 @@ function renderMenu(){
   filtered.forEach(function(it){
     var q=getQty(it.id);var hasQty=q>0;
     var sp=it.cat==="specials"||it.isLiveSpecial;
-    html+='<article class="menu-card'+(hasQty?" has-qty":"")+'" data-id="'+it.id+'"><div class="menu-card__visual">'+it.icon+'</div><div class="menu-card__body"><div class="menu-card__top"><h3 class="menu-card__title">'+it.name+'</h3><span class="diet-dot diet-dot--'+(it.diet==="nv"?"nv":"veg")+'" title="'+(it.diet==="nv"?"Non-vegetarian":"Vegetarian")+'" aria-label="'+(it.diet==="nv"?"Non-vegetarian":"Vegetarian")+'"></span></div><p class="menu-card__desc">'+it.desc+'</p><div class="menu-card__foot"><span class="price">'+fmt(it.price)+'</span>'+(sp?'<span style="font-family:var(--mono);font-size:10.5px;color:var(--veg);font-weight:600;letter-spacing:0.04em">★ SPECIAL</span>':'')+'<button type="button" class="btn-add-initial" data-action="add" data-id="'+it.id+'">+ Add</button><div class="qty-control"><button type="button" class="qty-btn qty-minus" data-action="minus" data-id="'+it.id+'" aria-label="Remove one">−</button><span class="qty-val">'+q+'</span><button type="button" class="qty-btn qty-btn--add" data-action="plus" data-id="'+it.id+'" aria-label="Add one">+</button></div></div></div></article>';
+    var isBestSeller = it.name.indexOf("Biryani") !== -1 || it.name.indexOf("Coffee") !== -1 || it.name.indexOf("Dosa") !== -1;
+    html+='<article class="menu-card'+(hasQty?" has-qty":"")+'" data-id="'+it.id+'"><div class="menu-card__visual">'+it.icon+'</div><div class="menu-card__body"><div class="menu-card__top"><h3 class="menu-card__title">'+it.name+'</h3><div style="display:flex;align-items:center;gap:6px">'+(isBestSeller?'<span class="best-seller-tag">Best Seller</span>':'')+'<span class="diet-dot diet-dot--'+(it.diet==="nv"?"nv":"veg")+'" title="'+(it.diet==="nv"?"Non-vegetarian":"Vegetarian")+'" aria-label="'+(it.diet==="nv"?"Non-vegetarian":"Vegetarian")+'"></span></div></div><p class="menu-card__desc">'+it.desc+'</p><div class="menu-card__foot"><span class="price">'+fmt(it.price)+'</span>'+(sp?'<span style="font-family:var(--mono);font-size:10.5px;color:var(--veg);font-weight:600;letter-spacing:0.04em">★ SPECIAL</span>':'')+'<button type="button" class="btn-add-initial" data-action="add" data-id="'+it.id+'">+ Add</button><div class="qty-control"><button type="button" class="qty-btn qty-minus" data-action="minus" data-id="'+it.id+'" aria-label="Remove one">−</button><span class="qty-val">'+q+'</span><button type="button" class="qty-btn qty-btn--add" data-action="plus" data-id="'+it.id+'" aria-label="Add one">+</button></div></div></div></article>';
   });
   document.getElementById("menuGrid").innerHTML=html;document.getElementById("itemCount").textContent=items.length+(items.length===1?" dish":" dishes");
   renderSpecialsCarousel();

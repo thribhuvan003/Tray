@@ -68,18 +68,18 @@ export default async function OrdersPage() {
                   href={o.status === "pending_payment" ? `/c/${tenant.slug}/pay/${o.id}` : `/c/${tenant.slug}/track/${o.id}`}
                   className="flex items-center justify-between gap-3 rounded-2xl border border-[color:var(--color-line)] bg-[color:var(--color-paper)] p-4 hover:border-ocean-500/40 transition-colors"
                 >
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-xl bg-ocean-50 dark:bg-ocean-500/10 text-ocean-500 inline-flex items-center justify-center font-mono text-[11px] font-semibold">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="h-10 w-10 shrink-0 rounded-xl bg-ocean-50 dark:bg-ocean-500/10 text-ocean-500 inline-flex items-center justify-center font-mono text-[11px] font-semibold">
                       {o.short_code.replace("T-", "")}
                     </div>
-                    <div>
-                      <div className="text-[14px] font-medium">{o.short_code}</div>
-                      <div className="text-[11px] font-mono text-[color:var(--color-ink)]/55">
+                    <div className="min-w-0">
+                      <div className="text-[14px] font-medium truncate">{o.short_code}</div>
+                      <div className="text-[11px] font-mono text-[color:var(--color-ink)]/55 truncate">
                         {formatDateIST(o.placed_at)} · {formatTimeIST(o.placed_at)}
                       </div>
                     </div>
                   </div>
-                  <div className="text-right">
+                  <div className="text-right shrink-0">
                     <div className="text-[14px] font-semibold tabular">{formatRupees(o.total_paise)}</div>
                     <span
                       className={

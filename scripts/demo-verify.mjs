@@ -163,7 +163,12 @@ function startStaticServer(port, dir) {
     const server = http.createServer((req, res) => {
       const rel = decodeURIComponent(req.url?.split("?")[0] || "/");
       const safe = path.normalize(rel).replace(/^(\.\.[/\\])+/, "");
-      const filePath = path.join(dir, safe === "/" ? "index.html" : safe.replace(/^\//, ""));
+      let cleanPath = safe.replace(/\\/g, "/");
+      cleanPath = cleanPath.replace(/^\//, "");
+      if (cleanPath.startsWith("demo/")) {
+        cleanPath = cleanPath.slice(5);
+      }
+      const filePath = path.join(dir, safe === "/" ? "index.html" : cleanPath);
       if (!filePath.startsWith(dir)) {
         res.writeHead(403);
         res.end("Forbidden");

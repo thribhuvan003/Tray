@@ -597,3 +597,10 @@ html.dark [data-portal="kitchen"] {
 #campus .grid {
   will-change: clip-path;
 }
+
+/* Scroll fade mask for horizontal mobile indicators */
+.scroll-fade-mask {
+  mask-image: linear-gradient(to right, transparent, black 16px, black calc(100% - 16px), transparent);
+  -webkit-mask-image: linear-gradient(to right, transparent, black 16px, black calc(100% - 16px), transparent);
+}
+

@@ -134,10 +134,10 @@ export function KitchenShell({
         </Link>
       </nav>
 
-      <div className="main min-w-0 overflow-x-hidden px-6 pt-6 pb-[calc(4.5rem+env(safe-area-inset-bottom,0px))] lg:pb-16 md:px-8">
+      <div className="main min-w-0 overflow-x-hidden px-4 sm:px-6 pt-6 pb-[calc(4.5rem+env(safe-area-inset-bottom,0px))] lg:pb-16 md:px-8">
         <header className="page-head flex flex-wrap items-end justify-between gap-4 border-b border-tomato-900/10 pb-[18px] mb-6">
           <div className="l min-w-0">
-            <span className="eyebrow font-mono text-[11px] uppercase tracking-[0.16em] text-tomato-900/55 font-medium">
+            <span className="eyebrow font-mono text-[11px] uppercase tracking-[0.16em] text-tomato-900/55 font-medium truncate block">
               {dateLine} · {tenantName} · {serviceLabel}
             </span>
             <h1 className="mt-1.5 font-display text-[clamp(2rem,5vw,3rem)] lg:text-[48px] font-medium tracking-[-0.03em] leading-none">

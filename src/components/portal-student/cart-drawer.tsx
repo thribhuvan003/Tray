@@ -97,7 +97,7 @@ export function CartDrawer({ tenantSlug, tenantName }: { tenantSlug: string; ten
   // form fields / totals between the two surfaces.
   const cartBody = (
     <>
-      <div className="px-5 sm:px-6 pb-3 flex items-center justify-between border-b border-[color:var(--color-line)]">
+      <div className="px-4 sm:px-5 pt-3 pb-3 flex items-center justify-between border-b border-[color:var(--color-line)]">
         <div>
           <div className="font-display text-[22px] font-medium tracking-tight">Your <span className="it">tray.</span></div>
           <div className="text-[11px] font-mono uppercase tracking-wider text-[color:var(--color-ink)]/55">
@@ -115,7 +115,7 @@ export function CartDrawer({ tenantSlug, tenantName }: { tenantSlug: string; ten
         )}
       </div>
 
-      <ul className="flex-1 overflow-y-auto px-5 sm:px-6 py-4 flex flex-col gap-3">
+      <ul className="flex-1 overflow-y-auto px-4 sm:px-5 py-4 flex flex-col gap-3">
         {empty ? (
           <li className="text-[13px] text-[color:var(--color-ink)]/55 italic text-center py-8">
             Your tray is empty.{" "}
@@ -182,7 +182,7 @@ export function CartDrawer({ tenantSlug, tenantName }: { tenantSlug: string; ten
       </ul>
 
       {!empty && (
-        <div className="px-5 sm:px-6 py-4 border-t border-[color:var(--color-line)] flex flex-col gap-3 bg-[color:var(--color-paper-dim)]">
+        <div className="px-4 sm:px-5 py-4 border-t border-[color:var(--color-line)] flex flex-col gap-3 bg-[color:var(--color-paper-dim)]">
           <div
             role="radiogroup"
             aria-label="Order type"
@@ -265,7 +265,7 @@ export function CartDrawer({ tenantSlug, tenantName }: { tenantSlug: string; ten
     return (
       <aside
         aria-label="Your cart"
-        className="lg:sticky lg:top-20 lg:w-80 lg:h-[calc(100vh-5rem)] lg:overflow-y-auto rounded-2xl border border-[color:var(--color-line)] bg-[color:var(--color-paper)] flex flex-col mt-6"
+        className="lg:sticky lg:top-20 lg:w-80 lg:h-[calc(100vh-5rem)] lg:overflow-y-auto rounded-2xl border border-[color:var(--color-line)] bg-[color:var(--color-paper)] flex flex-col mt-6 pt-3"
       >
         {cartBody}
       </aside>
@@ -299,7 +299,7 @@ export function CartDrawer({ tenantSlug, tenantName }: { tenantSlug: string; ten
       </Drawer.Trigger>
       <Drawer.Portal>
         <Drawer.Overlay className="fixed inset-0 z-40 bg-black/40" />
-        <Drawer.Content className="fixed bottom-0 left-0 right-0 z-50 mt-24 flex h-[88vh] sm:h-[80vh] flex-col rounded-t-3xl bg-[color:var(--color-paper)] focus:outline-none">
+        <Drawer.Content className="fixed bottom-0 left-0 right-0 z-50 mt-24 flex h-[88vh] sm:h-[80vh] flex-col rounded-t-3xl bg-[color:var(--color-paper)] focus:outline-none pb-[env(safe-area-inset-bottom)]">
           <Drawer.Title className="sr-only">Your cart</Drawer.Title>
           <div className="mx-auto w-12 h-1.5 rounded-full bg-[color:var(--color-line-strong)] mt-3 mb-2" />
           {cartBody}

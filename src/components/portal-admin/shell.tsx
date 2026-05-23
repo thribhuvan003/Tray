@@ -266,7 +266,7 @@ export function AdminShell({
           className="sticky top-0 z-20 flex items-center justify-between gap-3"
           style={{
             height: 52,
-            padding: "0 32px",
+            padding: "0 16px",
             background: "rgba(26,26,25,0.85)",
             backdropFilter: "blur(10px)",
             WebkitBackdropFilter: "blur(10px)",
@@ -304,7 +304,7 @@ export function AdminShell({
           </div>
         </header>
 
-        <main className="px-5 sm:px-8 py-6">{children}</main>
+        <main className="px-4 sm:px-8 py-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] lg:pb-6">{children}</main>
 
         {/* Mobile bottom nav */}
         <nav
@@ -312,6 +312,7 @@ export function AdminShell({
           style={{
             borderColor: "var(--admin-line)",
             background: "rgba(26,26,25,0.95)",
+            paddingBottom: "env(safe-area-inset-bottom)",
           }}
         >
           <div className="grid grid-cols-5">

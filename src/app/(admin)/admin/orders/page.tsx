@@ -95,7 +95,8 @@ export default async function OrdersPage() {
         </div>
       </div>
 
-      <div className="bg-graphite-700 border border-graphite-200/[0.08] rounded-xl overflow-hidden">
+      <div className="overflow-x-auto rounded-xl border border-graphite-200/[0.08]">
+      <div className="bg-graphite-700 min-w-[640px] rounded-xl overflow-hidden">
         <table className="w-full text-[13px]">
           <thead>
             <tr className="text-[10px] font-mono uppercase tracking-wider text-graphite-400 border-b border-graphite-200/[0.08]">
@@ -142,6 +143,7 @@ export default async function OrdersPage() {
             )}
           </tbody>
         </table>
+      </div>
       </div>
     </div>
   );

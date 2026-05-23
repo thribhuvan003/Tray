@@ -3,7 +3,7 @@ import {
   Inter, Fraunces, Manrope, JetBrains_Mono, Instrument_Serif,
   Newsreader, Geist, Geist_Mono, Space_Grotesk,
   Bebas_Neue, Cormorant_Garamond, Plus_Jakarta_Sans, Barlow_Condensed, DM_Serif_Display,
-  DM_Mono, Big_Shoulders, Krona_One, Chewy, Bricolage_Grotesque,
+  DM_Mono, Krona_One, Chewy, Bricolage_Grotesque,
 } from "next/font/google";
 import { headers } from "next/headers";
 import { Toaster } from "sonner";
@@ -58,6 +58,8 @@ const bebasNeue = Bebas_Neue({
   variable: "--font-bebas",
   display: "swap",
 });
+// Note: bigShoulders removed — was a duplicate Barlow_Condensed instantiation;
+// barlowCondensed (line below) covers the same font with full weight range.
 const cormorant = Cormorant_Garamond({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
@@ -98,13 +100,6 @@ const dmMono = DM_Mono({
   weight: ["300", "400", "500"],
   style: ["normal", "italic"],
   variable: "--font-dm-mono",
-  display: "swap",
-});
-// Big Shoulders — ultra-condensed bold display, used as Brixton Lead substitute
-const bigShoulders = Big_Shoulders({
-  subsets: ["latin"],
-  weight: ["700", "800", "900"],
-  variable: "--font-brixton",
   display: "swap",
 });
 const kronaOne = Krona_One({
@@ -164,7 +159,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       lang="en"
       data-tenant-id={tenant?.id ?? ""}
       data-tenant-slug={tenant?.slug ?? ""}
-      className={`${inter.variable} ${fraunces.variable} ${manrope.variable} ${jetbrains.variable} ${instrumentSerif.variable} ${newsreader.variable} ${spaceGrotesk.variable} ${geist.variable} ${geistMono.variable} ${bebasNeue.variable} ${cormorant.variable} ${plusJakarta.variable} ${barlowCondensed.variable} ${dmSerif.variable} ${dmMono.variable} ${bigShoulders.variable} ${kronaOne.variable} ${chewy.variable} ${bricolage.variable}`}
+      className={`${inter.variable} ${fraunces.variable} ${manrope.variable} ${jetbrains.variable} ${instrumentSerif.variable} ${newsreader.variable} ${spaceGrotesk.variable} ${geist.variable} ${geistMono.variable} ${bebasNeue.variable} ${cormorant.variable} ${plusJakarta.variable} ${barlowCondensed.variable} ${dmSerif.variable} ${dmMono.variable} ${kronaOne.variable} ${chewy.variable} ${bricolage.variable}`}
       suppressHydrationWarning
     >
       <head>

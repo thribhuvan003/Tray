@@ -128,7 +128,7 @@ async function main() {
   /* ── Setup: Reset passwords & ensure tenant is open & clean duplicate items ── */
   log("Setup — Reset passwords, clean DB, and verify duplicate index");
 
-  const { data: { users }, error: listErr } = await supabase.auth.admin.listUsers();
+  const { data: { users }, error: listErr } = await supabase.auth.admin.listUsers({ perPage: 1000 });
   if (listErr) throw new Error(`Cannot list users: ${listErr.message}`);
 
   const studentUser = users.find((u) => u.email === STUDENT_EMAIL);
@@ -339,7 +339,7 @@ async function main() {
     // Find original Samosa price in student UI
     const samosaCard = studentPage.locator('article', { has: studentPage.locator('h3', { hasText: /^Samosa$/ }) });
     await samosaCard.waitFor({ state: "visible", timeout: 10000 });
-    const priceTextBefore = await samosaCard.locator('div[class*="text-ocean-600"]').textContent();
+    const priceTextBefore = await samosaCard.locator('div[class*="text-ocean-500"]').textContent();
     info(`Samosa price in UI before update: ${priceTextBefore.trim()}`);
 
     // Update Samosa price directly in DB to ₹25.00 (2500 paise)
@@ -354,7 +354,7 @@ async function main() {
     info("Waiting for real-time menu card price update in student portal…");
     await studentPage.waitForTimeout(3000); // Let the supabase channel and revalidation propagate
 
-    const priceTextAfter = await samosaCard.locator('div[class*="text-ocean-600"]').textContent();
+    const priceTextAfter = await samosaCard.locator('div[class*="text-ocean-500"]').textContent();
     info(`Samosa price in UI after real-time update: ${priceTextAfter.trim()}`);
     await screenshot(studentPage, "22-student-menu-after-price-update");
 

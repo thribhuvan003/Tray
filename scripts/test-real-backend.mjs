@@ -117,7 +117,7 @@ async function main() {
   /* ── PHASE 0: Setup ────────────────────────────────────────────────────── */
   log("Setup — Reset passwords & ensure tenant is open");
 
-  const { data: { users }, error: listErr } = await supabase.auth.admin.listUsers();
+  const { data: { users }, error: listErr } = await supabase.auth.admin.listUsers({ perPage: 1000 });
   if (listErr) throw new Error(`Cannot list users: ${listErr.message}`);
 
   const studentUser = users.find((u) => u.email === STUDENT_EMAIL);

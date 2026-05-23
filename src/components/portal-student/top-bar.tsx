@@ -62,7 +62,7 @@ export function StudentTopBar({ tenant, siblings = [] }: Props) {
       className="sticky top-0 z-40 bg-[color:var(--color-paper)]/85 backdrop-blur-xl border-b border-[color:var(--color-line)]"
       style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
     >
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-6 h-14 flex items-center justify-between gap-3">
+      <div className="mx-auto max-w-7xl px-3 sm:px-6 lg:px-6 h-14 flex items-center justify-between gap-2 sm:gap-3">
         {/* Left: Tray logo → always goes to landing page */}
         <Link
           href="/"
@@ -97,14 +97,14 @@ export function StudentTopBar({ tenant, siblings = [] }: Props) {
               </div>
             </div>
           )}
-          <div className="text-[10px] font-mono tabular text-[color:var(--color-ink)]/40 flex items-center gap-1 mt-0.5">
+          <div className="text-[10px] font-mono tabular text-[color:var(--color-ink)]/40 flex items-center gap-1 mt-0.5 hidden sm:flex">
             <Clock size={9} />
             <span>{serviceLabel} · {t || "--:--"} IST</span>
           </div>
         </div>
 
         {/* Right: actions */}
-        <div className="flex items-center gap-1.5 flex-shrink-0">
+        <div className="flex items-center gap-1 sm:gap-1.5 flex-shrink-0">
           <ThemeToggle />
           <Link
             href={`/c/${tenant.slug}/orders`}

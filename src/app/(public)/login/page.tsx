@@ -21,14 +21,14 @@ export default async function LoginPage({
     >
       {/* Ambient blobs */}
       <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
-        <div className="absolute -left-40 -top-20 h-[30rem] w-[30rem] rounded-full blur-[6rem]"
+        <div className="absolute -left-[10vw] -top-[5vh] h-[45vw] w-[45vw] max-h-[30rem] max-w-[30rem] rounded-full blur-[6rem]"
           style={{ background: "rgba(90,79,207,0.13)" }} />
-        <div className="absolute -right-32 bottom-0 h-[28rem] w-[28rem] rounded-full blur-[6rem]"
+        <div className="absolute -right-[8vw] bottom-0 h-[40vw] w-[40vw] max-h-[28rem] max-w-[28rem] rounded-full blur-[6rem]"
           style={{ background: "rgba(63,114,93,0.10)" }} />
       </div>
 
       <div className="flex min-h-svh flex-col items-center justify-center px-5 py-12 sm:px-8">
-        <div className="w-full max-w-lg">
+        <div className="w-full max-w-[450px]">
           {/* Brand */}
           <Link href="/" className="mb-10 inline-flex items-center gap-2.5 group">
             <span

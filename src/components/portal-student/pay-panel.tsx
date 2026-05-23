@@ -133,7 +133,7 @@ export function PayPanel({
     });
 
   return (
-    <div className="mx-auto max-w-3xl px-4 sm:px-6 pt-6 pb-12">
+    <div className="mx-auto max-w-3xl px-4 sm:px-6 pt-6 pb-12 pb-[max(3rem,env(safe-area-inset-bottom))]">
       <Link
         href={`/c/${tenantSlug}/menu`}
         className="inline-flex items-center gap-1.5 text-[13px] text-[color:var(--color-ink)]/60 hover:text-ocean-500 mb-4"

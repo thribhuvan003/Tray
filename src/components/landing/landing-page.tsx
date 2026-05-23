@@ -281,7 +281,7 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
               <em style={{ fontStyle: "italic", color: "var(--tray-clay)" }}>in eleven minutes.</em>
             </h2>
             </RevealItem>
-            <div className="mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-5">
+            <div className="mt-8 sm:mt-14 grid gap-4 sm:gap-5 sm:grid-cols-2 lg:grid-cols-5">
               {([
                 ["01", "Choose canteen",  "Browse active canteens on your campus.",            "SELECTING"],
                 ["02", "Browse menu",     "Live availability, prep times, veg/non-veg.",       "CART"],
@@ -336,12 +336,11 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
                     key={num}
                     onMouseEnter={() => setHoveredStep(i)}
                     onMouseLeave={() => setHoveredStep(null)}
-                    className="flex flex-col gap-4 rounded-[1.75rem] p-9 sm:p-10 transition-all duration-300 ease-out hover:scale-[1.03] hover:-translate-y-1 hover:shadow-xl select-none cursor-pointer h-full"
+                    className="flex flex-col gap-3 sm:gap-4 rounded-[1.5rem] sm:rounded-[1.75rem] p-6 sm:p-9 lg:p-10 transition-all duration-300 ease-out hover:scale-[1.03] hover:-translate-y-1 hover:shadow-xl select-none cursor-pointer h-full"
                     style={{
                       background: cardBg,
                       color: cardText,
                       border: borderStyle,
-                      minHeight: "22rem",
                     }}
                   >
                     {/* Step number — Bebas Neue */}
@@ -419,7 +418,7 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
         <div className="px-5 py-12 sm:px-8 lg:px-10">
           <div className="mx-auto max-w-7xl">
             <div
-              className="flex flex-wrap items-center justify-center gap-6 rounded-[1.75rem] border px-8 py-6 sm:gap-10"
+              className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 rounded-[1.5rem] sm:rounded-[1.75rem] border px-4 sm:px-8 py-5 sm:py-6 sm:gap-10"
               style={{
                 border: "1px solid var(--tray-border)",
                 background: "rgba(255,255,255,0.38)",
@@ -524,7 +523,7 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
       </main>
 
       {/* ── FOOTER ────────────────────────────────────────────────────── */}
-      <footer className="relative overflow-hidden px-5 pb-8 pt-12 sm:px-8 lg:px-10">
+      <footer className="relative overflow-hidden px-4 pb-8 pt-10 sm:px-8 sm:pt-12 lg:px-10">
         {/* Ghost TRAY watermark — aligned to bottom bar height */}
         <div
           className="pointer-events-none absolute bottom-8 right-0 select-none tl-footer-mark"
@@ -558,7 +557,7 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
                 className="mt-5 max-w-sm uppercase"
                 style={{
                   fontFamily: "var(--font-krona-one), sans-serif",
-                  fontSize: "1.55rem",
+                  fontSize: "clamp(1.1rem, 2.5vw, 1.55rem)",
                   fontWeight: 900,
                   letterSpacing: "-0.03em",
                   lineHeight: 1.3,
@@ -635,7 +634,7 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
           </div>
 
           {/* Bottom bar */}
-          <div className="relative z-10 mt-16 flex flex-wrap items-center justify-between gap-4">
+          <div className="relative z-10 mt-10 sm:mt-16 flex flex-wrap items-center justify-between gap-4">
             <p
               className="text-[0.72rem] uppercase tracking-[0.2em] opacity-45"
               style={{ fontFamily: "var(--font-dm-mono)" }}

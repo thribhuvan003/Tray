@@ -175,7 +175,7 @@ export function TrackPanel({ tenantSlug, tenantName, order: initial, lines }: { 
   const isCollected = order.status === "collected";
 
   return (
-    <div className="mx-auto max-w-3xl px-4 sm:px-6 pt-6 pb-12">
+    <div className="mx-auto max-w-3xl px-4 sm:px-6 pt-6 pb-12 pb-[max(3rem,env(safe-area-inset-bottom))]">
       <div className="flex items-center gap-3 mb-4">
         <Link
           href={`/c/${tenantSlug}/menu`}
@@ -249,7 +249,7 @@ export function TrackPanel({ tenantSlug, tenantName, order: initial, lines }: { 
               Your pickup code · show at counter
             </div>
             <div
-              className="tabular leading-none text-[clamp(80px,16vw,140px)] tracking-[0.06em] cursor-pointer select-all"
+              className="tabular leading-none text-[clamp(60px,14vw,140px)] tracking-[0.06em] cursor-pointer select-all"
               style={{ fontFamily: "var(--font-bebas, Impact, sans-serif)" }}
               title="Tap to copy"
               onClick={() => navigator.clipboard.writeText(otp).catch(() => null)}

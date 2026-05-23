@@ -89,7 +89,7 @@ export function TrayHero() {
 
   return (
     <motion.section
-      className="relative isolate px-5 pb-12 pt-14 sm:px-8 sm:pt-20 lg:px-10 lg:min-h-screen lg:flex lg:flex-col lg:justify-center lg:py-24"
+      className="relative isolate px-4 pb-10 pt-10 sm:px-8 sm:pt-20 lg:px-10 lg:min-h-screen lg:flex lg:flex-col lg:justify-center lg:py-24"
       variants={staggerContainer}
       initial="hidden"
       animate="show"
@@ -100,7 +100,7 @@ export function TrayHero() {
         <div data-blob-b className="absolute -right-24 top-16 h-[32rem] w-[32rem] rounded-full will-change-transform" style={{ background: "rgba(42,110,58,0.12)", filter: "blur(6rem)" }} />
       </div>
 
-      <div className="relative mx-auto grid max-w-7xl gap-14 lg:grid-cols-[1.15fr_0.85fr] lg:items-start">
+      <div className="relative mx-auto grid max-w-7xl gap-12 lg:gap-14 grid-cols-1 lg:grid-cols-[1.15fr_0.85fr] lg:items-start">
         {/* Left: copy */}
         <div>
           {/* Eyebrow — first to animate in */}
@@ -151,7 +151,7 @@ export function TrayHero() {
 
           {/* Feature chips */}
           <motion.div variants={softFadeUp}>
-            <div className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="mt-8 grid grid-cols-1 gap-3 sm:gap-4 sm:grid-cols-2">
               {HERO_CHIPS.map((chip, index) => (
                 <motion.div
                   key={chip.title}
@@ -184,10 +184,10 @@ export function TrayHero() {
 
           {/* CTAs */}
           <motion.div variants={softFadeUp}>
-            <div className="mt-12 flex flex-wrap items-center gap-4">
+            <div className="mt-10 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-4">
               <LiquidButton
                 href="#portals"
-                className="!px-9 !py-4.5 !text-[1rem] !font-bold tracking-tight shadow-md hover:shadow-lg transition-shadow duration-300"
+                className="w-full sm:w-auto !px-9 !py-4 sm:!py-4.5 !text-[1rem] !font-bold tracking-tight shadow-md hover:shadow-lg transition-shadow duration-300 justify-center"
                 style={{ fontFamily: "var(--font-geist)" }}
               >
                 See how it works
@@ -196,7 +196,7 @@ export function TrayHero() {
                 data-magnetic
                 href="/get-started"
                 variant="secondary"
-                className="rounded-full border-2 border-[var(--tray-border)] px-9 py-4.5 text-[1rem] font-bold tracking-tight transition hover:bg-white/40 shadow-md hover:shadow-lg duration-300"
+                className="w-full sm:w-auto rounded-full border-2 border-[var(--tray-border)] px-9 py-4 sm:py-4.5 text-[1rem] font-bold tracking-tight transition hover:bg-white/40 shadow-md hover:shadow-lg duration-300 text-center"
                 style={{ fontFamily: "var(--font-geist)" } as React.CSSProperties}
               >
                 I have a canteen
@@ -206,7 +206,7 @@ export function TrayHero() {
 
           {/* Metrics strip */}
           <motion.div variants={softFadeUp} className="w-full">
-            <div className="mt-12 grid grid-cols-3 gap-6 lg:gap-10 border-t border-[var(--tray-border)] pt-8">
+            <div className="mt-10 grid grid-cols-3 gap-3 sm:gap-6 lg:gap-10 border-t border-[var(--tray-border)] pt-6 sm:pt-8">
               {METRICS.map((m) => (
                 <div key={m.label} className="flex flex-col gap-2">
                   <p
@@ -240,8 +240,8 @@ export function TrayHero() {
           </motion.div>
         </div>
 
-        {/* Right: live order journey visual */}
-        <motion.div variants={softFadeUp}>
+        {/* Right: live order journey visual — hidden below lg to save space on mobile/tablet */}
+        <motion.div variants={softFadeUp} className="hidden lg:block">
           <OrderJourneyVisual />
         </motion.div>
       </div>

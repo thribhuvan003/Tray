@@ -74,7 +74,7 @@ export function TrustSection() {
               }
             }
           }}
-          className="mt-12 grid gap-6 md:grid-cols-3"
+          className="mt-10 sm:mt-12 grid gap-5 sm:gap-6 sm:grid-cols-2 lg:grid-cols-3"
         >
           {trustItems.map((item, index) => (
             <motion.div
@@ -85,7 +85,7 @@ export function TrustSection() {
               }}
             >
               <HoverCard
-                className="flex h-full flex-col justify-between rounded-[2.25rem] border p-8 sm:p-9 transition-all"
+                className="flex h-full flex-col justify-between rounded-[1.75rem] sm:rounded-[2.25rem] border p-6 sm:p-8 lg:p-9 transition-all"
                 style={{
                   border: "1px solid var(--tray-border)",
                   background: "rgba(255,255,255,0.48)",

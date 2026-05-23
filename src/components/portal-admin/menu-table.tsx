@@ -57,7 +57,11 @@ export function MenuTable({ items, categories }: { items: Row[]; categories: { i
         ))}
       </div>
 
-      <div className="bg-graphite-700 border border-graphite-200/[0.08] rounded-xl overflow-hidden">
+      <div className="relative">
+        {/* Mobile scroll hint — right-edge gradient */}
+        <div className="sm:hidden absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-graphite-700 pointer-events-none z-10 rounded-r-xl" />
+        <div className="overflow-x-auto -mx-0 scrollbar-none">
+        <div className="bg-graphite-700 border border-graphite-200/[0.08] rounded-xl overflow-hidden min-w-[640px]">
         <table className="w-full text-[13px]">
           <thead>
             <tr className="text-[10px] font-mono uppercase tracking-wider text-graphite-400 border-b border-graphite-200/[0.08]">
@@ -169,6 +173,8 @@ export function MenuTable({ items, categories }: { items: Row[]; categories: { i
             )}
           </tbody>
         </table>
+      </div>
+      </div>
       </div>
     </>
   );

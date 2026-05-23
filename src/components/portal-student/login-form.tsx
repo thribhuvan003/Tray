@@ -192,7 +192,7 @@ export function LoginForm({ next, slug = "" }: { next: string; slug?: string }) 
             </form>
           </div>
         </div>
-        <p className="text-[12px] text-amber-600 bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30 rounded-lg p-3 mt-3">
+        <p className="text-[12px] text-[color:var(--color-ink)]/70 bg-[color:var(--color-paper-dim)] border border-[color:var(--color-line)] rounded-xl p-3.5 mt-3">
           If the email doesn&apos;t arrive in 60s, type the 6-digit code from the email above — or use Google sign-in.
         </p>
       </div>

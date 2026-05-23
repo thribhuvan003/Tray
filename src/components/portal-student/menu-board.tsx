@@ -115,7 +115,7 @@ export function MenuBoard({ categories, items, tenantId, tenantSlug, siblings = 
     <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:max-w-none pt-4 pb-10 lg:grid lg:grid-cols-[14rem,1fr] lg:gap-8 lg:items-start">
       
       {/* ── Desktop Category Sidebar (.cat-nav) ── */}
-      <nav className="hidden lg:block w-56 shrink-0 sticky top-24 self-start" aria-label="Categories">
+      <nav className="hidden lg:block w-56 shrink-0 sticky top-20 self-start" aria-label="Categories">
         <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[color:var(--color-ink)]/45 mb-3 px-3">
           Browse
         </p>
@@ -292,7 +292,7 @@ export function MenuBoard({ categories, items, tenantId, tenantSlug, siblings = 
         </div>
 
         {/* ── Mobile Category Pills (.cat-pills) ── */}
-        <div className="lg:hidden flex gap-2 overflow-x-auto pb-3 mb-5 scrollbar-none -mx-4 px-4 sticky top-14 bg-[color:var(--color-paper)]/95 backdrop-blur-md z-20 border-b border-[color:var(--color-line)] py-2.5">
+        <div className="lg:hidden flex gap-2 overflow-x-auto pb-3 mb-5 scrollbar-none -mx-4 px-4 sticky top-16 bg-[color:var(--color-paper)]/95 backdrop-blur-md z-20 border-b border-[color:var(--color-line)] py-2.5">
           <button
             onClick={() => setActiveCat("all")}
             className={cn(
@@ -390,7 +390,7 @@ export function MenuBoard({ categories, items, tenantId, tenantSlug, siblings = 
                       {list.length} item{list.length === 1 ? "" : "s"}
                     </span>
                   </div>
-                  <div className={cn("grid gap-3 grid-cols-2 md:grid-cols-2 lg:grid-cols-2")}>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-2 2xl:grid-cols-3 gap-3">
                     {list.map((it) => (
                       <MenuItemCard key={it.id} item={it} />
                     ))}
@@ -413,7 +413,7 @@ export function MenuBoard({ categories, items, tenantId, tenantSlug, siblings = 
                       </span>
                     </div>
                   )}
-                  <div className={cn("grid gap-3 grid-cols-2 md:grid-cols-2 lg:grid-cols-2")}>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-2 2xl:grid-cols-3 gap-3">
                     {uncategorised.map((it) => (
                       <MenuItemCard key={it.id} item={it} />
                     ))}

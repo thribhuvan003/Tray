@@ -86,6 +86,11 @@ Read AGENTS.md, docs/DEMO-SPEC.md, docs/PARALLEL-WORK.md. One file owner per lan
 
 ## Session log
 
+### 2026-05-23 — Next.js Font Override Bug Fix & Dev Server Restored
+
+**Work done:**
+- **Font Override Issue Fixed:** Replaced `Big_Shoulders` font initialization in `layout.tsx` with `Barlow_Condensed` to bypass the Next.js `next/font` local override compilation bug that was causing the dev server on port `3001` to crash. This successfully restores dev server stability on `localhost:3001`.
+
 ### 2026-05-23 — Today's Specials Horizontal Carousel Adaptation
 
 **Work done:**
@@ -1189,7 +1194,233 @@ pm run typecheck passes. Restart dev if port 3000 hangs: NODE_OPTIONS=--max-old-
   - Adapted Specials Carousel cards (`.special-card`) to include the `.special-card__top` header container, wrapping the title and standard rotating/scaling `diet-dot` indicator for consistent UX matching `.menu-card`.
 - **Verified**: Both TypeScript compiling (`pnpm typecheck` ✅), static verification routing checks (`pnpm demo:verify` ✅), and Playwright simulation E2E tests (`pnpm demo:verify:e2e` ✅) pass successfully.
 
+- Re-positioned the typography layout to match the black photo: Space Mono tags, numeric indicators, beautiful serif italic titles (`Fraunces`), and description paragraphs are now positioned directly **above** the live browser mockups.
+  - Set a premium slate-black canvas background (`bg-[#0E0E0D]`), rounded borders (`rounded-[2.5rem]`), thin borders (`border-white/10`), and a subtle internal monospace dot-grid overlay.
+- **MacBook / Laptop Viewport Integration (`PiranhaPortalsSection.tsx`)**:
+  - Replaced varied phone/tablet frames with a uniform, high-fidelity Laptop/Desktop Browser frame mockup across all three portals (Student, Kitchen, Admin).
+  - Designed the browser frame with round window controls (red, yellow, green close-dots) and an address bar containing the mock URL (`tray.app/student.html`, etc.).
+  - Configured a spacious canvas (`width: 200%`, `height: 200%`, `transform: scale(0.5)`) to display the **entire website interface, full navigation sidebar, and cart clearly** without any congestion.
+- **Accented Hover CTAs (`PiranhaPortalsSection.tsx`)**:
+  - Accented the "LAUNCH DEMO" button with each portal's dedicated color (blue, orange, green).
+  - Configured smooth, premium transition effects so the button becomes a **sleek charcoal-gray** on hover, matching your exact design requirements.
+- **Verified**: Running `npx tsc --noEmit` and `npm run demo:verify` both compile and pass perfectly with **0 errors**. Verified live rendering at `localhost:3000` is absolutely spectacular.
 
+---
 
+## 2026-05-23 — Session: Resolved "How It Works" Section Animation Loading Bug
 
+**What changed:**
+- **GSAP Animation Stability (`landing-motion.tsx`)**:
+  - Replaced brittle `gsap.from` calls for `#flow` cards (`flowCards`) and step numerals (`flowNums`) with robust, fail-safe `gsap.fromTo` animation sequences.
+  - Resolved the classic Next.js/React hydration double-trigger glitch where cards would occasionally render permanently invisible (`opacity: 0`) or misaligned on reload.
+  - Added `clearProps: "all"` inside GSAP's completion block, ensuring all inline style modifications, perspectives, and offsets are completely cleaned from the DOM once the trigger plays.
+  - This guarantees that cards restore clean native CSS properties, allowing tailwind styles, viewport scaling, and default hover effects (`hover:scale-[1.03]`, hover-shadows) to operate with perfect fluid responsiveness without any lingering GSAP interference.
+- **Verified**: Compiles seamlessly on typescript checks with 0 errors. Verified in live viewports.
+
+---
+
+  - Configured custom accented Launch buttons (blue, orange, green) that transition smoothly to matte charcoal (`hover:!bg-zinc-800`) on hover.
+- **Transaction Sync Flow Connectors (`PiranhaPortalsSection.tsx`)**:
+  - Added vertical gradient lines with pulsing order sync badges (`LIVE ORDER SYNC` and `DASHBOARD SYNC`) between the row cards to represent the transactional pipeline of the system.
+- **Footer Branding & Watermark Polish (`landing-page.tsx`)**:
+  - Completely removed the redundant `0% Tray commission` metric from the footer's branding column as requested, and updated the metrics grid to span exactly 2 columns (`grid-cols-2`).
+  - Added a detailed descriptive text block directly under the tagline "for colleges." explaining Tray's high-fidelity cashless value proposition.
+  - Refined the ghost `TRAY` watermark at the bottom right of the page: adjusted letter spacing to `-0.04em`, expanded its size to `clamp(16rem, 26vw, 28rem)` for a grand look, and decreased its opacity to `0.038` to blend perfectly with the background layout.
+- **Verified**: Running `npx tsc --noEmit` and `pnpm demo:verify` both pass successfully with **0 errors**. Tested live at `localhost:3000` with Chromium DevTools, confirming that the layout is responsive and looks breathtaking!
+
+---
+
+## 2026-05-23 — Session: Removed Footer Metrics, Tagline Description Restored & Watermark Scaled Down
+
+**What changed:**
+- **Footer Cleanups (`landing-page.tsx`)**:
+  - Removed the `12 min saved per lunch` and `240ms realtime sync` metrics completely from the footer Brand column.
+  - Restored the clear description tagline directly under the Krona One tagline: *"A campus canteen ordering system. Multi-tenant, source-available, built for India's college campuses."*
+  - **Decreased TRAY watermark size**: Scaled the giant background TRAY watermark down from the massive `clamp(16rem, 26vw, 28rem)` to a much more elegant, subtle size `clamp(8rem, 12vw, 12rem)`.
+- **Verified**: Confirmed zero compilation errors via `pnpm typecheck`. Verified live rendering.
+
+---
+
+## 2026-05-23 — Session: Widescreen Linear Portals Redesign & Cropping
+
+**What changed:**
+- **Linear Horizontal Cards Stack (`PiranhaPortalsSection.tsx`)**:
+  - Restructured the three showcase cards (Student, Kitchen, Admin) into a side-by-side linear horizontal row on desktop (`flex flex-col lg:flex-row items-stretch gap-6 w-full lg:max-w-[33%]`). On mobile/tablet, they collapse into a single vertical column for 100% responsive compatibility.
+  - Reordered each card vertically: descriptive copy, roles, and serif italic headings sit **above** the mockups, while role badges and "LAUNCH DEMO" CTA buttons sit **below** the mockups.
+- **Mockup Header & Iframe Cropping (`PiranhaPortalsSection.tsx`)**:
+  - Removed the three window control dots from mockup headers for a clean, minimalist address bar.
+  - Configured mock browser viewports with compact aspect ratios (`aspect-[4/3]`) and set inner iframe layouts to `width: 160%` scaled down by `scale(0.625)`. This successfully crops the rightmost 60% of the canvas out-of-bounds, completely hiding the student app cart drawer and focus-centering the menus.
+- **System Flow Indicators (`PiranhaPortalsSection.tsx`)**:
+  - Restructured connectors between cards to render as responsive solid pipelines with floating status badges, adapting smoothly from mobile (vertical) to desktop (horizontal side-by-side).
+- **Verified**: Confirmed Next.js type safety via `npx tsc --noEmit` and static demo routing via `pnpm demo:verify` both pass with **0 errors**. Verified live rendering at `localhost:3000` is flawless!
+
+---
+
+## 2026-05-23 — Session: Footer Redesign — Tagline Polish, Watermark Scale & Bottom Bar Alignment
+
+**What changed:**
+- **Footer Brand Column (`landing-page.tsx`)**:
+  - Removed the `"A campus canteen ordering system..."` tagline paragraph entirely, making the brand column exceptionally clean.
+- **Watermark Sizing & Baseline Alignment (`landing-page.tsx`)**:
+  - Scaled the background ghost `TRAY` watermark up to a bold, premium `clamp(9rem, 13vw, 13rem)` as requested.
+  - Positioned the watermark absolute container at `bottom-8` to align its baseline exactly with the vertical height of the bottom bar text (`Made for India's college campuses`).
+- **Bottom Bar Polishing (`landing-page.tsx`)**:
+  - Removed the horizontal border line (`border-t border-[var(--tray-border)]`) from the bottom bar.
+  - Removed the `v3.0 · 2026` version metadata from the bottom right as requested, leaving the clean tracking-wide `Made for India's college campuses` text in uppercase monospace `DM Mono` as the sole elegant footer bottom mark.
+- **Verified**: Running `pnpm typecheck` compiles completely clean with **0 errors**. Verified the visual layout in Chromium DevTools via live scrolling and screenshots.
+
+---
+
+## 2026-05-23 — Session: Frameless Live Showcase Cards & Widescreen Scaling
+
+**What changed:**
+- **Showcase Cards Layout (`PiranhaPortalsSection.tsx`)**:
+  - Reorganized card content to place the live website preview (`site-preview`) at the top, grouping heading and description below it (`site-meta`), followed by a clean right-aligned `LAUNCH DEMO →` link on a divider line.
+  - Set a fixed height of `220px` on the website preview containers, keeping the thumbnails perfectly aligned horizontally across all columns.
+  - Completely removed top labels (`STUDENT APP`, `KITCHEN VIEW`, `ADMIN CONSOLE`), index dots, and bottom device badges (`MOBILE • STUDENT`, etc.), making the cards extremely clean and matching Godly/Lapa Ninja showcase style.
+  - Maintained cream background blending into the landing page color.
+- **Dynamic Scale Custom Property (`PiranhaPortalsSection.tsx`)**:
+  - Implemented the CSS custom property `--scale` approach where the iframe's size is set to `calc(100% / var(--scale))` and scaled down by `scale(var(--scale))` using `origin-top-left`.
+  - Tuned the zoom levels per card (Student: 0.35, Kitchen: 0.4, Admin: 0.33) to render the websites in beautiful, readable desktop/tablet viewports.
+- **Responsive Iframe Enhancements (`student.html`, `kitchen.html`, `admin.html`)**:
+  - Added `overflow: hidden !important` to `body.in-iframe` in all three demo files to completely hide scrollbars and ensure a clean "live screenshot" presentation.
+  - Redesigned the student portal's `body.in-iframe` stylesheet: hid the search bar and section headers to save vertical space, laid out the canteen selection segments horizontally, and configured the menu items in a clean, space-saving 2-column grid.
+  - Removed forced mobile layout overrides from `admin.html` inside the iframe view so that the dashboard naturally displays in its full widescreen desktop layout.
+- **Verified**: Verified absolute type-safety (`pnpm typecheck` ✅) and static routing/link integrity (`pnpm run demo:verify` ✅) with zero errors. Live rendering verified via DevTools viewport screenshots.
+
+---
+
+## 2026-05-23 — Session: Dynamic Scroll Snapping & Watermark Baseline Alignment
+
+**What changed:**
+- **Dynamic Scroll Snapping (`landing-motion.tsx`)**:
+  - Removed the clunky desktop-only sticky section pinning/stacking overlays (`pinSpacing: false` on sections in normal flow) which caused overlapping text and layout clashes.
+  - Implemented a clean, ScrollTrigger-based scroll snapping mechanism. When a user scrolls and stops on desktop, it calculates the closest panel's `offsetTop` and smooth-scrolls the viewport to align it perfectly at the top, creating a premium full-screen snap transition.
+- **Full-Screen Desktop Sections (`TrayHero.tsx`, `PiranhaPortalsSection.tsx`, `TrustSection.tsx`, `CampusModelSection.tsx`, `landing-line-leave.tsx`, `landing-page.tsx`)**:
+  - Updated all major page sections on desktop to have the Tailwind classes `lg:min-h-screen lg:flex lg:flex-col lg:justify-center lg:py-0`, centering content vertically and making each section exactly 100vh tall to support perfect snapping.
+- **Footer Watermark & Baseline Alignment (`landing-page.tsx`, `landing-motion.tsx`)**:
+  - Positioned the ghost TRAY watermark container at `bottom-8` and added the class `tl-footer-mark` to align its baseline with the bottom bar text `Made for India's college campuses`.
+  - Updated the GSAP watermark parallax script to target the semantic `.tl-footer-mark` class, fixing the broken Tailwind class match query and ensuring the scroll-driven parallax movement behaves smoothly.
+- **Verified**: Compiles perfectly clean (`pnpm typecheck` ✅) and static verification checks pass with zero warnings (`pnpm demo:verify` ✅).
+
+---
+
+## 2026-05-23 — Session: Full Website Scaled Previews & Exact Mockup Card Styling
+
+**What changed:**
+- **Exact Card Mockup Styling (`PiranhaPortalsSection.tsx`)**:
+  - Redesigned card headers to match the user's photo exactly: added eyebrow labels (`STUDENT`, `KITCHEN`, `ADMIN` in uppercase sans) and status colored dots (blue, orange, green).
+  - Swapped headings to bold sans-serif titles (`Student`, `Kitchen staff`, `Canteen admin`).
+  - Added floating device badges (`STUDENT APP • MOBILE`, etc.) inside the top-left of each website preview container.
+  - Updated card descriptions to match the exact copy from the user's mockup.
+  - Center-aligned the monospaced `DEMO LOGIN · SHARED CREDENTIALS` uppercase line above the buttons for kitchen and admin.
+  - Replaced the outline links with solid, dark full-width pill buttons (e.g. `Open student demo`, `Sign in as kitchen staff`, `Sign in as admin`) with arrow icons (`→`) on the right.
+- **Showcase Cards Layout (`PiranhaPortalsSection.tsx`)**:
+  - Set the aspect ratio of the website preview container to `aspect-[4/3]`, which naturally keeps thumbnails aligned horizontally while increasing the height to ~285px to display more content.
+  - Adjusted the scale factors: Student: `0.9` (renders at `390px-420px` width, forcing the mobile responsive view), Kitchen: `0.45` (tablet widescreen), Admin: `0.38` (desktop widescreen).
+  - Deleted a duplicate website preview container block from the file.
+- **Static Demo Page CSS Refinements (`student.html`, `kitchen.html`, `admin.html`)**:
+  - Refactored `in-iframe` overrides to stop hiding headers, navigation menus, and sidebars, restoring the full website interfaces inside the cards.
+  - Keep the `.demo-stripe` instructions banner and browser scrollbars hidden inside the iframes.
+- **Verified**: Verified absolute typecheck (`pnpm typecheck` ✅) and static verification checks (`pnpm demo:verify` ✅) with zero errors. Visual layout verified using browser screenshots.
+
+---
+
+## 2026-05-23 — Session: Trust Section Card Redesign & Desktop Padding Normalization
+
+**What changed:**
+- **Trust Section Cards Redesign (`TrustSection.tsx`)**:
+  - Completely redesigned the cards inside the TrustSection to match the premium, structured typography and layout language of the Portals cards.
+  - Increased card padding from `p-6` to `p-8 sm:p-9` for a spacious, high-end editorial gallery card layout.
+  - Placed the card tag (e.g. `Direct to Bank`) as a bold uppercase eyebrow label (`font-code text-[0.68rem] font-bold uppercase tracking-[0.18em]`) directly below the icon container.
+  - Styled the card titles using the bold Barlow font (`font-barlow font-extrabold text-[1.45rem]`) with leading-snug alignment.
+  - Kept the descriptions in `font-geist text-[0.88rem] leading-[1.65]` with `opacity-75`.
+- **Desktop Padding Normalization (All Full-Screen Sections)**:
+  - Replaced the tight `lg:py-0` padding override with comfortable vertical padding `lg:py-24` on all full-screen snapping sections: [Hero](file:///c:/Users/ntena/Downloads/yyyy/src/components/landing/sections/TrayHero.tsx), [Portals](file:///c:/Users/ntena/Downloads/yyyy/src/components/landing/sections/PiranhaPortalsSection.tsx), [Trust](file:///c:/Users/ntena/Downloads/yyyy/src/components/landing/sections/TrustSection.tsx), [Campus Model](file:///c:/Users/ntena/Downloads/yyyy/src/components/landing/sections/CampusModelSection.tsx), [Adaptivity](file:///c:/Users/ntena/Downloads/yyyy/src/components/landing/landing-line-leave.tsx), and all custom sections inside [landing-page.tsx](file:///c:/Users/ntena/Downloads/yyyy/src/components/landing/landing-page.tsx). This guarantees that snapped full-screen panels never feel cramped or squished against the browser edges.
+- **Verified**: Typecheck compiled cleanly with zero errors (`pnpm typecheck` ✅) and static routing checks pass successfully (`pnpm demo:verify` ✅).
+
+---
+
+## 2026-05-23 — Session: Removed Watermark Parallax Displacement
+
+**What changed:**
+- **Watermark Static Alignment (`landing-motion.tsx`)**:
+  - Removed the GSAP `y: -70` parallax translation on the footer ghost watermark `.tl-footer-mark`. This keeps it stably positioned at `bottom-8` (matching the horizontal baseline level of `Made for India's college campuses`) instead of floating up and drifting away on scroll.
+- **Verified**: Typecheck compiles successfully (`pnpm typecheck` ✅) and static routing tests pass (`pnpm demo:verify` ✅).
+
+---
+
+## 2026-05-23 — Session: Removed Space in Hero Section Metric
+
+**What changed:**
+- **Hero Metric Spacer Clean (`TrayHero.tsx`)**:
+  - Removed the space in the `12 min` metric suffix (changing it from `" min"` to `"min"`). This aligns it with `240ms` and `0%` so there is no space between the numbers and their units, ensuring a consistent, compact presentation.
+- **Verified**: Typecheck compiles successfully (`pnpm typecheck` ✅) and static routing tests pass (`pnpm demo:verify` ✅).
+
+---
+
+## 2026-05-23 — Session: Redesigned Portals Showcase Layout & Static Iframe Simulations
+
+**What changed:**
+- **Showcase Layout Redesign (`zzz/index.html`)**:
+  - Implemented the original three-column grid layout from the photos with 100% bright, legible iframe previews (linear shading overlays removed).
+  - Styled the section heading in cream-colored uppercase bold condensed Barlow 900: `THREE PORTALS, ONE SOURCE OF TRUTH.`
+  - Styled the card titles using elegant serif italics (`Order from any canteen.`, `Run the live queue.`, `See the whole operation.`).
+  - Added header rows containing monospaced eyebrows (e.g. `STUDENT APP`) and accent-colored dots with index numbers (e.g. `• 01`).
+  - Standardized card backgrounds to `#161108` with a thin border `1px solid rgba(245,239,228,0.08)`.
+  - Added a subtle low-opacity background grid overlay to `#system` section.
+  - Placed device labels (e.g. `MOBILE • STUDENT`) and action links (`LAUNCH DEMO →`) in a hairline-separated footer row.
+  - Implemented responsive iframe auto-scaling JS block to scale previews dynamically based on column widths (450px virtual width for student, 1440px for kitchen/admin).
+- **Automated Client-Side Iframe Simulations (`student.html`, `kitchen.html`, `admin.html`)**:
+  - Added script detection for iframe rendering (`window.self !== window.top`).
+  - **Student App**: Auto-cycles through browsing menu, adding items (toasts), checking cart, paying with UPI (QR scanner), completing payment, showing OTP codes, and order tracking timeline updates before resetting.
+  - **Kitchen View**: Fast-forwards the simulated order progression (incoming → preparing → ready → collected) and automatically triggers walk-in orders.
+  - **Admin Dashboard**: Dynamically counts up KPIs: ticks Revenue (adding ₹120-240 per transaction) and Orders (+1), appends live event rows in the activity log feed, and inserts new records in the recent orders table.
+- **Verified**: Static check validation suite passes cleanly (`pnpm demo:verify` ✅). Visual layouts and autoplay logic verified via browser devtools screenshots.
+
+---
+
+## 2026-05-23 — Session: Fixed Student Demo Autoplay Leak & Added Specials Diet Indicator
+
+**What changed:**
+- **Student App Simulation Fix (`public/demo/student.html`)**:
+  - Overhauled the client-side simulation script inside `window.self !== window.top` check.
+  - Implemented sequential chained timeouts and tracking interval cleanup. All timer references are stored in an array and cleared on `resetAll()`, preventing the overlapping loop storm that was causing the student demo portal to hang in the showcase iframe.
+  - Adapted Specials Carousel cards (`.special-card`) to include the `.special-card__top` header container, wrapping the title and standard rotating/scaling `diet-dot` indicator for consistent UX matching `.menu-card`.
+- **Verified**: Both TypeScript compiling (`pnpm typecheck` ✅), static verification routing checks (`pnpm demo:verify` ✅), and Playwright simulation E2E tests (`pnpm demo:verify:e2e` ✅) pass successfully.
+
+### 2026-05-23 — Tester Report Verification & Code Audit
+
+- **Completed**: Conducted a thorough codebase and database audit to verify the setup issues and login errors reported by the tester.
+- **Details**:
+  - **Wizard Limitation**: Confirmed `createInstitution` server action always inserts new colleges, preventing users from adding multiple canteens to one college in the wizard.
+  - **Login Form Redirects Interception**: Verified the login form intercepts non-test email sign-ins (outside `@harvard.edu`, `@aec.edu.in`, `@traytest.dev`, or not containing `test`/`demo`) and hard-redirects to static mockups, locking real admins out of Supabase authentication.
+  - **Misleading 404 Pages**: Noticed the 404 `NotFound` page renders an order receipt titled "Order not found.", leading testers to believe it is a broken backend order flow instead of a 404.
+  - **Orphaned College-Admin Portal**: Found the `/college-admin` route is completely unlinked and lacks the ability to add new canteens.
+- **Retina-Grade Desktop Scaling:** Implemented dynamic 1440px virtual viewport scaling for all three portal card iframes (including Student) inside `PiranhaPortalsSection.tsx` using a React `useEffect` hook and parent ref observers, matching the exact sizing ratios and layout of `zzz (Remix)/index.html`.
+- **Report**: Created a detailed findings report as a markdown artifact under `canteen_testing_report.md`.
+
+---
+
+### 2026-05-23 — Redesigned Student Portal Showcase to Responsive 3-Column Desktop View (Variant A)
+
+**Work done:**
+- **Selected Variant A (Clean Minimal - Warm Cream theme):** Overhauled the mobile student app mockup into a responsive 3-column desktop layout (Left navigation + Middle menu grid + Right cart sidebar).
+- **Default Student Demo Integration:** Copied the selected Variant A template to the default `public/demo/student.html` portal.
+- **Portals Section Update:** Updated the landing page's showcase metadata (`PiranhaPortalsSection.tsx`) to render the student preview as a desktop web layout instead of a mobile screen, aligning the `deviceTag` to `"DESKTOP • STUDENT"`.
+- **Typo Fixes & Verification:** Defined the missing query selector array helper `$$` at the top of the script IIFE across all variant HTML templates to fix element event binding crashes, and repaired the specials list `data-id` concatenation typo (`data-id="+it.id+"` -> `data-id="'+it.id+'"`). Checked in browser via Chrome DevTools.
+- **Verified**: The responsive 3-column layout is fully functional. Confirmed no visual leakage or overflow in the iframe container. Verified all `pnpm` check commands pass cleanly with **0 errors**.
+
+---
+
+### 2026-05-23 — Mobile Responsiveness Pass (5 files)
+
+**Work done:**
+- **`src/app/(student)/orders/page.tsx`**: Added `min-w-0` to left card flex-child, `shrink-0 min-w-0` on icon + text wrappers, `truncate` on short_code and date strings so price/status badge never gets squeezed off-screen on narrow phones.
+- **`src/components/portal-kitchen/kitchen-shell.tsx`**: (a) Reduced main content horizontal padding from `px-6` to `px-4 sm:px-6` at mobile; (b) Added `truncate block` to the long eyebrow string (`dateLine · tenantName · serviceLabel`) so it clips instead of wrapping/overflowing on small viewports.
+- **`src/app/(student)/menu/page.tsx`**: Page delegates entirely to `MenuBoard` and `ClosedBanner` — no wrapper div or fixed widths in this file; already responsive, no changes needed.
+- **`src/components/portal-admin/dashboard-view.tsx`**: KPI grid already `grid-cols-2 lg:grid-cols-4`; chart grids already `grid lg:grid-cols-*` (single-column on mobile by default). Already responsive, no changes needed.
+- **`src/app/(admin)/admin/orders/page.tsx`**: Wrapped table container in `overflow-x-auto rounded-xl border` outer div + added `min-w-[640px]` to inner table div so the 6-column table scrolls horizontally on mobile instead of wrapping/overflowing.
+
+**Active tracks:** Responsiveness pass complete. No data/RLS/payment code touched.
 

@@ -719,7 +719,7 @@ export function KitchenBoard({
         <KitchenMarquee items={marqueeItems} />
 
         {/* Main board area */}
-        <main style={{ padding: "24px 24px 64px" }}>
+        <main style={{ padding: "16px 16px 64px" }} className="sm:p-6 sm:pb-16 pb-[calc(4rem+env(safe-area-inset-bottom))]">
           <PrepTotalsStrip orders={orders} lines={lines} onSessionExpired={() => setSessionExpired(true)} />
 
           {/* 4-column queue board — matches .queue-board + .queue-cols */}

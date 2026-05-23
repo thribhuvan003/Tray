@@ -17,7 +17,7 @@ const portals = [
     description:
       "Choose canteen, browse menu, pay by UPI, track your order live, collect with a 4-digit OTP.",
     previewSrc: "/demo/student.html",
-    deviceTag: "MOBILE • STUDENT",
+    deviceTag: "DESKTOP • STUDENT",
     portalKey: "student" as const,
   },
   {
@@ -46,6 +46,37 @@ const portals = [
 
 export function PiranhaPortalsSection() {
   const rootRef = useRef<HTMLElement>(null);
+  const portalRefs = useRef<(HTMLDivElement | null)[]>([]);
+
+  React.useEffect(() => {
+    function resizeIframes() {
+      portalRefs.current.forEach((frame) => {
+        if (!frame) return;
+        const iframe = frame.querySelector("iframe");
+        if (!iframe) return;
+        const parentWidth = frame.clientWidth;
+        const parentHeight = frame.clientHeight;
+        if (parentWidth === 0) return;
+
+        const virtualWidth = 1440;
+        const virtualHeight = parentHeight * (virtualWidth / parentWidth);
+        iframe.style.width = `${virtualWidth}px`;
+        iframe.style.height = `${virtualHeight}px`;
+        const scale = parentWidth / virtualWidth;
+        iframe.style.transform = `scale(${scale})`;
+        iframe.style.transformOrigin = "0 0";
+      });
+    }
+
+    resizeIframes();
+    window.addEventListener("resize", resizeIframes);
+    const interval = setInterval(resizeIframes, 1000);
+
+    return () => {
+      window.removeEventListener("resize", resizeIframes);
+      clearInterval(interval);
+    };
+  }, []);
 
   useGSAP(
     () => {
@@ -149,7 +180,7 @@ export function PiranhaPortalsSection() {
           className="grid grid-cols-1 lg:grid-cols-3 gap-[18px] mt-14 w-full"
           style={{ perspective: "1200px" }}
         >
-          {portals.map((portal) => (
+          {portals.map((portal, idx) => (
             <article
               key={portal.index}
               data-portal-card
@@ -177,7 +208,7 @@ export function PiranhaPortalsSection() {
                   </span>
                 </div>
                 <h3
-                  className="text-[32px] tracking-[-0.025em] leading-[1.08] m-0 font-normal italic"
+                  className="text-[clamp(1.35rem,3vw,2rem)] tracking-[-0.025em] leading-[1.08] m-0 font-normal italic"
                   style={{
                     fontFamily: "var(--font-instrument-serif, 'Instrument Serif', serif)",
                     color: "var(--ink, #f5efe4)",
@@ -189,9 +220,11 @@ export function PiranhaPortalsSection() {
 
               {/* Portal Frame — iframe preview */}
               <div
-                className="relative overflow-hidden"
+                ref={(el) => {
+                  portalRefs.current[idx] = el;
+                }}
+                className="relative overflow-hidden h-[260px] sm:h-[320px] md:h-[400px]"
                 style={{
-                  height: "400px",
                   background: "var(--bg-3, #1f1810)",
                   borderBottom: "1px solid rgba(245,239,228,0.08)",
                 }}
@@ -204,16 +237,7 @@ export function PiranhaPortalsSection() {
                   scrolling="no"
                   tabIndex={-1}
                   aria-hidden="true"
-                  className="border-0 origin-top-left pointer-events-none"
-                  style={{
-                    position: "absolute",
-                    top: 0,
-                    left: 0,
-                    width: "200%",
-                    height: "200%",
-                    transform: "scale(0.5)",
-                    transformOrigin: "0 0",
-                  }}
+                  className="border-0 origin-top-left pointer-events-none absolute top-0 left-0"
                 />
               </div>
 
