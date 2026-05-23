@@ -46,6 +46,15 @@ Read AGENTS.md, docs/DEMO-SPEC.md, docs/PARALLEL-WORK.md. One file owner per lan
 
 ## Session log
 
+### 2026-05-23 — Monumental Preloader Upgrades & GSAP Synchronization
+
+**Work done:**
+- Replaced the loading page text with colossal, bold "TRAY" (rendered in Bebas Neue for monumental Druk/Thunder-style typography) and a right-aligned elegant tagline "campus edition" in Instrument Serif (Berfal Italic style).
+- Configured a 3.4-second display timer for the preloader.
+- Implemented a custom event listener (`tray-intro-start`) to coordinate the preloader's curtain split exit animation with the landing page GSAP and Lenis scroll triggers, ensuring zero animation lag or cutoff.
+- Added pointer events suppression (`pointer-events-none`) during the preloader curtain slide-out so that the landing page is interactive as it is being revealed.
+- Verified TypeScript compilation (`pnpm typecheck` ✅) and static demo verified successfully (`pnpm demo:verify` ✅).
+
 ### 2026-05-23 — React NotFoundError Fix, Preloader Upgrades, Bento Portals Grid, & Ticker Scroll Restoration
 
 **Work done:**

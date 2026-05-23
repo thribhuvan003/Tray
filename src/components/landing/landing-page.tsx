@@ -256,12 +256,15 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
         {/* ── PHONE TO PLATE (5 steps) — Fraunces numbers, Jakarta titles ── */}
         <SectionReveal id="flow" as="div" className="px-5 py-24 sm:px-8 lg:px-10">
           <div className="mx-auto max-w-7xl">
+            <RevealItem variant="soft">
             <div className="mb-4 flex flex-wrap items-center gap-3">
               <p
                 className="text-xs uppercase tracking-[0.3em]"
                 style={{ fontFamily: "var(--font-dm-mono)", color: "var(--tray-muted)" }}
               >04 / How it works</p>
             </div>
+            </RevealItem>
+            <RevealItem variant="fade">
             {/* Newsreader for editorial section heads */}
             <h2
               className="leading-[0.88] tracking-[-0.04em]"
@@ -270,6 +273,7 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
               Phone to plate,<br />
               <em style={{ fontStyle: "italic", color: "var(--tray-clay)" }}>in eleven minutes.</em>
             </h2>
+            </RevealItem>
             <div className="mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-5">
               {([
                 ["01", "Choose canteen",  "Browse active canteens on your campus.",            "SELECTING"],
@@ -288,7 +292,8 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
                 const descOpacity = isInverted ? "0.8" : "0.6";
 
                 return (
-                  <div key={num} className="flex flex-col gap-4 rounded-[1.75rem] p-7 sm:p-8 transition-all duration-300 ease-out hover:scale-[1.03] hover:-translate-y-1 hover:shadow-xl select-none cursor-pointer"
+                  <RevealItem key={num} variant="card">
+                  <div className="flex flex-col gap-4 rounded-[1.75rem] p-7 sm:p-8 transition-all duration-300 ease-out hover:scale-[1.03] hover:-translate-y-1 hover:shadow-xl select-none cursor-pointer h-full"
                     style={{
                       background: cardBg,
                       color: cardText,
@@ -314,6 +319,7 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
                       style={{ fontFamily: "var(--font-dm-mono)", color: tagColor, background: tagBg, border: `1px solid ${tagBorder}` }}
                     >{tag}</span>
                   </div>
+                  </RevealItem>
                 );
               })}
             </div>
