@@ -96,7 +96,7 @@ export function CampusTicker() {
   return (
     <section
       ref={rootRef}
-      className="overflow-hidden py-5"
+      className="overflow-hidden py-5 tl-ticker"
       style={{ borderTop: "1px solid var(--tray-border)", borderBottom: "1px solid var(--tray-border)" }}
     >
       <TickerRow items={row1} fontStyle="druk" />
@@ -108,7 +108,7 @@ export function CampusTicker() {
 function TickerRow({ items, reverse, fontStyle = "mono" }: { items: string[]; reverse?: boolean; fontStyle?: "druk" | "mono" }) {
   const content = [...items, ...items];
   return (
-    <div className="tray-no-scrollbar overflow-hidden py-2">
+    <div data-ticker-wrapper className="tray-no-scrollbar overflow-hidden py-2">
       <div
         data-ticker-track
         className={`flex w-max gap-8 whitespace-nowrap items-center ${reverse ? "animate-marquee-reverse" : "animate-marquee"}`}

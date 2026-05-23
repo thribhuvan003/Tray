@@ -82,7 +82,6 @@ export function TrayHero() {
       const cleanups = Array.from(buttons).map((btn) => magneticButton(btn as HTMLElement));
       return () => {
         cleanups.forEach((c) => c());
-        ScrollTrigger.getAll().forEach((t) => t.kill());
       };
     },
     { scope: blobRef }

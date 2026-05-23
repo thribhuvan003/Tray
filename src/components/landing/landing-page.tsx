@@ -22,11 +22,11 @@ import {
 // ── Brand wordmark ────────────────────────────────────────────────────────────
 function BrandMark() {
   return (
-    <Link href="/" className="flex items-center gap-2 group" aria-label="Tray home">
-      <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-[var(--tray-ink)] font-editorial text-[13px] font-black text-[var(--tray-cream)] transition group-hover:scale-105">
+    <Link href="/" className="flex items-center gap-2.5 group" aria-label="Tray home">
+      <span className="flex h-9 w-9 items-center justify-center rounded-[0.6rem] bg-[var(--tray-ink)] font-editorial text-[15px] font-black text-[var(--tray-cream)] transition group-hover:scale-105">
         T
       </span>
-      <span className="font-editorial text-xl font-black tracking-[-0.06em]">
+      <span className="font-editorial text-[1.4rem] font-black tracking-[-0.05em] leading-none">
         Tray
       </span>
     </Link>
@@ -270,36 +270,52 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
               Phone to plate,<br />
               <em style={{ fontStyle: "italic", color: "var(--tray-clay)" }}>in eleven minutes.</em>
             </h2>
-            <div className="mt-12 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+            <div className="mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-5">
               {([
                 ["01", "Choose canteen",  "Browse active canteens on your campus.",            "SELECTING"],
                 ["02", "Browse menu",     "Live availability, prep times, veg/non-veg.",       "CART"],
                 ["03", "Pay by UPI",      "Single-use QR. Webhook confirms in seconds.",       "PAID"],
                 ["04", "Track live",      "Queued → preparing → ready in ~250 ms.",            "PREPARING"],
                 ["05", "Collect w/ OTP",  "Four-digit code at counter. Staff marks complete.", "READY"],
-              ] as const).map(([num, title, desc, tag]) => (
-                <div key={num} className="flex flex-col gap-3 rounded-[1.5rem] border p-5 transition-all duration-300 ease-out hover:scale-[1.03] hover:-translate-y-1 hover:shadow-xl select-none cursor-pointer"
-                  style={{ border: "1px solid var(--tray-border)", background: "rgba(255,255,255,0.52)" }}>
-                  {/* Newsreader for step numbers */}
-                  <span
-                    className="leading-none tracking-[-0.04em]"
-                    style={{ fontFamily: "var(--font-newsreader)", fontWeight: 600, fontSize: "3rem", color: "var(--tray-clay)" }}
-                  >{num}</span>
-                  {/* Newsreader for step titles */}
-                  <h3
-                    className="text-[1.05rem] tracking-tight"
-                    style={{ fontFamily: "var(--font-newsreader)", fontWeight: 600 }}
-                  >{title}</h3>
-                  <p
-                    className="flex-1 text-[0.88rem] leading-6 opacity-65"
-                    style={{ fontFamily: "var(--font-geist)" }}
-                  >{desc}</p>
-                  <span
-                    className="mt-auto self-start rounded-full border px-3 py-1 text-[0.72rem] uppercase tracking-[0.16em]"
-                    style={{ fontFamily: "var(--font-dm-mono)", color: "var(--tray-muted)", border: "1px solid var(--tray-border)" }}
-                  >{tag}</span>
-                </div>
-              ))}
+              ] as const).map(([num, title, desc, tag], i) => {
+                const isInverted = i % 2 === 1;
+                const cardBg = isInverted ? "var(--tray-clay, #B8531A)" : "rgba(255,255,255,0.65)";
+                const cardText = isInverted ? "#FAF8F5" : "var(--tray-ink, #1A1619)";
+                const numColor = isInverted ? "rgba(250,248,245,0.3)" : "var(--tray-clay, #B8531A)";
+                const tagBg = isInverted ? "rgba(250,248,245,0.15)" : "rgba(26,22,25,0.05)";
+                const tagBorder = isInverted ? "rgba(250,248,245,0.2)" : "var(--tray-border)";
+                const tagColor = isInverted ? "rgba(250,248,245,0.7)" : "var(--tray-muted)";
+                const descOpacity = isInverted ? "0.8" : "0.6";
+
+                return (
+                  <div key={num} className="flex flex-col gap-4 rounded-[1.75rem] p-7 sm:p-8 transition-all duration-300 ease-out hover:scale-[1.03] hover:-translate-y-1 hover:shadow-xl select-none cursor-pointer"
+                    style={{
+                      background: cardBg,
+                      color: cardText,
+                      border: isInverted ? "none" : "1px solid var(--tray-border)",
+                      minHeight: "14rem",
+                    }}>
+                    {/* Step number — Bebas Neue */}
+                    <span
+                      className="leading-none tracking-[-0.02em]"
+                      style={{ fontFamily: "var(--font-bebas)", fontSize: "clamp(3.5rem, 5vw, 4.5rem)", color: numColor }}
+                    >{num}</span>
+                    {/* Step title — Fraunces italic */}
+                    <h3
+                      className="text-[1.15rem] sm:text-[1.25rem] tracking-tight leading-[1.2]"
+                      style={{ fontFamily: "var(--font-fraunces)", fontStyle: "italic", fontWeight: 500 }}
+                    >{title}</h3>
+                    <p
+                      className="flex-1 text-[0.88rem] leading-[1.65]"
+                      style={{ fontFamily: "var(--font-jakarta)", opacity: descOpacity }}
+                    >{desc}</p>
+                    <span
+                      className="mt-auto self-start rounded-full px-3 py-1 text-[0.68rem] uppercase tracking-[0.16em]"
+                      style={{ fontFamily: "var(--font-dm-mono)", color: tagColor, background: tagBg, border: `1px solid ${tagBorder}` }}
+                    >{tag}</span>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </SectionReveal>
@@ -472,15 +488,15 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
             style={{
               fontFamily: "var(--font-barlow)",
               fontWeight: 900,
-              fontSize: "clamp(14rem, 24vw, 24rem)",
-              lineHeight: 0.82,
+              fontSize: "clamp(8rem, 12vw, 12rem)",
+              lineHeight: 1.0,
               letterSpacing: "-0.06em",
               textTransform: "uppercase",
               color: "var(--tray-ink)",
-              opacity: 0.045,
+              opacity: 0.038,
               display: "block",
-              paddingRight: "clamp(1.5rem, 4vw, 4rem)",
-              paddingBottom: "clamp(1.5rem, 3vw, 3rem)",
+              paddingRight: "clamp(1rem, 3vw, 3rem)",
+              paddingBottom: "clamp(1rem, 2.5vw, 2.5rem)",
             }}
           >
             TRAY
@@ -556,18 +572,12 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
           </div>
 
           {/* Bottom bar */}
-          <div className="relative z-10 mt-12 flex flex-wrap items-center justify-between gap-4 border-t border-[var(--tray-border)] pt-6">
+          <div className="relative z-10 mt-12 flex flex-wrap items-center justify-between gap-4 pt-6">
             <p
               className="text-[0.72rem] uppercase tracking-[0.2em] opacity-45"
               style={{ fontFamily: "var(--font-dm-mono)" }}
             >
               Built for campus canteens · Made in India
-            </p>
-            <p
-              className="text-[0.72rem] uppercase tracking-[0.2em] opacity-45"
-              style={{ fontFamily: "var(--font-dm-mono)" }}
-            >
-              v3.0 · 2026
             </p>
           </div>
         </div>

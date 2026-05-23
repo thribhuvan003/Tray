@@ -318,10 +318,10 @@ export function SyncPipelineVisual({ className }: { className?: string }) {
                 )}
               </div>
               <div>
-                <p className="text-[0.95rem] sm:text-base font-black tracking-tight" style={{ fontFamily: "var(--font-jakarta)", color: "var(--tray-ink)" }}>
+                <p className="text-[1.1rem] sm:text-[1.2rem] tracking-tight leading-snug" style={{ fontFamily: "var(--font-fraunces)", fontStyle: "italic", color: "var(--tray-ink)" }}>
                   {step.label}
                 </p>
-                <p className="mt-2 text-[0.72rem] sm:text-xs leading-[1.6] font-semibold" style={{ fontFamily: "var(--font-dm-mono)", color: "var(--tray-muted)" }}>
+                <p className="mt-2 text-[0.8rem] sm:text-[0.85rem] leading-[1.5] font-sans opacity-70">
                   {step.body}
                 </p>
               </div>

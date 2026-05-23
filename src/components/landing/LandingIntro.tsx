@@ -24,10 +24,10 @@ export function LandingIntro() {
       return () => window.clearTimeout(timeout);
     }
 
-    // Immediately display for exactly 1.5 seconds
+    // Immediately display for exactly 2.8 seconds
     const timer = window.setTimeout(() => {
       setShow(false);
-    }, 1500);
+    }, 2800);
 
     return () => window.clearTimeout(timer);
   }, [reduce]);
@@ -72,7 +72,7 @@ export function LandingIntro() {
               className="flex flex-col items-center"
             >
               {/* Unified Monumental Mask Reveal */}
-              <div className="overflow-hidden py-2 px-10 flex justify-center items-center">
+              <div className="overflow-hidden py-6 px-10 flex justify-center items-center">
                 <motion.h1
                   initial={{ 
                     y: "115%", 
@@ -90,9 +90,9 @@ export function LandingIntro() {
                     duration: 1.35,
                     ease: [0.16, 1, 0.3, 1]
                   }}
-                  className="text-[clamp(8rem,22vw,18rem)] font-normal italic leading-none select-none text-[#FAF8F5] tracking-[-0.05em]"
+                  className="text-[clamp(6rem,18vw,14rem)] font-black leading-none select-none text-[#FAF8F5] tracking-[-0.04em] uppercase"
                   style={{
-                    fontFamily: "var(--font-newsreader)",
+                    fontFamily: "var(--font-barlow)",
                     transformOrigin: "center bottom",
                   }}
                 >
@@ -106,10 +106,10 @@ export function LandingIntro() {
                   initial={{ y: "100%", opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ duration: 0.8, delay: 0.35, ease: [0.16, 1, 0.3, 1] }}
-                  className="text-xs uppercase tracking-[0.35em] text-[#FAF8F5] opacity-60 font-medium"
-                  style={{ fontFamily: "var(--font-ui)" }}
+                  className="text-2xl text-[#FAF8F5] opacity-80"
+                  style={{ fontFamily: "var(--font-fraunces)", fontStyle: "italic" }}
                 >
-                  Campus food suite · Unified
+                  campus edition
                 </motion.p>
               </div>
             </motion.div>

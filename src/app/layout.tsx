@@ -72,7 +72,7 @@ const plusJakarta = Plus_Jakarta_Sans({
 });
 const barlowCondensed = Barlow_Condensed({
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+  weight: ["400", "500", "600", "700", "800", "900"],
   variable: "--font-barlow",
   display: "swap",
 });

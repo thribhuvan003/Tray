@@ -15,8 +15,10 @@ export function LandingMotion() {
     }
 
     let killed = false;
+    let ctx: any = null;
     type LenisLike = { on(e: string, cb: () => void): void; raf(t: number): void; destroy(): void };
     let lenisInstance: LenisLike | null = null;
+    const btnHandlers: Array<[HTMLElement, (e: MouseEvent) => void, () => void]> = [];
 
     // ── Async animation bootstrap ────────────────────────────────────────────
     (async () => {
@@ -27,7 +29,7 @@ export function LandingMotion() {
       if (killed) return;
       gsap.registerPlugin(ScrollTrigger);
 
-      // Lenis smooth scroll
+      // Lenis smooth scroll (outside gsap.context — it's async)
       try {
         const LenisModule = await import("lenis");
         if (!killed) {
@@ -47,59 +49,36 @@ export function LandingMotion() {
         /* Lenis unavailable — continue with native scroll */
       }
 
-      // Scroll progress bar
-      const bar = document.querySelector<HTMLElement>(".tl-progress-bar");
-      if (bar) {
-        gsap.to(bar, {
-          width: "100%",
-          ease: "none",
-          scrollTrigger: {
-            trigger: document.documentElement,
-            start: "top top",
-            end: "bottom bottom",
-            scrub: 0.2,
-          },
-        });
-      }
+      if (killed) return;
+
+      ctx = gsap.context(() => {
+        // Scroll progress bar
+        const bar = document.querySelector<HTMLElement>(".tl-progress-bar");
+        if (bar) {
+          gsap.to(bar, {
+            width: "100%",
+            ease: "none",
+            scrollTrigger: {
+              trigger: document.documentElement,
+              start: "top top",
+              end: "bottom bottom",
+              scrub: 0.2,
+            },
+          });
+        }
 
       const root = document.querySelector<HTMLElement>(".tray-landing");
       if (!root) return;
 
-      // ── 1. TrayHero: focus-pull word/character mask reveals ──
-      root.querySelectorAll<HTMLElement>(".tl-h1 .tl-word").forEach((word) => {
-        const text = word.textContent ?? "";
-        word.textContent = "";
-        [...text].forEach((ch) => {
-          const mask  = document.createElement("span");
-          mask.className = "tl-char";
-          const inner = document.createElement("span");
-          inner.className = "tl-char-inner";
-          inner.textContent = ch === " " ? " " : ch;
-          mask.appendChild(inner);
-          word.appendChild(mask);
-        });
-      });
-
-      // Monumental stagger with filter blur focus-pull
-      gsap.from(".tray-landing .tl-h1 .tl-char-inner", {
-        y: "120%",
-        rotateX: 35,
-        rotateY: 10,
-        scale: 0.85,
-        filter: "blur(14px)",
-        opacity: 0,
-        stagger: { amount: 0.85, from: "start" },
-        duration: 1.6,
-        ease: "power4.out",
-        delay: 0.2,
-      });
-
+      // ── 1. TrayHero: clean focus-pull word stagger reveal (non-destructive) ──
       gsap.from(".tray-landing .tl-h1 .tl-word", {
-        letterSpacing: "-0.08em",
-        wordSpacing: "-0.1em",
-        duration: 1.6,
-        ease: "power3.out",
-        delay: 0.2,
+        y: 35,
+        filter: "blur(12px)",
+        opacity: 0,
+        stagger: 0.12,
+        duration: 1.4,
+        ease: "power4.out",
+        delay: 0.1,
       });
 
 
@@ -143,14 +122,14 @@ export function LandingMotion() {
 
       // ── 2. CampusTicker: Scroll-Velocity Skew Marquee ──
       ScrollTrigger.create({
-        trigger: ".tray-landing .tl-ticker, [data-ticker-track]",
+        trigger: ".tray-landing .tl-ticker, [data-ticker-wrapper]",
         start: "top bottom",
         end: "bottom top",
         onUpdate: (self) => {
           if (killed) return;
           const velocity = self.getVelocity();
           const skewAngle = gsap.utils.clamp(-12, 12, velocity * 0.0045);
-          gsap.to(".tray-landing [data-ticker-track]", {
+          gsap.to(".tray-landing [data-ticker-wrapper]", {
             skewX: skewAngle,
             duration: 0.4,
             ease: "power2.out",
@@ -160,8 +139,8 @@ export function LandingMotion() {
       });
 
       // Serene ticker entrance
-      gsap.from(".tray-landing [data-ticker-track]", {
-        scrollTrigger: { trigger: ".tray-landing .tl-ticker, .tray-landing [data-ticker-track]", start: "top 100%" },
+      gsap.from(".tray-landing [data-ticker-wrapper]", {
+        scrollTrigger: { trigger: ".tray-landing .tl-ticker, .tray-landing [data-ticker-wrapper]", start: "top 100%" },
         scaleX: 0.9,
         skewX: 8,
         opacity: 0,
@@ -279,7 +258,7 @@ export function LandingMotion() {
         gsap.from(flowCards, {
           scrollTrigger: {
             trigger: "#flow",
-            start: "top 80%",
+            start: "top bottom",
           },
           rotateY: -45,
           x: 60,
@@ -295,7 +274,7 @@ export function LandingMotion() {
         gsap.from(flowNums, {
           scrollTrigger: {
             trigger: "#flow",
-            start: "top 82%",
+            start: "top bottom",
           },
           rotateY: 360,
           scale: 0.4,
@@ -383,33 +362,18 @@ export function LandingMotion() {
         });
       }
 
-      // ── 12. Footer Section: TRAY Parallax Stagger & Link Wave ──
+      // ── 12. Footer Section: clean TRAY Parallax (non-destructive) ──
       const footerMark = root.querySelector<HTMLElement>(".tl-footer-mark span");
       if (footerMark) {
-        const text = footerMark.textContent ?? "";
-        footerMark.textContent = "";
-        
-        const letters = [...text].map((char) => {
-          const span = document.createElement("span");
-          span.style.display = "inline-block";
-          span.textContent = char;
-          footerMark.appendChild(span);
-          return span;
-        });
-
-        // Scrub parallax different letters at different speeds
-        letters.forEach((span, i) => {
-          const speeds = [-140, -100, -70, -40];
-          gsap.to(span, {
-            scrollTrigger: {
-              trigger: ".tl-footer",
-              scrub: 1.6,
-              start: "top bottom",
-              end: "bottom top",
-            },
-            y: speeds[i % speeds.length],
-            ease: "none",
-          });
+        gsap.to(footerMark, {
+          scrollTrigger: {
+            trigger: ".tl-footer",
+            scrub: 1.6,
+            start: "top bottom",
+            end: "bottom top",
+          },
+          y: -100,
+          ease: "none",
         });
       }
 
@@ -442,8 +406,10 @@ export function LandingMotion() {
         };
         btn.addEventListener("mousemove", onMove);
         btn.addEventListener("mouseleave", onLeave);
+        btnHandlers.push([btn, onMove, onLeave]);
       });
 
+      });
     })();
 
     // ── Demo role card entry transitions ─────────────────────────────
@@ -471,10 +437,12 @@ export function LandingMotion() {
       roleCardHandlers.forEach(([el, fn]) => {
         el.removeEventListener("click", fn as EventListener);
       });
-      if (lenisInstance) lenisInstance.destroy();
-      import("gsap/ScrollTrigger").then(({ ScrollTrigger }) => {
-        ScrollTrigger.getAll().forEach((t) => t.kill());
+      btnHandlers.forEach(([el, onMove, onLeave]) => {
+        el.removeEventListener("mousemove", onMove);
+        el.removeEventListener("mouseleave", onLeave);
       });
+      if (lenisInstance) lenisInstance.destroy();
+      if (ctx) ctx.revert();
     };
   }, []);
 

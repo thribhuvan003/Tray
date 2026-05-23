@@ -69,12 +69,14 @@ export function RoleSelector({
   next,
   slug,
   error,
+  initialRole,
 }: {
   next: string;
   slug: string;
   error?: string;
+  initialRole?: Role;
 }) {
-  const [selected, setSelected] = useState<Role | null>(null);
+  const [selected, setSelected] = useState<Role | null>(initialRole ?? null);
   const formRef = useRef<HTMLDivElement>(null);
   const cardsRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
@@ -84,6 +86,15 @@ export function RoleSelector({
     document.documentElement.classList.remove("dark");
     document.documentElement.setAttribute("data-theme", "light");
   }, []);
+
+  useEffect(() => {
+    if (initialRole && (initialRole === "student" || initialRole === "kitchen" || initialRole === "owner")) {
+      const t = setTimeout(() => {
+        handleRoleClick(initialRole);
+      }, 100);
+      return () => clearTimeout(t);
+    }
+  }, [initialRole]);
 
   useGSAP(() => {
     registerTrayGsap();

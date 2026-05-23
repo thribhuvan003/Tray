@@ -73,7 +73,7 @@ export default async function LoginPage({
           </p>
 
           {/* Role selector → login form */}
-          <RoleSelector next={next} slug={slug} error={sp.error} />
+          <RoleSelector next={next} slug={slug} error={sp.error} initialRole={sp.role as any} />
 
           {/* Footer links */}
           <p

@@ -46,6 +46,20 @@ Read AGENTS.md, docs/DEMO-SPEC.md, docs/PARALLEL-WORK.md. One file owner per lan
 
 ## Session log
 
+### 2026-05-23 — React NotFoundError Fix, Preloader Upgrades, Bento Portals Grid, & Ticker Scroll Restoration
+
+**Work done:**
+- Resolved React virtual DOM `NotFoundError` runtime crash on unmount by replacing DOM-destructive character/word splitting with statically defined JSX spans.
+- Upgraded cinematic preloader (`LandingIntro.tsx`) to show "TRAY" in colossal bold condensed Barlow font (weights 800/900) and tagline "campus edition" in Fraunces italic below it, remaining visible for 2.8 seconds.
+- Replaced the vertical card scroller and SVG track (`RailwayScroller.tsx`) with a clean, static 3-column bento grid for desktop and a single-column stack for mobile in `PiranhaPortalsSection.tsx`.
+- Restored horizontal scrolling motion of the campus ticker (`MetricsAndTicker.tsx`) by isolating the GSAP skew animation on `[data-ticker-wrapper]`, preventing conflict with the CSS marquee loop translations on `[data-ticker-track]`.
+- Simplified the `04 / How it works` section to show only the header text ("Phone to plate, in eleven minutes.") and removed the 5 steps cards.
+- Changed portal card descriptions in `PiranhaPortalsSection.tsx` to use the standard `font-sans` (Inter) for exact font matching.
+- Upgraded the typography inside the `SyncPipelineVisual` (real-time sync steps) in `src/lib/motion/tray-framer.tsx` to pair elegant `Fraunces` italic serif headers with highly readable `font-sans` descriptions.
+- Removed the footer bottom bar horizontal divider line and `v3.0 · 2026` version text, allowing the absolute-positioned `TRAY` watermark to fit perfectly in the corner.
+- Verified type safety (`pnpm typecheck` ✅) and static prototype integrity (`pnpm demo:verify` ✅).
+- Visual verification performed using Chrome DevTools viewports and screenshots ✅.
+
 ### 2026-05-23 — UI polish, login→demo redirects, GitHub push
 
 **Work done:**
