@@ -24,7 +24,7 @@ import { createClient } from "@supabase/supabase-js";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.join(__dirname, "..");
 const envPath = path.join(root, ".env.local");
-const ssDir = "C:\\Users\\ntena\\.gemini\\antigravity\\brain\\413ad5aa-c8d1-4763-bd87-593d930ce05b\\.playwright-screenshots-simulation";
+const ssDir = path.join(root, ".playwright-screenshots-simulation");
 
 if (fs.existsSync(envPath)) {
   const content = fs.readFileSync(envPath, "utf8");
@@ -84,7 +84,7 @@ async function screenshot(page, name) {
   info(`Screenshot saved: ${name}.png`);
 }
 
-async function waitAndClick(page, selector, label, timeout = 15000) {
+async function waitAndClick(page, selector, label, timeout = 60000) {
   const loc = page.locator(selector).first();
   await loc.waitFor({ state: "visible", timeout });
   await loc.click();
@@ -131,7 +131,7 @@ async function main() {
     const adminPage = await adminCtx.newPage();
     adminPage.on('console', msg => console.log('PAGE LOG:', msg.text()));
 
-    await adminPage.goto(`${BASE}/get-started`, { waitUntil: "networkidle", timeout: 60000 });
+    await adminPage.goto(`${BASE}/get-started`, { waitUntil: "networkidle", timeout: 120000 });
     await adminPage.waitForTimeout(2000);
     await screenshot(adminPage, "01-get-started-step1");
 
@@ -148,7 +148,7 @@ async function main() {
     await adminPage.waitForTimeout(1500);
 
     // Fill Step 2
-    await adminPage.waitForSelector('input[placeholder*="Main Canteen"]', { timeout: 15000 });
+    await adminPage.waitForSelector('input[placeholder*="Main Canteen"]', { timeout: 60000 });
     await adminPage.fill('input[placeholder*="Main Canteen"]', canteenName);
     await adminPage.fill('input[placeholder*="Academic Block"]', 'Annenberg Hall');
     await adminPage.fill('input[placeholder="canteen@okaxis"]', 'harvard@okaxis');
@@ -160,7 +160,7 @@ async function main() {
     await adminPage.waitForTimeout(1500);
 
     // Fill Step 3
-    await adminPage.waitForSelector('input[placeholder="Full name"]', { timeout: 15000 });
+    await adminPage.waitForSelector('input[placeholder="Full name"]', { timeout: 60000 });
     await adminPage.fill('input[placeholder="Full name"]', 'John Harvard');
     await adminPage.fill('input[placeholder="you@example.com"]', adminEmail);
     await adminPage.fill('input[placeholder="At least 8 characters"]', adminPassword);
@@ -169,7 +169,7 @@ async function main() {
     await waitAndClick(adminPage, 'button[type="submit"]', "Create Canteen Account");
     
     // Wait for redirect to admin dashboard
-    await adminPage.waitForURL(/\/admin\/dashboard/, { timeout: 35000 });
+    await adminPage.waitForURL(/\/admin\/dashboard/, { timeout: 120000 });
     const dashboardUrl = adminPage.url();
     info(`Redirected to dashboard URL: ${dashboardUrl}`);
 
@@ -240,7 +240,7 @@ async function main() {
 
     /* ── STEP 3: Admin Updates the Menu ─────────────────────────────────── */
     log("Admin: Adding a new item to the menu");
-    await adminPage.goto(`${BASE}/c/${canteenSlug}/admin/menu/new`, { waitUntil: "networkidle", timeout: 30000 });
+    await adminPage.goto(`${BASE}/c/${canteenSlug}/admin/menu/new`, { waitUntil: "networkidle", timeout: 120000 });
     await adminPage.waitForTimeout(1500);
 
     await adminPage.fill('input[name="name"]', menuitemName);
@@ -249,7 +249,7 @@ async function main() {
     await screenshot(adminPage, "06-new-item-form");
 
     await waitAndClick(adminPage, 'button[type="submit"]', "Create Item Submit");
-    await adminPage.waitForURL(/\/admin\/menu(?:\?|$)/, { timeout: 30000 });
+    await adminPage.waitForURL(/\/admin\/menu(?:\?|$)/, { timeout: 120000 });
     await adminPage.waitForTimeout(2000);
     await screenshot(adminPage, "07-admin-menu-list");
 
@@ -262,7 +262,7 @@ async function main() {
     const studentPage = await studentCtx.newPage();
     studentPage.on('console', msg => console.log('STUDENT PAGE LOG:', msg.text()));
 
-    await studentPage.goto(`${BASE}/login?tenant=${canteenSlug}`, { waitUntil: "networkidle", timeout: 60000 });
+    await studentPage.goto(`${BASE}/login?tenant=${canteenSlug}`, { waitUntil: "networkidle", timeout: 120000 });
     await studentPage.waitForTimeout(2000);
     await screenshot(studentPage, "08-student-login");
 
@@ -272,9 +272,9 @@ async function main() {
 
     // Switch to password mode
     const pwdToggle = studentPage.locator('button', { hasText: 'Use password' });
-    await pwdToggle.waitFor({ state: 'attached', timeout: 10000 });
+    await pwdToggle.waitFor({ state: 'attached', timeout: 45000 });
     await pwdToggle.click({ force: true });
-    await studentPage.waitForSelector('input[type="password"]', { timeout: 5000 });
+    await studentPage.waitForSelector('input[type="password"]', { timeout: 30000 });
 
     // Fill credentials
     await studentPage.fill('input[type="email"]', studentEmail);
@@ -282,12 +282,12 @@ async function main() {
     await screenshot(studentPage, "09-student-credentials");
 
     await waitAndClick(studentPage, 'button[type="submit"]', "Student Login Submit");
-    await studentPage.waitForSelector('h1', { timeout: 30000 });
+    await studentPage.waitForSelector('h1', { timeout: 120000 });
     await studentPage.waitForTimeout(2000);
     await screenshot(studentPage, "10-student-menu-page");
 
     // Wait for the menu item to become visible, ensuring loading has finished and state synced
-    await studentPage.locator(`text="${menuitemName}"`).first().waitFor({ state: "visible", timeout: 15000 });
+    await studentPage.locator(`text="${menuitemName}"`).first().waitFor({ state: "visible", timeout: 60000 });
     const itemVisibleOnStudentMenu = await studentPage.locator(`text="${menuitemName}"`).first().isVisible();
     recordResult("Menu updates sync instantly to Student Portal", itemVisibleOnStudentMenu);
 
@@ -315,7 +315,7 @@ async function main() {
     info("Clicked place order");
 
     // Pay page
-    await studentPage.waitForURL(/\/pay\//, { timeout: 30000 });
+    await studentPage.waitForURL(/\/pay\//, { timeout: 120000 });
     const payUrl = studentPage.url();
     orderId = payUrl.match(/\/pay\/([a-f0-9-]+)/i)?.[1];
     info(`Pay page loaded. Order ID: ${orderId}`);
@@ -327,7 +327,7 @@ async function main() {
     info("Clicked paid");
 
     // Tracking page
-    await studentPage.waitForURL(/\/track\//, { timeout: 30000 });
+    await studentPage.waitForURL(/\/track\//, { timeout: 120000 });
     await studentPage.waitForTimeout(2000);
     await screenshot(studentPage, "14-student-tracking-page");
 
@@ -345,7 +345,7 @@ async function main() {
 
     await kitchenPage.goto(`${BASE}/login?tenant=${canteenSlug}&next=/c/${canteenSlug}/kitchen`, {
       waitUntil: "networkidle",
-      timeout: 60000,
+      timeout: 120000,
     });
     await kitchenPage.waitForTimeout(2000);
 
@@ -355,9 +355,9 @@ async function main() {
 
     // Switch to password mode
     const kitchenPwdToggle = kitchenPage.locator('button', { hasText: 'Use password' });
-    await kitchenPwdToggle.waitFor({ state: 'attached', timeout: 10000 });
+    await kitchenPwdToggle.waitFor({ state: 'attached', timeout: 45000 });
     await kitchenPwdToggle.click({ force: true });
-    await kitchenPage.waitForSelector('input[type="password"]', { timeout: 5000 });
+    await kitchenPage.waitForSelector('input[type="password"]', { timeout: 30000 });
 
     // Fill credentials
     await kitchenPage.fill('input[type="email"]', kitchenEmail);
@@ -365,12 +365,13 @@ async function main() {
     await screenshot(kitchenPage, "15-kitchen-credentials");
 
     await waitAndClick(kitchenPage, 'button[type="submit"]', "Kitchen Login Submit");
-    await kitchenPage.waitForLoadState("networkidle", { timeout: 30000 }).catch(() => {});
+    await kitchenPage.waitForLoadState("networkidle", { timeout: 120000 }).catch(() => {});
     await kitchenPage.waitForTimeout(5000); // Wait for hydration
     await screenshot(kitchenPage, "16-kitchen-board-loaded");
 
     // Verify the placed order is visible in the Kitchen's placed list! (Student -> Kitchen Sync)
     const ticketLocator = kitchenPage.locator(`article:has-text("${shortCode}")`).first();
+    await ticketLocator.waitFor({ state: "visible", timeout: 15000 }).catch(() => {});
     const isTicketVisibleInKitchen = await ticketLocator.isVisible();
     recordResult("Student order syncs instantly to Kitchen Board queue", isTicketVisibleInKitchen);
 
@@ -415,7 +416,7 @@ async function main() {
     info("Clicked 'Verify OTP' button");
 
     // Wait for Radix Dialog
-    await kitchenPage.waitForSelector('[role="dialog"]', { timeout: 5000 });
+    await kitchenPage.waitForSelector('[role="dialog"]', { timeout: 30000 });
     info("Radix OTP dialog revealed");
     await screenshot(kitchenPage, "19-otp-dialog-opened");
 

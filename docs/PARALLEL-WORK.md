@@ -1424,3 +1424,38 @@ pm run typecheck passes. Restart dev if port 3000 hangs: NODE_OPTIONS=--max-old-
 
 **Active tracks:** Responsiveness pass complete. No data/RLS/payment code touched.
 
+---
+
+### 2026-05-23 — Offline Demo Verification & E2E Validation Pass
+
+**Work done:**
+- **Offline Demo Verification:** Executed static and E2E verifications via `pnpm demo:verify` and `pnpm demo:verify:e2e` in the workspace.
+- **Verification Results:** Confirmed that all static mockup files (`index.html`, `student.html`, `kitchen.html`, `admin.html`) successfully pass all assertions, and all dynamic interactive transitions, service modes (takeaway/dine-in), OTP entry flows, cart operations, and routing bounds are completely satisfied.
+- **Report Generation:** Compiled a detailed PASS/FAIL verification report confirming 100% compliance across both offline static checking and automated E2E browser runs.
+
+---
+
+### 2026-05-23 — Dynamic E2E User Simulation Execution & Verification Pass
+
+**Work done:**
+- **Pre-Warming & Startup:** Cleared orphaned `node` processes from previous turns to restore socket health, pre-warmed Next.js dev server on port `3005`, and verified dynamic route compilation.
+- **Race Condition Fix (`scripts/test-user-simulation.mjs`):** Resolved a critical test visibility race condition in Step 5 where `isVisible()` was checked immediately upon page load without waiting for React/Supabase subscription sync. Added a `waitFor` locator assertion block to guarantee reliable execution.
+- **Full E2E Simulation Run:** Successfully executed the entire E2E test-user simulation sequence (`pnpm node scripts/test-user-simulation.mjs`). Verified 14 separate integration assertions across onboarding (`/get-started`), student checkout (`/pay`), realtime kitchen board sync (`/kitchen`), OTP secrets db retrieval, kitchen handover (`collected`), dynamic student track updates (`/track`), and offline mockup views.
+- **Results:** 14 out of 14 checks successfully passed (`14 passed, 0 failed`). Captured 28 high-fidelity step-by-step verification screenshots under `.playwright-screenshots-simulation/`.
+
+---
+
+### 2026-05-23 — Advanced New Features E2E QA Audit Pass
+
+**Work done:**
+- **Robust Retry Polling (`scripts/test-new-features.mjs`):** Co-authored a dynamic, smart retry-polling loop with the user to prevent intermittent race conditions on sleep/wake visibility triggers. The script now dynamically awaits the database-level Supabase replication to propagate changes before asserting visibility re-fetch content.
+- **Advanced QA E2E Run:** Executed the complete advanced features test suite (`pnpm node scripts/test-new-features.mjs`) against the local dev server.
+- **Architectural Findings:**
+  1. **Case-Insensitive Duplicate Block:** **PASS** (Correctly blocked "saMoSa" and displayed validation alerts).
+  2. **Real-time Closed Banner:** **PASS** (Instantly flashed canteen closed notices on state transitions).
+  3. **Phone sleep/wake sync:** **PASS** (Re-fetched and synced stale states successfully).
+  4. **Auto-expiry Cron & Live Track Sync:** **PASS** (Order backdates successfully auto-expired via API trigger and student tracking page updated instantly).
+  5. **Canteen Switcher Dynamic list (FAIL):** Identified that the active canteen switcher selector does *not* listen to global realtime tenant insertion triggers, requiring a manual page refresh.
+  6. **Real-time Price Sync (FAIL):** Identified that menu items price changes in the DB do *not* propagate dynamically to active student menus without a hard refresh.
+
+

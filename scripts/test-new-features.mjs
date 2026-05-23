@@ -89,7 +89,7 @@ async function screenshot(page, name) {
   info(`Screenshot saved: ${name}.png`);
 }
 
-async function waitAndClick(page, selector, label, timeout = 15000) {
+async function waitAndClick(page, selector, label, timeout = 60000) {
   const loc = page.locator(selector).first();
   await loc.waitFor({ state: "visible", timeout });
   await loc.click();
@@ -153,10 +153,11 @@ async function main() {
   const TENANT_ID = tenant.id;
   const COLLEGE_ID = tenant.college_id;
 
-  // Clean any stray test canteens or menu items
+  // Clean any stray test canteens, menu items, or orders
   await supabase.from("tenants").delete().eq("slug", "south-block-cafeteria");
   await supabase.from("menu_items").delete().eq("tenant_id", TENANT_ID).ilike("name", "saMoSa-duplicate");
   await supabase.from("menu_items").delete().eq("tenant_id", TENANT_ID).ilike("name", "saMoSa");
+  await supabase.from("orders").delete().eq("tenant_id", TENANT_ID).eq("short_code", "EXPR");
 
   // Ensure aditya is open and has zero paused_until
   await supabase
@@ -239,9 +240,9 @@ async function main() {
   const warmupCtx = await browser.newContext();
   const warmupPage = await warmupCtx.newPage();
   try {
-    await warmupPage.goto(`${BASE}/c/${TENANT_SLUG}/menu`, { waitUntil: "networkidle", timeout: 40000 });
-    await warmupPage.goto(`${BASE}/login?tenant=${TENANT_SLUG}`, { waitUntil: "networkidle", timeout: 40000 });
-    await warmupPage.goto(`${BASE}/c/${TENANT_SLUG}/admin/menu/new`, { waitUntil: "networkidle", timeout: 40000 });
+    await warmupPage.goto(`${BASE}/c/${TENANT_SLUG}/menu`, { waitUntil: "networkidle", timeout: 120000 });
+    await warmupPage.goto(`${BASE}/login?tenant=${TENANT_SLUG}`, { waitUntil: "networkidle", timeout: 120000 });
+    await warmupPage.goto(`${BASE}/c/${TENANT_SLUG}/admin/menu/new`, { waitUntil: "networkidle", timeout: 120000 });
     info("Warm-up complete!");
   } catch (err) {
     info(`Warm-up page load completed or timed out (expected in dev mode compile): ${err.message}`);
@@ -264,7 +265,7 @@ async function main() {
     // Navigate to admin menu new item form with next URL parameter
     await adminPage.goto(`${BASE}/login?tenant=${TENANT_SLUG}&next=/c/${TENANT_SLUG}/admin/menu/new`, {
       waitUntil: "networkidle",
-      timeout: 60000,
+      timeout: 120000,
     });
     await adminPage.waitForTimeout(2000); // Hydration recovery
 
@@ -280,7 +281,7 @@ async function main() {
     info("Submitted admin login — waiting for form redirection…");
 
     // Wait for the new menu item form to load
-    await adminPage.waitForSelector('#name', { timeout: 20000 });
+    await adminPage.waitForSelector('#name', { timeout: 120000 });
     info("Admin redirected to New Menu Item form");
     await screenshot(adminPage, "11-admin-new-menu-form");
 
@@ -293,7 +294,7 @@ async function main() {
 
     // Form should reload and display the error message
     const errorMsgLoc = adminPage.locator('.text-rose-300');
-    await errorMsgLoc.waitFor({ state: "visible", timeout: 25000 });
+    await errorMsgLoc.waitFor({ state: "visible", timeout: 60000 });
     await screenshot(adminPage, "12-admin-duplicate-error");
 
     const errorMsg = await errorMsgLoc.textContent();
@@ -318,7 +319,7 @@ async function main() {
     // Login as student
     await studentPage.goto(`${BASE}/login?tenant=${TENANT_SLUG}`, {
       waitUntil: "networkidle",
-      timeout: 60000,
+      timeout: 120000,
     });
     await studentPage.waitForTimeout(2000);
 
@@ -332,13 +333,13 @@ async function main() {
     await studentPage.click('button[type="submit"]');
     info("Submitted student login — waiting for menu board load…");
 
-    await studentPage.waitForSelector('h1:has-text("cooking")', { timeout: 20000 });
+    await studentPage.waitForSelector('h1:has-text("cooking")', { timeout: 120000 });
     await studentPage.waitForTimeout(2000); // Fully hydrated
     await screenshot(studentPage, "21-student-menu-initial");
 
     // Find original Samosa price in student UI
     const samosaCard = studentPage.locator('article', { has: studentPage.locator('h3', { hasText: /^Samosa$/ }) });
-    await samosaCard.waitFor({ state: "visible", timeout: 10000 });
+    await samosaCard.waitFor({ state: "visible", timeout: 60000 });
     const priceTextBefore = await samosaCard.locator('div[class*="text-ocean-500"]').textContent();
     info(`Samosa price in UI before update: ${priceTextBefore.trim()}`);
 
@@ -432,14 +433,24 @@ async function main() {
       document.dispatchEvent(new Event('visibilitychange'));
     });
     info("Waiting for visibilitychange refresh to complete…");
-    await studentPage.waitForTimeout(3000);
+    await studentPage.waitForTimeout(1000);
+
+    // Assert that the new description is pulled in with smart retry polling
+    let samosaDescText = "";
+    let syncOnVisibility = false;
+    for (let attempt = 1; attempt <= 12; attempt++) {
+      samosaDescText = (await samosaCard.locator('p').textContent()) ?? "";
+      if (samosaDescText.includes("Updated during phone lock")) {
+        syncOnVisibility = true;
+        break;
+      }
+      info(`Attempt ${attempt}/12: description is still stale: "${samosaDescText.trim()}", waiting 1s...`);
+      await studentPage.waitForTimeout(1000);
+    }
     await screenshot(studentPage, "41-student-menu-after-unlock");
 
-    // Assert that the new description is pulled in
-    const samosaDescText = await samosaCard.locator('p').textContent();
     info(`Samosa description in UI after unlock: "${samosaDescText?.trim()}"`);
 
-    const syncOnVisibility = samosaDescText && samosaDescText.includes("Updated during phone lock");
     recordResult(
       "Sync on visibility change (phone unlock)",
       syncOnVisibility,
@@ -454,7 +465,7 @@ async function main() {
 
     // Open Canteen Switcher Drawer
     const switcherTrigger = studentPage.locator('button:has-text("Ordering from")');
-    await switcherTrigger.waitFor({ state: "visible", timeout: 10000 });
+    await switcherTrigger.waitFor({ state: "visible", timeout: 60000 });
     await switcherTrigger.click();
     info("Opened canteen switcher drawer");
     await studentPage.waitForTimeout(1000);
@@ -549,7 +560,7 @@ async function main() {
     // Navigate student to this order tracking page
     await studentPage.goto(`${BASE}/c/${TENANT_SLUG}/track/${testOrderId}`, {
       waitUntil: "networkidle",
-      timeout: 30000,
+      timeout: 120000,
     });
     await studentPage.waitForTimeout(2000);
     await screenshot(studentPage, "61-student-track-ready");

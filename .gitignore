@@ -17,3 +17,4 @@ tsconfig.tsbuildinfo
 # Screenshots
 .debug-screenshots/
 .playwright-screenshots/
+.playwright-screenshots-simulation/
