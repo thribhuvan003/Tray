@@ -192,13 +192,10 @@ export function PiranhaPortalsSection() {
           style={{ perspective: "1200px" }}
         >
           {portals.map((portal, idx) => (
-            <a
+            <article
               key={portal.index}
-              href={portal.previewSrc}
-              target="_blank"
-              rel="noopener noreferrer"
               data-portal-card
-              className="motion-card group flex flex-col select-none rounded-[18px] overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_20px_50px_rgba(26,26,25,0.08)] cursor-pointer"
+              className="motion-card group flex flex-col select-none rounded-[18px] overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_20px_50px_rgba(26,26,25,0.08)]"
               style={{
                 background: "#ffffff",
                 border: "1px solid var(--tray-border, rgba(26, 26, 25, 0.12))",
@@ -470,18 +467,21 @@ export function PiranhaPortalsSection() {
                   <span className="text-[10px] font-medium tracking-[0.12em]" style={{ fontFamily: "var(--font-geist-mono, monospace)", color: "var(--tray-muted, #78716C)" }}>
                     {portal.deviceTag}
                   </span>
-                  <span
-                    className="flex items-center gap-1.5 text-[11px] font-semibold tracking-[0.08em] uppercase transition-all duration-200 group-hover:opacity-85"
+                  <a
+                    href={portal.previewSrc}
+                    className="flex items-center gap-1.5 text-[11px] font-semibold tracking-[0.08em] uppercase transition-all duration-200 hover:opacity-85"
                     style={{
                       fontFamily: "var(--font-geist-mono, monospace)",
                       color: portal.accentColor,
                     }}
+                    target="_blank"
+                    rel="noopener noreferrer"
                   >
                     LAUNCH DEMO →
-                  </span>
+                  </a>
                 </div>
               </div>
-            </a>
+            </article>
           ))}
         </div>
       </div>
