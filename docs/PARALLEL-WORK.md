@@ -92,6 +92,7 @@ Read AGENTS.md, docs/DEMO-SPEC.md, docs/PARALLEL-WORK.md. One file owner per lan
 - **Repository Audit:** Completed a comprehensive Google senior-developer review of Tray's setup workflow, codebase directory layout, multi-tenant Postgres RLS architecture, and validation pipeline.
 - **Architecture Visuals & Documentation:** Added a high-fidelity Mermaid sequence diagram illustrating the middleware subdomain resolution and PostgREST session hook tenancy isolation pipeline. Documented local subdomain troubleshooting overrides (`?tenant=aditya`) and simulation vs. production backend modes in the `README.md`.
 - **Pruned Empty Directory:** Deleted the obsolete empty `design-system/` folder from the root of the repository.
+- **Admin Card Scaling Config:** Tuned the admin card zoom and scroll translation parameters in `PiranhaPortalsSection.tsx` and `cards-preview.html` (`virtualW: 1300` / `scrollPx: 140`) to hide the topbar and focus on the KPI cards grid, revenue chart, and top items.
 - **Verification & GitHub Sync:** Verified 100% test passing status with `pnpm typecheck` and `pnpm demo:verify`. Committed and pushed clean changes directly to GitHub main.
 
 ### 2026-05-23 — Portals Showcase & Cards Preview Light Theme Redesign
