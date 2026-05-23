@@ -93,12 +93,12 @@
     .menu-card.is-hidden{display:none}
     .menu-card__visual{width:72px;height:72px;border-radius:12px;flex-shrink:0;background:var(--surface-2);display:grid;place-items:center;font-size:30px;border:1px solid var(--border)}
     .menu-card__body{flex:1;min-width:0;display:flex;flex-direction:column}
-    .menu-card__top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+    .menu-card__top, .special-card__top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
     .menu-card__title{margin:0;font-family:var(--font-display);font-size:17px;font-weight:500;letter-spacing:-.015em;line-height:1.25}
     .diet-dot{width:18px;height:18px;border:2px solid currentColor;border-radius:3px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:4px;background:#ffffff;position:relative;transition:transform 0.4s var(--ease)}
-    .menu-card:hover .diet-dot{transform:rotate(180deg)}
+    .menu-card:hover .diet-dot, .special-card:hover .diet-dot{transform:rotate(180deg)}
     .diet-dot::after{content:"";width:8px;height:8px;border-radius:50%;background:currentColor;display:block;transition:transform 0.4s var(--ease)}
-    .menu-card:hover .diet-dot::after{transform:scale(1.2)}
+    .menu-card:hover .diet-dot::after, .special-card:hover .diet-dot::after{transform:scale(1.2)}
     .diet-dot--veg{color:var(--veg)}
     .diet-dot--nv{color:var(--nv)}
     .diet-dot--nv::after{content:"";width:0;height:0;border-radius:0;background:transparent;border-left:4.5px solid transparent;border-right:4.5px solid transparent;border-bottom:8px solid currentColor}
@@ -722,9 +722,12 @@ function renderSpecialsCarousel() {
               '<span class="special-card__new">NEW</span>' +
               '<div class="special-card__ico">' + it.emoji + '</div>' +
               '<div class="special-card__body">' +
-                '<h3 class="special-card__title">' +
-                  it.name.split(' ').slice(0,-1).join(' ') + ' <span class="it">' + it.name.split(' ').slice(-1)[0] + '.</span>' +
-                '</h3>' +
+                '<div class="special-card__top">' +
+                  '<h3 class="special-card__title">' +
+                    it.name.split(' ').slice(0,-1).join(' ') + ' <span class="it">' + it.name.split(' ').slice(-1)[0] + '.</span>' +
+                  '</h3>' +
+                  '<span class="diet-dot ' + dc + '"></span>' +
+                '</div>' +
                 '<p class="special-card__desc">' + it.desc + '</p>' +
               '</div>' +
               '<div class="special-card__foot">' +
@@ -965,43 +968,65 @@ initCanteenSelect();loadCanteenData(currentCanteenId);renderCategories();renderM
 
 if (window.self !== window.top) {
   (function() {
-    var timerId = null;
+    var timeouts = [];
+    function scheduleTimeout(fn, delay) {
+      var id = setTimeout(fn, delay);
+      timeouts.push(id);
+      return id;
+    }
+    function clearAllTimers() {
+      timeouts.forEach(function(id) { clearTimeout(id); });
+      timeouts = [];
+      if (payInterval) { clearInterval(payInterval); payInterval = null; }
+      if (trackInterval) { clearInterval(trackInterval); trackInterval = null; }
+    }
+    
+    // Override resetAll to clear our simulation timers as well!
+    var originalResetAll = resetAll;
+    resetAll = function() {
+      clearAllTimers();
+      originalResetAll();
+    };
+
     function runAutoSimulation() {
-      if (timerId) clearTimeout(timerId);
-      resetAll();
+      clearAllTimers();
       setView("menu");
       
-      timerId = setTimeout(function() {
+      scheduleTimeout(function() {
         var dishes = allMenuItems();
         if (dishes.length > 0) {
-          setQty(dishes[0].id, 1);
+          changeQty(dishes[0].id, 1);
           bumpCart();
           showToast("Added " + dishes[0].name + " to tray");
         }
+        
+        scheduleTimeout(function() {
+          var dishes = allMenuItems();
+          if (dishes.length > 1) {
+            changeQty(dishes[1].id, 1);
+            bumpCart();
+            showToast("Added " + dishes[1].name + " to tray");
+          }
+          
+          scheduleTimeout(function() {
+            startPayment();
+            
+            scheduleTimeout(function() {
+              confirmPaid();
+              
+              scheduleTimeout(function() {
+                runAutoSimulation();
+              }, 25000);
+              
+            }, 3000);
+            
+          }, 2000);
+          
+        }, 2000);
+        
       }, 1500);
-
-      timerId = setTimeout(function() {
-        var dishes = allMenuItems();
-        if (dishes.length > 1) {
-          setQty(dishes[1].id, 1);
-          bumpCart();
-          showToast("Added " + dishes[1].name + " to tray");
-        }
-      }, 3500);
-
-      timerId = setTimeout(function() {
-        startPayment();
-      }, 5500);
-
-      timerId = setTimeout(function() {
-        confirmPaid();
-      }, 8500);
-
-      timerId = setTimeout(function() {
-        runAutoSimulation();
-      }, 34000);
     }
-    setTimeout(runAutoSimulation, 5000);
+    scheduleTimeout(runAutoSimulation, 5000);
   })();
 }
 })();

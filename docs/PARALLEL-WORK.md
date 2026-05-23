@@ -1178,6 +1178,18 @@ pm run typecheck passes. Restart dev if port 3000 hangs: NODE_OPTIONS=--max-old-
   - **Admin Dashboard**: Dynamically counts up KPIs: ticks Revenue (adding ₹120-240 per transaction) and Orders (+1), appends live event rows in the activity log feed, and inserts new records in the recent orders table.
 - **Verified**: Static check validation suite passes cleanly (`pnpm demo:verify` ✅). Visual layouts and autoplay logic verified via browser devtools screenshots.
 
+---
+
+## 2026-05-23 — Session: Fixed Student Demo Autoplay Leak & Added Specials Diet Indicator
+
+**What changed:**
+- **Student App Simulation Fix (`public/demo/student.html`)**:
+  - Overhauled the client-side simulation script inside `window.self !== window.top` check.
+  - Implemented sequential chained timeouts and tracking interval cleanup. All timer references are stored in an array and cleared on `resetAll()`, preventing the overlapping loop storm that was causing the student demo portal to hang in the showcase iframe.
+  - Adapted Specials Carousel cards (`.special-card`) to include the `.special-card__top` header container, wrapping the title and standard rotating/scaling `diet-dot` indicator for consistent UX matching `.menu-card`.
+- **Verified**: Both TypeScript compiling (`pnpm typecheck` ✅), static verification routing checks (`pnpm demo:verify` ✅), and Playwright simulation E2E tests (`pnpm demo:verify:e2e` ✅) pass successfully.
+
+
 
 
 
