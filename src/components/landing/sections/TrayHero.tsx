@@ -206,7 +206,7 @@ export function TrayHero() {
 
           {/* Metrics strip */}
           <motion.div variants={softFadeUp} className="w-full">
-            <div className="mt-10 grid grid-cols-3 gap-3 sm:gap-6 lg:gap-10 border-t border-[var(--tray-border)] pt-6 sm:pt-8">
+            <div className="mt-10 grid grid-cols-3 gap-8 sm:gap-12 lg:gap-16 border-t border-[var(--tray-border)] pt-6 sm:pt-8">
               {METRICS.map((m) => (
                 <div key={m.label} className="flex flex-col gap-2">
                   <p
