@@ -6,7 +6,7 @@ import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 const INTRO_KEY = "tray_landing_intro_seen";
 
 export function LandingIntro() {
-  const [show, setShow] = useState(false);
+  const [show, setShow] = useState(true);
   const [phase, setPhase] = useState<"reveal" | "done">("reveal");
   const reduce = useReducedMotion();
 
@@ -17,6 +17,7 @@ export function LandingIntro() {
     if (window.sessionStorage.getItem(INTRO_KEY) === "1") {
       setPhase("done");
       (window as any).__trayIntroStarted = true;
+      document.documentElement.classList.add("tl-intro-done");
       window.dispatchEvent(new CustomEvent("tray-intro-start"));
       return;
     }
@@ -27,6 +28,7 @@ export function LandingIntro() {
     if (reduce) {
       const timeout = window.setTimeout(() => {
         (window as any).__trayIntroStarted = true;
+        document.documentElement.classList.add("tl-intro-done");
         window.dispatchEvent(new CustomEvent("tray-intro-start"));
         setShow(false);
       }, 400);
@@ -36,6 +38,7 @@ export function LandingIntro() {
     // Monumental preloader display timer: 3.4 seconds
     const timer = window.setTimeout(() => {
       (window as any).__trayIntroStarted = true;
+      document.documentElement.classList.add("tl-intro-done");
       window.dispatchEvent(new CustomEvent("tray-intro-start"));
       setShow(false);
     }, 3400);
@@ -50,6 +53,7 @@ export function LandingIntro() {
       {show && (
         <motion.div
           key="preloader-wrapper"
+          id="preloader-wrapper"
           className={`fixed inset-0 z-[9999] overflow-hidden ${show ? "pointer-events-auto" : "pointer-events-none"}`}
           exit={reduce ? { opacity: 0 } : undefined}
           transition={reduce ? { duration: 0.4 } : undefined}
@@ -119,7 +123,7 @@ export function LandingIntro() {
                   initial={{ y: "100%", opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ duration: 1.15, delay: 0.55, ease: [0.16, 1, 0.3, 1] }}
-                  className="text-[clamp(0.72rem,1.8vw,1.15rem)] text-[#FAF8F5]/80 font-bold tracking-[0.26em] uppercase leading-none whitespace-nowrap"
+                  className="text-[clamp(1rem,2.5vw,1.5rem)] text-[#FAF8F5]/80 font-bold tracking-[0.26em] uppercase leading-none whitespace-nowrap"
                   style={{
                     fontFamily: "var(--font-dm-mono), monospace",
                   }}

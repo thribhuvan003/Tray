@@ -42,7 +42,7 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
   const [hoveredStep, setHoveredStep] = React.useState<number | null>(null);
 
   return (
-    <div className="tray-landing tray-page min-h-svh overflow-x-hidden" style={{ fontFamily: "var(--font-ui)" }}>
+    <div className="tray-landing tray-page min-h-svh overflow-x-hidden tray-landing-wrapper" style={{ fontFamily: "var(--font-ui)" }}>
       <ScrollProgress />
       <LandingIntro />
       <LandingMotion />
@@ -84,7 +84,7 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
               Sign in
             </Link>
             <a
-              href="#try-demo"
+              href="#portals"
               className="rounded-full bg-[var(--tray-ink)] px-5 py-2.5 text-sm font-semibold text-[var(--tray-cream)] transition hover:opacity-85"
             >
               Demo →
@@ -127,7 +127,7 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
                 Sign in
               </Link>
               <a
-                href="#try-demo"
+                href="#portals"
                 className="rounded-xl bg-[var(--tray-ink)] px-3 py-3 text-center text-sm font-semibold text-[var(--tray-cream)]"
               >
                 Demo →
@@ -500,7 +500,7 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
           <RevealItem>
             <div className="mt-10 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
               <MotionCTA
-                href="#try-demo"
+                href="#portals"
                 variant="primary"
                 className="rounded-full bg-[var(--tray-ink)] px-8 py-4 text-sm font-semibold text-[var(--tray-cream)]"
                 style={{ fontFamily: "var(--font-geist)" } as React.CSSProperties}

@@ -298,7 +298,7 @@ export function CartDrawer({ tenantSlug, tenantName }: { tenantSlug: string; ten
         </button>
       </Drawer.Trigger>
       <Drawer.Portal>
-        <Drawer.Overlay className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm" />
+        <Drawer.Overlay className="fixed inset-0 z-40 bg-black/40" />
         <Drawer.Content className="fixed bottom-0 left-0 right-0 z-50 mt-24 flex h-[88vh] sm:h-[80vh] flex-col rounded-t-3xl bg-[color:var(--color-paper)] focus:outline-none">
           <Drawer.Title className="sr-only">Your cart</Drawer.Title>
           <div className="mx-auto w-12 h-1.5 rounded-full bg-[color:var(--color-line-strong)] mt-3 mb-2" />

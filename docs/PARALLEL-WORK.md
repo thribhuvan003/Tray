@@ -86,6 +86,34 @@ Read AGENTS.md, docs/DEMO-SPEC.md, docs/PARALLEL-WORK.md. One file owner per lan
 
 ## Session log
 
+### 2026-05-23 — High-Fidelity Device Mockups & Retina-Grade Preview Scaling
+
+**Work done:**
+- Implemented premium, visual-rich device mockups inside portals showcase cards in `PiranhaPortalsSection.tsx` inspired by premium showcase pages on Godly and Lapa Ninja:
+  - **Student Mobile**: Centered a vertical mobile phone frame mockup (notch, status indicators, dynamic island) with a grid background and high-density, sharp iframe scale (`scale(0.37)` of a real `375x550` viewport).
+  - **Kitchen Tablet**: Wrapped the queue view inside a landscape tablet frame with front camera dot and tablet scaling (`scale(0.288)` of a real `768x530` viewport).
+  - **Admin Desktop**: Rendered the overview panel in a desktop browser window frame mockup containing traffic light control buttons, thin bezel border, and browser address bar pointing to `tray.io/admin`, scaled at `scale(0.197)` of a real `1280x840` viewport.
+- Enhanced the card wrappers (`motion-card`) with a smooth 3D lift (`hover:-translate-y-1.5 hover:scale-[1.01]`) and a deep, soft ambient box shadow on hover (`hover:shadow-2xl hover:shadow-neutral-200/40`).
+- Verified absolute type-safety (`pnpm typecheck` ✅), static layout verifier integrity (`pnpm demo:verify` ✅), and local end-to-end clicks (`pnpm run demo:verify:e2e` ✅).
+
+### 2026-05-23 — Removed Annoying Blur on Cart Sidebar & Bar
+
+**Work done:**
+- Removed backdrop blur filters (`backdrop-filter: blur(...)`) and gray translucent overlays from the student cart sidebar and mobile bottom cart bar in the static prototype (`public/demo/student.html`), converting them to clean, high-contrast, premium solid surfaces:
+  - Desktop sidebar: Solid background (`var(--demo-choice-bg, #ffffff)`) for a clean editorial look.
+  - Mobile bottom bar: Solid dark background (`var(--dark-base)`) for strong readability.
+- Re-styled the mobile bottom bar item counter text to contrast perfectly with the solid dark color.
+- Removed `backdrop-blur-sm` from the mobile Vaul drawer overlay in the main Next.js app (`src/components/portal-student/cart-drawer.tsx`) to disable background blur.
+- Verified compilation typecheck (`pnpm typecheck` ✅), static verification (`pnpm demo:verify` ✅), and E2E verifier flow (`pnpm run demo:verify:e2e` ✅).
+
+### 2026-05-23 — Resolved Non-Existent Demo Anchor & Enabled Seamless Smooth Scroll
+
+**Work done:**
+- Fixed navigation issue where clicking "Demo →" in the desktop header, the mobile navigation sheet, or the "Try full demo" CTA at the bottom of the page did nothing because they pointed to `#try-demo`, which did not exist on the page.
+- Re-routed all of these links to point to `#portals`, which maps directly to the premium light-themed bento live preview portals showcase.
+- Updated the "Open live demo" CTA button in `not-found.tsx` to point to `/#portals` as well to maintain visual/functional alignment.
+- Verified absolute type-safety (`pnpm typecheck` ✅), static layout verifier integrity (`pnpm demo:verify` ✅), and local end-to-end clicks (`pnpm run demo:verify:e2e` ✅).
+
 ### 2026-05-23 — Portal Column Layout & Frameless Responsive Iframe Previews
 
 **Work done:**

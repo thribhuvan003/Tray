@@ -453,3 +453,19 @@ html.dark [data-portal="kitchen"] {
   letter-spacing: -0.07em;
   line-height: 0.84;
 }
+
+/* ── Preloader FOUC/Hydration Flash Guard ── */
+.tray-landing-wrapper {
+  opacity: 0;
+  transition: opacity 0.5s ease-in-out;
+}
+
+.tl-intro-seen .tray-landing-wrapper,
+.tl-intro-done .tray-landing-wrapper {
+  opacity: 1;
+}
+
+.tl-intro-seen #preloader-wrapper {
+  display: none !important;
+  pointer-events: none !important;
+}

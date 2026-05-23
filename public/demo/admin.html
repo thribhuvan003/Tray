@@ -334,7 +334,171 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
 .toast{position:fixed;bottom:24px;right:24px;background:var(--bg-3);border:1px solid var(--line-2);color:var(--ink);padding:10px 16px;border-radius:8px;font-size:13px;font-weight:500;display:flex;align-items:center;gap:10px;box-shadow:0 12px 32px rgba(0,0,0,.4);transform:translateY(20px);opacity:0;transition:all .35s cubic-bezier(.34,1.26,.64,1);z-index:50;pointer-events:none}
 .toast.show{transform:translateY(0);opacity:1}
 .toast .d{width:7px;height:7px;border-radius:50%;background:var(--lime)}
+
+body.in-iframe {
+  background: var(--bg) !important;
+}
+body.in-iframe .sb,
+body.in-iframe .topbar,
+body.in-iframe .toast {
+  display: none !important;
+}
+body.in-iframe .app {
+  display: block !important;
+  min-height: 0 !important;
+}
+body.in-iframe .main {
+  padding: 12px !important;
+}
+body.in-iframe .kpi-grid {
+  grid-template-columns: repeat(2, 1fr) !important;
+  gap: 10px !important;
+  margin-bottom: 12px !important;
+}
+body.in-iframe .kpi-card {
+  padding: 10px 12px !important;
+  gap: 8px !important;
+}
+body.in-iframe .kpi-card .val {
+  font-size: 24px !important;
+}
+body.in-iframe .kpi-card .spark {
+  height: 24px !important;
+}
+body.in-iframe .dash-row.r1 {
+  grid-template-columns: 1fr !important;
+}
+body.in-iframe .dash-row.r2 {
+  grid-template-columns: 1fr !important;
+}
+
+/* RESPONSIVENESS */
+.sb-toggle-btn {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 8px;
+  background: var(--bg-3);
+  border: 1px solid var(--line);
+  color: var(--ink);
+  cursor: pointer;
+  transition: background .12s, border-color .12s;
+  flex-shrink: 0;
+}
+.sb-toggle-btn:hover {
+  background: var(--bg-4);
+  border-color: var(--line-2);
+}
+.sb-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  z-index: 999;
+}
+.sb-overlay.show {
+  display: block;
+}
+
+@media (max-width: 991px) {
+  .app {
+    grid-template-columns: 1fr;
+  }
+  .sb {
+    position: fixed;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 248px;
+    height: 100vh;
+    z-index: 1000;
+    transform: translateX(-100%);
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 10px 0 30px rgba(0, 0, 0, 0.4);
+  }
+  .sb.open {
+    transform: translateX(0);
+  }
+  .sb-toggle-btn {
+    display: inline-flex;
+  }
+  .topbar {
+    position: static;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+    padding: 16px 0;
+    height: auto;
+  }
+  .topbar-l {
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
+  }
+  .topbar-r {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+  .search {
+    width: 100%;
+  }
+  .kpi-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .dash-row.r1, .dash-row.r2 {
+    grid-template-columns: 1fr;
+  }
+  .students-grid {
+    grid-template-columns: 1fr;
+  }
+  .main {
+    padding: 0 16px 48px;
+  }
+}
+
+@media (max-width: 575px) {
+  .kpi-grid {
+    grid-template-columns: 1fr;
+  }
+  .topbar-r {
+    gap: 8px;
+  }
+}
 </style>
+<script>
+  (function() {
+    function init() {
+      if (window.self !== window.top) {
+        document.body.classList.add('in-iframe');
+        const showOverview = () => {
+          const overviewNav = document.querySelector('[data-view="overview"]');
+          if (overviewNav) {
+            overviewNav.click();
+          } else {
+            document.querySelectorAll('.view-pane').forEach(el => {
+              if (el.id === 'view-overview' || el.classList.contains('dash-block')) {
+                el.removeAttribute('hidden');
+              } else {
+                el.setAttribute('hidden', 'true');
+              }
+            });
+          }
+        };
+        showOverview();
+        setTimeout(showOverview, 50);
+      }
+    }
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', init);
+    } else {
+      init();
+    }
+  })();
+</script>
 </head>
 <body>
 
@@ -411,7 +575,10 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
     <!-- TOP BAR -->
     <div class="topbar">
       <div class="topbar-l">
-        <div class="crumb">
+        <div class="crumb" style="display:flex; align-items:center; gap:12px;">
+          <button class="sb-toggle-btn" id="sbToggle" aria-label="Toggle navigation">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+          </button>
           <span>Operations</span>
           <span class="sep">/</span>
           <span id="crumbView" style="color:var(--ink-2)">Overview</span>
@@ -1541,6 +1708,34 @@ window.addEventListener('storage', function (e) {
     $('#tenantAv').textContent = TD.getCanteen(e.newValue).av;
   }
 });
+
+// Sidebar Mobile Toggle
+const sb = $('.sb');
+const toggle = $('#sbToggle');
+if (sb && toggle) {
+  const overlay = document.createElement('div');
+  overlay.className = 'sb-overlay';
+  document.body.appendChild(overlay);
+  
+  toggle.addEventListener('click', () => {
+    sb.classList.toggle('open');
+    overlay.classList.toggle('show');
+  });
+  
+  overlay.addEventListener('click', () => {
+    sb.classList.remove('open');
+    overlay.classList.remove('show');
+  });
+  
+  $$('.sb-link, .sb-portal-link').forEach(link => {
+    link.addEventListener('click', () => {
+      if (window.innerWidth < 992) {
+        sb.classList.remove('open');
+        overlay.classList.remove('show');
+      }
+    });
+  });
+}
 </script>
 </body>
 </html>
