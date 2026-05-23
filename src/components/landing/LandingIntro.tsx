@@ -3,8 +3,6 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 
-const INTRO_KEY = "tray_landing_intro_seen";
-
 export function LandingIntro() {
   const [show, setShow] = useState(true);
   const [phase, setPhase] = useState<"reveal" | "done">("reveal");
@@ -13,8 +11,13 @@ export function LandingIntro() {
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    // Check if intro has already been seen in this session
-    if (window.sessionStorage.getItem(INTRO_KEY) === "1") {
+    // Determine navigation type — show intro on fresh loads and reloads only.
+    // Skip on back/forward navigation (history traversal).
+    const navEntries = performance.getEntriesByType("navigation") as PerformanceNavigationTiming[];
+    const navType = navEntries[0]?.type ?? "navigate"; // "navigate" | "reload" | "back_forward"
+
+    if (navType === "back_forward") {
+      // User pressed back/forward — skip intro, fire immediately
       setPhase("done");
       (window as any).__trayIntroStarted = true;
       document.documentElement.classList.add("tl-intro-done");
@@ -22,7 +25,7 @@ export function LandingIntro() {
       return;
     }
 
-    window.sessionStorage.setItem(INTRO_KEY, "1");
+    // Fresh navigation or hard reload → always show intro
     setShow(true);
 
     if (reduce) {
