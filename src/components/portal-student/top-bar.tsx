@@ -70,13 +70,13 @@ export function StudentTopBar({ tenant, siblings = [] }: Props) {
           aria-label="Back to Tray home"
         >
           <span
-            className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-ocean-500 text-black text-[12px] transition group-hover:scale-105"
-            style={{ fontFamily: "var(--font-barlow, var(--font-geist))", fontWeight: 900 }}
+            className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-ocean-500 text-white text-[12px] transition group-hover:scale-105"
+            style={{ fontFamily: "var(--font-bricolage)", fontWeight: 900 }}
           >T</span>
           <span
-            className="hidden tracking-[-0.05em] sm:inline"
-            style={{ fontFamily: "var(--font-fraunces, var(--font-geist))", fontWeight: 700, fontSize: "1.05rem" }}
-          >Tray<em className="not-italic text-ocean-500" style={{ fontStyle: "italic" }}>.</em></span>
+            className="hidden tracking-[-0.02em] sm:inline"
+            style={{ fontFamily: "var(--font-bricolage)", fontWeight: 700, fontSize: "1.2rem" }}
+          >Tray<span className="dot">.</span></span>
         </Link>
 
         {/* Center: canteen switcher (if campus has siblings) or static name */}

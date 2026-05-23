@@ -115,8 +115,8 @@
 
 /* ─── Portal overrides ─── */
 [data-portal="student"] {
-  --portal-font-sans:    var(--font-manrope), ui-sans-serif, system-ui;
-  --portal-font-display: var(--font-fraunces), ui-serif, Georgia;
+  --portal-font-sans:    var(--font-bricolage), ui-sans-serif, system-ui;
+  --portal-font-display: var(--font-bricolage), ui-sans-serif, system-ui;
 }
 [data-portal="kitchen"] {
   --portal-font-sans:    var(--font-manrope), ui-sans-serif, system-ui;
@@ -233,15 +233,15 @@ html.dark [data-portal="student"] {
   --color-ink:       #F4EFE6;
   --color-line:      rgba(244, 239, 230, 0.08);
   --color-line-strong: rgba(244, 239, 230, 0.15);
-  --color-ocean-50:  #241515;
-  --color-ocean-100: #381B1B;
-  --color-ocean-200: #542222;
-  --color-ocean-300: #732A2A;
-  --color-ocean-400: #9E3030;
-  --color-ocean-500: #FF3333;
-  --color-ocean-600: #D92626;
-  --color-ocean-700: #B31919;
-  --color-ocean-900: #420808;
+  --color-ocean-50:  #0f172a;
+  --color-ocean-100: #1e293b;
+  --color-ocean-200: #334155;
+  --color-ocean-300: #475569;
+  --color-ocean-400: #64748b;
+  --color-ocean-500: #cbd5e1;   /* Light slate primary accent for dark mode */
+  --color-ocean-600: #e2e8f0;
+  --color-ocean-700: #f1f5f9;
+  --color-ocean-900: #f8fafc;
 }
 /* Kitchen dark: paper inversion */
 html.dark [data-portal="kitchen"] {
@@ -296,6 +296,18 @@ html.dark [data-portal="kitchen"] {
 
 /* ─── Mono helper that turns on stylistic sets cleanly ─── */
 .mono { font-family: var(--font-mono); font-feature-settings: "ss01","cv01","cv02"; }
+
+.it {
+  font-family: var(--font-instrument-serif), serif !important;
+  font-style: italic !important;
+  font-weight: 400 !important;
+}
+.dot {
+  font-family: var(--font-instrument-serif), serif !important;
+  font-style: italic !important;
+  font-weight: 400 !important;
+  color: var(--color-ocean-500) !important;
+}
 
 /* ─── Paper grain (used on kitchen portal) ─── */
 .paper-grain {
@@ -352,15 +364,15 @@ html.dark [data-portal="kitchen"] {
   --color-ink:       #1A1A19;   /* Charcoal ink */
   --color-line:      rgba(26, 26, 25, 0.12);
   --color-line-strong: rgba(26, 26, 25, 0.24);
-  --color-ocean-50:  #FDFBF8;   /* Very soft cream/pinkish tint */
-  --color-ocean-100: #FBEBE8;
-  --color-ocean-200: #F6C4BD;
-  --color-ocean-300: #ED877C;
-  --color-ocean-400: #E85F51;
-  --color-ocean-500: #E60000;   /* Crimson Red accent */
-  --color-ocean-600: #C40000;
-  --color-ocean-700: #A30000;
-  --color-ocean-900: #420000;
+  --color-ocean-50:  #f1f5f9;
+  --color-ocean-100: #e2e8f0;
+  --color-ocean-200: #cbd5e1;
+  --color-ocean-300: #94a3b8;
+  --color-ocean-400: #64748b;
+  --color-ocean-500: #334155;   /* Slate-700 primary accent */
+  --color-ocean-600: #1e293b;
+  --color-ocean-700: #0f172a;
+  --color-ocean-900: #020617;
 }
 
 /* ── Landing page ambient background ─────────────────────────────── */

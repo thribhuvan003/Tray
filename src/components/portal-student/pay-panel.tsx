@@ -161,7 +161,7 @@ export function PayPanel({
           Order {order.short_code}
         </div>
         <h1 className="font-display text-[clamp(28px,5vw,42px)] font-medium tracking-tight leading-tight">
-          Pay <span className="italic text-ocean-500">{formatRupees(order.total_paise)}</span> by UPI
+          Pay <span className="italic text-ocean-500">{formatRupees(order.total_paise)}</span> by <span className="it">UPI.</span>
         </h1>
       </div>
 

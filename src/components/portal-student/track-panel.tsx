@@ -200,16 +200,22 @@ export function TrackPanel({ tenantSlug, tenantName, order: initial, lines }: { 
           <h1 className="font-display text-[clamp(28px,5vw,40px)] font-medium tracking-tight leading-tight">
             {isCancelled ? (
               <>
-                Cancelled.{" "}
-                <span className="italic text-rose-500">Refund on its way.</span>
+                Order <span className="it">cancelled.</span>
               </>
             ) : (
               <>
-                {STEPS[currentIdx]?.label}.{" "}
-                <span className="italic text-ocean-500">{STEPS[currentIdx]?.copy}</span>
+                {STEPS[currentIdx]?.label === "Placed" && <>Order <span className="it">placed.</span></>}
+                {STEPS[currentIdx]?.label === "Preparing" && <>Almost <span className="it">there.</span></>}
+                {STEPS[currentIdx]?.label === "Ready" && <>Ready for <span className="it">pickup.</span></>}
+                {STEPS[currentIdx]?.label === "Collected" && <>Order <span className="it">collected.</span></>}
               </>
             )}
           </h1>
+          {!isCancelled && (
+            <p className="text-[13.5px] text-[color:var(--color-ink)]/65 mt-1.5 font-medium">
+              {STEPS[currentIdx]?.copy}
+            </p>
+          )}
         </div>
         <div className="text-[12px] font-mono tabular text-[color:var(--color-ink)]/55">
           Placed {formatTimeIST(order.placed_at)}

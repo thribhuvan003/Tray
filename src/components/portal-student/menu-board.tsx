@@ -2,12 +2,14 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Search } from "lucide-react";
+import { Search, Minus, Plus } from "lucide-react";
 import type { MenuItem, MenuCategory } from "@/lib/db/types";
 import { getBrowserClient } from "@/lib/supabase/browser";
 import { MenuItemCard } from "./menu-item-card";
-import { cn } from "@/lib/utils";
+import { cn, formatRupees } from "@/lib/utils";
 import { useCart } from "@/lib/cart/store";
+import { toast } from "sonner";
+import { motion } from "framer-motion";
 
 type Props = {
   categories: MenuCategory[];
@@ -22,6 +24,21 @@ export function MenuBoard({ categories, items, tenantId, tenantSlug, siblings = 
   const [vegOnly, setVegOnly] = useState(false);
   const [q, setQ] = useState("");
   const router = useRouter();
+
+  const specialsCategory = useMemo(() => {
+    return categories.find(c => c.name.toLowerCase() === "specials");
+  }, [categories]);
+
+  const specialsItems = useMemo(() => {
+    if (!specialsCategory) return [];
+    return items.filter(it => it.category_id === specialsCategory.id);
+  }, [items, specialsCategory]);
+
+  const showSpecials = activeCat === "all" || (specialsCategory && activeCat === specialsCategory.id);
+  const visibleSpecials = useMemo(() => {
+    if (!showSpecials || specialsItems.length === 0 || q.trim() !== "") return [];
+    return specialsItems.filter(it => !vegOnly || it.diet === "veg");
+  }, [showSpecials, specialsItems, q, vegOnly]);
 
   const { orderType, setOrderType, tableLabel, setTableLabel } = useCart();
 
@@ -144,6 +161,20 @@ export function MenuBoard({ categories, items, tenantId, tenantSlug, siblings = 
       {/* ── Main content area ── */}
       <div className="min-w-0">
         
+        {/* signature welcome greeting */}
+        <div className="mb-6">
+          <div className="text-[10px] font-mono uppercase tracking-[0.14em] text-[color:var(--color-ink)]/45 mb-1.5 flex items-center gap-1.5">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+            </span>
+            Kitchen open · ~7 min wait
+          </div>
+          <h1 className="text-4xl sm:text-5xl font-medium tracking-tight leading-none text-[color:var(--color-ink)]" style={{ fontFamily: "var(--font-bricolage)" }}>
+            What's <span className="it">cooking, Ananya?</span>
+          </h1>
+        </div>
+
         {/* ── .menu-controls block ── */}
         <div className="mb-6 p-5 rounded-2xl border border-[color:var(--color-line)] bg-[color:var(--color-paper-dim)] shadow-sm flex flex-col gap-5">
           {/* Canteen Selector / Switcher */}
@@ -306,6 +337,34 @@ export function MenuBoard({ categories, items, tenantId, tenantSlug, siblings = 
           </label>
         </div>
 
+        {/* Today's Specials Section */}
+        {visibleSpecials.length > 0 && (
+          <div className="mb-8 animate-in fade-in duration-300">
+            <div className="flex items-baseline justify-between mb-3">
+              <div>
+                <h2 className="font-display text-[22px] sm:text-[26px] font-medium tracking-tight animate-fade-in" style={{ fontFamily: "var(--font-bricolage)" }}>
+                  Today's <span className="it">specials.</span>
+                </h2>
+                <p className="text-[11px] font-mono uppercase tracking-wider text-[color:var(--color-ink)]/45">
+                  Live from kitchen
+                </p>
+              </div>
+              <div className="text-[10px] font-mono uppercase tracking-[0.12em] text-[color:var(--color-accent)] mb-1 flex items-center gap-1.5">
+                <span className="relative flex h-1.5 w-1.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
+                </span>
+                Just Added
+              </div>
+            </div>
+            <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-none -mx-4 px-4">
+              {visibleSpecials.map((item) => (
+                <SpecialCard key={item.id} item={item} />
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* ── Menu Grid ── */}
         {filtered.length === 0 ? (
           <div className="py-16 text-center text-[color:var(--color-ink)]/55">
@@ -367,5 +426,174 @@ export function MenuBoard({ categories, items, tenantId, tenantSlug, siblings = 
 
       </div>
     </div>
+  );
+}
+
+function SpecialCard({ item }: { item: MenuItem }) {
+  const line = useCart((s) => s.lines.find((l) => l.menuItemId === item.id));
+  const add = useCart((s) => s.add);
+  const inc = useCart((s) => s.increment);
+  const dec = useCart((s) => s.decrement);
+  const oos = !item.in_stock || item.status !== "live";
+
+  const dietRing =
+    item.diet === "veg"
+      ? "border-emerald-600 text-emerald-600"
+      : item.diet === "egg"
+      ? "border-amber-600 text-amber-600"
+      : "border-rose-600 text-rose-600";
+  const dietFill =
+    item.diet === "veg" ? "bg-emerald-600" : item.diet === "egg" ? "bg-amber-600" : "bg-rose-600";
+
+  const nameParts = item.name.split(" ");
+  const lastName = nameParts[nameParts.length - 1];
+  const firstNames = nameParts.slice(0, -1).join(" ");
+
+  return (
+    <article
+      className={cn(
+        "group relative w-56 shrink-0 rounded-2xl border bg-gradient-to-br from-white/65 to-[color:var(--color-ink)]/5 dark:from-white/10 dark:to-white/0 p-4.5 flex flex-col gap-3 transition-all",
+        oos ? "opacity-60 border-[color:var(--color-line)]" : "border-[color:var(--color-line)] hover:border-ocean-500/40 hover:-translate-y-1 hover:shadow-md"
+      )}
+    >
+      <span className="absolute top-4.5 right-4.5 bg-rose-600 text-white text-[9px] font-mono font-bold tracking-widest px-2 py-0.5 rounded uppercase z-10 shadow-sm">
+        NEW
+      </span>
+
+      <div className="relative w-14 h-14 rounded-xl overflow-hidden flex-shrink-0">
+        {item.image_url ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={item.image_url}
+            alt={item.name}
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <div
+            className="w-full h-full flex items-center justify-center font-serif italic text-2xl text-ocean-500 border border-[color:var(--color-line)] bg-white dark:bg-neutral-800"
+            style={{
+              background:
+                item.diet === "veg"
+                  ? "linear-gradient(135deg,#e8f5e9,#a5d6a7)"
+                  : item.diet === "egg"
+                  ? "linear-gradient(135deg,#fff8e1,#ffe082)"
+                  : "linear-gradient(135deg,#fce4ec,#ef9a9a)",
+            }}
+          >
+            {item.name.charAt(0)}
+          </div>
+        )}
+
+        {/* FSSAI Badge absolute on bottom-right of thumbnail */}
+        <motion.span
+          aria-label={item.diet}
+          className={cn(
+            "absolute bottom-0 right-0 inline-flex h-4.5 w-4.5 items-center justify-center border bg-white z-10 rounded-tl-md shadow-sm",
+            dietRing
+          )}
+          whileHover={{ rotate: 180 }}
+          transition={{ duration: 0.4, ease: "easeInOut" }}
+        >
+          {item.diet === "nonveg" ? (
+            <span className="w-0 h-0 border-l-[3.5px] border-l-transparent border-r-[3.5px] border-r-transparent border-b-[7px] border-b-rose-600 block" />
+          ) : (
+            <span className={cn("h-2.5 w-2.5 rounded-full block", dietFill)} />
+          )}
+        </motion.span>
+      </div>
+
+      <div className="flex flex-col gap-1">
+        <h3 className="text-[16px] font-semibold leading-tight text-[color:var(--color-ink)]" style={{ fontFamily: "var(--font-bricolage)" }}>
+          {firstNames} <span className="it">{lastName}.</span>
+        </h3>
+        {item.description && (
+          <p className="text-[12px] leading-[1.4] text-[color:var(--color-ink)]/55 line-clamp-2">
+            {item.description}
+          </p>
+        )}
+      </div>
+
+      <div className="mt-auto pt-3 flex items-center justify-between gap-2">
+        <div className="text-[17px] font-bold tabular tracking-[0.01em] text-ocean-500">
+          {formatRupees(item.price_paise)}
+        </div>
+        {line ? (
+          <motion.div
+            initial={{ scale: 0.85, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ type: "spring", stiffness: 400, damping: 22 }}
+            className="inline-flex items-center rounded-full bg-ocean-500 text-black"
+          >
+            <button
+              aria-label="Decrease"
+              disabled={oos}
+              onClick={() => dec(item.id)}
+              className="h-8 w-8 inline-flex items-center justify-center transition-opacity hover:opacity-75"
+            >
+              <Minus size={14} />
+            </button>
+            <span className="text-[13px] font-bold tabular w-5 text-center">{line.qty}</span>
+            <button
+              aria-label="Increase"
+              disabled={oos}
+              onClick={() => inc(item.id)}
+              className="h-8 w-8 inline-flex items-center justify-center transition-opacity hover:opacity-75"
+            >
+              <Plus size={14} />
+            </button>
+          </motion.div>
+        ) : (
+          <motion.button
+            disabled={oos}
+            whileTap={{ scale: 0.95 }}
+            whileHover={{ scale: 1.05 }}
+            onClick={() => {
+              add({
+                menuItemId: item.id,
+                name: item.name,
+                pricePaise: item.price_paise,
+                diet: item.diet,
+              });
+              const nameLower = item.name.toLowerCase();
+              let message = `Added ${item.name} to tray!`;
+              if (nameLower.includes("biryani")) {
+                message = `Aromatic Biryani added to your tray! 🍛`;
+              } else if (nameLower.includes("coffee") || nameLower.includes("cappuccino")) {
+                message = `Freshly brewed coffee added! ☕`;
+              } else if (nameLower.includes("tea") || nameLower.includes("chai")) {
+                message = `Hot steaming chai added! ☕`;
+              } else if (nameLower.includes("burger")) {
+                message = `Juicy burger added! 🍔`;
+              } else if (nameLower.includes("sandwich")) {
+                message = `Crispy sandwich added! 🥪`;
+              } else if (nameLower.includes("dosa")) {
+                message = `Crispy golden Dosa added! 🥞`;
+              } else if (nameLower.includes("momo")) {
+                message = `Steaming hot momos added! 🥟`;
+              } else if (nameLower.includes("maggi") || nameLower.includes("noodle")) {
+                message = `Slurpy noodles added! 🍜`;
+              } else if (nameLower.includes("shake") || nameLower.includes("smoothie") || nameLower.includes("juice")) {
+                message = `Chilled shake added! 🥤`;
+              } else if (item.diet === "veg") {
+                message = `Fresh & green ${item.name} added! 🟢`;
+              } else if (item.diet === "egg") {
+                message = `Egg-cellent choice of ${item.name}! 🍳`;
+              } else if (item.diet === "nonveg") {
+                message = `Savory ${item.name} added to tray! 🍖`;
+              }
+              toast.success(message);
+            }}
+            className={cn(
+              "inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-[12.5px] font-semibold transition-colors",
+              oos
+                ? "bg-[color:var(--color-line)] text-[color:var(--color-ink)]/40 cursor-not-allowed"
+                : "bg-ocean-500 text-black hover:bg-ocean-600"
+            )}
+          >
+            <Plus size={14} /> Add
+          </motion.button>
+        )}
+      </div>
+    </article>
   );
 }

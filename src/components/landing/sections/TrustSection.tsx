@@ -99,23 +99,23 @@ export function TrustSection() {
 
                   {/* Eyebrow / Tag */}
                   <span
-                    className="font-code text-[0.68rem] font-bold uppercase tracking-[0.18em]"
-                    style={{ color: "var(--tray-muted)" }}
+                    className="text-[0.72rem] font-semibold uppercase tracking-[0.15em] block mb-2"
+                    style={{ fontFamily: "var(--font-geist)", color: "var(--tray-clay)" }}
                   >
                     {item.tag}
                   </span>
 
                   {/* Title */}
                   <h3
-                    className="mt-2.5 mb-4 text-[1.45rem] font-extrabold tracking-tight text-neutral-900 leading-snug"
-                    style={{ fontFamily: "var(--font-barlow)" }}
+                    className="mb-4 text-[1.75rem] font-medium tracking-tight text-neutral-900 leading-[1.2]"
+                    style={{ fontFamily: "var(--font-fraunces)", fontStyle: "italic" }}
                   >
                     {item.title}
                   </h3>
 
                   {/* Description */}
                   <p
-                    className="text-[0.88rem] leading-[1.65] text-neutral-600 opacity-75"
+                    className="text-[0.88rem] leading-[1.65] text-neutral-600 opacity-80"
                     style={{ fontFamily: "var(--font-geist)" }}
                   >
                     {item.desc}

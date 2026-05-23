@@ -1713,6 +1713,36 @@ if (sb && toggle) {
     });
   });
 }
+
+if (window.self !== window.top) {
+  (function() {
+    setInterval(function() {
+      var cards = document.querySelectorAll('.kpi-grid .kpi-card');
+      if (cards.length >= 2) {
+        var revCounter = cards[0].querySelector('.counter');
+        if (revCounter) {
+          var currentRev = parseInt(revCounter.dataset.to) || 38420;
+          var newRev = currentRev + Math.floor(Math.random() * 200) + 40;
+          revCounter.dataset.to = newRev;
+          revCounter.dataset.animated = '0';
+          animateCounter(revCounter);
+          
+          var revHl = document.querySelector('.label-hl');
+          if (revHl) revHl.textContent = '₹' + (newRev / 1000).toFixed(1) + 'K · today';
+        }
+        
+        var ordCounter = cards[1].querySelector('.counter');
+        if (ordCounter) {
+          var currentOrd = parseInt(ordCounter.dataset.to) || 248;
+          var newOrd = currentOrd + 1;
+          ordCounter.dataset.to = newOrd;
+          ordCounter.dataset.animated = '0';
+          animateCounter(ordCounter);
+        }
+      }
+    }, 6000);
+  })();
+}
 </script>
 </body>
 </html>

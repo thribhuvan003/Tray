@@ -99,7 +99,7 @@ export function CartDrawer({ tenantSlug, tenantName }: { tenantSlug: string; ten
     <>
       <div className="px-5 sm:px-6 pb-3 flex items-center justify-between border-b border-[color:var(--color-line)]">
         <div>
-          <div className="font-display text-[22px] font-medium tracking-tight">Your tray.</div>
+          <div className="font-display text-[22px] font-medium tracking-tight">Your <span className="it">tray.</span></div>
           <div className="text-[11px] font-mono uppercase tracking-wider text-[color:var(--color-ink)]/55">
             Paying to: {tenantName} · ready in ~7 min
           </div>

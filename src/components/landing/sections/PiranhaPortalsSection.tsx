@@ -11,36 +11,36 @@ import {
 const portals = [
   {
     index: "01",
-    eyebrow: "STUDENT",
-    dotColor: "#2E80EF",
-    title: "Student",
-    description: "Order from any canteen in the campus. Pay by UPI. Track live. Show OTP.",
+    eyebrow: "STUDENT APP",
+    accentColor: "#5cb1ff",
+    title: "Order from any canteen.",
+    description:
+      "Choose canteen, browse menu, pay by UPI, track your order live, collect with a 4-digit OTP.",
     previewSrc: "/demo/student.html",
-    buttonLabel: "Open student demo",
-    showCredentials: false,
-    scale: 0.9,
+    deviceTag: "MOBILE • STUDENT",
+    portalKey: "student" as const,
   },
   {
     index: "02",
-    eyebrow: "KITCHEN",
-    dotColor: "#B8531A",
-    title: "Kitchen staff",
-    description: "Manage one canteen's live queue. Accept, prep, hand over with OTP.",
+    eyebrow: "KITCHEN VIEW",
+    accentColor: "#ef5749",
+    title: "Run the live queue.",
+    description:
+      "New tickets land instantly, prep timers count down, OTP handover clears the order — no paper, no shouting.",
     previewSrc: "/demo/kitchen.html",
-    buttonLabel: "Sign in as kitchen staff",
-    showCredentials: true,
-    scale: 0.45,
+    deviceTag: "TABLET • KITCHEN",
+    portalKey: "kitchen" as const,
   },
   {
     index: "03",
-    eyebrow: "ADMIN",
-    dotColor: "#16A34A",
-    title: "Canteen admin",
-    description: "Menu, orders, staff, and daily revenue. Full audit log included.",
+    eyebrow: "ADMIN CONSOLE",
+    accentColor: "#cdfa50",
+    title: "See the whole operation.",
+    description:
+      "Live orders, daily revenue, menu edits, staff access, full audit log — one screen, every metric.",
     previewSrc: "/demo/admin.html",
-    buttonLabel: "Sign in as admin",
-    showCredentials: true,
-    scale: 0.38,
+    deviceTag: "DESKTOP • ADMIN",
+    portalKey: "admin" as const,
   },
 ] as const;
 
@@ -99,7 +99,7 @@ export function PiranhaPortalsSection() {
       ref={rootRef}
       id="portals"
       className="relative overflow-hidden px-5 py-24 sm:px-8 lg:px-10 lg:min-h-screen lg:flex lg:flex-col lg:justify-center lg:py-24"
-      style={{ background: "var(--tray-cream, #EDE5D2)", color: "var(--tray-ink, #1A1619)" }}
+      style={{ background: "var(--bg, #0e0a06)", color: "var(--ink, #f5efe4)" }}
     >
       {/* Dot-grid */}
       <div className="pointer-events-none absolute inset-0 opacity-[0.06] [background-image:radial-gradient(circle_at_1px_1px,currentColor_1px,transparent_0)] [background-size:18px_18px]" />
@@ -115,66 +115,22 @@ export function PiranhaPortalsSection() {
 
           <h2
             data-portals-heading
-            className="leading-[0.85] tracking-[-0.02em] uppercase"
+            className="leading-[0.9] tracking-[-0.03em] uppercase flex flex-col gap-1"
             style={{
               fontFamily: "var(--font-barlow)",
               fontWeight: 900,
-              fontSize: "clamp(3rem, 7.5vw, 7.5rem)",
+              fontSize: "clamp(2.5rem, 6.5vw, 6.2rem)",
+              color: "var(--ink, #f5efe4)",
             }}
           >
-            <span className="split-word inline-block overflow-hidden"><span className="inline-block mr-[0.22em]">Three</span></span>{" "}
-            <span className="split-word inline-block overflow-hidden"><span className="inline-block mr-[0.22em]">portals,</span></span>{" "}
             <span className="split-word inline-block overflow-hidden">
-              <span
-                className="inline-block not-italic mr-[0.22em]"
-                style={{
-                  fontFamily: "var(--font-fraunces)",
-                  fontStyle: "italic",
-                  textTransform: "none",
-                  color: "var(--tray-clay)",
-                }}
-              >
-                one
-              </span>
-            </span>{" "}
+              <span className="inline-block">Three portals,</span>
+            </span>
             <span className="split-word inline-block overflow-hidden">
-              <span
-                className="inline-block not-italic mr-[0.22em]"
-                style={{
-                  fontFamily: "var(--font-fraunces)",
-                  fontStyle: "italic",
-                  textTransform: "none",
-                  color: "var(--tray-clay)",
-                }}
-              >
-                source
-              </span>
-            </span>{" "}
+              <span className="inline-block">one source of</span>
+            </span>
             <span className="split-word inline-block overflow-hidden">
-              <span
-                className="inline-block not-italic mr-[0.22em]"
-                style={{
-                  fontFamily: "var(--font-fraunces)",
-                  fontStyle: "italic",
-                  textTransform: "none",
-                  color: "var(--tray-clay)",
-                }}
-              >
-                of
-              </span>
-            </span>{" "}
-            <span className="split-word inline-block overflow-hidden">
-              <span
-                className="inline-block not-italic"
-                style={{
-                  fontFamily: "var(--font-fraunces)",
-                  fontStyle: "italic",
-                  textTransform: "none",
-                  color: "var(--tray-clay)",
-                }}
-              >
-                truth.
-              </span>
+              <span className="inline-block">truth.</span>
             </span>
           </h2>
 
@@ -188,88 +144,113 @@ export function PiranhaPortalsSection() {
           </p>
         </div>
 
-        {/* 3-Column Linear Horizontal Showcase Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 mt-10 w-full">
+        {/* 3-Column Portal Grid — matches user screenshots */}
+        <div
+          className="grid grid-cols-1 lg:grid-cols-3 gap-[18px] mt-14 w-full"
+          style={{ perspective: "1200px" }}
+        >
           {portals.map((portal) => (
             <article
               key={portal.index}
               data-portal-card
-              className="motion-card group flex flex-col justify-between p-5 sm:p-6 select-none transition-all duration-300 rounded-[2rem] border border-neutral-300/40 bg-[var(--tray-cream,#EDE5D2)] relative overflow-hidden gap-5 shadow-sm hover:shadow-xl hover:shadow-neutral-300/20 hover:-translate-y-1.5"
+              className="motion-card group flex flex-col select-none rounded-[18px] overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_20px_50px_rgba(0,0,0,0.5)]"
+              style={{
+                background: "var(--bg-2, #161108)",
+                border: "1px solid rgba(245,239,228,0.08)",
+              }}
             >
-              {/* Monospace dot-grid background inside the card */}
-              <div className="pointer-events-none absolute inset-0 opacity-[0.02] [background-image:radial-gradient(circle_at_1px_1px,currentColor_1px,transparent_0)] [background-size:14px_14px] text-neutral-800" />
-
-              {/* Top content group */}
-              <div className="flex flex-col">
-                {/* Eyebrow */}
-                <div className="flex items-center justify-between w-full mb-1">
-                  <span className="font-code text-[0.68rem] font-bold uppercase tracking-wider opacity-60">
+              {/* Portal Head — eyebrow + title */}
+              <div
+                className="flex flex-col gap-2.5"
+                style={{
+                  padding: "24px 24px 20px",
+                  borderBottom: "1px solid rgba(245,239,228,0.08)",
+                }}
+              >
+                <div className="flex justify-between items-center text-[10.5px] font-medium tracking-[0.14em]">
+                  <span style={{ fontFamily: "var(--font-geist-mono, monospace)", color: "var(--ink-3, #8a7960)" }}>
                     {portal.eyebrow}
                   </span>
-                  <span
-                    className="w-2 h-2 rounded-full"
-                    style={{ backgroundColor: portal.dotColor }}
-                  />
+                  <span className="flex items-center gap-1.5 font-bold" style={{ fontFamily: "var(--font-geist-mono, monospace)", color: portal.accentColor }}>
+                    <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: portal.accentColor, boxShadow: `0 0 8px ${portal.accentColor}` }} />
+                    {portal.index}
+                  </span>
                 </div>
-
-                {/* Title */}
                 <h3
-                  className="text-[1.85rem] font-normal tracking-tight text-neutral-900 mb-4"
-                  style={{ fontFamily: "var(--font-fraunces)", fontStyle: "italic" }}
+                  className="text-[32px] tracking-[-0.025em] leading-[1.08] m-0 font-normal italic"
+                  style={{
+                    fontFamily: "var(--font-instrument-serif, 'Instrument Serif', serif)",
+                    color: "var(--ink, #f5efe4)",
+                  }}
                 >
                   {portal.title}
                 </h3>
+              </div>
 
-                {/* Website Preview Container */}
-                <div
-                  className="relative w-full aspect-[16/10] rounded-2xl border border-neutral-300/40 bg-white overflow-hidden shadow-sm mb-4"
-                  style={{ "--scale": portal.scale } as React.CSSProperties}
-                >
-                  <iframe
-                    src={portal.previewSrc}
-                    title={`${portal.title} Live Preview`}
-                    loading="lazy"
-                    sandbox="allow-scripts allow-same-origin"
-                    scrolling="no"
-                    tabIndex={-1}
-                    aria-hidden="true"
-                    className="border-0 origin-top-left"
-                    style={{
-                      position: "absolute",
-                      top: 0,
-                      left: 0,
-                      width: "calc(100% / var(--scale))",
-                      height: "calc(100% / var(--scale))",
-                      transform: "scale(var(--scale))",
-                    }}
-                  />
-                </div>
+              {/* Portal Frame — iframe preview */}
+              <div
+                className="relative overflow-hidden"
+                style={{
+                  height: "400px",
+                  background: "var(--bg-3, #1f1810)",
+                  borderBottom: "1px solid rgba(245,239,228,0.08)",
+                }}
+              >
+                <iframe
+                  src={portal.previewSrc}
+                  title={`${portal.title} Live Preview`}
+                  loading="lazy"
+                  sandbox="allow-scripts allow-same-origin"
+                  scrolling="no"
+                  tabIndex={-1}
+                  aria-hidden="true"
+                  className="border-0 origin-top-left pointer-events-none"
+                  style={{
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    width: "200%",
+                    height: "200%",
+                    transform: "scale(0.5)",
+                    transformOrigin: "0 0",
+                  }}
+                />
+              </div>
 
-                {/* Description */}
+              {/* Portal Body — description + footer */}
+              <div
+                className="flex flex-col gap-4 flex-1"
+                style={{ padding: "20px 24px 24px" }}
+              >
                 <p
-                  className="opacity-70 text-[0.88rem] leading-[1.6] text-neutral-600 mb-6"
-                  style={{ fontFamily: "var(--font-inter)" }}
+                  className="text-[13.5px] leading-relaxed m-0 opacity-80"
+                  style={{
+                    color: "var(--ink-2, #c8b89e)",
+                    maxWidth: "34ch",
+                    fontFamily: "var(--font-inter, var(--font-geist, sans-serif))",
+                  }}
                 >
                   {portal.description}
                 </p>
-              </div>
 
-              {/* Bottom content group */}
-              <div className="flex flex-col mt-auto w-full gap-2">
-                {portal.showCredentials && (
-                  <div className="text-[0.58rem] font-code font-extrabold tracking-[0.18em] text-neutral-400 uppercase text-center w-full mb-1">
-                    DEMO LOGIN · SHARED CREDENTIALS
-                  </div>
-                )}
-
-                <a
-                  href={portal.previewSrc}
-                  className="w-full flex items-center justify-between bg-neutral-900 hover:bg-neutral-950 text-white text-xs font-bold uppercase tracking-wider py-3.5 px-6 rounded-full transition-colors group/btn shadow-sm"
-                  style={{ fontFamily: "var(--font-inter)" }}
-                >
-                  <span>{portal.buttonLabel}</span>
-                  <span className="text-sm transition-transform duration-200 group-hover/btn:translate-x-1">&rarr;</span>
-                </a>
+                {/* Footer row */}
+                <div className="flex justify-between items-center mt-auto pt-4" style={{ borderTop: "1px solid rgba(245,239,228,0.08)" }}>
+                  <span className="text-[10px] font-medium tracking-[0.12em]" style={{ fontFamily: "var(--font-geist-mono, monospace)", color: "var(--ink-3, #8a7960)" }}>
+                    {portal.deviceTag}
+                  </span>
+                  <a
+                    href={portal.previewSrc}
+                    className="flex items-center gap-1.5 text-[11px] font-semibold tracking-[0.08em] uppercase transition-all duration-200 hover:opacity-85"
+                    style={{
+                      fontFamily: "var(--font-geist-mono, monospace)",
+                      color: portal.accentColor,
+                    }}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    LAUNCH DEMO →
+                  </a>
+                </div>
               </div>
             </article>
           ))}

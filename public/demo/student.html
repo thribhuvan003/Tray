@@ -7,37 +7,38 @@
   <meta name="theme-color" content="#f7f3ea" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Fraunces:ital,opsz,wght@0,9..144,100..900;1,9..144,100..900&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <style>
     :root {
       --bg:#F4EFE6;--bg-2:#E8DFD0;--text:#1A1A19;--muted:rgba(26,26,25,.58);--muted-2:rgba(26,26,25,.38);
-      --accent:#E60000;--accent-dim:rgba(230,0,0,.08);--accent-glow:rgba(230,0,0,.15);
+      --accent:#334155;--accent-dim:rgba(51, 65, 85, .08);--accent-glow:rgba(51, 65, 85, .15);
       --dark-base:#171310;--dark-bar:rgba(23,19,16,.94);--dark-edge:rgba(255,243,230,.14);--dark-edge-strong:rgba(255,243,230,.22);
       --on-dark:#f4efe6;--surface:rgba(26,26,25,.04);--surface-2:rgba(26,26,25,.07);--border:rgba(26,26,25,.12);
       --demo-bar-bg:rgba(244,239,230,.9);--demo-bar-border:rgba(26,26,25,.12);
       --demo-choice-bg:#ffffff;--demo-choice-bg-hover:#f4efe6;--demo-choice-border:rgba(26,26,25,.14);
-      --demo-choice-meta:rgba(26,26,25,.7);--demo-choice-active-border:rgba(230,0,0,.65);
-      --demo-choice-active-bg:#ffffff;--demo-choice-active-ring:rgba(230,0,0,.15);
+      --demo-choice-meta:rgba(26,26,25,.7);--demo-choice-active-border:rgba(51, 65, 85, .65);
+      --demo-choice-active-bg:#ffffff;--demo-choice-active-ring:rgba(51, 65, 85, .15);
       --demo-choice-active-shadow:0 0 0 1px var(--demo-choice-active-ring),0 10px 26px rgba(26,26,25,.1);
       --veg:#0c8a43;--nv:#b32b2b;--ok:#0c8a43;
-      --font-display:"Fraunces",Georgia,serif;--font-ui:"Manrope",system-ui,sans-serif;
-      --mono:ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;
+      --font-display:"Bricolage Grotesque",ui-sans-serif,system-ui,sans-serif;--font-ui:"Bricolage Grotesque",ui-sans-serif,system-ui,sans-serif;
+      --font-serif:"Instrument Serif",serif;
+      --mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
       --topbar-h:64px;--cart-w:320px;--nav-w:200px;--radius:14px;--radius-sm:10px;
       --ease:cubic-bezier(.22,1,.36,1);
     }
     *,*::before,*::after{box-sizing:border-box}
     html,body{margin:0;min-height:100dvh;background:var(--bg);color:var(--text);font-family:var(--font-ui);font-size:17px;line-height:1.58;-webkit-font-smoothing:antialiased}
-    body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;background:radial-gradient(ellipse 90% 50% at 12% -8%,rgba(230,0,0,.04) 0%,transparent 55%),radial-gradient(ellipse 70% 45% at 88% 0%,rgba(230,0,0,.02) 0%,transparent 50%),linear-gradient(165deg,var(--bg) 0%,var(--bg-2) 100%)}
+    body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;background:radial-gradient(ellipse 90% 50% at 12% -8%,rgba(51,65,85,.04) 0%,transparent 55%),radial-gradient(ellipse 70% 45% at 88% 0%,rgba(51,65,85,.02) 0%,transparent 50%),linear-gradient(165deg,var(--bg) 0%,var(--bg-2) 100%)}
     button{font:inherit;cursor:pointer;border:none;background:none;color:inherit}
     input{font:inherit;color:inherit}
     ::selection{background:var(--accent);color:var(--bg)}
 
-    /* Info stripe — calm red, matching Theme H */
-    .demo-stripe{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 16px;background:rgba(230,0,0,.06);border-bottom:1px solid rgba(230,0,0,.15);font-family:var(--font-ui);font-size:13px;color:#800000;position:sticky;top:0;z-index:60}
-    .demo-stripe__pill{background:rgba(230,0,0,.12);border-radius:999px;padding:2px 8px;font-family:var(--mono);font-size:10px;letter-spacing:.1em;font-weight:700;text-transform:uppercase}
-    .demo-stripe__otp{font-family:var(--mono);font-weight:700;font-size:14px;background:rgba(230,0,0,.08);border-radius:5px;padding:1px 7px;letter-spacing:.06em}
-    .demo-stripe__close{min-width:32px;min-height:32px;display:flex;align-items:center;justify-content:center;border-radius:6px;color:#800000;opacity:.6;font-size:16px;transition:opacity .15s,background .15s}
-    .demo-stripe__close:hover{opacity:1;background:rgba(230,0,0,.12)}
+    /* Info stripe — calm slate */
+    .demo-stripe{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 16px;background:rgba(51,65,85,.06);border-bottom:1px solid rgba(51,65,85,.15);font-family:var(--font-ui);font-size:13px;color:#334155;position:sticky;top:0;z-index:60}
+    .demo-stripe__pill{background:rgba(51,65,85,.12);border-radius:999px;padding:2px 8px;font-family:var(--mono);font-size:10px;letter-spacing:.1em;font-weight:700;text-transform:uppercase}
+    .demo-stripe__otp{font-family:var(--mono);font-weight:700;font-size:14px;background:rgba(51,65,85,.08);border-radius:5px;padding:1px 7px;letter-spacing:.06em}
+    .demo-stripe__close{min-width:32px;min-height:32px;display:flex;align-items:center;justify-content:center;border-radius:6px;color:#334155;opacity:.6;font-size:16px;transition:opacity .15s,background .15s}
+    .demo-stripe__close:hover{opacity:1;background:rgba(51,65,85,.12)}
     .demo-stripe.is-gone{display:none}
 
     .app{position:relative;z-index:1;min-height:100dvh;display:flex;flex-direction:column}
@@ -52,7 +53,7 @@
     .brand__sub{font-family:var(--font-ui);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
     .topbar__actions{display:flex;align-items:center;gap:10px;flex-shrink:0}
     .pill-status{font-family:var(--font-ui);font-size:11px;letter-spacing:.08em;text-transform:uppercase;padding:6px 10px;border-radius:999px;border:1px solid var(--border);color:var(--muted)}
-    .pill-status.is-live{color:#800000;border-color:rgba(230,0,0,.3);background:var(--accent-dim)}
+    .pill-status.is-live{color:#334155;border-color:rgba(51,65,85,.3);background:var(--accent-dim)}
     .btn-icon{width:40px;height:40px;border-radius:12px;border:1px solid var(--border);background:var(--surface);display:grid;place-items:center;transition:border-color .2s,background .2s}
     .btn-icon:hover{border-color:var(--dark-edge-strong);background:var(--surface-2)}
     .btn-icon svg{width:18px;height:18px;opacity:.85}
@@ -63,7 +64,7 @@
     .cat-nav__list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px}
     .cat-btn{width:100%;text-align:left;padding:12px 14px;border-radius:var(--radius-sm);font-size:15px;font-weight:500;color:var(--muted);transition:color .2s,background .2s}
     .cat-btn:hover{color:var(--text);background:var(--surface)}
-    .cat-btn.is-active{color:var(--text);background:var(--accent-dim);box-shadow:inset 0 0 0 1px rgba(230,0,0,.15)}
+    .cat-btn.is-active{color:var(--text);background:var(--accent-dim);box-shadow:inset 0 0 0 1px rgba(51,65,85,.15)}
     .cat-btn span{display:block;font-family:var(--font-ui);font-size:11px;color:var(--muted-2);margin-top:2px;font-weight:500}
     .main{flex:1;min-width:0;display:flex;flex-direction:column}
     .content{flex:1;padding:20px 16px 100px;max-width:900px}
@@ -236,6 +237,7 @@
     .canteen-segment.is-active{border-color:var(--demo-choice-active-border);background:var(--demo-choice-active-bg);box-shadow:var(--demo-choice-active-shadow);transform:translateY(-1px)}
     #menuGrid.menu-switch-flash{animation:menuSwitchFlash .42s ease}
     @keyframes menuSwitchFlash{from{opacity:.35;transform:translateY(8px)}to{opacity:1;transform:none}}
+    @keyframes live-pulse{0%,100%{transform:scale(0.95);opacity:0.5}50%{transform:scale(1.1);opacity:1}}
     .table-field{margin-top:12px;display:flex;flex-direction:column;gap:6px}
     .table-field label{font-family:var(--font-display);font-size:12px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
     .table-field input{width:100%;padding:10px 12px;border-radius:var(--radius-sm);border:1px solid var(--border);background:rgba(228,228,228,.72);font-family:var(--font-ui);font-size:14px;font-weight:500;outline:none}
@@ -278,6 +280,154 @@
     }
     @media(max-width:480px){.cart-bar{flex-direction:column;align-items:stretch}.cart-bar .btn-primary{width:100%;order:3}.cart-bar__count{align-self:flex-start}}
     @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+    /* Specials horizontal carousel styling */
+    .specials-section {
+      margin-bottom: 24px;
+    }
+    .specials-carousel {
+      display: flex;
+      gap: 14px;
+      overflow-x: auto;
+      padding: 4px 4px 16px;
+      margin: 0 -4px;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+    .specials-carousel::-webkit-scrollbar {
+      display: none;
+    }
+    .special-card {
+      flex-shrink: 0;
+      width: 220px;
+      background: linear-gradient(145deg, rgba(255, 255, 255, 0.65) 0%, rgba(51, 65, 85, 0.06) 100%);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      position: relative;
+      transition: border-color .2s, transform .2s var(--ease), box-shadow .2s;
+    }
+    @media(hover:hover){
+      .special-card:hover {
+        border-color: var(--accent-glow);
+        transform: translateY(-3px);
+        box-shadow: 0 8px 24px rgba(26,26,25,.08);
+      }
+    }
+    .special-card__new {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      background: var(--nv);
+      color: #fff;
+      font-family: var(--mono);
+      font-size: 9px;
+      letter-spacing: 0.08em;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+    .special-card__ico {
+      width: 56px;
+      height: 56px;
+      border-radius: 12px;
+      background: #fff;
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 26px;
+      box-shadow: 0 4px 12px rgba(51, 65, 85, 0.06);
+    }
+    .special-card__body {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .special-card__title {
+      font-family: var(--font-display);
+      font-size: 18px;
+      font-weight: 500;
+      letter-spacing: -0.02em;
+      margin: 0;
+      line-height: 1.25;
+      color: var(--text);
+    }
+    .special-card__desc {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+    .special-card__foot {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: auto;
+      padding-top: 8px;
+    }
+    .special-card .qty-control {
+      display: flex;
+      align-items: center;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      overflow: hidden;
+      background: rgba(228, 228, 228, 0.72);
+    }
+    .special-card .qty-control.is-empty .qty-val,
+    .special-card .qty-control.is-empty .qty-minus {
+      display: none;
+    }
+    .special-card .qty-btn {
+      width: 32px;
+      height: 32px;
+      display: grid;
+      place-items: center;
+      font-size: 16px;
+      font-weight: 500;
+      color: var(--text);
+      transition: background .15s;
+    }
+    .special-card .qty-btn:hover {
+      background: var(--surface-2);
+    }
+    .special-card .qty-val {
+      min-width: 24px;
+      text-align: center;
+      font-family: var(--font-ui);
+      font-size: 13px;
+      font-weight: 700;
+    }
+    .special-card .btn-add-initial {
+      padding: 6px 12px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      background: var(--accent-dim);
+      color: var(--accent);
+      border: 1px solid var(--border);
+      transition: background .2s, transform .15s;
+    }
+    .special-card .btn-add-initial:hover {
+      background: var(--accent-glow);
+    }
+    .special-card.has-qty .btn-add-initial {
+      display: none;
+    }
+    .special-card.has-qty .qty-control {
+      display: flex;
+    }
+    .special-card:not(.has-qty) .qty-control {
+      display: none;
+    }
+    body.in-iframe #specialsSection {
+      display: none !important;
+    }
+
+    .it{font-family:var(--font-serif);font-style:italic;font-weight:400}
+    .dot{font-family:var(--font-serif);font-style:italic;font-weight:400;color:var(--accent);margin-left:-2px}
 
     /* in-iframe cleanups */
     body.in-iframe {
@@ -374,7 +524,7 @@
   <div class="app">
     <header class="topbar">
       <a href="/" class="brand" title="Tray home">
-        <span class="brand__name">Tray</span>
+        <span class="brand__name">Tray<span class="dot">.</span></span>
         <span class="brand__sub" id="topbarContext">Campus canteen · Takeaway</span>
       </a>
       <div class="topbar__actions">
@@ -392,6 +542,13 @@
       </nav>
       <main class="main">
         <div class="content">
+          <div class="menu-hero" style="margin-bottom: 24px;">
+            <div style="font-family: var(--mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; display: flex; align-items: center; gap: 8px;">
+              <span style="width: 8px; height: 8px; border-radius: 50%; background: var(--ok); position: relative; display: inline-block; animation: live-pulse 2s ease-out infinite;"></span>
+              Kitchen open · ~7 min wait
+            </div>
+            <h1 style="font-family: var(--font-display); font-size: 42px; font-weight: 500; line-height: 1.05; letter-spacing: -0.035em; margin: 4px 0 0;">What's <span class="it">cooking, Ananya?</span></h1>
+          </div>
           <div class="menu-controls">
             <div class="canteen-bar">
               <p class="canteen-bar__label">Canteen</p>
@@ -423,6 +580,21 @@
               </div>
             </div>
           </div>
+          <!-- Today's Specials Section -->
+          <div id="specialsSection" class="specials-section" hidden>
+            <div class="section-head" style="margin-bottom: 8px; margin-top: 16px;">
+              <div>
+                <h2 style="font-family: var(--font-display); font-size: 1.6rem; font-weight: 400; letter-spacing: -.02em; line-height: 1.15; margin: 0;">Today's <span class="it">specials.</span></h2>
+                <p style="margin: 0; font-family: var(--font-ui); font-size: 12px; color: var(--muted); letter-spacing: .06em;">LIVE FROM KITCHEN</p>
+              </div>
+              <div style="font-size: 11px; color: var(--accent); font-family: var(--mono); letter-spacing: 0.06em; display: flex; align-items: center; gap: 6px;">
+                <span style="width: 6px; height: 6px; border-radius: 50%; background: var(--ok); display: inline-block; animation: live-pulse 2s ease-out infinite;"></span>
+                <span>JUST ADDED</span>
+              </div>
+            </div>
+            <div class="specials-carousel" id="specialsCarousel"></div>
+          </div>
+
           <div class="cat-pills" id="catPills" role="tablist"></div>
           <div class="search-wrap">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
@@ -436,7 +608,7 @@
       </main>
       <aside class="cart-sidebar" aria-label="Your cart">
         <div class="cart-sidebar__head">
-          <h3>Your order</h3>
+          <h3>Your <span class="it">order.</span></h3>
           <p>Paying to: <span id="cartPayTo">—</span></p>
         </div>
         <div class="cart-lines" id="cartLinesDesktop"></div>
@@ -452,7 +624,7 @@
       <section class="view" id="viewPayment" data-view-id="payment">
         <div class="view-panel">
           <button type="button" class="back-link" data-go="menu">← Back to menu</button>
-          <h1 class="view-title">Pay by UPI</h1>
+          <h1 class="view-title">Pay by <span class="it">UPI.</span></h1>
           <p class="view-sub">Open your UPI app and pay. Then tap "I've paid" below.</p>
           <div class="pay-card">
             <div class="pay-mobile">
@@ -470,7 +642,7 @@
 
       <section class="view" id="viewTracking" data-view-id="tracking">
         <div class="view-panel">
-          <h1 class="view-title">Order status</h1>
+          <h1 class="view-title">Order <span class="it">status.</span></h1>
           <p class="view-sub" id="trackingSub">We're preparing your food.</p>
           <div class="success-note">Order confirmed. We've got your order!</div>
           <div class="pickup-ribbon" id="pickupRibbon" hidden>
@@ -488,7 +660,7 @@
 
       <section class="view" id="viewOtp" data-view-id="otp">
         <div class="view-panel">
-          <h1 class="view-title" id="otpTitle">Ready for pickup</h1>
+          <h1 class="view-title" id="otpTitle">Ready for <span class="it">pickup.</span></h1>
           <p class="view-sub">Show this code at the counter. Staff will tap it in — if there's a problem, show order <span id="otpOrderRef">—</span>.</p>
           <div class="otp-display" id="otpDisplay" role="button" tabindex="0" aria-label="Pickup code — tap to copy">
             <p class="otp-label">Pickup code · tap to copy</p>
@@ -526,6 +698,48 @@ var liveSpecialItems=[],MENU=[],CATEGORIES=[];
 
 function specialsKey(){return TD.specialsKey(currentCanteenId);}
 function specialsToMenuItems(){try{return TD.getSpecials(currentCanteenId).map(function(s){return{id:"sp_"+s.id,name:s.name,desc:s.desc||"Today's kitchen special",price:s.price||0,cat:"specials",diet:s.diet==="nonveg"?"nv":"veg",emoji:s.icon||"★",isLiveSpecial:true};});}catch(_){return[];}}
+function renderSpecialsCarousel() {
+  var specialsSect = document.getElementById("specialsSection");
+  var carousel = document.getElementById("specialsCarousel");
+  if (!specialsSect || !carousel) return;
+  var show = liveSpecialItems.length > 0 && 
+             (activeCat === "all" || activeCat === "specials") && 
+             !searchQuery.trim();
+  if (!show) {
+    specialsSect.hidden = true;
+    specialsSect.style.display = "none";
+    return;
+  }
+  specialsSect.hidden = false;
+  specialsSect.style.display = "block";
+  var html = "";
+  liveSpecialItems.forEach(function(it) {
+    var qty = getQty(it.id);
+    var hasQty = qty > 0;
+    var dc = it.diet === "veg" ? "diet-dot--veg" : "diet-dot--nv";
+    if (vegOnly && it.diet !== "veg") return;
+    html += '<div class="special-card' + (hasQty ? " has-qty" : "") + '" data-id="' + it.id + '">' +
+              '<span class="special-card__new">NEW</span>' +
+              '<div class="special-card__ico">' + it.emoji + '</div>' +
+              '<div class="special-card__body">' +
+                '<h3 class="special-card__title">' +
+                  it.name.split(' ').slice(0,-1).join(' ') + ' <span class="it">' + it.name.split(' ').slice(-1)[0] + '.</span>' +
+                '</h3>' +
+                '<p class="special-card__desc">' + it.desc + '</p>' +
+              '</div>' +
+              '<div class="special-card__foot">' +
+                '<span class="price">' + fmt(it.price) + '</span>' +
+                '<button type="button" class="btn-add-initial" data-action="add" data-id="' + it.id + '">+ Add</button>' +
+                '<div class="qty-control' + (hasQty ? "" : " is-empty") + '">' +
+                  '<button type="button" class="qty-btn qty-minus" data-action="minus" data-id="' + it.id + '" aria-label="Decrease">−</button>' +
+                  '<span class="qty-val">' + qty + '</span>' +
+                  '<button type="button" class="qty-btn" data-action="plus" data-id="' + it.id + '" aria-label="Increase">+</button>' +
+                '</div>' +
+              '</div>' +
+            '</div>';
+  });
+  carousel.innerHTML = html || '<p style="color:var(--muted);font-size:14px;padding:12px 4px;text-align:center;width:100%">No specials match the selected diet.</p>';
+}
 function refreshLiveSpecials(){liveSpecialItems=specialsToMenuItems();CATEGORIES=CATEGORIES.filter(function(c){return c.id!=="specials";});if(liveSpecialItems.length)CATEGORIES.splice(1,0,{id:"specials",label:"Today's specials",sub:"Live from "+TD.getCanteen(currentCanteenId).short});renderCategories();renderMenu();}
 
 function loadCanteenData(id){
@@ -581,6 +795,7 @@ function renderMenu(){
   items.forEach(function(it){var qty=getQty(it.id),hasQty=qty>0,dc=it.diet==="veg"?"diet-dot--veg":"diet-dot--nv";html+='<article class="menu-card'+(hasQty?" has-qty":"")+'" data-id="'+it.id+'" data-cat="'+it.cat+'">'+'<div class="menu-card__visual">'+it.emoji+"</div>"+'<div class="menu-card__body"><div class="menu-card__top"><h3 class="menu-card__title">'+it.name+(it.isLiveSpecial?' <span style="font-family:var(--font-ui);font-size:10px;color:var(--accent)">★ LIVE</span>':"")+' </h3><span class="diet-dot '+dc+'"></span></div><p class="menu-card__desc">'+it.desc+'</p><div class="menu-card__foot"><span class="price">'+fmt(it.price)+'</span><button type="button" class="btn-add-initial" data-action="add" data-id="'+it.id+'">+ Add</button><div class="qty-control'+(hasQty?"":" is-empty")+'"><button type="button" class="qty-btn qty-minus" data-action="minus" data-id="'+it.id+'" aria-label="Decrease">−</button><span class="qty-val">'+qty+'</span><button type="button" class="qty-btn" data-action="plus" data-id="'+it.id+'" aria-label="Increase">+</button></div></div></div></article>';});
   if(!items.length)html='<p style="color:var(--muted);text-align:center;padding:32px 0">No items match.</p>';
   document.getElementById("menuGrid").innerHTML=html;document.getElementById("itemCount").textContent=items.length+(items.length===1?" dish":" dishes");
+  renderSpecialsCarousel();
 }
 function renderCart(){
   var count=getCartCount(),total=getCartTotal(),linesHtml="";
@@ -684,7 +899,7 @@ function updateTrackUI(ci){var els=$$(".track-step");els.forEach(function(el,i){
 
 function revealOtp(code){
   var ref=document.getElementById("otpOrderRef");if(ref)ref.textContent=orderId||"—";
-  var ot=document.getElementById("otpTitle");if(ot)ot.textContent=serviceMode==="dine"?"Ready at your table":"Ready for pickup";
+  var ot=document.getElementById("otpTitle");if(ot)ot.innerHTML=serviceMode==="dine"?"Ready at your <span class=\"it\">table.</span>":"Ready for <span class=\"it\">pickup.</span>";
   code.split("").forEach(function(d,i){var el=document.getElementById("otpD"+i);if(!el)return;setTimeout(function(){el.textContent=d;if(!REDUCED){el.classList.remove("flip-in");void el.offsetWidth;el.classList.add("flip-in");}},i*150);});
 }
 
@@ -720,7 +935,7 @@ function bindEvents(){
       if(action==="plus")changeQty(id,1);
       if(action==="minus")changeQty(id,-1);
       if(getCartCount()>0)bumpCart();
-      if(isFirstAdd&&!REDUCED){var card=aBtn.closest(".menu-card");if(card)flyToCart(card);}
+      if(isFirstAdd&&!REDUCED){var card=aBtn.closest(".menu-card") || aBtn.closest(".special-card");if(card)flyToCart(card);}
       var it=allMenuItems().find(function(m){return m.id===id;});
       var msg="Added to tray ✓";
       if(action==="minus"){
@@ -747,6 +962,48 @@ function bindEvents(){
 window.addEventListener("storage",function(e){if(e.key===specialsKey())refreshLiveSpecials();if(e.key===TD.STORAGE_CANTEEN&&e.newValue&&TD.CANTEENS[e.newValue]){loadCanteenData(e.newValue);var sel=document.getElementById("canteenSelect");if(sel)sel.value=e.newValue;syncSegs(e.newValue);}});
 
 initCanteenSelect();loadCanteenData(currentCanteenId);renderCategories();renderMenu();renderCart();bindEvents();setView("menu");
+
+if (window.self !== window.top) {
+  (function() {
+    var timerId = null;
+    function runAutoSimulation() {
+      if (timerId) clearTimeout(timerId);
+      resetAll();
+      setView("menu");
+      
+      timerId = setTimeout(function() {
+        var dishes = allMenuItems();
+        if (dishes.length > 0) {
+          setQty(dishes[0].id, 1);
+          bumpCart();
+          showToast("Added " + dishes[0].name + " to tray");
+        }
+      }, 1500);
+
+      timerId = setTimeout(function() {
+        var dishes = allMenuItems();
+        if (dishes.length > 1) {
+          setQty(dishes[1].id, 1);
+          bumpCart();
+          showToast("Added " + dishes[1].name + " to tray");
+        }
+      }, 3500);
+
+      timerId = setTimeout(function() {
+        startPayment();
+      }, 5500);
+
+      timerId = setTimeout(function() {
+        confirmPaid();
+      }, 8500);
+
+      timerId = setTimeout(function() {
+        runAutoSimulation();
+      }, 34000);
+    }
+    setTimeout(runAutoSimulation, 5000);
+  })();
+}
 })();
   </script>
 </body>

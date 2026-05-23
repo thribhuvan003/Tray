@@ -86,6 +86,28 @@ Read AGENTS.md, docs/DEMO-SPEC.md, docs/PARALLEL-WORK.md. One file owner per lan
 
 ## Session log
 
+### 2026-05-23 — Today's Specials Horizontal Carousel Adaptation
+
+**Work done:**
+- **Static Demo Carousel (`public/demo/student.html`):** Integrated the horizontal specials card scroller from the user's blueprint folder (`zzz (Remix)`) above the category filter pills list. Styled cards using a premium gradient (`linear-gradient(145deg, rgba(255, 255, 255, 0.65) 0%, rgba(51, 65, 85, 0.06) 100%)`) consistent with the Monsoon Paper / Slate Gray theme. Programmed the carousel renderer (`renderSpecialsCarousel()`) to run dynamically on canteen switches, search entries, and category/veg filters. Wrote custom `@keyframes live-pulse` to animate live indicator dots.
+- **Next.js React Carousel (`src/components/portal-student/menu-board.tsx`):** Added the same horizontal specials rail to the dynamic student menu board. Created the `SpecialCard` subcomponent supporting live image thumbnails, FSSAI diet-indicators with rotation, Bricolage display typography, and quantity modification triggers.
+- **Interactions & State Sync:** Wired quantity triggers to local storage and active cart states, ensuring quantities in both grids and carousels stay in perfect sync. Updated event delegation to animate additions from the carousel to the cart bar.
+- **Verification:** Completed full type check (`pnpm typecheck`) and integration tests (`pnpm demo:verify:e2e`) — all checks passed.
+
+### 2026-05-23 — Adapted Blueprint Fonts & Premium Monochrome Slate Gray Styling
+
+**Work done:**
+- **Typography Overhaul:** Loaded and initialized Google Fonts (Bricolage Grotesque, Instrument Serif, JetBrains Mono) across the entire student experience. Substituted Fraunces and Manrope fonts in both static `public/demo/student.html` and dynamic student portal pages (`src/app/(student)`).
+- **Premium Slate Accent:** Replaced blue highlights from the blueprint and red accent colors from the previous theme with a monochrome slate gray palette (`--color-ocean-*` mapped to slate shades, slate-700/800 for light mode, slate-300 for dark mode) to maintain a highly polished, neutral editorial look.
+- **Signature Styling Details:** Formatted all student views headings (cart, payment, tracking, ready for pickup) and logo with `.it` (Instrument Serif italic accents) and `.dot` spans matching the blueprint design. Added a live-status welcome greeting banner ("What's cooking, Ananya?") above the menu-controls block.
+- **Verification:** Verified compilation and link structure with `pnpm typecheck` and `pnpm demo:verify` (static + E2E browser tests) — all checks passed.
+
+### 2026-05-23 — Dev Server Port Shift & Multi-Portal Render Verification
+
+**Work done:**
+- **Alternative Port Dev Server:** Started Next.js dev server on port `3001` via `npx next dev -p 3001` to allow side-by-side local previews without port `3000` conflicts.
+- **Portal Rendering Validation:** Verified live-rendered portal iframes (student, kitchen, admin) inside the sticky portals section on the new port. Confirmed that custom device mockups and fonts display correctly under the light-theme Monsoon Paper design.
+
 ### 2026-05-23 — Sticky Stacking Scroll Panels, Watermark Alignment & Premium Micro-Interactions
 
 **References/Inspiration:** freefrontend.com (Gooey Liquid Radio Buttons, Resizing Tab Bar with Anchor Positioning).
