@@ -86,6 +86,13 @@ Read AGENTS.md, docs/DEMO-SPEC.md, docs/PARALLEL-WORK.md. One file owner per lan
 
 ## Session log
 
+### 2026-05-23 — Portals Showcase & Cards Preview Light Theme Redesign
+
+**Work done:**
+- **Light Theme Redesign:** Refactored the portals showcase section (`PiranhaPortalsSection.tsx`) and `cards-preview.html` to use the landing page's light cream background (`#F4EFE6`), white bento cards (`#ffffff`), and charcoal text colors (`#1A1A19`). This ensures the bento grids mix and blend perfectly with the rest of the Monsoon Paper marketing surface.
+- **Preview Synchronization:** Copied the finalized `cards-preview.html` to `public/demo/cards-preview.html`.
+- **Validation & Deploy:** Verified compilation with `pnpm typecheck` and static files checks with `pnpm demo:verify`. Committed and pushed the changes to the main branch of `thribhuvan003/Tray`.
+
 ### 2026-05-23 — 100% E2E Simulation PASS & Real-Time / Caching Bug Resolutions
 
 **Work done:**
