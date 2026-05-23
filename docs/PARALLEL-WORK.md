@@ -1157,6 +1157,27 @@ pm run typecheck passes. Restart dev if port 3000 hangs: NODE_OPTIONS=--max-old-
   - Removed the space in the `12 min` metric suffix (changing it from `" min"` to `"min"`). This aligns it with `240ms` and `0%` so there is no space between the numbers and their units, ensuring a consistent, compact presentation.
 - **Verified**: Typecheck compiles successfully (`pnpm typecheck` ✅) and static routing tests pass (`pnpm demo:verify` ✅).
 
+---
+
+## 2026-05-23 — Session: Redesigned Portals Showcase Layout & Static Iframe Simulations
+
+**What changed:**
+- **Showcase Layout Redesign (`zzz/index.html`)**:
+  - Implemented the original three-column grid layout from the photos with 100% bright, legible iframe previews (linear shading overlays removed).
+  - Styled the section heading in cream-colored uppercase bold condensed Barlow 900: `THREE PORTALS, ONE SOURCE OF TRUTH.`
+  - Styled the card titles using elegant serif italics (`Order from any canteen.`, `Run the live queue.`, `See the whole operation.`).
+  - Added header rows containing monospaced eyebrows (e.g. `STUDENT APP`) and accent-colored dots with index numbers (e.g. `• 01`).
+  - Standardized card backgrounds to `#161108` with a thin border `1px solid rgba(245,239,228,0.08)`.
+  - Added a subtle low-opacity background grid overlay to `#system` section.
+  - Placed device labels (e.g. `MOBILE • STUDENT`) and action links (`LAUNCH DEMO →`) in a hairline-separated footer row.
+  - Implemented responsive iframe auto-scaling JS block to scale previews dynamically based on column widths (450px virtual width for student, 1440px for kitchen/admin).
+- **Automated Client-Side Iframe Simulations (`student.html`, `kitchen.html`, `admin.html`)**:
+  - Added script detection for iframe rendering (`window.self !== window.top`).
+  - **Student App**: Auto-cycles through browsing menu, adding items (toasts), checking cart, paying with UPI (QR scanner), completing payment, showing OTP codes, and order tracking timeline updates before resetting.
+  - **Kitchen View**: Fast-forwards the simulated order progression (incoming → preparing → ready → collected) and automatically triggers walk-in orders.
+  - **Admin Dashboard**: Dynamically counts up KPIs: ticks Revenue (adding ₹120-240 per transaction) and Orders (+1), appends live event rows in the activity log feed, and inserts new records in the recent orders table.
+- **Verified**: Static check validation suite passes cleanly (`pnpm demo:verify` ✅). Visual layouts and autoplay logic verified via browser devtools screenshots.
+
 
 
 
