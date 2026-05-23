@@ -65,40 +65,45 @@ const _resolverClient = () =>
   });
 
 const fetchTenantUncached = async (slug: string): Promise<ResolvedTenant | null> => {
-  const client = _resolverClient();
-  const { data, error } = await client.rpc("resolve_tenant", { p_slug: slug });
-  if (error || !data || data.length === 0) return null;
-  const row = data[0] as unknown as {
-    id: string;
-    slug: string;
-    name: string;
-    college_name: string;
-    hero_tagline: string | null;
-    logo_url: string | null;
-    allowed_domain: string | null;
-    upi_vpa: string | null;
-    // Extended fields returned by the updated SECURITY DEFINER RPC
-    college_slug: string | null;
-    building: string | null;
-    zone: string | null;
-    is_open: boolean;
-  };
-  if (!row) return null;
+  try {
+    const client = _resolverClient();
+    const { data, error } = await client.rpc("resolve_tenant", { p_slug: slug });
+    if (error || !data || data.length === 0) return null;
+    const row = data[0] as unknown as {
+      id: string;
+      slug: string;
+      name: string;
+      college_name: string;
+      hero_tagline: string | null;
+      logo_url: string | null;
+      allowed_domain: string | null;
+      upi_vpa: string | null;
+      // Extended fields returned by the updated SECURITY DEFINER RPC
+      college_slug: string | null;
+      building: string | null;
+      zone: string | null;
+      is_open: boolean;
+    };
+    if (!row) return null;
 
-  return {
-    id: row.id,
-    slug: row.slug,
-    name: row.name,
-    college_name: row.college_name,
-    college_slug: row.college_slug ?? null,
-    hero_tagline: row.hero_tagline,
-    logo_url: row.logo_url,
-    allowed_domain: row.allowed_domain ?? null,
-    upi_vpa: row.upi_vpa ?? null,
-    building: row.building ?? null,
-    zone: row.zone ?? null,
-    is_open: row.is_open ?? true,
-  };
+    return {
+      id: row.id,
+      slug: row.slug,
+      name: row.name,
+      college_name: row.college_name,
+      college_slug: row.college_slug ?? null,
+      hero_tagline: row.hero_tagline,
+      logo_url: row.logo_url,
+      allowed_domain: row.allowed_domain ?? null,
+      upi_vpa: row.upi_vpa ?? null,
+      building: row.building ?? null,
+      zone: row.zone ?? null,
+      is_open: row.is_open ?? true,
+    };
+  } catch (err) {
+    console.error("resolveTenant failed:", err);
+    return null;
+  }
 };
 
 const fetchTenantEdgeCached = unstable_cache(
@@ -113,10 +118,15 @@ export const resolveTenant = cache(async (slug: string): Promise<ResolvedTenant 
 
 // College portal: list all canteens at a college with live wait/open status.
 export const collegeCanteensUncached = async (collegeSlug: string): Promise<CollegeCanteen[]> => {
-  const client = _resolverClient();
-  const { data, error } = await client.rpc("college_canteens", { p_college_slug: collegeSlug });
-  if (error || !data) return [];
-  return data as unknown as CollegeCanteen[];
+  try {
+    const client = _resolverClient();
+    const { data, error } = await client.rpc("college_canteens", { p_college_slug: collegeSlug });
+    if (error || !data) return [];
+    return data as unknown as CollegeCanteen[];
+  } catch (err) {
+    console.error("collegeCanteens failed:", err);
+    return [];
+  }
 };
 
 const fetchCollegeCanteensCached = unstable_cache(
