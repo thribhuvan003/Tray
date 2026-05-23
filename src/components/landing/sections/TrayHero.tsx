@@ -37,8 +37,8 @@ const HERO_CHIPS = [
 ];
 
 const METRICS = [
-  { end: 12, suffix: " min", label: "saved per lunch" },
-  { end: 240, suffix: " ms", label: "realtime sync" },
+  { end: 12, prefix: "~", suffix: " min", label: "saved per lunch" },
+  { end: 240, prefix: "~", suffix: " ms", label: "realtime sync" },
   { end: 0, suffix: "%", label: "Tray commission" },
 ];
 
@@ -206,30 +206,58 @@ export function TrayHero() {
 
           {/* Metrics strip */}
           <motion.div variants={softFadeUp} className="w-full">
-            <div className="mt-10 grid grid-cols-3 gap-8 sm:gap-12 lg:gap-16 border-t border-[var(--tray-border)] pt-6 sm:pt-8">
+            <div className="mt-12 grid grid-cols-3 gap-6 sm:gap-10 lg:gap-14 border-t border-[var(--tray-border)] pt-8 sm:pt-10">
               {METRICS.map((m) => (
-                <div key={m.label} className="flex flex-col gap-2">
-                  <p
-                    className="font-black leading-none tracking-tighter"
-                    style={{
-                      fontFamily: "var(--font-bebas), sans-serif",
-                      fontSize: "clamp(2.5rem, 5.5vw, 3.8rem)",
-                      fontWeight: 900,
-                      letterSpacing: "-0.05em",
-                      color: "var(--tray-clay)",
-                    }}
+                <div key={m.label} className="flex flex-col gap-2.5">
+                  <div
+                    className="flex items-baseline gap-1 leading-none font-bold"
+                    style={{ color: "var(--tray-clay)" }}
                   >
-                    <CountUp end={m.end} suffix={m.suffix} />
-                  </p>
+                    {m.prefix && (
+                      <span
+                        style={{
+                          fontFamily: "var(--font-newsreader), 'Newsreader', serif",
+                          fontStyle: "italic",
+                          fontSize: "clamp(1.15rem, 2.2vw, 1.65rem)",
+                          color: "var(--tray-clay)",
+                          opacity: 0.85,
+                          textTransform: "none",
+                        }}
+                      >
+                        {m.prefix}
+                      </span>
+                    )}
+                    <span
+                      style={{
+                        fontFamily: "var(--font-bricolage), var(--font-barlow), sans-serif",
+                        fontSize: "clamp(2.5rem, 5vw, 3.8rem)",
+                        fontWeight: 800,
+                        letterSpacing: "-0.015em",
+                      }}
+                    >
+                      <CountUp end={m.end} />
+                    </span>
+                    <span
+                      style={{
+                        fontFamily: "var(--font-newsreader), 'Newsreader', serif",
+                        fontStyle: "italic",
+                        fontSize: "clamp(1.15rem, 2.2vw, 1.65rem)",
+                        color: "var(--tray-ink)",
+                        opacity: 0.85,
+                        textTransform: "none",
+                      }}
+                    >
+                      {m.suffix.trim()}
+                    </span>
+                  </div>
                   <p
                     className="uppercase leading-tight"
                     style={{
-                      fontFamily: "var(--font-chewy), sans-serif",
-                      fontSize: "clamp(0.68rem, 1.2vw, 0.85rem)",
-                      fontWeight: 700,
-                      letterSpacing: "0.19em",
-                      color: "var(--tray-ink)",
-                      opacity: 0.7,
+                      fontFamily: "var(--font-dm-mono), monospace",
+                      fontSize: "clamp(0.65rem, 1.1vw, 0.78rem)",
+                      fontWeight: 600,
+                      letterSpacing: "0.22em",
+                      color: "var(--tray-muted)",
                     }}
                   >
                     {m.label}

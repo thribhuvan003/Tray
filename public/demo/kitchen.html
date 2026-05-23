@@ -641,6 +641,15 @@ let DISH = [];
 let STUDENTS = [];
 let PRICE = {};
 
+let isSimulationActive = true;
+window.addEventListener('message', (e) => {
+  if (e.data && e.data.type === 'pause_simulation') {
+    isSimulationActive = false;
+  } else if (e.data && e.data.type === 'resume_simulation') {
+    isSimulationActive = true;
+  }
+});
+
 function saveSpecials() {
   TD.setSpecials(currentCanteenId, specials);
 }
@@ -758,6 +767,9 @@ function ingestInbox(){
     if (!orders.some(x => x.id === o.id)) {
       orders.unshift(o);
       changed = true;
+      try {
+        window.parent.postMessage({ type: 'kitchen_order_received', orderId: o.id }, '*');
+      } catch(_) {}
     }
   });
   localStorage.setItem(INBOX_KEY, JSON.stringify(remaining));
@@ -1085,6 +1097,7 @@ if (ingestInbox()) toast('Student order synced to Incoming');
 
 // Auto-advance one preparing order every ~6s
 setInterval(() => {
+  if (!isSimulationActive) return;
   const prep = orders.filter(o => o.status === 'preparing' && Math.floor((Date.now()-o.placedAt)/1000) > o.target/2);
   if (prep.length) advance(prep[0].id);
   // trim collected
@@ -1094,6 +1107,7 @@ setInterval(() => {
 
 // New incoming every ~13s
 setInterval(() => {
+  if (!isSimulationActive) return;
   const incoming = orders.filter(o => o.status === 'incoming');
   if (incoming.length < 4){
     orders.unshift(makeOrder('incoming'));
@@ -1126,6 +1140,7 @@ window.addEventListener('storage', (e) => {
   }
 });
 setInterval(() => {
+  if (!isSimulationActive) return;
   if (ingestInbox()) {
     renderQueue();
     toast('New student order · Incoming');

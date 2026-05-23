@@ -86,6 +86,18 @@ Read AGENTS.md, docs/DEMO-SPEC.md, docs/PARALLEL-WORK.md. One file owner per lan
 
 ## Session log
 
+### 2026-05-24 — Student Logo Dot Removal & Live Showcase Card iframe Preview
+
+**Work done:**
+- **Navbar Brand Dot Removal (`public/demo/student.html` and Next.js):** Removed the unnecessary dot indicator from the top navbar logo across student standalone pages (`student.html` and variants A/B/C), the Next.js Student TopBar component (`top-bar.tsx`), and the college canteens directory page (`src/app/college/[slug]/page.tsx`) to match user preference.
+- **Live Student iframe Portal Preview (`PiranhaPortalsSection.tsx`):** Replaced the static React student layout preview inside the landing page showcase card with a live, interactive `iframe` rendering `student.html`. Set it to render as a wide desktop browser viewport (`virtualWidth = 1440` and `scrollPx = 0`), aligning it with the web layout style of the kitchen and admin portals. This lets users interact with the live student demo directly from the landing page.
+- **Showcase Cards Google/Amazon Refinements:**
+  - **Browser Chrome Wrappers (Feature 1)**: Wrapped all three showcase card iframes inside premium Mock Browser Frame bars containing red/yellow/green traffic-light controls, back/forward arrows, and responsive address bars with SSL lock indicators pointing to their respective subdomains (`student.tray.in`, `kitchen.tray.in`, `admin.tray.in`).
+  - **Real-Time Sync Connection (Feature 2)**: Added postMessage emitters inside `student.html` (on paid), `kitchen.html` (on ingest), and a storage listener inside `admin.html` (on new order). Parent page (`PiranhaPortalsSection.tsx`) captures these events to display real-time animated synchronisation pipeline overlays showcasing when orders write to LocalStorage, sync to the kitchen queue, and update dashboard revenue.
+  - **Interactive Dev Sandbox Mode (Feature 3)**: Added hover card overlays allowing visitors to click and unlock "Sandbox Mode" for any portal card. Clicking sandbox disables autoplay scripts, opens pointer events, and allows users to click and interact with the live websites directly. A floating "Reset Autoplay ↻" button reloads the iframe and restarts simulation loops.
+  - **Scaling & Backgrounds**: Set viewport scaling from `cards-preview.html` and configured theme matching background colors (Student/Kitchen: cream `#F4EFE6`, Admin: dark `#1A1A19`).
+- **Typechecks & Verification:** Ran `pnpm typecheck` and `npm run demo:verify` to confirm zero type errors and successful static validation.
+
 ### 2026-05-24 — Cart Sidebar Premium Layout Redesign (Main & Variant A)
 
 **Work done:**
@@ -1533,4 +1545,37 @@ pm run typecheck passes. Restart dev if port 3000 hangs: NODE_OPTIONS=--max-old-
 **Work done:**
 - **Adjusted 3D Glare & Spotlight Depth (`PiranhaPortalsSection.tsx`):** Added explicit `z: 30` to the spotlight overlay and `z: 40` to the diagonal glare reflection line within the custom Framer Motion interactive cards. This ensures that the dynamic spotlight glow and sweeping diagonal reflection sweep correctly *over* the 3D-translated inner elements (text at `z: 15` and preview mockup frame at `z: 25`) instead of being clipped behind them in the 3D space.
 - **Verification:** Ran `pnpm typecheck` (passed with 0 type errors), and validated static prototypes with `pnpm demo:verify` (all 4 pages pass). Verified compile checks for the Next.js production build (`pnpm build`).
+
+---
+
+## 2026-05-23 — Session: Overhauled Realtime Latency Strip Typography & Hero Stats Spacing
+
+**Work done:**
+- **Overhauled Realtime Latency Strip (`landing-page.tsx` & `landing-motion.tsx`)**:
+  - Replaced the condensed Bebas Neue font for `~240ms` in the realtime strip down the page with the split-span dynamic design system (Bricolage Grotesque + Newsreader Italic) and spacing tokens matching the hero stats.
+  - Added `data-realtime-counter="wrapper"` and `data-realtime-value="true"` data attributes to enable targeting.
+- **Preserved GSAP Count-Up Simulation**:
+  - Rewrote the GSAP ScrollTrigger animation logic in `landing-motion.tsx` to target the nested `[data-realtime-value="true"]` number span, preserving the outer tilde (`~`) and unit (`ms`) Newsreader italic layout, styling, and spacing without destroying the HTML structure upon count-up animations. Added a robust fallback to the original text-based selection.
+- **AWS/Vercel standard tilde prefix to Hero stats (`TrayHero.tsx`)**:
+  - Added elegant `~` prefixes to the `12 min` and `240 ms` metrics in `METRICS` to indicate estimation/realtime latency, rendering them in the premium Newsreader italic font matching their suffixes.
+  - Tightened baseline flex gaps to `gap-1` for optimal spacing balance, solving the congestion and visual hierarchy issues.
+- **Sandbox Mode Autoplay Pause Fixes (`kitchen.html` & `admin.html`)**:
+  - Added a global state flag `isSimulationActive = true` and `message` event listeners (`pause_simulation` / `resume_simulation`) inside the static Kitchen App and Admin Console mockups, mirroring the Student App sandbox architecture.
+  - Wrapped the randomized/automated count-up intervals and queue-advancing intervals in conditional logic checking `if (!isSimulationActive) return;`. This allows sandbox mode interactions to properly pause the background looping simulations on click.
+- **Immediate Interactive Affordance (`PiranhaPortalsSection.tsx`)**:
+  - Replaced `hover:opacity-100` with `group-hover:opacity-100` on the Sandbox click overlay. This allows the sandbox overlay and spotlight glares to trigger immediately when the cursor hovers anywhere over the parent card instead of waiting for the mouse to cross precisely over the invisible iframe boundaries.
+- **Dynamic Portal Card Border Glows (`PiranhaPortalsSection.tsx`)**:
+  - Integrated dynamic `borderColorGlow` motion value interpolations inside each custom Framer Motion portal showcase card.
+  - Moving the cursor on a card smoothly fades its border color from default low-opacity gray to its custom theme tint (Student: soft blue, Kitchen: soft tomato, Admin: soft neon-lime) matching its dynamic spotlight colors.
+- **LAUNCH DEMO footer micro-animations (`PiranhaPortalsSection.tsx`)**:
+  - Added CSS transition tags and `group-hover/btn:translate-x-0.75` properties to the card's `LAUNCH DEMO →` link arrow key to execute a premium, fluid horizontal translate shift on hover.
+- **Custom Showcase Previews Calibrations (`PiranhaPortalsSection.tsx`)**:
+  - Calibrated card frame dimension variables: Student frame remains widescreen responsive desktop (`virtualWidth = 1024`, `scrollPx = 0`).
+  - Kitchen card frame calibrated to mirror `zzz (Remix)/index.html` values (`virtualWidth = 1440`, `scrollPx = 0`) to render the full dashboard—including the left sidebar, the middle orders queue, and the right "Today's Specials" list, allowing visitors to inspect all panels.
+  - Admin Console card reverted to the previous calibrated values (`virtualWidth = 1300`, `scrollPx = 140`).
+- **Verified**: Verified that both `pnpm typecheck` ✅ and `pnpm demo:verify` ✅ passed with **0 errors**.
+
+
+
+
 

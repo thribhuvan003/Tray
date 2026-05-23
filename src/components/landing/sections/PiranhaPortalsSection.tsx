@@ -59,9 +59,58 @@ interface InteractivePortalCardProps {
 
 function InteractivePortalCard({ portal, idx, portalRefs }: InteractivePortalCardProps) {
   const [mounted, setMounted] = React.useState(false);
+  const [iframeLoaded, setIframeLoaded] = React.useState(false);
+  const [isSandbox, setIsSandbox] = React.useState(false);
+  const [syncMessage, setSyncMessage] = React.useState<string | null>(null);
+
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+
   React.useEffect(() => {
     setMounted(true);
   }, []);
+
+  React.useEffect(() => {
+    function handleMessage(e: MessageEvent) {
+      const data = e.data;
+      if (!data || typeof data !== "object") return;
+
+      if (portal.portalKey === "student" && data.type === "student_order_placed") {
+        setSyncMessage(`Pushed Order #${data.orderId} to Kitchen via LocalStorage`);
+        const tid = setTimeout(() => setSyncMessage(null), 3800);
+        return () => clearTimeout(tid);
+      }
+      if (portal.portalKey === "kitchen" && data.type === "kitchen_order_received") {
+        setSyncMessage(`Incoming Order #${data.orderId} detected (0ms delay)`);
+        const tid = setTimeout(() => setSyncMessage(null), 3800);
+        return () => clearTimeout(tid);
+      }
+      if (portal.portalKey === "admin" && data.type === "admin_revenue_updated") {
+        setSyncMessage(`Revenue updated +₹${data.total} (Sync Complete)`);
+        const tid = setTimeout(() => setSyncMessage(null), 3800);
+        return () => clearTimeout(tid);
+      }
+    }
+
+    window.addEventListener("message", handleMessage);
+    return () => window.removeEventListener("message", handleMessage);
+  }, [portal.portalKey]);
+
+  const enterSandbox = () => {
+    setIsSandbox(true);
+    if (iframeRef.current && iframeRef.current.contentWindow) {
+      iframeRef.current.contentWindow.postMessage({ type: 'pause_simulation' }, '*');
+    }
+  };
+
+  const resetAutoplay = () => {
+    setIsSandbox(false);
+    if (iframeRef.current) {
+      setIframeLoaded(false);
+      iframeRef.current.src = portal.previewSrc;
+    }
+  };
+
+  const containerBg = portal.portalKey === "admin" ? "#1A1A19" : "#F4EFE6";
 
   const isReducedMotion = useReducedMotion();
   const shouldAnimate = mounted && !isReducedMotion;
@@ -145,12 +194,40 @@ function InteractivePortalCard({ portal, idx, portalRefs }: InteractivePortalCar
     hoverProgress.set(0);
   };
 
+  const bgGlow = useTransform(
+    hoverProgress,
+    [0, 1],
+    [
+      "rgba(255, 255, 255, 1)",
+      portal.portalKey === "student"
+        ? "rgba(244, 250, 255, 1)"
+        : portal.portalKey === "kitchen"
+        ? "rgba(255, 245, 245, 1)"
+        : "rgba(253, 255, 240, 1)"
+    ]
+  );
+
+  const borderColorGlow = useTransform(
+    hoverProgress,
+    [0, 1],
+    [
+      "var(--tray-border, rgba(26, 26, 25, 0.12))",
+      portal.portalKey === "student"
+        ? "rgba(92, 177, 255, 0.35)"
+        : portal.portalKey === "kitchen"
+        ? "rgba(239, 87, 73, 0.3)"
+        : "rgba(205, 250, 80, 0.45)"
+    ]
+  );
+
   const style = shouldAnimate
     ? {
         rotateX,
         rotateY,
         scale,
         boxShadow: shadow,
+        backgroundColor: bgGlow,
+        borderColor: borderColorGlow,
         transformStyle: "preserve-3d" as const,
       }
     : {};
@@ -161,7 +238,7 @@ function InteractivePortalCard({ portal, idx, portalRefs }: InteractivePortalCar
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
       data-portal-card
-      className="motion-card group relative flex flex-col select-none rounded-[18px] overflow-hidden border border-[var(--tray-border,rgba(26,26,25,0.12))] bg-white h-full flex-1"
+      className="motion-card group relative flex flex-col select-none rounded-[18px] overflow-hidden border border-[var(--tray-border,rgba(26,26,25,0.12))] bg-white h-full flex-1 transition-colors duration-300"
       style={style}
     >
       {/* Spotlight glow overlay */}
@@ -229,6 +306,8 @@ function InteractivePortalCard({ portal, idx, portalRefs }: InteractivePortalCar
         </h3>
       </motion.div>
 
+
+
       {/* Portal Frame — iframe preview or static mockup */}
       <motion.div
         className="z-10"
@@ -242,7 +321,7 @@ function InteractivePortalCard({ portal, idx, portalRefs }: InteractivePortalCar
             : {}
         }
       >
-        {portal.portalKey === "student" ? (
+        {(portal.portalKey as string) === "student-mock-disabled" ? (
           <div
             className="relative w-full h-[260px] sm:h-[320px] md:h-[400px] overflow-hidden"
             style={{
@@ -439,21 +518,106 @@ function InteractivePortalCard({ portal, idx, portalRefs }: InteractivePortalCar
             ref={(el) => {
               portalRefs.current[idx] = el;
             }}
-            className="relative overflow-hidden h-[260px] sm:h-[320px] md:h-[400px]"
+            className="relative overflow-hidden h-[260px] sm:h-[320px] md:h-[400px] transition-all duration-300"
             style={{
-              background: "var(--tray-surface, #E8DFD0)",
+              background: containerBg,
               borderBottom: "1px solid var(--tray-border, rgba(26, 26, 25, 0.12))",
+              boxShadow: syncMessage
+                ? `inset 0 0 0 2px ${portal.accentColor}`
+                : isSandbox
+                ? "inset 0 0 0 2px #10b981"
+                : "none",
             }}
           >
+            {/* Real-time Sync Pipeline Banner Overlay */}
+            {syncMessage && (
+              <div
+                className="absolute top-3 left-3 right-3 py-2 px-3.5 rounded-lg z-40 text-xs font-semibold flex items-center gap-2 shadow-lg select-none pointer-events-none animate-bounce"
+                style={{
+                  background: portal.accentColor === "#cdfa50" ? "#cdfa50" : portal.accentColor,
+                  color: portal.accentColor === "#cdfa50" ? "#1A1A19" : "#ffffff",
+                }}
+              >
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 bg-current" />
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-current" />
+                </span>
+                <span>{syncMessage}</span>
+              </div>
+            )}
+
+            {/* Premium skeleton loader placeholder */}
+            {!iframeLoaded && (
+              <div
+                className="absolute inset-0 flex flex-col items-center justify-center z-30 pointer-events-none transition-opacity duration-300"
+                style={{ background: containerBg }}
+              >
+                <div
+                  className="w-6 h-6 rounded-full border-2 animate-spin"
+                  style={{
+                    borderColor: portal.portalKey === "admin" ? "rgba(255,255,255,0.12)" : "rgba(26,26,25,0.08)",
+                    borderTopColor: portal.portalKey === "admin" ? "#cdfa50" : "#334155",
+                  }}
+                />
+                <span
+                  className="text-[9px] tracking-[0.16em] uppercase font-mono mt-3"
+                  style={{ color: portal.portalKey === "admin" ? "rgba(255,255,255,0.35)" : "rgba(26,26,25,0.4)" }}
+                >
+                  Spinning up portal...
+                </span>
+              </div>
+            )}
+
+            {/* Sandbox Mode click overlay */}
+            {!isSandbox && iframeLoaded && (
+              <div
+                onClick={enterSandbox}
+                className="absolute inset-0 bg-neutral-900/10 hover:bg-neutral-900/30 backdrop-blur-[0px] hover:backdrop-blur-[1px] flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 cursor-pointer z-10"
+              >
+                <button
+                  className="px-4 py-2 rounded-full text-xs font-semibold shadow-xl border flex items-center gap-2 transform translate-y-2 hover:scale-105 transition-all duration-200"
+                  style={{
+                    backgroundColor: portal.portalKey === "admin" ? "#cdfa50" : "#334155",
+                    color: portal.portalKey === "admin" ? "#1A1A19" : "#ffffff",
+                    borderColor: portal.portalKey === "admin" ? "#cdfa50" : "#334155",
+                  }}
+                >
+                  <span>⚡</span> Live Sandbox: Click to Interact
+                </button>
+              </div>
+            )}
+
             <iframe
+              ref={iframeRef}
               src={portal.previewSrc}
               title={`${portal.title} Live Preview`}
               loading="lazy"
               sandbox="allow-scripts allow-same-origin"
               scrolling="no"
-              tabIndex={-1}
-              aria-hidden="true"
-              className="border-0 origin-top-left pointer-events-none absolute top-0 left-0"
+              tabIndex={isSandbox ? 0 : -1}
+              aria-hidden={!isSandbox}
+              onLoad={() => setIframeLoaded(true)}
+              className={`border-0 origin-top-left absolute top-0 left-0 transition-all duration-300 ${
+                isSandbox ? "pointer-events-auto" : "pointer-events-none"
+              }`}
+            />
+
+            {/* Floating Reset Autoplay Button */}
+            {isSandbox && (
+              <button
+                onClick={resetAutoplay}
+                className="absolute bottom-4 right-4 z-40 px-3 py-1.5 rounded-full text-[10px] font-mono font-bold tracking-wider uppercase border shadow-md flex items-center gap-1.5 bg-neutral-900 text-white border-neutral-700 hover:bg-neutral-800 transition-all duration-200 hover:scale-105"
+              >
+                Reset Autoplay ↻
+              </button>
+            )}
+
+            {/* Bottom fade overlay to soften cropped edge */}
+            <div
+              className="absolute bottom-0 left-0 right-0 h-16 pointer-events-none z-20"
+              style={{
+                background: `linear-gradient(to bottom, transparent, ${containerBg})`,
+              }}
             />
           </div>
         )}
@@ -491,7 +655,7 @@ function InteractivePortalCard({ portal, idx, portalRefs }: InteractivePortalCar
           </span>
           <a
             href={portal.previewSrc}
-            className="flex items-center gap-1.5 text-[11px] font-semibold tracking-[0.08em] uppercase transition-all duration-200 hover:opacity-85"
+            className="group/btn flex items-center gap-1 text-[11px] font-semibold tracking-[0.08em] uppercase transition-all duration-200 hover:opacity-85"
             style={{
               fontFamily: "var(--font-geist-mono, monospace)",
               color: portal.accentColor,
@@ -499,7 +663,7 @@ function InteractivePortalCard({ portal, idx, portalRefs }: InteractivePortalCar
             target="_blank"
             rel="noopener noreferrer"
           >
-            LAUNCH DEMO →
+            LAUNCH DEMO <span className="inline-block transition-transform duration-200 group-hover/btn:translate-x-0.75">→</span>
           </a>
         </div>
       </motion.div>
@@ -522,7 +686,7 @@ export function PiranhaPortalsSection() {
         if (parentWidth === 0) return;
 
         const portalKey = portals[idx]?.portalKey;
-        let virtualWidth = 1440;
+        let virtualWidth = 1024;
         let scrollPx = 0;
 
         if (portalKey === "kitchen") {

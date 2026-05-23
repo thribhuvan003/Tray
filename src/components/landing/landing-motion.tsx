@@ -472,26 +472,40 @@ export function LandingMotion() {
           // 10. REALTIME STRIP (~240ms) — number count-up on enter
           //     Find by text content (most reliable, avoids fragile style selectors).
           // ═══════════════════════════════════════════════════════════════
-          const allSpans = Array.from(root.querySelectorAll<HTMLElement>("span"));
-          const bigNum = allSpans.find((s) => s.textContent?.trim() === "~240ms") ?? null;
-          if (bigNum) {
+          const bigNumWrapper = root.querySelector("[data-realtime-counter='wrapper']") as HTMLElement ?? null;
+          const bigNumVal = bigNumWrapper?.querySelector("[data-realtime-value='true']") as HTMLElement ?? null;
+          
+          if (bigNumWrapper && bigNumVal) {
             const obj = { val: 0 };
-            const trigger = bigNum.closest("[class*='rounded']") as HTMLElement ?? bigNum;
+            const trigger = bigNumWrapper.closest("[class*='rounded']") as HTMLElement ?? bigNumWrapper;
             gsap.to(obj, {
               val: 240, duration: 1.5, ease: "power3.out",
               scrollTrigger: { trigger, start: "top 85%", once: true },
-              onUpdate: () => { bigNum.textContent = `~${Math.round(obj.val)}ms`; },
-              onComplete: () => { bigNum.textContent = "~240ms"; },
+              onUpdate: () => { bigNumVal.textContent = `${Math.round(obj.val)}`; },
+              onComplete: () => { bigNumVal.textContent = "240"; },
             });
 
             // Flanking labels slide in from sides
-            const stripFlex = bigNum.closest("[class*='flex-wrap']");
+            const stripFlex = bigNumWrapper.closest("[class*='flex-wrap']");
             if (stripFlex) {
               const stripItems = stripFlex.querySelectorAll<HTMLElement>("[class*='items-center']");
               gsap.from(stripItems, {
                 x: (i: number) => (i === 0 ? -36 : 36),
                 opacity: 0, stagger: 0.08, duration: 0.85, ease: "power3.out",
                 scrollTrigger: { trigger, start: "top 85%", once: true },
+              });
+            }
+          } else {
+            const allSpans = Array.from(root.querySelectorAll<HTMLElement>("span"));
+            const bigNum = allSpans.find((s) => s.textContent?.trim() === "~240ms") ?? null;
+            if (bigNum) {
+              const obj = { val: 0 };
+              const trigger = bigNum.closest("[class*='rounded']") as HTMLElement ?? bigNum;
+              gsap.to(obj, {
+                val: 240, duration: 1.5, ease: "power3.out",
+                scrollTrigger: { trigger, start: "top 85%", once: true },
+                onUpdate: () => { bigNum.textContent = `~${Math.round(obj.val)}ms`; },
+                onComplete: () => { bigNum.textContent = "~240ms"; },
               });
             }
           }

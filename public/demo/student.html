@@ -631,7 +631,7 @@
   <div class="app">
     <header class="topbar">
       <a href="/" class="brand" title="Tray home">
-        <span class="brand__name">Tray<span class="dot">.</span></span>
+        <span class="brand__name">Tray</span>
         <span class="brand__sub" id="topbarContext">Campus canteen · Takeaway</span>
       </a>
       <div class="topbar__actions">
@@ -1139,6 +1139,9 @@ function confirmPaid(){
     btn.classList.remove("is-confirming");btn.textContent="I've paid — confirm my order";
     if(payInterval){clearInterval(payInterval);payInterval=null;}
     pickupOtp=genOtp();pushOrderToKitchen();
+    try {
+      window.parent.postMessage({ type: 'student_order_placed', orderId: orderId, total: getCartTotal() }, '*');
+    } catch(e) {}
     var now=new Date();var el=document.getElementById("placedTime");if(el)el.textContent=now.toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"});
     var rsc=document.getElementById("readyStepCopy");if(rsc)rsc.textContent=serviceMode==="dine"?"Serving to your table":"Collect at the pickup counter";
     setView("tracking");runTrackingSimulation();
@@ -1236,6 +1239,13 @@ if (window.self !== window.top) {
       if (payInterval) { clearInterval(payInterval); payInterval = null; }
       if (trackInterval) { clearInterval(trackInterval); trackInterval = null; }
     }
+    window.addEventListener('message', function(e) {
+      if (e.data && e.data.type === 'pause_simulation') {
+        clearAllTimers();
+      } else if (e.data && e.data.type === 'resume_simulation') {
+        runAutoSimulation();
+      }
+    });
     
     var originalResetAll = resetAll;
     resetAll = function() {

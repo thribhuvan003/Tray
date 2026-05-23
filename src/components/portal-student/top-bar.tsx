@@ -150,7 +150,7 @@ export function StudentTopBar({ tenant, siblings = [] }: Props) {
           <span
             className="hidden tracking-[-0.02em] sm:inline"
             style={{ fontFamily: "var(--font-bricolage)", fontWeight: 700, fontSize: "1.2rem" }}
-          >Tray<span className="dot">.</span></span>
+          >Tray</span>
         </Link>
 
         {/* Center: canteen switcher (if campus has siblings) or static name */}

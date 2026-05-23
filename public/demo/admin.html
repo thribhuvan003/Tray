@@ -810,6 +810,15 @@ let orderCounter = 2425;
 const $ = (q) => document.querySelector(q);
 const $$ = (q) => document.querySelectorAll(q);
 
+var isSimulationActive = true;
+window.addEventListener('message', function(e) {
+  if (e.data && e.data.type === 'pause_simulation') {
+    isSimulationActive = false;
+  } else if (e.data && e.data.type === 'resume_simulation') {
+    isSimulationActive = true;
+  }
+});
+
 /* KPI Counters · count-up on first IntersectionObserver entry */
 const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -1717,6 +1726,7 @@ if (sb && toggle) {
 if (window.self !== window.top) {
   (function() {
     setInterval(function() {
+      if (!isSimulationActive) return;
       var cards = document.querySelectorAll('.kpi-grid .kpi-card');
       if (cards.length >= 2) {
         var revCounter = cards[0].querySelector('.counter');
@@ -1743,6 +1753,56 @@ if (window.self !== window.top) {
     }, 6000);
   })();
 }
+
+window.addEventListener('storage', function(e) {
+  if (e.key && e.key.indexOf('tray_kitchen_inbox_') === 0 && e.newValue) {
+    try {
+      var inbox = JSON.parse(e.newValue);
+      if (inbox.length > 0) {
+        var lastOrder = inbox[inbox.length - 1];
+        if (lastOrder && lastOrder.id) {
+          var cards = document.querySelectorAll('.kpi-grid .kpi-card');
+          if (cards.length >= 2) {
+            var revCounter = cards[0].querySelector('.counter');
+            if (revCounter) {
+              var currentRev = parseInt(revCounter.dataset.to) || 38420;
+              var newRev = currentRev + lastOrder.total;
+              revCounter.dataset.to = newRev;
+              revCounter.dataset.animated = '0';
+              animateCounter(revCounter);
+              
+              var revHl = document.querySelector('.label-hl');
+              if (revHl) revHl.textContent = '₹' + (newRev / 1000).toFixed(1) + 'K · today';
+            }
+            var ordCounter = cards[1].querySelector('.counter');
+            if (ordCounter) {
+              var currentOrd = parseInt(ordCounter.dataset.to) || 248;
+              ordCounter.dataset.to = currentOrd + 1;
+              ordCounter.dataset.animated = '0';
+              animateCounter(ordCounter);
+            }
+          }
+          if (typeof ORDERS !== 'undefined') {
+            var newOrdObj = {
+              id: lastOrder.id,
+              student: lastOrder.student || "Demo student",
+              items: lastOrder.items.map(function(it) { return it.name + " (" + it.q + ")"; }).join(", "),
+              total: lastOrder.total,
+              status: "preparing",
+              time: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
+            };
+            ORDERS.unshift(newOrdObj);
+            renderOrdersTable();
+          }
+          toast("Order " + lastOrder.id + " synced to dashboard");
+          try {
+            window.parent.postMessage({ type: 'admin_revenue_updated', orderId: lastOrder.id, total: lastOrder.total }, '*');
+          } catch(_) {}
+        }
+      }
+    } catch(err) {}
+  }
+});
 </script>
 </body>
 </html>

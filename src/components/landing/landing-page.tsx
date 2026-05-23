@@ -441,15 +441,43 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
               </span>
 
               <span
-                className="leading-none tracking-[-0.04em]"
-                style={{
-                  fontFamily: "var(--font-bebas)",
-                  fontWeight: 900,
-                  fontSize: "clamp(2rem, 4vw, 3.2rem)",
-                  color: "var(--tray-clay)",
-                }}
+                data-realtime-counter="wrapper"
+                className="flex items-baseline gap-1 leading-none font-bold"
+                style={{ color: "var(--tray-clay)" }}
               >
-                ~240ms
+                <span
+                  style={{
+                    fontFamily: "var(--font-newsreader), 'Newsreader', serif",
+                    fontStyle: "italic",
+                    fontSize: "clamp(1.15rem, 2vw, 1.55rem)",
+                    opacity: 0.85,
+                    textTransform: "none",
+                  }}
+                >
+                  ~
+                </span>
+                <span
+                  data-realtime-value="true"
+                  style={{
+                    fontFamily: "var(--font-bricolage), var(--font-barlow), sans-serif",
+                    fontSize: "clamp(2rem, 4vw, 3.2rem)",
+                    fontWeight: 800,
+                    letterSpacing: "-0.015em",
+                  }}
+                >
+                  240
+                </span>
+                <span
+                  style={{
+                    fontFamily: "var(--font-newsreader), 'Newsreader', serif",
+                    fontStyle: "italic",
+                    fontSize: "clamp(1.15rem, 2vw, 1.55rem)",
+                    opacity: 0.85,
+                    textTransform: "none",
+                  }}
+                >
+                  ms
+                </span>
               </span>
 
               <span

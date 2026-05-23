@@ -406,7 +406,7 @@ export default async function CollegePortalPage({
         <div className="tcp-nav-inner">
           <Link href="/" className="tcp-brand" aria-label="Tray home">
             <span className="tcp-brand-mark" aria-hidden="true">T</span>
-            Tray<span className="tcp-brand-dot">.</span>
+            Tray
           </Link>
           <Link href="/" className="tcp-nav-back" aria-label="Back to home">
             ← home
