@@ -121,18 +121,20 @@ export function TrayHero() {
           {/* H1 — monumental THUNDER style word-stagger reveal */}
           <motion.h1
             variants={softFadeUp}
-            className="tl-h1 max-w-4xl leading-[0.80] tracking-[-0.05em] uppercase"
+            className="tl-h1 max-w-4xl uppercase"
             style={{
-              fontFamily: "var(--font-barlow)",
+              fontFamily: "var(--font-krona-one), sans-serif",
               fontWeight: 900,
-              fontSize: "clamp(2.8rem, 5.8vw, 6.2rem)",
+              fontSize: "clamp(2rem, 4.4vw, 4.6rem)", // Krona One is very wide, so this scales beautifully on desktop!
+              lineHeight: 1.3,
+              letterSpacing: "-0.03em",
             }}
           >
             <span className="tl-word inline-block mr-[0.2em]">Multi-tenant</span>{" "}
             <span className="tl-word inline-block mr-[0.2em]">canteen</span>{" "}
             <span className="tl-word inline-block mr-[0.2em]">management</span>{" "}
             <span className="tl-word inline-block mr-[0.2em]">for</span>{" "}
-            <span className="tl-word inline-block" style={{ fontFamily: "var(--font-fraunces)", fontStyle: "italic", textTransform: "none", color: "var(--tray-clay)" }}>
+            <span className="tl-word inline-block" style={{ fontFamily: "var(--font-newsreader), serif", fontStyle: "italic", textTransform: "none", color: "var(--tray-clay)", fontWeight: "normal" }}>
               colleges.
             </span>
           </motion.h1>
@@ -208,14 +210,27 @@ export function TrayHero() {
               {METRICS.map((m) => (
                 <div key={m.label} className="flex flex-col gap-2">
                   <p
-                    className="text-4xl sm:text-5xl font-black leading-none tracking-tighter"
-                    style={{ fontFamily: "var(--font-barlow)", color: "var(--tray-clay)" }}
+                    className="font-black leading-none tracking-tighter"
+                    style={{
+                      fontFamily: "var(--font-barlow), sans-serif",
+                      fontSize: "clamp(2.5rem, 5.5vw, 3.8rem)",
+                      fontWeight: 900,
+                      letterSpacing: "-0.05em",
+                      color: "var(--tray-clay)",
+                    }}
                   >
                     <CountUp end={m.end} suffix={m.suffix} />
                   </p>
                   <p
-                    className="text-[0.68rem] sm:text-xs uppercase tracking-[0.18em] opacity-60 font-bold"
-                    style={{ fontFamily: "var(--font-dm-mono)" }}
+                    className="uppercase leading-tight"
+                    style={{
+                      fontFamily: "var(--font-chewy), sans-serif",
+                      fontSize: "clamp(0.68rem, 1.2vw, 0.85rem)",
+                      fontWeight: 700,
+                      letterSpacing: "0.19em",
+                      color: "var(--tray-ink)",
+                      opacity: 0.7,
+                    }}
                   >
                     {m.label}
                   </p>

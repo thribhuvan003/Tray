@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import React, { useRef } from "react";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 import {
@@ -14,39 +14,36 @@ const portals = [
     role: "STUDENT",
     dotColor: "#2E80EF",
     title: "Student",
-    description: "Choose canteen, browse menu, pay by UPI, track your order live, collect with a 4-digit OTP.",
+    description: "Order from any canteen in the campus. Pay by UPI. Track live. Show OTP.",
     deviceBadge: "STUDENT APP · MOBILE",
-    demoText: "Open student demo",
-    signInText: "Sign in as student",
     previewSrc: "/demo/student.html",
     loginRole: "student",
-    frameType: "phone",
+    buttonLabel: "Open student demo",
+    showCredentials: false,
   },
   {
     index: "02",
-    role: "KITCHEN STAFF",
+    role: "KITCHEN",
     dotColor: "#B8531A",
     title: "Kitchen staff",
-    description: "New tickets land instantly, prep timers count down, OTP handover clears the order — no paper, no shouting.",
+    description: "Manage one canteen's live queue. Accept, prep, hand over with OTP.",
     deviceBadge: "KITCHEN VIEW · TABLET",
-    demoText: "Sign in as kitchen staff",
-    signInText: "Sign in as kitchen",
     previewSrc: "/demo/kitchen.html",
     loginRole: "kitchen",
-    frameType: "tablet",
+    buttonLabel: "Sign in as kitchen staff",
+    showCredentials: true,
   },
   {
     index: "03",
-    role: "CANTEEN ADMIN",
+    role: "ADMIN",
     dotColor: "#16A34A",
     title: "Canteen admin",
-    description: "Live orders, daily revenue, menu edits, staff access, full audit log — one screen, every metric.",
+    description: "Menu, orders, staff, and daily revenue. Full audit log included.",
     deviceBadge: "ADMIN CONSOLE · DESKTOP",
-    demoText: "Sign in as admin",
-    signInText: "Sign in as admin",
     previewSrc: "/demo/admin.html",
     loginRole: "owner",
-    frameType: "desktop",
+    buttonLabel: "Sign in as admin",
+    showCredentials: true,
   },
 ] as const;
 
@@ -105,16 +102,16 @@ export function PiranhaPortalsSection() {
       ref={rootRef}
       id="portals"
       className="relative overflow-hidden px-5 py-24 sm:px-8 lg:px-10 lg:py-32"
-      style={{ background: "var(--tray-cream, #FAF8F5)", color: "var(--tray-ink, #1A1619)" }}
+      style={{ background: "var(--tray-cream, #EDE5D2)", color: "var(--tray-ink, #1A1619)" }}
     >
       {/* Dot-grid */}
-      <div className="pointer-events-none absolute inset-0 opacity-[0.04] [background-image:radial-gradient(circle_at_1px_1px,currentColor_1px,transparent_0)] [background-size:20px_20px]" />
+      <div className="pointer-events-none absolute inset-0 opacity-[0.06] [background-image:radial-gradient(circle_at_1px_1px,currentColor_1px,transparent_0)] [background-size:18px_18px]" />
 
       <div className="relative z-10 mx-auto max-w-7xl w-full flex flex-col gap-16">
         {/* Heading panel */}
         <div className="max-w-4xl">
           <div className="mb-5 flex flex-wrap items-center gap-3">
-            <p className="text-[0.72rem] font-code font-medium uppercase tracking-[0.24em] opacity-50">
+            <p className="text-[0.72rem] font-code font-medium uppercase tracking-[0.24em] opacity-40">
               01 / The system
             </p>
           </div>
@@ -185,7 +182,7 @@ export function PiranhaPortalsSection() {
           </h2>
 
           <p
-            className="mt-7 max-w-3xl text-[1.1rem] leading-8 opacity-75 text-neutral-700 dark:text-neutral-300"
+            className="mt-7 max-w-3xl text-[1.1rem] leading-8 opacity-58"
             style={{ fontFamily: "var(--font-geist)" }}
           >
             One database, three purpose-built views. What a student orders is what the
@@ -194,136 +191,87 @@ export function PiranhaPortalsSection() {
           </p>
         </div>
 
-        {/* 3-Column Grid on Desktop, Stack on Mobile */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-10 mt-4">
+        {/* 3-Column Linear Horizontal Showcase Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-12 w-full">
           {portals.map((portal) => (
             <article
-              key={portal.role}
+              key={portal.index}
               data-portal-card
-              className="motion-card group flex min-h-[46rem] flex-col rounded-[2rem] bg-white border border-[#e5e5e0] shadow-[0_4px_24px_rgba(26,22,25,0.03)] overflow-hidden select-none transition-all hover:shadow-[0_12px_32px_rgba(26,22,25,0.06)] hover:-translate-y-1.5 p-8 sm:p-10 justify-between"
-              style={{ outlineColor: portal.dotColor }}
+              className="motion-card group flex flex-col justify-between p-8 sm:p-9 select-none transition-all duration-300 rounded-[2rem] border border-neutral-200 bg-white relative overflow-hidden gap-6 shadow-sm hover:shadow-md"
             >
-              {/* Header row */}
-              <div className="flex items-center justify-between mb-6">
-                <span className="text-[0.68rem] font-code font-bold uppercase tracking-[0.2em] text-neutral-400">
-                  {portal.role}
-                </span>
-                <span className="flex items-center gap-1.5 text-xs font-code tracking-[0.1em] text-neutral-400">
-                  <span className="h-2.5 w-2.5 rounded-full animate-pulse shadow-[0_0_8px_currentColor]" style={{ background: portal.dotColor, color: portal.dotColor }} />
-                  <span className="ml-1 opacity-70">• {portal.index}</span>
-                </span>
-              </div>
+              {/* Monospace dot-grid background inside the card */}
+              <div className="pointer-events-none absolute inset-0 opacity-[0.02] [background-image:radial-gradient(circle_at_1px_1px,currentColor_1px,transparent_0)] [background-size:14px_14px] text-neutral-800" />
 
-              {/* Content Container */}
-              <div className="flex-1 flex flex-col justify-start">
-                {/* Title in bold Barlow font */}
-                <h3
-                  className="text-2xl sm:text-3xl font-black tracking-tight mb-4 text-[var(--tray-ink)] leading-none"
-                  style={{
-                    fontFamily: "var(--font-barlow)",
-                    fontWeight: 900,
-                  }}
-                >
+              {/* Text block sit ABOVE the mockup */}
+              <div className="relative z-10 flex flex-col gap-1.5">
+                {/* Header row */}
+                <div className="flex items-center justify-between">
+                  <span className="text-[0.62rem] font-code font-bold uppercase tracking-[0.2em] text-neutral-400">
+                    {portal.role}
+                  </span>
+                  <span className="flex items-center">
+                    <span
+                      className="h-2.5 w-2.5 rounded-full animate-pulse shadow-[0_0_8px_currentColor]"
+                      style={{ background: portal.dotColor, color: portal.dotColor }}
+                    />
+                  </span>
+                </div>
+
+                {/* Heading (Bold Sans-Serif) */}
+                <h3 className="text-[1.85rem] sm:text-[2rem] font-sans font-black tracking-tight text-neutral-900 leading-[1.1] mt-2">
                   {portal.title}
                 </h3>
+              </div>
 
-                {/* Live Preview Container (mockup) */}
-                <div className="relative overflow-hidden mb-6 bg-[#f9f6f0] rounded-2xl flex items-center justify-center p-6 border border-neutral-200/40 w-full min-h-[300px]">
-                  {portal.frameType === "phone" && (
-                    <div className="relative mx-auto w-[180px] h-[320px] rounded-[1.8rem] border-[6px] border-[#1a1619] bg-[#0a0a09] shadow-lg overflow-hidden shrink-0">
-                      <iframe
-                        src={portal.previewSrc}
-                        title={`${portal.title} preview`}
-                        loading="lazy"
-                        sandbox="allow-scripts allow-same-origin"
-                        scrolling="no"
-                        tabIndex={-1}
-                        aria-hidden="true"
-                        className="absolute inset-0 border-0 pointer-events-none"
-                        style={{
-                          width: "300px",
-                          height: "540px",
-                          transform: "scale(0.56)",
-                          transformOrigin: "0 0",
-                        }}
-                      />
-                    </div>
-                  )}
-
-                  {portal.frameType === "tablet" && (
-                    <div className="relative mx-auto w-full max-w-[270px] aspect-[4/3] rounded-[1.2rem] border-[6px] border-[#1a1619] bg-[#0a0a09] shadow-lg overflow-hidden shrink-0">
-                      <iframe
-                        src={portal.previewSrc}
-                        title={`${portal.title} preview`}
-                        loading="lazy"
-                        sandbox="allow-scripts allow-same-origin"
-                        scrolling="no"
-                        tabIndex={-1}
-                        aria-hidden="true"
-                        className="absolute inset-0 border-0 pointer-events-none"
-                        style={{
-                          width: "143%",
-                          height: "143%",
-                          transform: "scale(0.7)",
-                          transformOrigin: "0 0",
-                        }}
-                      />
-                    </div>
-                  )}
-
-                  {portal.frameType === "desktop" && (
-                    <div className="relative mx-auto w-full max-w-[280px] aspect-[16/10] rounded-[0.8rem] border-[5px] border-[#1a1619] bg-[#0a0a09] shadow-lg overflow-hidden shrink-0">
-                      <iframe
-                        src={portal.previewSrc}
-                        title={`${portal.title} preview`}
-                        loading="lazy"
-                        sandbox="allow-scripts allow-same-origin"
-                        scrolling="no"
-                        tabIndex={-1}
-                        aria-hidden="true"
-                        className="absolute inset-0 border-0 pointer-events-none"
-                        style={{
-                          width: "166%",
-                          height: "166%",
-                          transform: "scale(0.6)",
-                          transformOrigin: "0 0",
-                        }}
-                      />
-                    </div>
-                  )}
-
-                  {/* Device Badge Overlay */}
-                  <span
-                    className="absolute left-3 top-3 rounded-lg px-2.5 py-1.5 text-[0.55rem] font-code font-bold uppercase tracking-[0.15em] backdrop-blur-md"
-                    style={{
-                      color: "var(--tray-cream)",
-                      background: "rgba(26,22,25,0.72)",
-                      border: "1px solid rgba(255,255,255,0.06)",
-                    }}
-                  >
+              {/* Mockup Frame with overlapping badge */}
+              <div className="relative w-full my-2">
+                {/* Absolute overlapping badge */}
+                <div className="absolute top-4 left-4 z-20 bg-white/95 backdrop-blur-sm border border-neutral-200/80 rounded-full px-3.5 py-1.5 shadow-sm">
+                  <span className="text-[0.58rem] font-code font-bold uppercase tracking-wider text-neutral-700">
                     {portal.deviceBadge}
                   </span>
                 </div>
 
-                {/* Description */}
-                <p className="text-neutral-600 text-[0.92rem] leading-[1.6] font-sans mb-6">
-                  {portal.description}
-                </p>
+                <div className="relative overflow-hidden rounded-2xl border border-neutral-200/80 w-full aspect-[4/3] bg-black/5 flex flex-col shadow-lg transition-transform duration-300 group-hover:scale-[1.01] group-hover:-translate-y-0.5">
+                  <div className="relative flex-1 w-full overflow-hidden bg-white">
+                    <iframe
+                      src={portal.previewSrc}
+                      title={`${portal.role} Live Preview`}
+                      loading="lazy"
+                      sandbox="allow-scripts allow-same-origin"
+                      scrolling="yes"
+                      tabIndex={-1}
+                      aria-hidden="true"
+                      className="absolute top-0 left-0 border-0 pointer-events-none select-none"
+                      style={{
+                        width: "160%",
+                        height: "160%",
+                        transform: "scale(0.625)",
+                        transformOrigin: "top left",
+                      }}
+                    />
+                  </div>
+                </div>
               </div>
 
-              {/* Single CTA Button */}
-              <div className="mt-auto flex flex-col">
-                {portal.loginRole !== "student" && (
-                  <div className="text-[0.62rem] font-code uppercase tracking-wider text-neutral-400 mb-2.5 mt-auto text-center">
-                    demo login · shared credentials
-                  </div>
+              {/* Description & Demo Credentials & Button Below Mockup */}
+              <div className="relative z-10 flex flex-col gap-4 mt-auto">
+                <p className="opacity-70 text-[0.88rem] leading-[1.65] font-sans text-neutral-600">
+                  {portal.description}
+                </p>
+
+                {portal.showCredentials && (
+                  <span className="text-[0.62rem] font-code font-extrabold tracking-[0.16em] text-neutral-400 uppercase block -mt-1">
+                    DEMO LOGIN · SHARED CREDENTIALS
+                  </span>
                 )}
+
                 <a
                   href={portal.previewSrc}
-                  className="w-full rounded-2xl py-3.5 px-6 flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-[0.12em] bg-[#1a1619] text-white hover:bg-[#1a1619]/90 shadow-sm transition-all duration-200"
+                  className="inline-flex items-center justify-between w-full py-3.5 px-6 rounded-xl text-[0.72rem] font-code font-bold uppercase tracking-wider transition-all duration-300 bg-neutral-900 text-white hover:bg-neutral-800 active:scale-[0.98] shadow-sm mt-2"
                 >
-                  <span>{portal.demoText}</span>
-                  <span className="text-xs">→</span>
+                  <span>{portal.buttonLabel}</span>
+                  <span className="text-sm font-sans font-black">&rarr;</span>
                 </a>
               </div>
             </article>
@@ -333,4 +281,3 @@ export function PiranhaPortalsSection() {
     </section>
   );
 }
-

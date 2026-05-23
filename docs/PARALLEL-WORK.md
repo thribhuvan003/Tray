@@ -38,6 +38,46 @@ Read AGENTS.md, docs/DEMO-SPEC.md, docs/PARALLEL-WORK.md. One file owner per lan
 
 | Surface | Direction |
 |---------|-----------|
+# Parallel work log (Tray)
+
+**Contract:** Bar **C** — premium landing **and** student demo = real laptop web app. Kitchen static demo: **click paths + student sync** (2026-05-20).
+
+**F1 mode (user):** Research → team discuss → one council pick → implement → Amazon/Microsoft QA bar. Spec: **`docs/DEMO-SPEC.md`**.
+
+## Council decision (2026-05-19)
+
+| Priority | Feature | Landing | Student demo |
+|----------|---------|---------|--------------|
+| **Primary** | KFC-style **Takeaway / Dine in** + optional table | Line-leave + copy | Service mode cards + flow copy |
+| **Secondary** | **Pickup window** ETA ribbon | Mention in flow | Tracking view |
+| **Secondary** | **Veg lane** toggle | Feature tag | Menu filter |
+| **Secondary** | **Line leave** (“where are you?”) | `landing-line-leave.tsx` | — |
+
+Rejected for this sprint: Rush Room (admin), Payment Trust Seal animation (defer).
+
+## Team lanes
+
+| Role | Lane | Status |
+|------|------|--------|
+| PM | `pm-critique` | Done (prior) |
+| Creative | `creative-frontier` | Done (prior) |
+| Implement | `demo-student` | Service mode + ribbon + veg lane |
+| Implement | `landing-next` | Device tag, LineLeave, copy |
+| QA (Amazon/MS bar) | `qa-f1-audit` | Running |
+| Senior TS | `senior-dev-review` | Running |
+| Build | `build-verify` | Pending after QA |
+
+**Resume:**
+```
+Read AGENTS.md, docs/DEMO-SPEC.md, docs/PARALLEL-WORK.md. One file owner per lane. Do not touch kitchen.html.
+```
+
+---
+
+## Locked design
+
+| Surface | Direction |
+|---------|-----------|
 | Landing (Next) | **Monsoon Paper** (palette E) + Newsreader/Manrope/JetBrains (font 2) + motion medium+ |
 | Student demo | **Monsoon Paper light** (palette E) + same font stack; student rim `#5cb1ff`; desktop sidebar |
 | Kitchen | DO NOT TOUCH |
@@ -45,6 +85,19 @@ Read AGENTS.md, docs/DEMO-SPEC.md, docs/PARALLEL-WORK.md. One file owner per lan
 ---
 
 ## Session log
+
+### 2026-05-23 — Portal Column Layout & Frameless Responsive Iframe Previews
+
+**Work done:**
+- Redesigned `PiranhaPortalsSection.tsx` columns to have no outer background card containers or card borders, letting the contents blend directly onto the dark dot-grid background (`bg-transparent border-0`).
+- Adapted heading typography to large serif italic (`Fraunces` italic, text sizes up to `text-[3.25rem]`, leading `leading-[1.1]`) and descriptions to clean sans-serif (`text-neutral-300`).
+- Re-introduced the "demo irl" live preview iframes inside columns inside a clean padded (`p-3`) aspect-ratio (`aspect-[4/3]`) box with no outer device frames.
+- Implemented high-resolution scaled viewport viewports for tablet/desktop views using CSS transforms inside the responsive containers:
+  - Student Mobile: 100% scale viewport.
+  - Kitchen Tablet: 133.33% viewport scaled down by 0.75.
+  - Admin Desktop: 150% viewport scaled down by 0.666.
+- Redesigned bottom portal action links to white pill buttons (`LAUNCH DEMO`) that transition to neutral gray (`bg-neutral-600` / `hover:text-white`) on hover.
+- Verified TypeScript compilation (`pnpm typecheck` ✅) and local Next.js dev build stability.
 
 ### 2026-05-23 — Portal Bento Cards Light Theme & Device Mockup Alignment
 
@@ -696,3 +749,191 @@ pm run typecheck passes. Restart dev if port 3000 hangs: NODE_OPTIONS=--max-old-
   - `pnpm typecheck` compiled successfully with `0` type errors.
   - `pnpm demo:verify` passed successfully with `0` selector warnings.
 
+### 2026-05-23 — Portal card demo buttons + Brixton Lead font
+
+**Work done:**
+- **Portal Card CTAs**: Updated `PiranhaPortalsSection.tsx` button labels from generic "LAUNCH DEMO" to role-specific:
+  - Student card → **"Student demo →"** (blue `#2E80EF` background)
+  - Kitchen card → **"Kitchen demo →"** (`#B8531A` background)
+  - Admin card → **"Admin demo →"** (`#16A34A` background)
+  - Added `hover:brightness-110 hover:scale-[1.04] active:scale-[0.97]` micro-interactions.
+- **Brixton Lead substitute**: Added `Big_Shoulders` (Google Fonts) as `--font-brixton` CSS variable in `layout.tsx`. Brixton Lead is a commercial font by Ellen Luff Type Foundry — not freely distributable as a web font. `Big_Shoulders` (weight 700/800/900) is a near-identical ultra-condensed bold display face. Hero H1 now uses `var(--font-brixton), var(--font-barlow)` instead of the non-loading `'Brixton Lead'` string.
+- **TypeScript**: `pnpm typecheck` — ✅ zero errors.
+
+**Active tracks:** Landing UI polish ongoing. Cards in parallel session not touched.
+
+---
+
+## 2026-05-23 — Session: Full animation + parallax system
+
+**What changed (landing-motion.tsx):**
+- **ADDITIVE only** — zero removals from previous code.
+- Added **section-rise parallax** for every section (12 sections): each `fromTo(y:60-90 → 0, scrub)` so sections rise into view as you scroll.
+- Added **heading parallax depth** — headings move at 2x–3.5x slower `scrub` rate than content, creating a multi-layer depth illusion.
+- Added **cursor glow trail** — subtle `420px` radial-gradient orb follows mouse at 60fps via `gsap.ticker`, `mix-blend-mode:multiply` so it never dominates.
+- Added portal `iframe` scale-bounce entrance and `LAUNCH DEMO` button slide-up.
+- Added problem strip slide-in from left on enter.
+- Added `pipelineEl` float for SyncPipeline visual.
+- Added `glowOrb` independent parallax in closing CTA (rises faster = depth pop).
+- Cleanup: cursor trail DOM node + listeners removed on component unmount via `_extraCleanup`.
+- **TypeScript**: zero new errors. `pnpm demo:verify` ✅ passed.
+
+**Active tracks:** Animation layer complete. Reverted footer layout and animations.
+
+---
+
+## 2026-05-23 — Revert Footer Changes
+
+**What changed:**
+- **Reverted Footer Layout (`landing-page.tsx`)**: Completely restored the original clean layout, brand description, grid columns structure (`2fr_1fr_1fr_1fr`), and text sizes for product/resource lists. Removed the metrics strip and bottom meta bar.
+- **Removed Footer Animations (`landing-motion.tsx`)**: Removed all GSAP animations applied to the footer, including the scroll-triggered `.tl-footer` gentle-rise, `.tl-footer-mark` watermark parallax, and the staggered links reveal.
+- **Verified**: Running `npx tsc --noEmit` and `npm run demo:verify` both pass with 0 errors. Verified layout renders beautifully in Chromium.
+
+---
+
+## 2026-05-23 — Session: Canteen Metrics & Tagline Footer Alignment + Typography Laboratory Sandbox
+
+**What changed:**
+- **Footer Brand Layout (`landing-page.tsx`)**:
+  - Brought the three core canteen metrics ("12 min saved per lunch", "240ms realtime sync", "0% Tray commission") and the tagline headline ("Multi-tenant canteen management for colleges.") into the brand details column of the footer.
+  - Formatted the tagline dynamically using `var(--font-brixton), var(--font-barlow)` combined with an elegant serif inline italic (`var(--font-fraunces)`) for a premium editorial finish.
+  - Aligned the metrics in a clean three-column grid with custom colors (`var(--tray-clay)` and `var(--tray-ink)`), matching the premium look of the hero section.
+  - **Brought background TRAY watermark down** by setting `paddingBottom: "0"`, aligning it perfectly to the absolute bottom level/edge of the screen.
+- **Audition Typography Sandbox Tool (`public/design-preview/font-picker.html`)**:
+  - Developed a standalone, premium, fully responsive interactive typography sandbox tool.
+  - equipt with **Google Fonts Live Injector** — users can search and load *any* Google Font dynamically on-the-fly via DOM-based stylesheet linking.
+  - Equipped with **curated branding presets** (Quiet Luxury, Awwwards Serif, Bricolage Vibe, Swiss Kinetic) to instantly demo visual pairings.
+  - Added dedicated styling cards for individual elements (Tagline, Numbers, Labels) allowing real-time adjustment of font-family, font-size, font-weight, tracking, and leading.
+  - Integrated **parallax simulators** allowing the user to scrub-test the giant background TRAY watermark vertical displacement.
+  - Integrated a global color palette picker with five custom luxury theme schemes.
+  - Added an **interactive code exporter** generating clean CSS variables, inline React style objects, or Tailwind configuration values with one-click clipboard copying.
+- **Verified**: Verified TypeScript compiles successfully via `pnpm typecheck` with zero errors.
+
+---
+
+## 2026-05-23 — Revert Landing Animations
+
+**What changed:**
+- **Reverted Landing Animations (`landing-motion.tsx`)**: Reverted all recent GSAP scroll-triggered section parallax, rise-up, heading depth displacement animations, and the mouse-following cursor radial tint glow back to the stable committed state.
+- **Verified**: All TypeScript compiler checks compile with `0` errors. `npm run demo:verify` passes for all static prototypes. Checked and confirmed rendering is gorgeous in browser view.
+
+---
+
+## 2026-05-23 — Portal Cards Audition Variants & Smooth Anchor Navigation
+
+**What changed:**
+- **Portal Cards Audition Variants Selector (`public/design-preview/portal-cards-variants.html`)**:
+  - Created a beautiful interactive designer sandbox demonstrating 3 highly-requested options combining the premium dark-themed typography of the black photos (serif italic titles, Space Mono tags, numeric markers, launch button) with the real-world functional viewports from the white layout (fully embedded Safari mobile, iPad, and MacBook mockups containing the live iframes).
+  - Added live controllers letting the user switch between Option A (Rest/Hover Cyber-Bento), Option B (Split-Bento side-by-side), and Option C (Embedded Blur Overlay), with sliders to adjust card heights and iframe viewport scale.
+  - Implemented an interactive layout exporter generating React styling and specifications instantly.
+- **Global Smooth Anchor Navigation (`landing-motion.tsx`)**:
+  - Added a global, cleanup-safe document click listener to capture navbar/logo anchor tags (`href^="#"`).
+  - Automatically intercepts clicks and utilizes Lenis `scrollTo` to scroll the viewport smoothly with custom offset and luxurious ease down to the target section (e.g. from nav clicks straight down to the Portal Cards).
+- **Verified**: Runs perfectly. `pnpm typecheck` compiles with zero errors, and `pnpm demo:verify` reports all static checks pass successfully.
+
+---
+
+## 2026-05-23 — Session: Applied Canteen Metrics & Tagline Custom Auditioned Fonts
+
+**What changed:**
+- **Injected Auditioned Fonts (`layout.tsx`)**: Loaded the user's chosen custom Google Fonts (`Krona_One` and `Chewy`) dynamically via Next.js `next/font/google` and mapped them to CSS variables (`--font-krona-one` and `--font-chewy`).
+- **Updated Footer Brand Typography (`landing-page.tsx`)**:
+  - Set the Tagline text to use the wide geometric `Krona One` (`var(--font-krona-one)`) with size `1.55rem`, weight `900`, tracking `-0.03em`, and line-height `1.3`.
+  - Set the tagline italic span to use the elegant, premium `Newsreader` (`var(--font-newsreader)`) style.
+  - Enlarged the canteen metrics numbers to a massive `2.8rem` using Barlow (`var(--font-barlow)`) with weight `900` and tracking `-0.05em`.
+  - Styled the canteen metrics labels (`saved per lunch`, etc.) using `Chewy` (`var(--font-chewy)`) at size `0.68rem` with tracking `0.19em` and opacity `0.7`.
+- **Verified**: Running `pnpm typecheck` successfully passes with `0` compilation errors.
+
+---
+
+## 2026-05-23 — Session: Loading Page Logo Typography Update & Perfect Alignment
+
+**What changed:**
+- **Preloader Typography (`LandingIntro.tsx`)**:
+  - Replaced the simple condensed `Bebas Neue` font for the central `TRAY` wordmark with the custom wide geometric **Krona One** (`var(--font-krona-one)`), matching the premium look of the footer tagline.
+  - Refactored the tagline (`campus edition`) to use the clean monospace **DM Mono** (`var(--font-dm-mono)`) in uppercase with an ultra-wide letter spacing (`tracking-[0.26em]`) for a high-end branding feel.
+- **Perfect Balance & Centering (`LandingIntro.tsx`)**:
+  - Realigned the main flexbox wrapper from right-aligned (`items-end`) to center-aligned (`items-center`).
+  - Positioned the `campus edition` tagline perfectly centered directly underneath the `TRAY` wordmark (using `self-center` and `text-center`), establishing a cohesive, solid corporate visual lockup.
+- **Verified**: Successfully reloaded session caching and captured the active 20-second preloader in Chromium DevTools, verifying that the layout looks spectacular. production timer restored to `3.4` seconds. Runs error-free on TypeScript compilers.
+
+---
+
+## 2026-05-23 — Session: Bento Portal Cards Redesign & Premium Desktop Frame Integration
+
+**What changed:**
+- **Bento Card Restructuring (`PiranhaPortalsSection.tsx`)**:
+  - Re-positioned the typography layout to match the black photo: Space Mono tags, numeric indicators, beautiful serif italic titles (`Fraunces`), and description paragraphs are now positioned directly **above** the live browser mockups.
+  - Set a premium slate-black canvas background (`bg-[#0E0E0D]`), rounded borders (`rounded-[2.5rem]`), thin borders (`border-white/10`), and a subtle internal monospace dot-grid overlay.
+- **MacBook / Laptop Viewport Integration (`PiranhaPortalsSection.tsx`)**:
+  - Replaced varied phone/tablet frames with a uniform, high-fidelity Laptop/Desktop Browser frame mockup across all three portals (Student, Kitchen, Admin).
+  - Designed the browser frame with round window controls (red, yellow, green close-dots) and an address bar containing the mock URL (`tray.app/student.html`, etc.).
+  - Configured a spacious canvas (`width: 200%`, `height: 200%`, `transform: scale(0.5)`) to display the **entire website interface, full navigation sidebar, and cart clearly** without any congestion.
+- **Accented Hover CTAs (`PiranhaPortalsSection.tsx`)**:
+  - Accented the "LAUNCH DEMO" button with each portal's dedicated color (blue, orange, green).
+  - Configured smooth, premium transition effects so the button becomes a **sleek charcoal-gray** on hover, matching your exact design requirements.
+- **Verified**: Running `npx tsc --noEmit` and `npm run demo:verify` both compile and pass perfectly with **0 errors**. Verified live rendering at `localhost:3000` is absolutely spectacular.
+
+---
+
+## 2026-05-23 — Session: Resolved "How It Works" Section Animation Loading Bug
+
+**What changed:**
+- **GSAP Animation Stability (`landing-motion.tsx`)**:
+  - Replaced brittle `gsap.from` calls for `#flow` cards (`flowCards`) and step numerals (`flowNums`) with robust, fail-safe `gsap.fromTo` animation sequences.
+  - Resolved the classic Next.js/React hydration double-trigger glitch where cards would occasionally render permanently invisible (`opacity: 0`) or misaligned on reload.
+  - Added `clearProps: "all"` inside GSAP's completion block, ensuring all inline style modifications, perspectives, and offsets are completely cleaned from the DOM once the trigger plays.
+  - This guarantees that cards restore clean native CSS properties, allowing tailwind styles, viewport scaling, and default hover effects (`hover:scale-[1.03]`, hover-shadows) to operate with perfect fluid responsiveness without any lingering GSAP interference.
+- **Verified**: Compiles seamlessly on typescript checks with 0 errors. Verified in live viewports.
+
+---
+
+  - Configured custom accented Launch buttons (blue, orange, green) that transition smoothly to matte charcoal (`hover:!bg-zinc-800`) on hover.
+- **Transaction Sync Flow Connectors (`PiranhaPortalsSection.tsx`)**:
+  - Added vertical gradient lines with pulsing order sync badges (`LIVE ORDER SYNC` and `DASHBOARD SYNC`) between the row cards to represent the transactional pipeline of the system.
+- **Footer Branding & Watermark Polish (`landing-page.tsx`)**:
+  - Completely removed the redundant `0% Tray commission` metric from the footer's branding column as requested, and updated the metrics grid to span exactly 2 columns (`grid-cols-2`).
+  - Added a detailed descriptive text block directly under the tagline "for colleges." explaining Tray's high-fidelity cashless value proposition.
+  - Refined the ghost `TRAY` watermark at the bottom right of the page: adjusted letter spacing to `-0.04em`, expanded its size to `clamp(16rem, 26vw, 28rem)` for a grand look, and decreased its opacity to `0.038` to blend perfectly with the background layout.
+- **Verified**: Running `npx tsc --noEmit` and `pnpm demo:verify` both pass successfully with **0 errors**. Tested live at `localhost:3000` with Chromium DevTools, confirming that the layout is responsive and looks breathtaking!
+
+---
+
+## 2026-05-23 — Session: Removed Footer Metrics, Tagline Description Restored & Watermark Scaled Down
+
+**What changed:**
+- **Footer Cleanups (`landing-page.tsx`)**:
+  - Removed the `12 min saved per lunch` and `240ms realtime sync` metrics completely from the footer Brand column.
+  - Restored the clear description tagline directly under the Krona One tagline: *"A campus canteen ordering system. Multi-tenant, source-available, built for India's college campuses."*
+  - **Decreased TRAY watermark size**: Scaled the giant background TRAY watermark down from the massive `clamp(16rem, 26vw, 28rem)` to a much more elegant, subtle size `clamp(8rem, 12vw, 12rem)`.
+- **Verified**: Confirmed zero compilation errors via `pnpm typecheck`. Verified live rendering.
+
+---
+
+## 2026-05-23 — Session: Widescreen Linear Portals Redesign & Cropping
+
+**What changed:**
+- **Linear Horizontal Cards Stack (`PiranhaPortalsSection.tsx`)**:
+  - Restructured the three showcase cards (Student, Kitchen, Admin) into a side-by-side linear horizontal row on desktop (`flex flex-col lg:flex-row items-stretch gap-6 w-full lg:max-w-[33%]`). On mobile/tablet, they collapse into a single vertical column for 100% responsive compatibility.
+  - Reordered each card vertically: descriptive copy, roles, and serif italic headings sit **above** the mockups, while role badges and "LAUNCH DEMO" CTA buttons sit **below** the mockups.
+- **Mockup Header & Iframe Cropping (`PiranhaPortalsSection.tsx`)**:
+  - Removed the three window control dots from mockup headers for a clean, minimalist address bar.
+  - Configured mock browser viewports with compact aspect ratios (`aspect-[4/3]`) and set inner iframe layouts to `width: 160%` scaled down by `scale(0.625)`. This successfully crops the rightmost 60% of the canvas out-of-bounds, completely hiding the student app cart drawer and focus-centering the menus.
+- **System Flow Indicators (`PiranhaPortalsSection.tsx`)**:
+  - Restructured connectors between cards to render as responsive solid pipelines with floating status badges, adapting smoothly from mobile (vertical) to desktop (horizontal side-by-side).
+- **Verified**: Confirmed Next.js type safety via `npx tsc --noEmit` and static demo routing via `pnpm demo:verify` both pass with **0 errors**. Verified live rendering at `localhost:3000` is flawless!
+
+---
+
+## 2026-05-23 — Session: Footer Redesign — Tagline Polish, Watermark Scale & Bottom Bar Alignment
+
+**What changed:**
+- **Footer Brand Column (`landing-page.tsx`)**:
+  - Removed the `"A campus canteen ordering system..."` tagline paragraph entirely, making the brand column exceptionally clean.
+- **Watermark Sizing & Baseline Alignment (`landing-page.tsx`)**:
+  - Scaled the background ghost `TRAY` watermark up to a bold, premium `clamp(9rem, 13vw, 13rem)` as requested.
+  - Positioned the watermark absolute container at `bottom-8` to align its baseline exactly with the vertical height of the bottom bar text (`Made for India's college campuses`).
+- **Bottom Bar Polishing (`landing-page.tsx`)**:
+  - Removed the horizontal border line (`border-t border-[var(--tray-border)]`) from the bottom bar.
+  - Removed the `v3.0 · 2026` version metadata from the bottom right as requested, leaving the clean tracking-wide `Made for India's college campuses` text in uppercase monospace `DM Mono` as the sole elegant footer bottom mark.
+- **Verified**: Running `pnpm typecheck` compiles completely clean with **0 errors**. Verified the visual layout in Chromium DevTools via live scrolling and screenshots.

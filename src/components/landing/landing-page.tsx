@@ -39,6 +39,7 @@ function BrandMark() {
 // ── Landing page ─────────────────────────────────────────────────────────────
 export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
   const campusName = tenant?.college_name ?? null;
+  const [hoveredStep, setHoveredStep] = React.useState<number | null>(null);
 
   return (
     <div className="tray-landing tray-page min-h-svh overflow-x-hidden" style={{ fontFamily: "var(--font-ui)" }}>
@@ -50,11 +51,11 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
       <input type="checkbox" id="tl-ham" className="sr-only peer" aria-hidden />
 
       <AnimatedNav
-        className="sticky top-0 z-50 backdrop-blur-xl"
+        className="sticky top-0 z-50 backdrop-blur-xl px-5 sm:px-8 lg:px-10"
         style={{ paddingTop: "env(safe-area-inset-top, 0px)" } as React.CSSProperties}
       >
       <header>
-        <div className="tl-nav-inner mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-3.5 sm:px-8 lg:px-10">
+        <div className="tl-nav-inner mx-auto flex max-w-7xl items-center justify-between gap-4 py-3.5">
           <BrandMark />
 
           {/* Desktop nav links */}
@@ -289,6 +290,8 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
                 // Card 1, 5 (i = 0, 4): Normal (Cream bg, Ink text)
                 // Card 2, 4 (i = 1, 3): Opposite (Red bg, Cream text)
                 // Card 3 (i = 2): Opposite of Card 2 (Cream bg, Red text)
+                const isHovered = hoveredStep === i;
+
                 let cardBg = "rgba(255,255,255,0.65)";
                 let cardText = "var(--tray-ink, #1A1619)";
                 let numColor = "var(--tray-clay, #B8531A)";
@@ -298,8 +301,13 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
                 let borderStyle = "1px solid var(--tray-border)";
                 let descOpacity = "0.6";
 
-                if (i === 1 || i === 3) {
-                  // Inverted: Red bg, Cream text
+                const showRedTheme = (
+                  ((i === 0 || i === 4 || i === 2) && isHovered) ||
+                  ((i === 1 || i === 3) && !isHovered)
+                );
+
+                if (showRedTheme) {
+                  // Red bg, Cream text
                   cardBg = "var(--tray-clay, #B8531A)";
                   cardText = "#FAF8F5";
                   numColor = "rgba(250,248,245,0.3)";
@@ -308,8 +316,8 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
                   tagColor = "rgba(250,248,245,0.7)";
                   borderStyle = "none";
                   descOpacity = "0.8";
-                } else if (i === 2) {
-                  // Opposite of Card 2: Cream bg, Red text
+                } else if (i === 2 && !isHovered) {
+                  // Opposite of Card 2 (Cream bg, Red text)
                   cardBg = "rgba(255,255,255,0.65)";
                   cardText = "var(--tray-clay, #B8531A)";
                   numColor = "var(--tray-ink, #1A1619)";
@@ -321,13 +329,18 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
                 }
 
                 return (
-                  <div key={num} className="flex flex-col gap-4 rounded-[1.75rem] p-9 sm:p-10 transition-all duration-300 ease-out hover:scale-[1.03] hover:-translate-y-1 hover:shadow-xl select-none cursor-pointer h-full"
+                  <div
+                    key={num}
+                    onMouseEnter={() => setHoveredStep(i)}
+                    onMouseLeave={() => setHoveredStep(null)}
+                    className="flex flex-col gap-4 rounded-[1.75rem] p-9 sm:p-10 transition-all duration-300 ease-out hover:scale-[1.03] hover:-translate-y-1 hover:shadow-xl select-none cursor-pointer h-full"
                     style={{
                       background: cardBg,
                       color: cardText,
                       border: borderStyle,
                       minHeight: "22rem",
-                    }}>
+                    }}
+                  >
                     {/* Step number — Bebas Neue */}
                     <span
                       className="leading-none tracking-[-0.02em]"
@@ -508,28 +521,25 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
       </main>
 
       {/* ── FOOTER ────────────────────────────────────────────────────── */}
-      <footer
-        className="relative overflow-hidden px-5 pb-8 pt-12 sm:px-8 lg:px-10 tl-footer"
-        style={{ paddingBottom: "max(2rem, env(safe-area-inset-bottom))" }}
-      >
-        {/* Ghost TRAY watermark — bottom-right, sized so it clears the footer links */}
+      <footer className="relative overflow-hidden px-5 pb-8 pt-12 sm:px-8 lg:px-10">
+        {/* Ghost TRAY watermark — decreased size and aligned to bottom bar height */}
         <div
-          className="pointer-events-none absolute bottom-0 right-0 select-none tl-footer-mark"
+          className="pointer-events-none absolute bottom-8 right-0 select-none"
           style={{ overflow: "hidden" }}
         >
           <span
             style={{
               fontFamily: "var(--font-barlow)",
               fontWeight: 900,
-              fontSize: "clamp(8rem, 12vw, 12rem)",
-              lineHeight: 1.0,
-              letterSpacing: "-0.06em",
+              fontSize: "clamp(9rem, 13vw, 13rem)", // Increased size as requested!
+              lineHeight: 0.8,
+              letterSpacing: "-0.04em",
               textTransform: "uppercase",
               color: "var(--tray-ink)",
               opacity: 0.038,
               display: "block",
-              paddingRight: "clamp(1rem, 3vw, 3rem)",
-              paddingBottom: "clamp(1rem, 2.5vw, 2.5rem)",
+              paddingRight: "clamp(1.5rem, 4vw, 4rem)",
+              paddingBottom: "0",
             }}
           >
             TRAY
@@ -537,22 +547,40 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
         </div>
 
         <div className="mx-auto max-w-7xl">
-          <div className="relative z-10 grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="relative z-10 grid gap-10 sm:grid-cols-2 lg:grid-cols-[2fr_1fr_1fr_1fr]">
             {/* Brand */}
             <div>
               <BrandMark />
               <p
-                className="mt-5 max-w-sm text-[1.15rem] leading-[1.8] opacity-75 font-medium"
-                style={{ fontFamily: "var(--font-geist)" }}
+                className="mt-5 max-w-sm uppercase"
+                style={{
+                  fontFamily: "var(--font-krona-one), sans-serif",
+                  fontSize: "1.55rem",
+                  fontWeight: 900,
+                  letterSpacing: "-0.03em",
+                  lineHeight: 1.3,
+                  color: "var(--tray-ink)",
+                }}
               >
-                A campus canteen ordering system. Multi-tenant, source-available, built for India.
+                Multi-tenant canteen management{" "}
+                <span
+                  style={{
+                    fontFamily: "var(--font-newsreader), serif",
+                    fontStyle: "italic",
+                    textTransform: "none",
+                    color: "var(--tray-clay)",
+                    fontWeight: "normal"
+                  }}
+                >
+                  for colleges.
+                </span>
               </p>
             </div>
 
             {/* Product */}
             <div>
               <p className="font-code mb-5 text-[0.85rem] font-bold uppercase tracking-[0.22em] text-[var(--tray-muted)]">Product</p>
-              <ul className="flex flex-col gap-3.5 text-[1.12rem] sm:text-[1.25rem]">
+              <ul className="flex flex-col gap-3 text-[1.05rem]">
                 {[
                   ["Student app",   "/menu"],
                   ["Kitchen view",  "/kitchen"],
@@ -572,7 +600,7 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
             {/* Resources */}
             <div>
               <p className="font-code mb-5 text-[0.85rem] font-bold uppercase tracking-[0.22em] text-[var(--tray-muted)]">Resources</p>
-              <ul className="flex flex-col gap-3.5 text-[1.12rem] sm:text-[1.25rem]">
+              <ul className="flex flex-col gap-3 text-[1.05rem]">
                 {[
                   ["README",       "https://github.com/thribhuvan003/Tray/blob/main/README.md"],
                   ["Architecture", "https://github.com/thribhuvan003/Tray/tree/main/docs/adr"],
@@ -591,26 +619,25 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
             {/* Contact */}
             <div>
               <p className="font-code mb-5 text-[0.85rem] font-bold uppercase tracking-[0.22em] text-[var(--tray-muted)]">Contact</p>
-              <div className="tl-footer-contact">
-                <a
-                  href="https://github.com/thribhuvan003"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-[1.12rem] sm:text-[1.25rem] opacity-75 hover:opacity-100 transition-opacity font-semibold block"
-                >
-                  github.com/thribhuvan003
-                </a>
-              </div>
+              <a
+                href="https://github.com/thribhuvan003"
+                target="_blank"
+                rel="noreferrer"
+                className="tl-footer-link-item text-[1.12rem] sm:text-[1.25rem] opacity-75 font-semibold block"
+              >
+                <span className="tl-footer-link-circ" />
+                <span className="tl-footer-link-text">github.com/thribhuvan003</span>
+              </a>
             </div>
           </div>
 
           {/* Bottom bar */}
-          <div className="relative z-10 mt-12 flex flex-wrap items-center justify-between gap-4 pt-6">
+          <div className="relative z-10 mt-16 flex flex-wrap items-center justify-between gap-4">
             <p
               className="text-[0.72rem] uppercase tracking-[0.2em] opacity-45"
               style={{ fontFamily: "var(--font-dm-mono)" }}
             >
-              Built for campus canteens · Made in India
+              Made for India's college campuses
             </p>
           </div>
         </div>

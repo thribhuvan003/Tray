@@ -255,34 +255,44 @@ export function LandingMotion() {
           // ── 9. Phone to Plate Section: Y-Axis Book-Flip & Spin Numerals ──
           const flowCards = root.querySelectorAll<HTMLElement>("#flow .grid > div");
           if (flowCards.length) {
-            gsap.from(flowCards, {
-              scrollTrigger: {
-                trigger: "#flow",
-                start: "top bottom",
-              },
-              rotateY: -45,
-              x: 60,
-              opacity: 0,
-              stagger: 0.1,
-              duration: 1.35,
-              ease: "power4.out",
-              transformPerspective: 1200,
-            });
+            gsap.fromTo(
+              flowCards,
+              { rotateY: -45, x: 60, opacity: 0 },
+              {
+                scrollTrigger: {
+                  trigger: "#flow",
+                  start: "top 90%",
+                },
+                rotateY: 0,
+                x: 0,
+                opacity: 1,
+                stagger: 0.1,
+                duration: 1.35,
+                ease: "power4.out",
+                transformPerspective: 1200,
+                clearProps: "all",
+              }
+            );
 
             // Numeric elastic spins
-            const flowNums = root.querySelectorAll<HTMLElement>("#flow .grid > div > span");
-            gsap.from(flowNums, {
-              scrollTrigger: {
-                trigger: "#flow",
-                start: "top bottom",
-              },
-              rotateY: 360,
-              scale: 0.4,
-              opacity: 0,
-              stagger: 0.1,
-              duration: 1.25,
-              ease: "back.out(2.2)",
-            });
+            const flowNums = root.querySelectorAll<HTMLElement>("#flow .grid > div > span:first-child");
+            gsap.fromTo(
+              flowNums,
+              { rotateY: 360, scale: 0.4, opacity: 0 },
+              {
+                scrollTrigger: {
+                  trigger: "#flow",
+                  start: "top 90%",
+                },
+                rotateY: 0,
+                scale: 1,
+                opacity: 1,
+                stagger: 0.1,
+                duration: 1.25,
+                ease: "back.out(2.2)",
+                clearProps: "all",
+              }
+            );
           }
 
           // ── 10. Boring Tech Stack Section: Elastic Pop-ins & Mouse Tilt ──
@@ -434,6 +444,30 @@ export function LandingMotion() {
       })();
     };
 
+    // ── Global anchor link smooth scroll listener ────────────────────────────
+    const handleAnchorClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      const link = target.closest("a");
+      if (!link) return;
+      
+      const href = link.getAttribute("href");
+      if (href && href.startsWith("#")) {
+        const targetEl = document.querySelector(href);
+        if (targetEl) {
+          e.preventDefault();
+          if (lenisInstance) {
+            (lenisInstance as any).scrollTo(targetEl, {
+              offset: -40,
+              duration: 1.5,
+            });
+          } else {
+            targetEl.scrollIntoView({ behavior: "smooth" });
+          }
+        }
+      }
+    };
+    document.addEventListener("click", handleAnchorClick);
+
     // ── Coordinate with LandingIntro preloader exit ──────────────────────────
     let introListener: (() => void) | null = null;
     if ((window as any).__trayIntroStarted) {
@@ -447,6 +481,7 @@ export function LandingMotion() {
 
     return () => {
       killed = true;
+      document.removeEventListener("click", handleAnchorClick);
       if (introListener) {
         window.removeEventListener("tray-intro-start", introListener);
       }

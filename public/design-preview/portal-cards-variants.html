@@ -1,0 +1,1147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Portal Cards Designer & Variant Selector — Tray</title>
+  
+  <!-- Curated Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;900&family=Chewy&family=Fraunces:ital,opsz,wght@0,9..144,100..900;1,9..144,100..900&family=Krona+One&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&family=Barlow:wght@800;900&family=Newsreader:ital,opsz,wght@1,6..72,400;1,6..72,700&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --bg-dark: #0A0A0A;
+      --bg-card-dark: #121212;
+      --border-dark: rgba(255, 255, 255, 0.08);
+      
+      --color-student: #2E80EF;
+      --color-kitchen: #B8531A;
+      --color-admin: #16A34A;
+      
+      --font-serif: "Fraunces", "Newsreader", serif;
+      --font-sans: "Plus Jakarta Sans", sans-serif;
+      --font-mono: "Space Mono", monospace;
+      --font-display: "Big Shoulders Display", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: #F3F4F6;
+      font-family: var(--font-sans);
+      min-height: 100vh;
+      overflow-x: hidden;
+      padding-bottom: 5rem;
+    }
+
+    /* Background Grid Patterns */
+    .bg-grid {
+      position: fixed;
+      inset: 0;
+      background-size: 40px 40px;
+      background-image: 
+        linear-gradient(to right, rgba(255, 255, 255, 0.015) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .bg-gradient-radial {
+      position: fixed;
+      top: -10%;
+      left: 10%;
+      width: 800px;
+      height: 800px;
+      background: radial-gradient(circle, rgba(46, 128, 239, 0.03) 0%, transparent 80%);
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    /* Content Layout */
+    .container {
+      position: relative;
+      z-index: 2;
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 2.5rem 1.5rem;
+    }
+
+    header {
+      margin-bottom: 3.5rem;
+      border-bottom: 1px solid var(--border-dark);
+      padding-bottom: 2rem;
+    }
+
+    .brand-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border-dark);
+      padding: 0.4rem 1rem;
+      border-radius: 9999px;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: #9CA3AF;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      margin-bottom: 1rem;
+    }
+
+    .title {
+      font-family: var(--font-serif);
+      font-size: clamp(2rem, 4vw, 3.5rem);
+      font-weight: 800;
+      line-height: 1.1;
+      letter-spacing: -0.03em;
+      color: #FFFFFF;
+      max-w: 800px;
+    }
+
+    .title em {
+      font-family: "Fraunces";
+      font-style: italic;
+      color: var(--color-student);
+      font-weight: 300;
+    }
+
+    .subtitle {
+      font-size: 1.05rem;
+      color: #9CA3AF;
+      max-width: 650px;
+      margin-top: 1rem;
+      line-height: 1.6;
+    }
+
+    /* CONTROL PANEL PANEL */
+    .controls-wrapper {
+      background: rgba(18, 18, 18, 0.8);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border-dark);
+      border-radius: 1.5rem;
+      padding: 1.5rem;
+      margin-bottom: 3rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 2rem;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .variant-selector {
+      display: flex;
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid var(--border-dark);
+      border-radius: 9999px;
+      padding: 0.35rem;
+    }
+
+    .v-btn {
+      background: transparent;
+      border: none;
+      color: #9CA3AF;
+      font-size: 0.85rem;
+      font-weight: 600;
+      padding: 0.6rem 1.4rem;
+      border-radius: 9999px;
+      cursor: pointer;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .v-btn.active {
+      background: #FFFFFF;
+      color: #000000;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+
+    .v-btn:hover:not(.active) {
+      color: #FFFFFF;
+    }
+
+    .dimension-control {
+      display: flex;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+    }
+
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+
+    .control-label {
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #6B7280;
+    }
+
+    .control-input-wrap {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .control-slider {
+      -webkit-appearance: none;
+      width: 130px;
+      height: 4px;
+      border-radius: 2px;
+      background: rgba(255,255,255,0.1);
+      outline: none;
+    }
+
+    .control-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: #FFFFFF;
+      cursor: pointer;
+      transition: transform 0.15s;
+    }
+
+    .control-slider::-webkit-slider-thumb:hover {
+      transform: scale(1.2);
+    }
+
+    .control-val {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      width: 38px;
+      color: #9CA3AF;
+    }
+
+    /* GRID OR CONTAINERS FOR VARIANTS */
+    .variants-container {
+      display: grid;
+      gap: 2.5rem;
+      transition: all 0.5s ease;
+    }
+
+    /* Responsive variants layout */
+    .variants-grid-3 {
+      grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+    }
+    .variants-grid-1 {
+      grid-template-columns: 1fr;
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+
+    /* ══════════════════════════════════════════════════════════════════
+       CARD COMMON STRUCTURE
+       ══════════════════════════════════════════════════════════════════ */
+    .portal-card {
+      background-color: var(--bg-card-dark);
+      border: 1px solid var(--border-dark);
+      border-radius: 2rem;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+    }
+
+    /* Top row elements */
+    .card-header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+      padding: 1.5rem 1.8rem;
+      border-bottom: 1px solid rgba(255,255,255,0.03);
+      background: rgba(0,0,0,0.1);
+    }
+
+    .card-badge-top {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      font-weight: 500;
+      color: #9CA3AF;
+    }
+
+    .card-number {
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .card-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    /* Typography / Copy bounds */
+    .card-body-content {
+      padding: 2.2rem 2.2rem;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+    }
+
+    .card-heading {
+      font-family: var(--font-serif);
+      font-size: 2.3rem;
+      font-weight: 800;
+      line-height: 1.15;
+      letter-spacing: -0.02em;
+      color: #FFFFFF;
+      margin-bottom: 1rem;
+    }
+
+    .card-heading em {
+      font-style: italic;
+      font-weight: 300;
+      font-family: "Fraunces";
+    }
+
+    .card-desc {
+      font-family: var(--font-sans);
+      font-size: 0.95rem;
+      color: #9CA3AF;
+      line-height: 1.6;
+      margin-bottom: 2rem;
+      font-weight: 400;
+    }
+
+    /* Bottom row elements */
+    .card-footer-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.5rem 2rem;
+      margin-top: auto;
+      border-top: 1px solid rgba(255,255,255,0.03);
+      background: rgba(0,0,0,0.1);
+    }
+
+    .card-badge-bottom {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: #6B7280;
+      font-weight: 600;
+    }
+
+    .launch-btn {
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #FFFFFF;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      cursor: pointer;
+      transition: all 0.3s;
+      border: none;
+      background: transparent;
+    }
+
+    /* ══════════════════════════════════════════════════════════════════
+       REAL DEVICE MOCKUPS
+       ══════════════════════════════════════════════════════════════════ */
+    .device-mockup-wrapper {
+      width: 100%;
+      overflow: hidden;
+      position: relative;
+      background: #000000;
+      border: 1px solid rgba(255,255,255,0.08);
+      box-shadow: inset 0 0 40px rgba(0,0,0,0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto;
+    }
+
+    /* Safari Mobile Viewport Mockup */
+    .mobile-safari-frame {
+      width: 100%;
+      max-width: 290px;
+      height: 480px;
+      border-radius: 2.2rem;
+      border: 8px solid #262626;
+      background: #171717;
+      position: relative;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.7), inset 0 0 10px rgba(0,0,0,0.5);
+      overflow: hidden;
+      margin: 1.5rem auto;
+    }
+
+    /* Screen Frame Notch */
+    .mobile-safari-frame::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 110px;
+      height: 20px;
+      background: #262626;
+      border-bottom-left-radius: 12px;
+      border-bottom-right-radius: 12px;
+      z-index: 100;
+    }
+
+    /* Safari Top Address Bar */
+    .safari-top-bar {
+      height: 44px;
+      background: #202020;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      padding: 16px 12px 6px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: relative;
+      z-index: 5;
+    }
+
+    .safari-url-bar {
+      flex: 1;
+      height: 24px;
+      background: rgba(255,255,255,0.08);
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.65rem;
+      color: #9CA3AF;
+      font-family: var(--font-sans);
+      gap: 0.3rem;
+      margin-left: 24px; /* offset to center since we have lock */
+    }
+
+    /* Tablet Frame Mockup */
+    .tablet-frame {
+      width: 90%;
+      height: 380px;
+      border-radius: 1.8rem;
+      border: 10px solid #262626;
+      background: #171717;
+      box-shadow: 0 12px 45px rgba(0,0,0,0.7);
+      overflow: hidden;
+      margin: 1rem auto;
+      position: relative;
+    }
+
+    /* Desktop Frame Mockup */
+    .macbook-frame {
+      width: 95%;
+      height: 360px;
+      border-radius: 0.8rem;
+      border: 8px solid #262626;
+      background: #171717;
+      box-shadow: 0 15px 50px rgba(0,0,0,0.7);
+      overflow: hidden;
+      margin: 1rem auto;
+      position: relative;
+    }
+
+    /* Embedded iframe style */
+    .mockup-iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+      background: #FFFFFF;
+      display: block;
+      transform-origin: top left;
+    }
+
+    /* ══════════════════════════════════════════════════════════════════
+       DESIGN OPTION STYLES
+       ══════════════════════════════════════════════════════════════════ */
+    
+    /* -----------------------------------------------------------------
+       VARIANT A: "Hover-Slide Reveal Cyber-Bento" (Text resting, slide-up real demo on hover)
+       ----------------------------------------------------------------- */
+    .variant-a .portal-card {
+      height: 520px;
+      cursor: pointer;
+    }
+
+    .variant-a .card-text-container {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      justify-content: space-between;
+      transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      position: relative;
+      z-index: 10;
+    }
+
+    .variant-a .card-device-slidein {
+      position: absolute;
+      bottom: -320px;
+      left: 5%;
+      width: 90%;
+      transition: all 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+      z-index: 5;
+      opacity: 0.15;
+    }
+
+    /* Hover States for Variant A */
+    .variant-a .portal-card:hover {
+      border-color: rgba(255,255,255,0.2);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.8);
+      background-color: #0D0D0D;
+    }
+
+    .variant-a .portal-card:hover .card-text-container {
+      transform: translateY(-90px);
+    }
+
+    .variant-a .portal-card:hover .card-desc {
+      opacity: 0.3;
+      transform: scale(0.95);
+      filter: blur(1px);
+    }
+
+    .variant-a .portal-card:hover .card-device-slidein {
+      bottom: 25px;
+      opacity: 1;
+      transform: translateY(-20px) scale(1.03);
+      box-shadow: 0 20px 45px rgba(0,0,0,0.8);
+    }
+
+    .variant-a .portal-card:hover .launch-btn {
+      color: var(--color-student);
+      transform: translateX(5px);
+    }
+
+    /* -----------------------------------------------------------------
+       VARIANT B: "The High-Fidelity Split Bento" (Side by Side Landscape)
+       ----------------------------------------------------------------- */
+    .variant-b .portal-card {
+      flex-direction: row;
+      min-height: 480px;
+      width: 100%;
+    }
+
+    .variant-b .card-left-column {
+      flex: 1.1;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      border-right: 1px solid rgba(255,255,255,0.04);
+      background: rgba(255, 255, 255, 0.005);
+      position: relative;
+      z-index: 10;
+    }
+
+    .variant-b .card-right-column {
+      flex: 1.3;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+      background: radial-gradient(circle at center, rgba(255,255,255,0.01) 0%, rgba(0,0,0,0.3) 100%);
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* Hover effect for Option B */
+    .variant-b .portal-card:hover {
+      border-color: rgba(255,255,255,0.25);
+    }
+
+    .variant-b .portal-card:hover .mobile-safari-frame {
+      transform: scale(1.05) translateY(-5px);
+      box-shadow: 0 20px 45px rgba(0, 0, 0, 0.8);
+      border-color: #333333;
+    }
+
+    .variant-b .portal-card:hover .tablet-frame,
+    .variant-b .portal-card:hover .macbook-frame {
+      transform: scale(1.04) translateY(-4px) rotate(0.5deg);
+      box-shadow: 0 22px 50px rgba(0,0,0,0.8);
+      border-color: #333333;
+    }
+
+    .variant-b .mobile-safari-frame,
+    .variant-b .tablet-frame,
+    .variant-b .macbook-frame {
+      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    /* -----------------------------------------------------------------
+       VARIANT C: "Glassmorphic Embedded Overlay" (Mockup underneath text)
+       ----------------------------------------------------------------- */
+    .variant-c .portal-card {
+      height: 520px;
+      cursor: pointer;
+    }
+
+    .variant-c .card-body-content {
+      position: relative;
+      z-index: 10;
+      background: linear-gradient(to top, var(--bg-card-dark) 40%, rgba(18,18,18,0.7) 100%);
+      backdrop-filter: blur(2px);
+    }
+
+    .variant-c .card-device-bg {
+      position: absolute;
+      top: 140px;
+      left: 10%;
+      width: 80%;
+      z-index: 1;
+      opacity: 0.18;
+      transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+      transform: scale(0.9) translateY(40px);
+      filter: grayscale(40%);
+    }
+
+    /* Option C Hover states */
+    .variant-c .portal-card:hover {
+      border-color: rgba(255,255,255,0.2);
+    }
+
+    .variant-c .portal-card:hover .card-device-bg {
+      opacity: 0.85;
+      transform: scale(1.05) translateY(-20px) rotate(-1deg);
+      filter: grayscale(0%);
+    }
+
+    .variant-c .portal-card:hover .card-heading {
+      color: #FFFFFF;
+    }
+
+    .variant-c .portal-card:hover .card-desc {
+      color: rgba(255,255,255,0.9);
+      text-shadow: 0 4px 10px rgba(0,0,0,0.8);
+    }
+
+    /* Dynamic heights adjust */
+    .height-display {
+      margin-left: 0.3rem;
+      font-size: 0.8rem;
+    }
+
+    /* SELECTION CONFIRM MODAL */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.85);
+      backdrop-filter: blur(16px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .modal-overlay.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal-box {
+      background: #111;
+      border: 1px solid var(--border-dark);
+      border-radius: 2rem;
+      width: 90%;
+      max-width: 750px;
+      padding: 2.5rem;
+      box-shadow: 0 25px 60px rgba(0,0,0,0.8);
+      position: relative;
+      transform: translateY(40px) scale(0.95);
+      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .modal-overlay.open .modal-box {
+      transform: translateY(0) scale(1);
+    }
+
+    .modal-close {
+      position: absolute;
+      top: 1.5rem;
+      right: 1.5rem;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--border-dark);
+      color: #FFF;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-sans);
+      font-weight: 700;
+      transition: all 0.2s;
+    }
+
+    .modal-close:hover {
+      background: #FFF;
+      color: #000;
+    }
+
+    .modal-title {
+      font-family: var(--font-serif);
+      font-size: 2rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.5rem;
+      color: #FFF;
+    }
+
+    .modal-desc {
+      font-size: 0.9rem;
+      color: #9CA3AF;
+      margin-bottom: 1.8rem;
+    }
+
+    .code-block {
+      background: #000;
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 1rem;
+      padding: 1.5rem;
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      color: #cdfa50;
+      max-height: 320px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      margin-bottom: 1.5rem;
+      text-align: left;
+    }
+
+    .modal-btn {
+      background: #FFFFFF;
+      color: #000000;
+      border: none;
+      border-radius: 9999px;
+      padding: 0.8rem 2rem;
+      font-family: var(--font-mono);
+      font-weight: 700;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.25s;
+      width: 100%;
+    }
+
+    .modal-btn:hover {
+      background: #cdfa50;
+      box-shadow: 0 4px 15px rgba(205,250,80,0.3);
+    }
+
+    /* Visual layout toggle buttons */
+    .view-config-row {
+      display: flex;
+      justify-content: flex-end;
+      margin-bottom: 1.5rem;
+      z-index: 5;
+      position: relative;
+    }
+
+    .select-card-btn {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid var(--border-dark);
+      color: #FFF;
+      border-radius: 9999px;
+      padding: 0.4rem 1rem;
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      font-weight: 700;
+      cursor: pointer;
+      z-index: 100;
+      transition: all 0.2s;
+    }
+
+    .select-card-btn:hover {
+      background: #FFFFFF;
+      color: #000000;
+    }
+
+    /* Live toggle color dots */
+    .color-dot-student { background-color: var(--color-student); box-shadow: 0 0 10px var(--color-student); }
+    .color-dot-kitchen { background-color: var(--color-kitchen); box-shadow: 0 0 10px var(--color-kitchen); }
+    .color-dot-admin { background-color: var(--color-admin); box-shadow: 0 0 10px var(--color-admin); }
+
+    .color-txt-student { color: var(--color-student); }
+    .color-txt-kitchen { color: var(--color-kitchen); }
+    .color-txt-admin { color: var(--color-admin); }
+  </style>
+</head>
+<body>
+
+  <div class="bg-grid"></div>
+  <div class="bg-gradient-radial"></div>
+
+  <div class="container">
+    <header>
+      <div class="brand-pill"><span>•</span> Portal Cards Designer</div>
+      <h1 class="title">Bento <em>Portal Mockups</em> Variant Auditions</h1>
+      <p class="subtitle">
+        Mix and match the premium dark-themed typography of the black photos (Fraunces serifs, metadata tags, numeric markers, and launching buttons) with real-world functional viewports from the white layout.
+      </p>
+    </header>
+
+    <!-- CONTROL PANEL -->
+    <div class="controls-wrapper">
+      <div class="control-group">
+        <span class="control-label">Aesthetic Option Variant</span>
+        <div class="variant-selector">
+          <button class="v-btn active" onclick="setVariant('a', this)">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><rect width="24" height="24" rx="4"/></svg>
+            Option A: Rest/Hover Cyber-Bento
+          </button>
+          <button class="v-btn" onclick="setVariant('b', this)">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><rect width="10" height="24" x="0"/><rect width="10" height="24" x="14"/></svg>
+            Option B: Wide Split-Bento
+          </button>
+          <button class="v-btn" onclick="setVariant('c', this)">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg>
+            Option C: Embedded Layer Overlay
+          </button>
+        </div>
+      </div>
+
+      <div class="dimension-control">
+        <div class="control-group">
+          <span class="control-label">Card Height <span id="height-val" class="control-val">520px</span></span>
+          <div class="control-input-wrap">
+            <input type="range" class="control-slider" min="400" max="650" value="520" id="height-slider" oninput="updateHeight(this.value)">
+          </div>
+        </div>
+
+        <div class="control-group">
+          <span class="control-label">Iframe Viewport Scaling <span id="scale-val" class="control-val">0.75</span></span>
+          <div class="control-input-wrap">
+            <input type="range" class="control-slider" min="50" max="100" value="75" id="scale-slider" oninput="updateScale(this.value)">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- VARIANTS CONTAINER -->
+    <div class="variants-container variants-grid-3 variant-a" id="variants-box">
+      
+      <!-- CARD 1 — STUDENT PORTAL -->
+      <div class="portal-card" id="card-student">
+        <button class="select-card-btn" onclick="openSelection('Student App', 'student')">Select Layout</button>
+        
+        <!-- Inside content layout dynamic columns for Option B -->
+        <div class="card-left-column">
+          <!-- Top details -->
+          <div class="card-header-row">
+            <span class="card-badge-top">STUDENT APP</span>
+            <span class="card-number"><span class="card-dot color-dot-student"></span>01</span>
+          </div>
+
+          <!-- Rest Text Content -->
+          <div class="card-body-content" id="student-text">
+            <h2 class="card-heading">Order from any <em class="color-txt-student">canteen.</em></h2>
+            <p class="card-desc">Choose canteen, browse menu, pay by UPI, track your order live, collect with a 4-digit OTP.</p>
+          </div>
+          
+          <!-- Bottom details -->
+          <div class="card-footer-row">
+            <span class="card-badge-bottom">MOBILE · STUDENT</span>
+            <button class="launch-btn" onclick="openLiveDemo('/demo/student.html')">LAUNCH DEMO &rarr;</button>
+          </div>
+        </div>
+
+        <!-- Embedded Device Frame for variants -->
+        <!-- Variant A will slide this in, Variant B displays it side by side, Variant C handles blur overlay -->
+        <div class="card-right-column card-device-bg card-device-slidein" id="student-device-wrap">
+          <div class="mobile-safari-frame">
+            <div class="safari-top-bar">
+              <div style="display: flex; gap: 3px;">
+                <span style="width:5px; height:5px; border-radius:50%; background:#FF5F56; display:inline-block;"></span>
+                <span style="width:5px; height:5px; border-radius:50%; background:#FFBD2E; display:inline-block;"></span>
+                <span style="width:5px; height:5px; border-radius:50%; background:#27C93F; display:inline-block;"></span>
+              </div>
+              <div class="safari-url-bar">
+                <svg width="7" height="7" viewBox="0 0 24 24" fill="currentColor"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
+                tray.app/c/aditya
+              </div>
+            </div>
+            <iframe class="mockup-iframe" src="/demo/student.html" title="Student Live Demo" id="student-iframe"></iframe>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- CARD 2 — KITCHEN PORTAL -->
+      <div class="portal-card" id="card-kitchen">
+        <button class="select-card-btn" onclick="openSelection('Kitchen View', 'kitchen')">Select Layout</button>
+        
+        <div class="card-left-column">
+          <!-- Top details -->
+          <div class="card-header-row">
+            <span class="card-badge-top">KITCHEN VIEW</span>
+            <span class="card-number"><span class="card-dot color-dot-kitchen"></span>02</span>
+          </div>
+
+          <!-- Rest Text Content -->
+          <div class="card-body-content" id="kitchen-text">
+            <h2 class="card-heading">Run the live <em class="color-txt-kitchen">queue.</em></h2>
+            <p class="card-desc">New tickets land instantly, prep timers count down, OTP handover clears the order — no paper, no shouting.</p>
+          </div>
+          
+          <!-- Bottom details -->
+          <div class="card-footer-row">
+            <span class="card-badge-bottom">TABLET · KITCHEN</span>
+            <button class="launch-btn" onclick="openLiveDemo('/demo/kitchen.html')">LAUNCH DEMO &rarr;</button>
+          </div>
+        </div>
+
+        <div class="card-right-column card-device-bg card-device-slidein" id="kitchen-device-wrap">
+          <div class="tablet-frame">
+            <iframe class="mockup-iframe" src="/demo/kitchen.html" title="Kitchen Live Demo" id="kitchen-iframe"></iframe>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- CARD 3 — CANTEEN ADMIN -->
+      <div class="portal-card" id="card-admin">
+        <button class="select-card-btn" onclick="openSelection('Canteen Admin', 'admin')">Select Layout</button>
+        
+        <div class="card-left-column">
+          <!-- Top details -->
+          <div class="card-header-row">
+            <span class="card-badge-top">ADMIN CONSOLE</span>
+            <span class="card-number"><span class="card-dot color-dot-admin"></span>03</span>
+          </div>
+
+          <!-- Rest Text Content -->
+          <div class="card-body-content" id="admin-text">
+            <h2 class="card-heading">Manage real <em class="color-txt-admin">analytics.</em></h2>
+            <p class="card-desc">Full inventory oversight, dynamic product edits, automated commission reports, institution-level analytics logs.</p>
+          </div>
+          
+          <!-- Bottom details -->
+          <div class="card-footer-row">
+            <span class="card-badge-bottom">DESKTOP · ADMIN</span>
+            <button class="launch-btn" onclick="openLiveDemo('/demo/admin.html')">LAUNCH DEMO &rarr;</button>
+          </div>
+        </div>
+
+        <div class="card-right-column card-device-bg card-device-slidein" id="admin-device-wrap">
+          <div class="macbook-frame">
+            <iframe class="mockup-iframe" src="/demo/admin.html" title="Admin Live Demo" id="admin-iframe"></iframe>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <!-- SELECTION CONFIG MODAL -->
+  <div class="modal-overlay" id="selection-modal">
+    <div class="modal-box">
+      <button class="modal-close" onclick="closeModal()">×</button>
+      <h3 class="modal-title" id="modal-title-label">Layout Config Exporter</h3>
+      <p class="modal-desc" id="modal-desc-label">Generate clean React component styling and properties for the selected layout option.</p>
+      
+      <div class="code-block" id="modal-code-export">
+        // Export code matches standard landing-page components structure
+      </div>
+      
+      <button class="modal-btn" onclick="confirmLayoutSelection()">I Confirm and Select This Layout Option</button>
+    </div>
+  </div>
+
+  <script>
+    let activeVariant = 'a';
+    let cardHeight = 520;
+    let iframeScale = 0.75;
+
+    // Apply viewport scaling when loaded
+    window.addEventListener('DOMContentLoaded', () => {
+      updateScale(75);
+      updateHeight(520);
+    });
+
+    function setVariant(type, btn) {
+      activeVariant = type;
+      
+      // Update tabs UI
+      document.querySelectorAll('.v-btn').forEach(el => el.classList.remove('active'));
+      btn.classList.add('active');
+
+      const vBox = document.getElementById('variants-box');
+      
+      // Re-initialize layouts
+      vBox.className = 'variants-container';
+      
+      if (type === 'a') {
+        vBox.classList.add('variants-grid-3', 'variant-a');
+        
+        // Reset Device classes
+        resetDeviceClasses('card-device-slidein');
+        updateHeight(520);
+      } else if (type === 'b') {
+        vBox.classList.add('variants-grid-1', 'variant-b');
+        
+        // Reset Device classes
+        resetDeviceClasses('');
+        updateHeight(480);
+      } else if (type === 'c') {
+        vBox.classList.add('variants-grid-3', 'variant-c');
+        
+        // Reset Device classes
+        resetDeviceClasses('card-device-bg');
+        updateHeight(520);
+      }
+    }
+
+    function resetDeviceClasses(customClass) {
+      const studentWrap = document.getElementById('student-device-wrap');
+      const kitchenWrap = document.getElementById('kitchen-device-wrap');
+      const adminWrap = document.getElementById('admin-device-wrap');
+
+      studentWrap.className = 'card-right-column ' + customClass;
+      kitchenWrap.className = 'card-right-column ' + customClass;
+      adminWrap.className = 'card-right-column ' + customClass;
+    }
+
+    function updateHeight(val) {
+      cardHeight = val;
+      document.getElementById('height-val').innerText = val + 'px';
+      document.getElementById('height-slider').value = val;
+      
+      document.querySelectorAll('.portal-card').forEach(card => {
+        card.style.height = val + 'px';
+      });
+    }
+
+    function updateScale(val) {
+      iframeScale = val / 100;
+      document.getElementById('scale-val').innerText = iframeScale.toFixed(2);
+      document.getElementById('scale-slider').value = val;
+      
+      const iframes = document.querySelectorAll('.mockup-iframe');
+      iframes.forEach(iframe => {
+        iframe.style.width = (100 / iframeScale) + '%';
+        iframe.style.height = (100 / iframeScale) + '%';
+        iframe.style.transform = `scale(${iframeScale})`;
+      });
+    }
+
+    function openLiveDemo(url) {
+      window.open(url, '_blank');
+    }
+
+    function openSelection(role, slug) {
+      const modal = document.getElementById('selection-modal');
+      const title = document.getElementById('modal-title-label');
+      const desc = document.getElementById('modal-desc-label');
+      const codeBlock = document.getElementById('modal-code-export');
+
+      title.innerHTML = `Exporter Details: Option ${activeVariant.toUpperCase()} for ${role}`;
+      desc.innerHTML = `Below is the generated high-fidelity implementation specs matching your selection. Clicking confirm will log this selection in the session ledger.`;
+
+      let codeTemplate = '';
+      if (activeVariant === 'a') {
+        codeTemplate = `// OPTION A: Rest/Hover Cyber-Bento card implementation
+<PortalCard 
+  height="${cardHeight}px" 
+  className="relative overflow-hidden group border border-[var(--tray-border)] rounded-[2rem] bg-[#121212] transition-all duration-300 hover:bg-[#0d0d0d]"
+>
+  <div className="flex flex-col h-full justify-between transition-transform duration-500 group-hover:-translate-y-[90px]">
+    {/* Card Badges and Typography Header */}
+    <div className="flex justify-between items-center p-6 border-b border-[var(--tray-border-dim)] bg-black/10">
+      <span className="font-mono text-xs uppercase tracking-widest text-[#9CA3AF]">${role.toUpperCase()} APP</span>
+      <span className="font-mono text-xs font-bold flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-[var(--role-accent)]"></span>01</span>
+    </div>
+    
+    <div className="p-8">
+      <h2 className="font-serif italic font-extrabold text-[2.3rem] leading-none mb-4">Order from any canteen.</h2>
+      <p className="font-sans text-sm text-[#9CA3AF] leading-relaxed group-hover:opacity-30 group-hover:blur-[1px]">Choose canteen, browse menu, pay by UPI...</p>
+    </div>
+  </div>
+
+  {/* Device iframe slide-in on hover */}
+  <div className="absolute -bottom-[320px] left-[5%] width-[90%] transition-all duration-500 group-hover:bottom-[25px] group-hover:-translate-y-5 group-hover:scale-[1.03]">
+    <DeviceMockup scale={${iframeScale}} src="/demo/${slug}.html" />
+  </div>
+</PortalCard>`;
+      } else if (activeVariant === 'b') {
+        codeTemplate = `// OPTION B: Split-Bento Landscape Card implementation
+<PortalCard 
+  className="flex flex-col md:flex-row min-height-[480px] w-full border border-[var(--tray-border)] rounded-[2rem]"
+>
+  {/* Left Side text */}
+  <div className="flex-1 p-8 flex flex-col justify-between border-r border-[var(--tray-border-dim)]">
+    <div className="flex justify-between items-center pb-4">
+      <span className="font-mono text-xs uppercase text-gray-400">${role.toUpperCase()} APP</span>
+      <span className="font-mono text-xs font-bold">01</span>
+    </div>
+    <div className="my-auto">
+      <h2 className="font-serif italic font-extrabold text-4xl mb-4">Order from any canteen.</h2>
+      <p className="text-gray-400 text-sm">Choose canteen, browse menu, pay by UPI...</p>
+    </div>
+  </div>
+
+  {/* Right Side Frame Viewport */}
+  <div className="flex-[1.3] p-8 flex items-center justify-center bg-black/20">
+    <div className="w-full transition-transform duration-300 hover:scale-[1.05] hover:-translate-y-1">
+      <DeviceMockup scale={${iframeScale}} src="/demo/${slug}.html" />
+    </div>
+  </div>
+</PortalCard>`;
+      } else if (activeVariant === 'c') {
+        codeTemplate = `// OPTION C: Embedded Depth Layer Overlay implementation
+<PortalCard 
+  height="${cardHeight}px" 
+  className="relative overflow-hidden group border border-[var(--tray-border)] rounded-[2rem]"
+>
+  {/* Text elements layered on top */}
+  <div className="relative z-10 p-8 h-full bg-gradient-to-t from-[#121212] via-[#121212]/80 to-transparent">
+    <h2 className="font-serif italic text-4xl mb-4">Order from any canteen.</h2>
+  </div>
+
+  {/* Embedded background device mockup */}
+  <div className="absolute top-[140px] left-[10%] w-[80%] opacity-20 transition-all duration-500 group-hover:opacity-90 group-hover:scale-[1.05] group-hover:-translate-y-5">
+    <DeviceMockup scale={${iframeScale}} src="/demo/${slug}.html" />
+  </div>
+</PortalCard>`;
+      }
+
+      codeBlock.innerText = codeTemplate;
+      modal.classList.add('open');
+    }
+
+    function closeModal() {
+      document.getElementById('selection-modal').classList.remove('open');
+    }
+
+    function confirmLayoutSelection() {
+      alert(`Option ${activeVariant.toUpperCase()} successfully auditioned and selected! We will now integrate this specific card layout choice back into your landing page main application.`);
+      closeModal();
+    }
+  </script>
+</body>
+</html>

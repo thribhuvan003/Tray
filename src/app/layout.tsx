@@ -3,7 +3,7 @@ import {
   Inter, Fraunces, Manrope, JetBrains_Mono, Instrument_Serif,
   Newsreader, Geist, Geist_Mono, Space_Grotesk,
   Bebas_Neue, Cormorant_Garamond, Plus_Jakarta_Sans, Barlow_Condensed, DM_Serif_Display,
-  DM_Mono,
+  DM_Mono, Big_Shoulders, Krona_One, Chewy,
 } from "next/font/google";
 import { headers } from "next/headers";
 import { Toaster } from "sonner";
@@ -100,6 +100,25 @@ const dmMono = DM_Mono({
   variable: "--font-dm-mono",
   display: "swap",
 });
+// Big Shoulders — ultra-condensed bold display, used as Brixton Lead substitute
+const bigShoulders = Big_Shoulders({
+  subsets: ["latin"],
+  weight: ["700", "800", "900"],
+  variable: "--font-brixton",
+  display: "swap",
+});
+const kronaOne = Krona_One({
+  subsets: ["latin"],
+  weight: "400",
+  variable: "--font-krona-one",
+  display: "swap",
+});
+const chewy = Chewy({
+  subsets: ["latin"],
+  weight: "400",
+  variable: "--font-chewy",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "Tray — Campus food, without the queue.",
@@ -140,7 +159,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       lang="en"
       data-tenant-id={tenant?.id ?? ""}
       data-tenant-slug={tenant?.slug ?? ""}
-      className={`${inter.variable} ${fraunces.variable} ${manrope.variable} ${jetbrains.variable} ${instrumentSerif.variable} ${newsreader.variable} ${spaceGrotesk.variable} ${geist.variable} ${geistMono.variable} ${bebasNeue.variable} ${cormorant.variable} ${plusJakarta.variable} ${barlowCondensed.variable} ${dmSerif.variable} ${dmMono.variable}`}
+      className={`${inter.variable} ${fraunces.variable} ${manrope.variable} ${jetbrains.variable} ${instrumentSerif.variable} ${newsreader.variable} ${spaceGrotesk.variable} ${geist.variable} ${geistMono.variable} ${bebasNeue.variable} ${cormorant.variable} ${plusJakarta.variable} ${barlowCondensed.variable} ${dmSerif.variable} ${dmMono.variable} ${bigShoulders.variable} ${kronaOne.variable} ${chewy.variable}`}
       suppressHydrationWarning
     >
       <head>

@@ -82,9 +82,9 @@ export function LandingIntro() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0, y: -45, scale: 0.94, filter: "blur(8px)" }}
               transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-              className="flex flex-col items-end relative px-6 w-full max-w-[90vw] md:max-w-5xl"
+              className="flex flex-col items-center relative px-6 w-full max-w-[90vw] md:max-w-5xl"
             >
-              {/* Big bold monumental TRAY title (Thunder / Druk text style) */}
+              {/* Big bold monumental TRAY title (Krona One wide luxury branding) */}
               <div className="overflow-hidden py-3 px-6 flex justify-center items-center w-full">
                 <motion.h1
                   initial={{ 
@@ -103,26 +103,25 @@ export function LandingIntro() {
                     duration: 1.5,
                     ease: [0.16, 1, 0.3, 1]
                   }}
-                  className="text-[clamp(7.5rem,23vw,21rem)] font-bold leading-[0.78] select-none text-[#FAF8F5] tracking-tighter uppercase text-center"
+                  className="text-[clamp(4.2rem,11.5vw,9rem)] font-black leading-[0.9] select-none text-[#FAF8F5] tracking-[-0.04em] uppercase text-center"
                   style={{
-                    fontFamily: "var(--font-bebas)",
+                    fontFamily: "var(--font-krona-one), sans-serif",
                     transformOrigin: "center bottom",
                   }}
                 >
-                  Tray
+                  TRAY
                 </motion.h1>
               </div>
 
-              {/* Tagline in Berfal Italic / Elegant Serif style aligned to the right edge */}
-              <div className="overflow-hidden -mt-5 sm:-mt-9 md:-mt-11 mr-4 sm:mr-8 md:mr-10 self-end">
+              {/* Tagline centered and aligned perfectly under TRAY */}
+              <div className="overflow-hidden mt-4 self-center text-center">
                 <motion.p
                   initial={{ y: "100%", opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ duration: 1.15, delay: 0.55, ease: [0.16, 1, 0.3, 1] }}
-                  className="text-[clamp(1.5rem,4.2vw,3.2rem)] text-[#FAF8F5]/85 font-normal leading-none whitespace-nowrap"
+                  className="text-[clamp(0.72rem,1.8vw,1.15rem)] text-[#FAF8F5]/80 font-bold tracking-[0.26em] uppercase leading-none whitespace-nowrap"
                   style={{
-                    fontFamily: "var(--font-instrument-serif)",
-                    fontStyle: "italic",
+                    fontFamily: "var(--font-dm-mono), monospace",
                   }}
                 >
                   campus edition

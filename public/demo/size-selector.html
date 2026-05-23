@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Card Sizing Selector — Tray</title>
+  <style>
+    :root {
+      --tray-ink: #1a1619;
+      --tray-cream: #faf8f5;
+      --tray-clay: #b8531a;
+      --font-newsreader: 'Newsreader', Georgia, serif;
+      --font-barlow: 'Barlow Condensed', sans-serif;
+    }
+    body {
+      background: #0d0c0a;
+      color: #faf8f5;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      margin: 0;
+      padding: 40px 20px;
+    }
+    .header {
+      text-align: center;
+      max-width: 800px;
+      margin: 0 auto 50px auto;
+    }
+    .header h1 {
+      font-family: var(--font-newsreader);
+      font-style: italic;
+      font-weight: normal;
+      font-size: 2.8rem;
+      margin-bottom: 10px;
+    }
+    .header p {
+      opacity: 0.7;
+      font-size: 1.1rem;
+    }
+    .selector-section {
+      margin-bottom: 80px;
+      border-top: 1px solid rgba(255,255,255,0.08);
+      padding-top: 40px;
+    }
+    .option-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 25px;
+      color: var(--tray-clay);
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+    .option-title span {
+      background: rgba(255,255,255,0.08);
+      color: #faf8f5;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      font-weight: normal;
+    }
+    
+    /* Layout Container */
+    .grid-container {
+      display: grid;
+      grid-template-cols: 1fr;
+      gap: 30px;
+      margin: 0 auto;
+    }
+
+    @media (min-width: 1024px) {
+      .grid-container {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    /* CARD BASE */
+    .card {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 36px;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+    .card-role {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.2em;
+      opacity: 0.4;
+    }
+    .card-dot-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .card-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+    .card-index {
+      font-size: 12px;
+      opacity: 0.3;
+    }
+    .card-title {
+      font-family: var(--font-newsreader);
+      font-style: italic;
+      font-size: 32px;
+      font-weight: normal;
+      margin: 0 0 24px 0;
+      line-height: 1.25;
+    }
+    
+    /* Live Preview Mockup Box */
+    .preview-box {
+      background: rgba(255,255,255,0.015);
+      border-top: 1px solid rgba(255,255,255,0.06);
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      width: 100%;
+      margin-bottom: 24px;
+      box-sizing: border-box;
+    }
+    .device-label {
+      font-size: 10px;
+      font-weight: bold;
+      letter-spacing: 0.15em;
+      opacity: 0.5;
+      text-transform: uppercase;
+      margin-bottom: 16px;
+    }
+    .device-badge {
+      position: absolute;
+      left: 24px;
+      top: 24px;
+      background: rgba(0,0,0,0.6);
+      border: 1px solid rgba(255,255,255,0.06);
+      padding: 6px 10px;
+      border-radius: 8px;
+      font-size: 9px;
+      font-weight: bold;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+    }
+
+    /* Device Mockups */
+    .mock-phone {
+      border: 5px solid #27272a;
+      background: #000;
+      border-radius: 26px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      overflow: hidden;
+      position: relative;
+      flex-shrink: 0;
+    }
+    .mock-tablet {
+      border: 5px solid #27272a;
+      background: #000;
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      overflow: hidden;
+      position: relative;
+      aspect-ratio: 4/3;
+      flex-shrink: 0;
+    }
+    .mock-desktop {
+      border: 4px solid #27272a;
+      background: #000;
+      border-radius: 10px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      overflow: hidden;
+      position: relative;
+      aspect-ratio: 16/10;
+      flex-shrink: 0;
+    }
+    .mock-frame {
+      width: 100%;
+      height: 100%;
+      background: #111;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      opacity: 0.4;
+    }
+
+    .card-description {
+      opacity: 0.7;
+      font-size: 15px;
+      line-height: 1.65;
+      margin-bottom: 30px;
+    }
+
+    .card-footer {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .caption {
+      font-size: 10px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      opacity: 0.4;
+      text-align: center;
+    }
+    .btn {
+      background: var(--tray-cream);
+      color: var(--tray-ink);
+      border-radius: 16px;
+      padding: 14px 24px;
+      font-size: 12px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: background 0.2s;
+    }
+    .btn:hover {
+      background: #ffffff;
+    }
+
+    /* ── SIZING SPECIFICS ── */
+    
+    /* OPTION A: Wide & Short (Compact height, wide cards) */
+    .container-a { max-w: 1280px; }
+    .card-a { min-height: 44rem; padding: 40px; }
+    .preview-a { min-height: 320px; padding: 20px 0; }
+    .phone-a { width: 160px; height: 284px; }
+    .tablet-a { width: 250px; }
+    .desktop-a { width: 260px; }
+    
+    /* OPTION B: Balanced Sizing (Highly Recommended) */
+    .container-b { max-w: 1360px; }
+    .card-b { min-height: 46rem; padding: 44px; }
+    .preview-b { min-height: 360px; padding: 24px 0; }
+    .phone-b { width: 180px; height: 320px; }
+    .tablet-b { width: 280px; }
+    .desktop-b { width: 290px; }
+
+    /* OPTION C: Generous Breathing Room (Tall & Spacious) */
+    .container-c { max-w: 1440px; }
+    .card-c { min-height: 50rem; padding: 48px; }
+    .preview-c { min-height: 400px; padding: 32px 0; }
+    .phone-c { width: 200px; height: 356px; }
+    .tablet-c { width: 310px; }
+    .desktop-c { width: 320px; }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <h1>Card Size & Ratio Options Selector</h1>
+    <p>We've created three visual layout options below. View their height, breathing room, and mockup aspect ratios on your screen, then pick your favorite style!</p>
+  </div>
+
+  <!-- OPTION A -->
+  <div class="selector-section">
+    <div class="option-title">
+      Option A: Wide & Short
+      <span>Height: 44rem (704px) · Padding: 40px (p-10) · Preview: 320px</span>
+    </div>
+    <div class="grid-container container-a">
+      <!-- Card 1 -->
+      <div class="card card-a" style="border-top: 3px solid #2E80EF;">
+        <div>
+          <div class="card-header">
+            <span class="card-role">STUDENT APP</span>
+            <div class="card-dot-row">
+              <span class="card-dot" style="background: #2E80EF;"></span>
+              <span class="card-index">• 01</span>
+            </div>
+          </div>
+          <h3 class="card-title">Order from any canteen.</h3>
+          
+          <div class="preview-box preview-a">
+            <div class="device-label">STUDENT APP - MOBILE</div>
+            <div class="mock-phone phone-a">
+              <div class="mock-frame">Mobile View</div>
+            </div>
+          </div>
+          <p class="card-description">Choose canteen, browse menu, pay by UPI, track your order live, collect with a 4-digit OTP.</p>
+        </div>
+        <div class="card-footer">
+          <a href="#" class="btn">Open student demo &rarr;</a>
+        </div>
+      </div>
+
+      <!-- Card 2 -->
+      <div class="card card-a" style="border-top: 3px solid #B8531A;">
+        <div>
+          <div class="card-header">
+            <span class="card-role">KITCHEN VIEW</span>
+            <div class="card-dot-row">
+              <span class="card-dot" style="background: #B8531A;"></span>
+              <span class="card-index">• 02</span>
+            </div>
+          </div>
+          <h3 class="card-title">Run the live queue.</h3>
+          
+          <div class="preview-box preview-a">
+            <div class="device-label">KITCHEN VIEW - TABLET</div>
+            <div class="mock-tablet tablet-a">
+              <div class="mock-frame">Tablet View</div>
+            </div>
+          </div>
+          <p class="card-description">New tickets land instantly, prep timers count down, OTP handover clears the order — no paper, no shouting.</p>
+        </div>
+        <div class="card-footer">
+          <div class="caption">DEMO LOGIN · SHARED CREDENTIALS</div>
+          <a href="#" class="btn">Sign in as kitchen staff &rarr;</a>
+        </div>
+      </div>
+
+      <!-- Card 3 -->
+      <div class="card card-a" style="border-top: 3px solid #16A34A;">
+        <div>
+          <div class="card-header">
+            <span class="card-role">ADMIN CONSOLE</span>
+            <div class="card-dot-row">
+              <span class="card-dot" style="background: #16A34A;"></span>
+              <span class="card-index">• 03</span>
+            </div>
+          </div>
+          <h3 class="card-title">See the whole operation.</h3>
+          
+          <div class="preview-box preview-a">
+            <div class="device-label">ADMIN CONSOLE - DESKTOP</div>
+            <div class="mock-desktop desktop-a">
+              <div class="mock-frame">Desktop View</div>
+            </div>
+          </div>
+          <p class="card-description">Live orders, daily revenue, menu edits, staff access, full audit log — one screen, every metric.</p>
+        </div>
+        <div class="card-footer">
+          <div class="caption">DEMO LOGIN · SHARED CREDENTIALS</div>
+          <a href="#" class="btn">Sign in as admin &rarr;</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- OPTION B -->
+  <div class="selector-section">
+    <div class="option-title">
+      Option B: Balanced & Compact (Recommended)
+      <span>Height: 46rem (736px) · Padding: 44px (p-11) · Preview: 360px</span>
+    </div>
+    <div class="grid-container container-b">
+      <!-- Card 1 -->
+      <div class="card card-b" style="border-top: 3px solid #2E80EF;">
+        <div>
+          <div class="card-header">
+            <span class="card-role">STUDENT APP</span>
+            <div class="card-dot-row">
+              <span class="card-dot" style="background: #2E80EF;"></span>
+              <span class="card-index">• 01</span>
+            </div>
+          </div>
+          <h3 class="card-title">Order from any canteen.</h3>
+          
+          <div class="preview-box preview-b">
+            <div class="device-label">STUDENT APP - MOBILE</div>
+            <div class="mock-phone phone-b">
+              <div class="mock-frame">Mobile View</div>
+            </div>
+          </div>
+          <p class="card-description">Choose canteen, browse menu, pay by UPI, track your order live, collect with a 4-digit OTP.</p>
+        </div>
+        <div class="card-footer">
+          <a href="#" class="btn">Open student demo &rarr;</a>
+        </div>
+      </div>
+
+      <!-- Card 2 -->
+      <div class="card card-b" style="border-top: 3px solid #B8531A;">
+        <div>
+          <div class="card-header">
+            <span class="card-role">KITCHEN VIEW</span>
+            <div class="card-dot-row">
+              <span class="card-dot" style="background: #B8531A;"></span>
+              <span class="card-index">• 02</span>
+            </div>
+          </div>
+          <h3 class="card-title">Run the live queue.</h3>
+          
+          <div class="preview-box preview-b">
+            <div class="device-label">KITCHEN VIEW - TABLET</div>
+            <div class="mock-tablet tablet-b">
+              <div class="mock-frame">Tablet View</div>
+            </div>
+          </div>
+          <p class="card-description">New tickets land instantly, prep timers count down, OTP handover clears the order — no paper, no shouting.</p>
+        </div>
+        <div class="card-footer">
+          <div class="caption">DEMO LOGIN · SHARED CREDENTIALS</div>
+          <a href="#" class="btn">Sign in as kitchen staff &rarr;</a>
+        </div>
+      </div>
+
+      <!-- Card 3 -->
+      <div class="card card-b" style="border-top: 3px solid #16A34A;">
+        <div>
+          <div class="card-header">
+            <span class="card-role">ADMIN CONSOLE</span>
+            <div class="card-dot-row">
+              <span class="card-dot" style="background: #16A34A;"></span>
+              <span class="card-index">• 03</span>
+            </div>
+          </div>
+          <h3 class="card-title">See the whole operation.</h3>
+          
+          <div class="preview-box preview-b">
+            <div class="device-label">ADMIN CONSOLE - DESKTOP</div>
+            <div class="mock-desktop desktop-b">
+              <div class="mock-frame">Desktop View</div>
+            </div>
+          </div>
+          <p class="card-description">Live orders, daily revenue, menu edits, staff access, full audit log — one screen, every metric.</p>
+        </div>
+        <div class="card-footer">
+          <div class="caption">DEMO LOGIN · SHARED CREDENTIALS</div>
+          <a href="#" class="btn">Sign in as admin &rarr;</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- OPTION C -->
+  <div class="selector-section">
+    <div class="option-title">
+      Option C: Generous Breathing Room
+      <span>Height: 50rem (800px) · Padding: 48px (p-12) · Preview: 400px</span>
+    </div>
+    <div class="grid-container container-c">
+      <!-- Card 1 -->
+      <div class="card card-c" style="border-top: 3px solid #2E80EF;">
+        <div>
+          <div class="card-header">
+            <span class="card-role">STUDENT APP</span>
+            <div class="card-dot-row">
+              <span class="card-dot" style="background: #2E80EF;"></span>
+              <span class="card-index">• 01</span>
+            </div>
+          </div>
+          <h3 class="card-title">Order from any canteen.</h3>
+          
+          <div class="preview-box preview-c">
+            <div class="device-label">STUDENT APP - MOBILE</div>
+            <div class="mock-phone phone-c">
+              <div class="mock-frame">Mobile View</div>
+            </div>
+          </div>
+          <p class="card-description">Choose canteen, browse menu, pay by UPI, track your order live, collect with a 4-digit OTP.</p>
+        </div>
+        <div class="card-footer">
+          <a href="#" class="btn">Open student demo &rarr;</a>
+        </div>
+      </div>
+
+      <!-- Card 2 -->
+      <div class="card card-c" style="border-top: 3px solid #B8531A;">
+        <div>
+          <div class="card-header">
+            <span class="card-role">KITCHEN VIEW</span>
+            <div class="card-dot-row">
+              <span class="card-dot" style="background: #B8531A;"></span>
+              <span class="card-index">• 02</span>
+            </div>
+          </div>
+          <h3 class="card-title">Run the live queue.</h3>
+          
+          <div class="preview-box preview-c">
+            <div class="device-label">KITCHEN VIEW - TABLET</div>
+            <div class="mock-tablet tablet-c">
+              <div class="mock-frame">Tablet View</div>
+            </div>
+          </div>
+          <p class="card-description">New tickets land instantly, prep timers count down, OTP handover clears the order — no paper, no shouting.</p>
+        </div>
+        <div class="card-footer">
+          <div class="caption">DEMO LOGIN · SHARED CREDENTIALS</div>
+          <a href="#" class="btn">Sign in as kitchen staff &rarr;</a>
+        </div>
+      </div>
+
+      <!-- Card 3 -->
+      <div class="card card-c" style="border-top: 3px solid #16A34A;">
+        <div>
+          <div class="card-header">
+            <span class="card-role">ADMIN CONSOLE</span>
+            <div class="card-dot-row">
+              <span class="card-dot" style="background: #16A34A;"></span>
+              <span class="card-index">• 03</span>
+            </div>
+          </div>
+          <h3 class="card-title">See the whole operation.</h3>
+          
+          <div class="preview-box preview-c">
+            <div class="device-label">ADMIN CONSOLE - DESKTOP</div>
+            <div class="mock-desktop desktop-c">
+              <div class="mock-frame">Desktop View</div>
+            </div>
+          </div>
+          <p class="card-description">Live orders, daily revenue, menu edits, staff access, full audit log — one screen, every metric.</p>
+        </div>
+        <div class="card-footer">
+          <div class="caption">DEMO LOGIN · SHARED CREDENTIALS</div>
+          <a href="#" class="btn">Sign in as admin &rarr;</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>
