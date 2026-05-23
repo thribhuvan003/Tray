@@ -470,7 +470,7 @@ async function main() {
     await screenshot(studentPage, "51-switcher-drawer-before");
 
     // Ensure South Block doesn't exist in DOM
-    const southBlockTextBefore = studentPage.locator('button:has-text("South Block Cafeteria")');
+    const southBlockTextBefore = studentPage.locator('button:has-text("South Block Cafeteria")').first();
     const isSouthBlockVisibleBefore = await southBlockTextBefore.isVisible().catch(() => false);
     info(`South Block visible in drawer initially: ${isSouthBlockVisibleBefore}`);
 
