@@ -694,7 +694,7 @@ export function PiranhaPortalsSection() {
           scrollPx = 0;
         } else if (portalKey === "admin") {
           virtualWidth = 1300;
-          scrollPx = 140;
+          scrollPx = 0;
         }
 
         const virtualHeight = parentHeight * (virtualWidth / parentWidth) + scrollPx;
