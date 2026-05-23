@@ -46,6 +46,24 @@ Read AGENTS.md, docs/DEMO-SPEC.md, docs/PARALLEL-WORK.md. One file owner per lan
 
 ## Session log
 
+### 2026-05-23 — UI polish, login→demo redirects, GitHub push
+
+**Work done:**
+- Upgraded admin portal typography (Google Fonts: Outfit/Inter), removed generic fonts
+- Removed triple-dot ellipsis icon from navbar; replaced with single unified dark/light toggle button
+- Fixed navbar alignment across student and admin demo portals
+- Implemented conditional login redirect in `src/components/portal-student/login-form.tsx`:
+  - Regular users (magic link / password / Google OAuth) → redirected to `/demo/student.html` (student) or `/demo/admin.html` (admin)
+  - Test/real users (`@harvard.edu`, `@aec.edu.in`, `@traytest.dev`, `test` in email, `real=true` param) → routed to real backend pages as before
+- Fixed `src/middleware.ts` cookie forwarding to ensure session propagation on rewrites
+- Build verified (Next.js 15, 0 type errors, all 34 routes compiled)
+- Live tested via Chrome DevTools: student login → `/demo/student.html` ✅, admin login → `/demo/admin.html` ✅
+- Pushed all changes to `thribhuvan003/Tray` (`main`) — commit `7265601`
+
+**Active tracks:** All UI tasks done. Backend (RLS, payments) untouched.
+
+---
+
 ### 2026-05-19 — F1 harness + council implementation
 
 - **Fixed:** 15× invalid `</motion.div>` closers in `student.html` (P0 DOM break).
