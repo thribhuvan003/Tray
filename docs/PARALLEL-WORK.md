@@ -635,3 +635,13 @@ pm run typecheck passes. Restart dev if port 3000 hangs: NODE_OPTIONS=--max-old-
   - **Offline Prototype Verification**: Verified the static demo surfaces (index, student menu, incoming kitchen column, admin console) load cleanly with correct locators and assertions.
 - **Verified**: `pnpm typecheck` → 0 errors. All 14 steps in `test-user-simulation.mjs` E2E flow pass 100% cleanly in E2E headless Chromium.
 
+### 2026-05-23 — Trust Section Cards Reveal & Animation Clash Fix
+
+- **Completed**: Resolved the GSAP vs Framer Motion opacity collision on the `#trust` section cards.
+- **Details**:
+  - Replaced the parent `<SectionReveal>` container with a standard HTML `<section>` to prevent inherited Framer Motion `initial="hidden"` state propagation to the cards.
+  - Removed the `<RevealItem variant="card">` wrappers from the three bento cards so they render with a default opacity of `1`.
+  - Added individual `initial="hidden" whileInView="show" viewport={{ once: true, amount: 0.2 }}` props to the heading/paragraph `<RevealItem>` components so they still animate on scroll.
+  - The cards ("Direct UPI Settlements", "Bank-Grade Postgres RLS", "0% Order Commissions") now correctly animate from `opacity: 0` to `1` using GSAP's scroll trigger, fixing the bug where the cards were permanently blank/hidden.
+- **Verified**: Checked compilation with `pnpm typecheck` (0 errors) and validated static prototypes with `pnpm demo:verify` (all tests passed). Checked in browser via Chrome DevTools and confirmed the bento cards fade in and render beautifully.
+

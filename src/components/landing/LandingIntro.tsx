@@ -24,10 +24,10 @@ export function LandingIntro() {
       return () => window.clearTimeout(timeout);
     }
 
-    // Immediately display for exactly 3.0 seconds
+    // Immediately display for exactly 1.5 seconds
     const timer = window.setTimeout(() => {
       setShow(false);
-    }, 3000);
+    }, 1500);
 
     return () => window.clearTimeout(timer);
   }, [reduce]);

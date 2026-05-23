@@ -219,7 +219,7 @@ export function PiranhaPortalsSection() {
                   </span>
                 </div>
                 <h3
-                  className="leading-[0.9] tracking-[-0.03em]"
+                  className="leading-[0.9] tracking-[-0.03em] mb-4"
                   style={{
                     fontFamily: "var(--font-cormorant)",
                     fontWeight: 600,
@@ -229,9 +229,45 @@ export function PiranhaPortalsSection() {
                 >
                   {portal.title}
                 </h3>
-                <p className="mt-4 text-[0.95rem] leading-7 opacity-65 font-geist">
+                <p className="text-[0.95rem] leading-7 opacity-65 font-geist mb-6">
                   {portal.text}
                 </p>
+
+                {/* iframe preview */}
+                <div
+                  className="relative overflow-hidden rounded-[2rem] mb-6 bg-white/5 border-none"
+                  style={{ height: 320 }}
+                >
+                  <iframe
+                    src={portal.previewSrc}
+                    title={`${portal.label} preview`}
+                    loading="lazy"
+                    sandbox="allow-scripts allow-same-origin"
+                    scrolling="no"
+                    tabIndex={-1}
+                    aria-hidden="true"
+                    style={{
+                      position: "absolute",
+                      top: 0,
+                      left: 0,
+                      width: "200%",
+                      height: "200%",
+                      transform: "scale(0.5)",
+                      transformOrigin: "0 0",
+                      border: 0,
+                      pointerEvents: "none",
+                    }}
+                  />
+                  <span
+                    className="absolute left-4 top-4 rounded-xl px-3 py-1.5 text-[0.7rem] font-code font-bold uppercase tracking-[0.12em] backdrop-blur-md"
+                    style={{
+                      color: "var(--tray-cream)",
+                      background: "rgba(0,0,0,0.65)",
+                    }}
+                  >
+                    {portal.previewDevice}
+                  </span>
+                </div>
 
                 <div className="mt-auto pt-8 flex items-center justify-between">
                   <span className="text-[0.72rem] font-code font-semibold uppercase tracking-[0.12em] opacity-40">

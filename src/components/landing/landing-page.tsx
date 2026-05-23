@@ -6,7 +6,6 @@ import { CampusTicker }         from "@/components/landing/sections/MetricsAndTi
 import { TrustSection }          from "@/components/landing/sections/TrustSection";
 import { PiranhaPortalsSection } from "@/components/landing/sections/PiranhaPortalsSection";
 import { CampusModelSection }    from "@/components/landing/sections/CampusModelSection";
-import { TryDemoSection }        from "@/components/landing/sections/TryDemoSection";
 import { LandingIntro }          from "@/components/landing/LandingIntro";
 import { LandingMotion }         from "@/components/landing/landing-motion";
 import {
@@ -52,7 +51,7 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
         style={{ paddingTop: "env(safe-area-inset-top, 0px)" } as React.CSSProperties}
       >
       <header>
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-3.5 sm:px-8 lg:px-10">
+        <div className="tl-nav-inner mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-3.5 sm:px-8 lg:px-10">
           <BrandMark />
 
           {/* Desktop nav links */}
@@ -167,7 +166,6 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
 
         <TrayHero />
         <CampusTicker />
-        <TryDemoSection />
         <PiranhaPortalsSection />
         <TrustSection />
         <CampusModelSection campusName={campusName} />
@@ -538,15 +536,33 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
             {/* Contact */}
             <div>
               <p className="font-code mb-5 text-[0.85rem] font-bold uppercase tracking-[0.22em] text-[var(--tray-muted)]">Contact</p>
-              <a
-                href="https://github.com/thribhuvan003"
-                target="_blank"
-                rel="noreferrer"
-                className="text-[1.12rem] sm:text-[1.25rem] opacity-75 hover:opacity-100 transition-opacity font-semibold block"
-              >
-                github.com/thribhuvan003
-              </a>
+              <div className="tl-footer-contact">
+                <a
+                  href="https://github.com/thribhuvan003"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-[1.12rem] sm:text-[1.25rem] opacity-75 hover:opacity-100 transition-opacity font-semibold block"
+                >
+                  github.com/thribhuvan003
+                </a>
+              </div>
             </div>
+          </div>
+
+          {/* Bottom bar */}
+          <div className="relative z-10 mt-12 flex flex-wrap items-center justify-between gap-4 border-t border-[var(--tray-border)] pt-6">
+            <p
+              className="text-[0.72rem] uppercase tracking-[0.2em] opacity-45"
+              style={{ fontFamily: "var(--font-dm-mono)" }}
+            >
+              Built for campus canteens · Made in India
+            </p>
+            <p
+              className="text-[0.72rem] uppercase tracking-[0.2em] opacity-45"
+              style={{ fontFamily: "var(--font-dm-mono)" }}
+            >
+              v3.0 · 2026
+            </p>
           </div>
         </div>
       </footer>

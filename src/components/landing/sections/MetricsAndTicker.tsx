@@ -106,19 +106,18 @@ export function CampusTicker() {
 }
 
 function TickerRow({ items, reverse, fontStyle = "mono" }: { items: string[]; reverse?: boolean; fontStyle?: "druk" | "mono" }) {
-  const content = [...items, ...items, ...items];
+  const content = [...items, ...items];
   return (
     <div className="tray-no-scrollbar overflow-hidden py-2">
       <div
         data-ticker-track
-        className="flex w-max gap-8 whitespace-nowrap items-center"
+        className={`flex w-max gap-8 whitespace-nowrap items-center ${reverse ? "animate-marquee-reverse" : "animate-marquee"}`}
         style={{
           fontFamily: fontStyle === "druk" ? "var(--font-bebas)" : "var(--font-code)",
-          fontSize: fontStyle === "druk" ? "clamp(1.4rem, 3.5vw, 2rem)" : "0.75rem",
+          fontSize: fontStyle === "druk" ? "clamp(1.4rem, 3.5vw, 2.8rem)" : "0.85rem",
           letterSpacing: fontStyle === "druk" ? "0.06em" : "0.22em",
           textTransform: "uppercase",
           color: "var(--tray-muted)",
-          direction: reverse ? "rtl" : "ltr",
           lineHeight: 1,
         }}
       >

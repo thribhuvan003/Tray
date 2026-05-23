@@ -26,9 +26,9 @@ export function TrustSection() {
   ] as const;
 
   return (
-    <SectionReveal id="trust" className="px-5 py-20 sm:px-8 lg:px-10 border-b border-[var(--tray-border)]">
+    <section id="trust" className="px-5 py-20 sm:px-8 lg:px-10 border-b border-[var(--tray-border)]">
       <div className="mx-auto max-w-7xl">
-        <RevealItem>
+        <RevealItem initial="hidden" whileInView="show" viewport={{ once: true, amount: 0.2 }}>
           <div className="mb-4 flex flex-wrap items-center gap-3">
             <p className="font-code text-xs uppercase tracking-[0.3em] text-[var(--tray-muted)]">
               Trust & Security
@@ -36,7 +36,7 @@ export function TrustSection() {
           </div>
         </RevealItem>
 
-        <RevealItem>
+        <RevealItem initial="hidden" whileInView="show" viewport={{ once: true, amount: 0.2 }}>
           <h2
             className="max-w-3xl leading-[0.9] tracking-[-0.04em]"
             style={{
@@ -53,7 +53,7 @@ export function TrustSection() {
           </h2>
         </RevealItem>
 
-        <RevealItem>
+        <RevealItem initial="hidden" whileInView="show" viewport={{ once: true, amount: 0.2 }}>
           <p className="mt-6 max-w-xl text-[1.05rem] leading-8 opacity-70"
             style={{ fontFamily: "var(--font-geist)" }}>
             Tray is designed as a secure, decentralized campus platform. You own your data, control your revenue flow, and run your operations with confidence.
@@ -62,48 +62,47 @@ export function TrustSection() {
 
         <div className="mt-12 grid gap-6 md:grid-cols-3">
           {trustItems.map((item, index) => (
-            <RevealItem key={item.title} variant="card">
-              <HoverCard
-                className="flex h-full flex-col justify-between rounded-[2rem] border p-6 transition-all"
-                style={{
-                  border: "1px solid var(--tray-border)",
-                  background: "rgba(255,255,255,0.48)",
-                }}
-              >
-                <div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[var(--tray-surface)] border border-[var(--tray-border)]">
-                      {item.icon}
-                    </div>
-                    <span
-                      className="rounded-full px-3 py-1 text-[0.72rem] font-code font-bold uppercase tracking-[0.16em]"
-                      style={{
-                        background: "rgba(26,26,25,0.05)",
-                        color: "var(--tray-muted)",
-                        border: "1px solid var(--tray-border)",
-                      }}
-                    >
-                      {item.tag}
-                    </span>
+            <HoverCard
+              key={item.title}
+              className="flex h-full flex-col justify-between rounded-[2rem] border p-6 transition-all"
+              style={{
+                border: "1px solid var(--tray-border)",
+                background: "rgba(255,255,255,0.48)",
+              }}
+            >
+              <div>
+                <div className="flex items-center justify-between">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[var(--tray-surface)] border border-[var(--tray-border)]">
+                    {item.icon}
                   </div>
-                  <h3
-                    className="mt-6 text-[1.2rem] font-semibold tracking-tight"
-                    style={{ fontFamily: "var(--font-jakarta)" }}
+                  <span
+                    className="rounded-full px-3 py-1 text-[0.72rem] font-code font-bold uppercase tracking-[0.16em]"
+                    style={{
+                      background: "rgba(26,26,25,0.05)",
+                      color: "var(--tray-muted)",
+                      border: "1px solid var(--tray-border)",
+                    }}
                   >
-                    {item.title}
-                  </h3>
-                  <p
-                    className="mt-3 text-[0.88rem] leading-[1.65] opacity-65"
-                    style={{ fontFamily: "var(--font-geist)" }}
-                  >
-                    {item.desc}
-                  </p>
+                    {item.tag}
+                  </span>
                 </div>
-              </HoverCard>
-            </RevealItem>
+                <h3
+                  className="mt-6 text-[1.2rem] font-semibold tracking-tight"
+                  style={{ fontFamily: "var(--font-jakarta)" }}
+                >
+                  {item.title}
+                </h3>
+                <p
+                  className="mt-3 text-[0.88rem] leading-[1.65] opacity-65"
+                  style={{ fontFamily: "var(--font-geist)" }}
+                >
+                  {item.desc}
+                </p>
+              </div>
+            </HoverCard>
           ))}
         </div>
       </div>
-    </SectionReveal>
+    </section>
   );
 }

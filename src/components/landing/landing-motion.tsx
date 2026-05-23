@@ -102,48 +102,7 @@ export function LandingMotion() {
         delay: 0.2,
       });
 
-      // Hero support staggered with blur focus-pull
-      gsap.from(".tray-landing .tl-hero-top", {
-        y: -25,
-        filter: "blur(6px)",
-        opacity: 0,
-        duration: 0.8,
-        ease: "power3.out",
-        delay: 0.05,
-      });
-      gsap.from(".tray-landing .tl-hero-lede", {
-        y: 35,
-        filter: "blur(8px)",
-        opacity: 0,
-        duration: 1.1,
-        ease: "power3.out",
-        delay: 0.6,
-      });
-      gsap.from(".tray-landing .tl-hero-cta .tl-btn, .tray-landing .tl-hero-cta a", {
-        y: 25,
-        filter: "blur(8px)",
-        opacity: 0,
-        stagger: 0.12,
-        duration: 0.9,
-        ease: "power3.out",
-        delay: 0.75,
-      });
-      gsap.from(".tray-landing .tl-hero-cta .tl-note", {
-        opacity: 0,
-        filter: "blur(4px)",
-        duration: 0.7,
-        ease: "power2.out",
-        delay: 1.0,
-      });
-      gsap.from(".tray-landing .tl-hero-stat", {
-        y: 35,
-        opacity: 0,
-        filter: "blur(6px)",
-        stagger: 0.1,
-        duration: 0.9,
-        ease: "power3.out",
-        delay: 0.9,
-      });
+
       gsap.from(".tray-landing .tl-nav-inner > *", {
         y: -30,
         opacity: 0,
@@ -211,84 +170,7 @@ export function LandingMotion() {
         ease: "power4.out",
       });
 
-      // ── 3. PiranhaPortals & RailwayScroller ──
-      // Clean, stunning 3D cards fade-ins stagger
-      gsap.matchMedia().add("(min-width: 900px)", () => {
-        const pCards = root.querySelectorAll(".tray-landing [data-portal-card]");
-        if (pCards.length) {
-          gsap.from(pCards, {
-            scrollTrigger: {
-              trigger: ".tray-landing #portals",
-              start: "top 75%",
-            },
-            y: 120,
-            rotateX: 18,
-            rotateY: -10,
-            opacity: 0,
-            stagger: 0.12,
-            duration: 1.45,
-            ease: "power4.out",
-            transformPerspective: 1200,
-          });
-        }
-      });
 
-      // ── 4. TryDemoSection: 3D Card Spotlight & Deep Fold-In Stagger ──
-      const demoCards = root.querySelectorAll<HTMLElement>("[data-demo-card]");
-      if (demoCards.length) {
-        gsap.from(demoCards, {
-          scrollTrigger: {
-            trigger: "#try-demo",
-            start: "top 78%",
-          },
-          y: 130,
-          rotateY: -25,
-          rotateX: 12,
-          scale: 0.9,
-          opacity: 0,
-          stagger: 0.15,
-          duration: 1.35,
-          ease: "power4.out",
-          transformPerspective: 1200,
-        });
-
-        // Spotlight Tracking & 3D Tilt Inertia
-        demoCards.forEach((el) => {
-          const quickX = gsap.quickTo(el, "--spot-x", { duration: 0.35, ease: "power2.out" });
-          const quickY = gsap.quickTo(el, "--spot-y", { duration: 0.35, ease: "power2.out" });
-
-          const onMove = (e: MouseEvent) => {
-            const r = el.getBoundingClientRect();
-            const px = e.clientX - r.left;
-            const py = e.clientY - r.top;
-            quickX(px);
-            quickY(py);
-
-            // 3D rotation based on pointer position relative to center
-            const nx = ((e.clientX - r.left) / r.width  - 0.5) * 2;
-            const ny = ((e.clientY - r.top)  / r.height - 0.5) * 2;
-            gsap.to(el, {
-              rotateY: nx * 10,
-              rotateX: -ny * 8,
-              transformPerspective: 1200,
-              duration: 0.45,
-              ease: "power2.out",
-            });
-          };
-
-          const onLeave = () => {
-            gsap.to(el, {
-              rotateX: 0,
-              rotateY: 0,
-              duration: 0.75,
-              ease: "power3.out",
-            });
-          };
-
-          el.addEventListener("mousemove", onMove);
-          el.addEventListener("mouseleave", onLeave);
-        });
-      }
 
       // ── 5. TrustSection: Bento Card Sweep Reveals & Snap-Rotate Icons ──
       const trustCards = root.querySelectorAll<HTMLElement>("#trust .grid > div");
@@ -532,7 +414,7 @@ export function LandingMotion() {
       }
 
       // Link waves
-      const footerLinks = root.querySelectorAll<HTMLElement>(".tl-footer li, .tl-footer a");
+      const footerLinks = root.querySelectorAll<HTMLElement>(".tl-footer li, .tl-footer p, .tl-footer h4, .tl-footer-contact, .tl-footer a.group");
       if (footerLinks.length) {
         gsap.from(footerLinks, {
           scrollTrigger: {

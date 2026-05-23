@@ -37,14 +37,22 @@ export function RailwayScroller() {
   useEffect(() => {
     if (prefersReducedMotion() || !scrollerRef.current || !pathRef.current) return;
 
-    const railwayScroller = scrollerRef.current;
-    const railwayGlowPath = pathRef.current;
-    
-    // We wait for layout to settle
-    const timeout = setTimeout(() => {
-      const svgPathLength = railwayGlowPath.getTotalLength();
-      railwayGlowPath.style.strokeDasharray = `${svgPathLength}`;
-      railwayGlowPath.style.strokeDashoffset = `${svgPathLength}`;
+    let triggerInstance: any = null;
+
+    const timeout = setTimeout(async () => {
+      const [{ gsap }, { ScrollTrigger }] = await Promise.all([
+        import("gsap"),
+        import("gsap/ScrollTrigger"),
+      ]);
+      gsap.registerPlugin(ScrollTrigger);
+
+      const scrollerEl = scrollerRef.current;
+      const pathEl = pathRef.current;
+      if (!scrollerEl || !pathEl) return;
+
+      const svgPathLength = pathEl.getTotalLength();
+      pathEl.style.strokeDasharray = `${svgPathLength}`;
+      pathEl.style.strokeDashoffset = `${svgPathLength}`;
 
       const cardData = [
         { offset: 0.18, el: cardsRef.current[0], baseX: 0, baseY: 0, baseAngle: 0 },
@@ -62,8 +70,8 @@ export function RailwayScroller() {
       cardData.forEach((card) => {
         if (!card.el) return;
         const dist = card.offset * svgPathLength;
-        const pt = railwayGlowPath.getPointAtLength(dist);
-        const ptNext = railwayGlowPath.getPointAtLength(Math.min(dist + 6, svgPathLength));
+        const pt = pathEl.getPointAtLength(dist);
+        const ptNext = pathEl.getPointAtLength(Math.min(dist + 6, svgPathLength));
         card.baseX = pt.x;
         card.baseY = pt.y;
         const angleRad = Math.atan2(ptNext.y - pt.y, ptNext.x - pt.x);
@@ -73,17 +81,19 @@ export function RailwayScroller() {
       stationData.forEach((st) => {
         if (!st.el) return;
         const dist = st.offset * svgPathLength;
-        const pt = railwayGlowPath.getPointAtLength(dist);
+        const pt = pathEl.getPointAtLength(dist);
         st.y = pt.y;
         st.el.setAttribute("transform", `translate(${pt.x}, ${pt.y})`);
       });
 
-      function renderRailwayScroll(scrollTop: number, velocity: number = 0) {
-        const maxScroll = railwayScroller.scrollHeight - railwayScroller.clientHeight;
-        const progress = maxScroll > 0 ? scrollTop / maxScroll : 0;
-
-        railwayGlowPath.style.strokeDashoffset = `${svgPathLength - (progress * svgPathLength)}`;
-        const viewportCenter = scrollTop + (railwayScroller.clientHeight / 2);
+      function renderRailwayScroll(progress: number, velocity: number = 0) {
+        if (!pathEl || !scrollerEl) return;
+        pathEl.style.strokeDashoffset = `${svgPathLength - (progress * svgPathLength)}`;
+        
+        // Map progress (0-1) to an virtual scrollTop over a height of 3200px
+        const maxScroll = 3200 - scrollerEl.clientHeight;
+        const scrollTop = progress * maxScroll;
+        const viewportCenter = scrollTop + (scrollerEl.clientHeight / 2);
 
         cardData.forEach((card) => {
           if (!card.el) return;
@@ -122,40 +132,25 @@ export function RailwayScroller() {
         });
       }
 
-      let currentScroll = 0;
-      let targetScroll = 0;
-      let isTickerRunning = false;
-
-      const handleScroll = () => {
-        targetScroll = railwayScroller.scrollTop;
-        if (!isTickerRunning) {
-          isTickerRunning = true;
-          updateRailwayMomentum();
+      // Create ScrollTrigger to pin #portals and scrub the railway
+      triggerInstance = ScrollTrigger.create({
+        trigger: "#portals",
+        start: "top top",
+        end: "+=2200",
+        pin: true,
+        scrub: 0.5,
+        onUpdate: (self) => {
+          renderRailwayScroll(self.progress, self.getVelocity());
         }
-      };
+      });
 
-      function updateRailwayMomentum() {
-        const diff = targetScroll - currentScroll;
-        if (Math.abs(diff) > 0.05) {
-          currentScroll += diff * 0.095;
-          renderRailwayScroll(currentScroll, diff);
-          requestAnimationFrame(updateRailwayMomentum);
-        } else {
-          currentScroll = targetScroll;
-          renderRailwayScroll(currentScroll, 0);
-          isTickerRunning = false;
-        }
-      }
-
-      railwayScroller.addEventListener("scroll", handleScroll);
       renderRailwayScroll(0);
-
-      return () => {
-        railwayScroller.removeEventListener("scroll", handleScroll);
-      };
     }, 150);
 
-    return () => clearTimeout(timeout);
+    return () => {
+      clearTimeout(timeout);
+      if (triggerInstance) triggerInstance.kill();
+    };
   }, []);
 
   return (
@@ -163,13 +158,9 @@ export function RailwayScroller() {
       <style dangerouslySetInnerHTML={{ __html: `
         .railway-scroller-box {
           width: 100%;
-          height: 70vh;
-          overflow-y: scroll;
+          height: 80vh;
+          overflow: hidden;
           position: relative;
-          scroll-behavior: smooth;
-        }
-        .railway-scroller-box::-webkit-scrollbar {
-          display: none;
         }
         .railway-canvas-container {
           position: relative;
@@ -261,7 +252,7 @@ export function RailwayScroller() {
           background: rgba(255,255,255,0.05);
           border: 1px solid rgba(255,255,255,0.1);
           border-radius: 20px;
-          padding: 24px;
+          padding: 20px;
           box-shadow: 0 4px 20px rgba(0,0,0,0.3);
           backdrop-filter: blur(16px);
           z-index: 5;
@@ -358,10 +349,38 @@ export function RailwayScroller() {
                   Launch →
                 </span>
               </div>
-              <h3 className="text-2xl font-bold font-editorial mb-2" style={{ color: "var(--tray-cream)" }}>
+
+              {/* iframe preview */}
+              <div
+                className="relative overflow-hidden rounded-[1.25rem] mb-4 bg-white/5 border-none"
+                style={{ height: 180 }}
+              >
+                <iframe
+                  src={p.href}
+                  title={`${p.label} preview`}
+                  loading="lazy"
+                  sandbox="allow-scripts allow-same-origin"
+                  scrolling="no"
+                  tabIndex={-1}
+                  aria-hidden="true"
+                  style={{
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    width: "200%",
+                    height: "200%",
+                    transform: "scale(0.5)",
+                    transformOrigin: "0 0",
+                    border: 0,
+                    pointerEvents: "none",
+                  }}
+                />
+              </div>
+
+              <h3 className="text-xl font-bold font-editorial mb-2" style={{ color: "var(--tray-cream)" }}>
                 {p.label}
               </h3>
-              <p className="opacity-70 text-sm font-geist">{p.text}</p>
+              <p className="opacity-70 text-[0.8rem] leading-relaxed font-geist">{p.text}</p>
             </div>
           ))}
         </div>
