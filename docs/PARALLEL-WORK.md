@@ -46,6 +46,19 @@ Read AGENTS.md, docs/DEMO-SPEC.md, docs/PARALLEL-WORK.md. One file owner per lan
 
 ## Session log
 
+### 2026-05-23 — Portal Bento Cards Light Theme & Device Mockup Alignment
+
+**Work done:**
+- Refactored `PiranhaPortalsSection.tsx` into a high-end light theme, adapting background to `var(--tray-cream)` and text to `var(--tray-ink)`.
+- Redesigned portal bento cards with a clean white background, subtle border, and soft shadow matching the premium design aesthetics.
+- Replaced general scaled-down iframes with custom device mockups containing responsive live-rendered iframes:
+  - Student App: Rendered in a high-fidelity vertical mobile phone mockup.
+  - Kitchen Staff: Rendered in a tablet landscape mockup.
+  - Canteen Admin: Rendered in a desktop browser window mockup.
+- Aligned card headings ("Student", "Kitchen staff", "Canteen admin") with bold Barlow typography, keeping detailed portal copy descriptions below them.
+- Positioned the custom monospace caption `DEMO LOGIN · SHARED CREDENTIALS` directly above the dark solid black pill buttons.
+- Verified TypeScript compile checks (`pnpm typecheck` ✅) and static demo verified successfully (`pnpm demo:verify` ✅).
+
 ### 2026-05-23 — Monumental Preloader Upgrades & GSAP Synchronization
 
 **Work done:**

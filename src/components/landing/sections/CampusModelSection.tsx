@@ -1,5 +1,6 @@
 "use client";
 
+import { motion } from "framer-motion";
 import { SectionReveal, RevealItem, HoverCard } from "@/lib/motion/tray-framer";
 
 const CANTEENS = [
@@ -57,7 +58,7 @@ export function CampusModelSection({ campusName }: { campusName?: string | null 
         }
       `}} />
       <SectionReveal as="div" id="campus" className="px-5 pt-36 pb-24 sm:px-8 lg:px-10">
-        <div className="mx-auto max-w-7xl">
+        <motion.div className="mx-auto max-w-7xl">
           <RevealItem>
             <div className="mb-4 flex flex-wrap items-center gap-3">
               <p className="font-code text-xs uppercase tracking-[0.3em] text-[var(--tray-muted)]">
@@ -154,7 +155,7 @@ export function CampusModelSection({ campusName }: { campusName?: string | null 
               ))}
             </div>
           </div>
-        </div>
+        </motion.div>
       </SectionReveal>
     </>
   );

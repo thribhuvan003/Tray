@@ -1,4 +1,7 @@
+"use client";
+
 import React from "react";
+import { motion } from "framer-motion";
 import Link from "next/link";
 import type { ResolvedTenant } from "@/lib/tenant";
 import { TrayHero }             from "@/components/landing/sections/TrayHero";
@@ -23,10 +26,10 @@ import {
 function BrandMark() {
   return (
     <Link href="/" className="flex items-center gap-2.5 group" aria-label="Tray home">
-      <span className="flex h-9 w-9 items-center justify-center rounded-[0.6rem] bg-[var(--tray-ink)] font-editorial text-[15px] font-black text-[var(--tray-cream)] transition group-hover:scale-105">
+      <span className="flex h-10 w-10 items-center justify-center rounded-[0.65rem] bg-[var(--tray-ink)] font-editorial text-[17px] font-black text-[var(--tray-cream)] transition group-hover:scale-105">
         T
       </span>
-      <span className="font-editorial text-[1.4rem] font-black tracking-[-0.05em] leading-none">
+      <span className="font-editorial text-[1.65rem] font-black tracking-[-0.05em] leading-[1.1] py-1 pr-1.5 pl-0.5">
         Tray
       </span>
     </Link>
@@ -172,7 +175,7 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
 
         {/* ── REALTIME SYNC — animated pipeline visual ─────────────── */}
         <SectionReveal id="sync" className="px-5 py-24 sm:px-8 lg:px-10">
-          <div className="mx-auto max-w-7xl">
+          <motion.div className="mx-auto max-w-7xl">
             <RevealItem>
               <div className="mb-5 flex flex-wrap items-center gap-3">
                 <p className="text-xs uppercase tracking-[0.34em]"
@@ -211,7 +214,7 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
             <RevealItem variant="card">
               <SyncPipelineVisual className="mt-12" />
             </RevealItem>
-          </div>
+          </motion.div>
         </SectionReveal>
 
         {/* ── KITCHEN QUOTE — Cormorant Garamond for romantic serif feel ── */}
@@ -255,7 +258,7 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
 
         {/* ── PHONE TO PLATE (5 steps) — Fraunces numbers, Jakarta titles ── */}
         <SectionReveal id="flow" as="div" className="px-5 py-24 sm:px-8 lg:px-10">
-          <div className="mx-auto max-w-7xl">
+          <motion.div className="mx-auto max-w-7xl">
             <RevealItem variant="soft">
             <div className="mb-4 flex flex-wrap items-center gap-3">
               <p
@@ -282,23 +285,48 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
                 ["04", "Track live",      "Queued → preparing → ready in ~250 ms.",            "PREPARING"],
                 ["05", "Collect w/ OTP",  "Four-digit code at counter. Staff marks complete.", "READY"],
               ] as const).map(([num, title, desc, tag], i) => {
-                const isInverted = i % 2 === 1;
-                const cardBg = isInverted ? "var(--tray-clay, #B8531A)" : "rgba(255,255,255,0.65)";
-                const cardText = isInverted ? "#FAF8F5" : "var(--tray-ink, #1A1619)";
-                const numColor = isInverted ? "rgba(250,248,245,0.3)" : "var(--tray-clay, #B8531A)";
-                const tagBg = isInverted ? "rgba(250,248,245,0.15)" : "rgba(26,22,25,0.05)";
-                const tagBorder = isInverted ? "rgba(250,248,245,0.2)" : "var(--tray-border)";
-                const tagColor = isInverted ? "rgba(250,248,245,0.7)" : "var(--tray-muted)";
-                const descOpacity = isInverted ? "0.8" : "0.6";
+                // Alternating color logic requested by the user:
+                // Card 1, 5 (i = 0, 4): Normal (Cream bg, Ink text)
+                // Card 2, 4 (i = 1, 3): Opposite (Red bg, Cream text)
+                // Card 3 (i = 2): Opposite of Card 2 (Cream bg, Red text)
+                let cardBg = "rgba(255,255,255,0.65)";
+                let cardText = "var(--tray-ink, #1A1619)";
+                let numColor = "var(--tray-clay, #B8531A)";
+                let tagBg = "rgba(26,22,25,0.05)";
+                let tagBorder = "var(--tray-border)";
+                let tagColor = "var(--tray-muted)";
+                let borderStyle = "1px solid var(--tray-border)";
+                let descOpacity = "0.6";
+
+                if (i === 1 || i === 3) {
+                  // Inverted: Red bg, Cream text
+                  cardBg = "var(--tray-clay, #B8531A)";
+                  cardText = "#FAF8F5";
+                  numColor = "rgba(250,248,245,0.3)";
+                  tagBg = "rgba(250,248,245,0.15)";
+                  tagBorder = "rgba(250,248,245,0.2)";
+                  tagColor = "rgba(250,248,245,0.7)";
+                  borderStyle = "none";
+                  descOpacity = "0.8";
+                } else if (i === 2) {
+                  // Opposite of Card 2: Cream bg, Red text
+                  cardBg = "rgba(255,255,255,0.65)";
+                  cardText = "var(--tray-clay, #B8531A)";
+                  numColor = "var(--tray-ink, #1A1619)";
+                  tagBg = "rgba(184,83,26,0.05)";
+                  tagBorder = "rgba(184,83,26,0.2)";
+                  tagColor = "var(--tray-clay, #B8531A)";
+                  borderStyle = "1px solid var(--tray-border)";
+                  descOpacity = "0.7";
+                }
 
                 return (
-                  <RevealItem key={num} variant="card">
-                  <div className="flex flex-col gap-4 rounded-[1.75rem] p-7 sm:p-8 transition-all duration-300 ease-out hover:scale-[1.03] hover:-translate-y-1 hover:shadow-xl select-none cursor-pointer h-full"
+                  <div key={num} className="flex flex-col gap-4 rounded-[1.75rem] p-9 sm:p-10 transition-all duration-300 ease-out hover:scale-[1.03] hover:-translate-y-1 hover:shadow-xl select-none cursor-pointer h-full"
                     style={{
                       background: cardBg,
                       color: cardText,
-                      border: isInverted ? "none" : "1px solid var(--tray-border)",
-                      minHeight: "14rem",
+                      border: borderStyle,
+                      minHeight: "22rem",
                     }}>
                     {/* Step number — Bebas Neue */}
                     <span
@@ -319,11 +347,10 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
                       style={{ fontFamily: "var(--font-dm-mono)", color: tagColor, background: tagBg, border: `1px solid ${tagBorder}` }}
                     >{tag}</span>
                   </div>
-                  </RevealItem>
                 );
               })}
             </div>
-          </div>
+          </motion.div>
         </SectionReveal>
 
         {/* ── STACK — Plus Jakarta Sans for clean tech feel ─────────── */}
@@ -510,7 +537,7 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
         </div>
 
         <div className="mx-auto max-w-7xl">
-          <div className="relative z-10 grid gap-10 sm:grid-cols-2 lg:grid-cols-[2fr_1fr_1fr_1fr]">
+          <div className="relative z-10 grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
             {/* Brand */}
             <div>
               <BrandMark />
