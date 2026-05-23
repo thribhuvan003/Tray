@@ -1591,6 +1591,16 @@ pm run typecheck passes. Restart dev if port 3000 hangs: NODE_OPTIONS=--max-old-
 - **Calibrated virtualWidth scaling (`PiranhaPortalsSection.tsx`)**: Re-calibrated the kitchen portal virtual viewport width from `1020` to `980` in the iframe resizing function. Increasing the scale factor (`parentWidth / 980`) instantly boosted font weights, sizes, and icon readability, making the entire sidebar navigation, canteens switcher, and ticket items highly legible inside the landing page showcase card.
 - **Verification & Git Push**: Passed all automated checks (`pnpm typecheck` ✅, `pnpm demo:verify` ✅) and took before/after browser screenshots.
 
+---
+
+### 2026-05-24 — Showcase Cards Height Calibration & GitHub Deployments Triage
+
+**Work done:**
+- **Showcase Previews Taller Heights (`PiranhaPortalsSection.tsx`)**: Increased the desktop height of all bento portal showcase cards preview areas from `400px` to `480px` (`h-[300px] sm:h-[380px] md:h-[480px]`). This expands the dynamic iframe viewport space within cards, allowing the widescreen side-by-side active lanes and Today's Specials layout inside the Kitchen card to render significantly larger, crisp, and beautifully readable.
+- **GitHub Deployments Cleanup**: Executed a remote API cleanup script using the `gh` CLI. Inactivated older Vercel deployment logs and successfully deleted 19 obsolete deployments from the GitHub repository, keeping only the 8 most recent production/preview deployments (safely below the 10-deployment cap).
+- **Contributors Triage**: Inspected and verified the repository's git history (`git log`). Confirmed that `@thribhuvan003` is the sole committer and author of all 145 commits on the default `main` branch. GitHub API (`/contributors`) returns only `@thribhuvan003`. Clarified that any extra contributors shown on the GitHub UI are cached artifacts from deleted forks or collaborators, which will self-resolve on subsequent pushes.
+- **Git Push**: Successfully verified compilation (`pnpm typecheck` ✅, `pnpm demo:verify` ✅) and pushed modifications cleanly to GitHub main (commit `84cb2a1`).
+
 
 
 
