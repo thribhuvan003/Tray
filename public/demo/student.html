@@ -264,6 +264,8 @@
       .service-mode{min-height:44px;padding:14px 16px}
       .cat-pills{margin:0 -8px;padding:0 8px 14px;gap:10px}
       .pill-cat{min-height:44px;padding:10px 16px;display:inline-flex;align-items:center}
+      /* Menu grid: single column on phones */
+      .menu-grid{grid-template-columns:1fr!important;gap:10px}
       .menu-card{flex-wrap:wrap;padding:14px 12px;gap:12px}
       .menu-card__visual{width:64px;height:64px;font-size:26px}
       .menu-card__foot{flex-wrap:wrap;width:100%;justify-content:space-between;row-gap:10px}
@@ -276,10 +278,62 @@
       .view-sub{font-size:14px}
       .back-link{min-height:44px;padding:10px 0;display:inline-flex;align-items:center}
       .pickup-ribbon{flex-direction:column;align-items:flex-start;gap:10px;padding:12px 14px}
-      .cart-bar{left:max(12px,env(safe-area-inset-left,0));right:max(12px,env(safe-area-inset-right,0));bottom:max(12px,env(safe-area-inset-bottom,0))}
+      /* Cart bar: full-width sticky bottom bar */
+      .cart-bar{left:0;right:0;bottom:0;border-radius:0;padding:14px 16px calc(14px + env(safe-area-inset-bottom,0))}
       .cart-bar .btn-primary{min-height:44px;padding:12px 16px}
+      /* Demo stripe: wrap text and shrink on phones */
+      .demo-stripe{flex-wrap:wrap;font-size:12px;padding:8px 12px;gap:6px}
+      .demo-stripe__otp{font-size:13px}
+      /* Section headings */
+      .section-head h2{font-size:1.5rem}
+      /* Search input touch target */
+      .search{padding:14px 14px 14px 42px;min-height:44px}
+      /* Canteen dropdown touch target */
+      .canteen-dropdown__trigger{min-height:44px;padding:12px 14px}
+      .canteen-dropdown__option{min-height:44px;padding:12px}
+      /* Total row in sidebar */
+      .total-row span:last-child{font-size:1.15rem}
+      /* btn-primary / btn-ghost touch targets */
+      .btn-primary{min-height:44px}
+      .btn-ghost{min-height:44px}
+      /* Special cards in carousel: slightly smaller on phones */
+      .special-card{width:190px;padding:14px}
+      .special-card .qty-btn{width:40px;height:40px}
+      .special-card .btn-add-initial{min-height:40px;padding:8px 14px}
     }
-    @media(max-width:480px){.cart-bar{flex-direction:column;align-items:stretch}.cart-bar .btn-primary{width:100%;order:3}.cart-bar__count{align-self:flex-start}}
+    /* Narrow phones (320-390px) */
+    @media(max-width:390px){
+      .content{padding:12px 10px calc(110px + env(safe-area-inset-bottom,0))}
+      .menu-card{padding:12px 10px;gap:10px}
+      .menu-card__visual{width:56px;height:56px;font-size:22px}
+      .menu-card__title{font-size:15px}
+      .menu-card__desc{font-size:13px}
+      .price{font-size:14px}
+      /* OTP digits: prevent overflow on 320px */
+      .otp-digits{gap:8px}
+      .otp-digit{width:48px;height:64px;font-size:2.25rem;border-radius:8px}
+      .otp-hint{font-size:13px}
+      /* Special cards narrower */
+      .special-card{width:170px;padding:12px}
+      .special-card__title{font-size:16px}
+      /* Timer */
+      .timer-val{font-size:1.6rem}
+      /* Cart bar compact layout */
+      .cart-bar{padding:10px 12px calc(10px + env(safe-area-inset-bottom,0));gap:8px}
+      .cart-bar__count{width:36px;height:36px;font-size:15px;border-radius:10px}
+      .cart-bar__text strong{font-size:14px}
+      .cart-bar__text span{font-size:12px}
+      .cart-bar .btn-primary{padding:10px 14px;font-size:14px;min-height:38px}
+      /* QR box */
+      .qr-box{width:150px;height:150px}
+    }
+    @media(max-width:480px) and (min-width:391px){
+      .cart-bar{padding:12px 14px calc(12px + env(safe-area-inset-bottom,0));gap:10px}
+      .cart-bar__count{width:40px;height:40px;font-size:16px;border-radius:11px}
+      .cart-bar__text strong{font-size:15px}
+      .cart-bar__text span{font-size:13px}
+      .cart-bar .btn-primary{padding:11px 16px;font-size:15px;min-height:40px}
+    }
     @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
     
     /* Specials horizontal carousel styling */
@@ -654,7 +708,7 @@
               <span style="width: 8px; height: 8px; border-radius: 50%; background: var(--ok); position: relative; display: inline-block; animation: live-pulse 2s ease-out infinite;"></span>
               Kitchen open · ~7 min wait
             </div>
-            <h1 style="font-family: var(--font-display); font-size: 42px; font-weight: 500; line-height: 1.05; letter-spacing: -0.035em; margin: 4px 0 0;">What's <span class="it">cooking, Ananya?</span></h1>
+            <h1 style="font-family: var(--font-display); font-size: clamp(1.75rem, 8vw, 42px); font-weight: 500; line-height: 1.05; letter-spacing: -0.035em; margin: 4px 0 0;">What's <span class="it">cooking, Ananya?</span></h1>
           </div>
           <div class="menu-controls">
             <div class="canteen-bar">

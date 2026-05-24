@@ -318,7 +318,7 @@ export function MenuBoard({ categories, items, tenantId, tenantSlug, siblings = 
           <button
             onClick={() => setActiveCat("all")}
             className={cn(
-              "shrink-0 px-4 py-1.5 rounded-full text-[13px] font-semibold border transition-all",
+              "shrink-0 px-4 py-2 rounded-full text-[13px] font-semibold border transition-all",
               activeCat === "all"
                 ? "border-ocean-500 bg-ocean-500/10 text-ocean-600 dark:text-ocean-400 font-bold"
                 : "border-[color:var(--color-line)] bg-[color:var(--color-paper-dim)] text-[color:var(--color-ink)]/65"
@@ -334,7 +334,7 @@ export function MenuBoard({ categories, items, tenantId, tenantSlug, siblings = 
                 key={cat.id}
                 onClick={() => setActiveCat(cat.id)}
                 className={cn(
-                  "shrink-0 px-4 py-1.5 rounded-full text-[13px] font-semibold border transition-all",
+                  "shrink-0 px-4 py-2 rounded-full text-[13px] font-semibold border transition-all",
                   activeCat === cat.id
                     ? "border-ocean-500 bg-ocean-500/10 text-ocean-600 dark:text-ocean-400 font-bold"
                     : "border-[color:var(--color-line)] bg-[color:var(--color-paper-dim)] text-[color:var(--color-ink)]/65"
@@ -412,7 +412,7 @@ export function MenuBoard({ categories, items, tenantId, tenantSlug, siblings = 
                       {list.length} item{list.length === 1 ? "" : "s"}
                     </span>
                   </div>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-2 2xl:grid-cols-3 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 2xl:grid-cols-3 gap-3">
                     {list.map((it) => (
                       <MenuItemCard key={it.id} item={it} />
                     ))}
@@ -435,7 +435,7 @@ export function MenuBoard({ categories, items, tenantId, tenantSlug, siblings = 
                       </span>
                     </div>
                   )}
-                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-2 2xl:grid-cols-3 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 2xl:grid-cols-3 gap-3">
                     {uncategorised.map((it) => (
                       <MenuItemCard key={it.id} item={it} />
                     ))}

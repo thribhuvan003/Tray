@@ -191,7 +191,7 @@ export function StudentTopBar({ tenant, siblings = [], user }: Props) {
           <Link
             href={`/c/${tenant.slug}/orders`}
             aria-label="My orders"
-            className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[color:var(--color-line)] hover:border-ocean-500 hover:text-ocean-500 transition-colors"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[color:var(--color-line)] hover:border-ocean-500 hover:text-ocean-500 transition-colors"
           >
             <History size={15} />
           </Link>
@@ -200,7 +200,7 @@ export function StudentTopBar({ tenant, siblings = [], user }: Props) {
               onClick={handleSignOut}
               aria-label="Sign out"
               title={`Sign out (${user.email})`}
-              className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[color:var(--color-line)] hover:border-rose-500 hover:text-rose-500 transition-colors"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[color:var(--color-line)] hover:border-rose-500 hover:text-rose-500 transition-colors"
             >
               <LogOut size={15} />
             </button>
@@ -208,7 +208,7 @@ export function StudentTopBar({ tenant, siblings = [], user }: Props) {
             <Link
               href={`/c/${tenant.slug}/login?next=/c/${tenant.slug}/menu`}
               aria-label="Account"
-              className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[color:var(--color-line)] hover:border-ocean-500 hover:text-ocean-500 transition-colors"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[color:var(--color-line)] hover:border-ocean-500 hover:text-ocean-500 transition-colors"
             >
               <User size={15} />
             </Link>

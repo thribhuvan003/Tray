@@ -233,19 +233,27 @@ export function CartDrawer({ tenantSlug, tenantName }: { tenantSlug: string; ten
               className="w-full h-10 px-3 rounded-lg border border-[color:var(--color-line)] bg-[color:var(--color-paper)] text-[13px] focus:outline-none focus:border-ocean-500"
             />
           </label>
-          <div className="flex items-center justify-between gap-3 flex-wrap">
-            <div>
-              <div className="text-[11px] font-mono uppercase tracking-wider text-[color:var(--color-ink)]/55">
-                Total · pays to {tenantName}
+          <div className="mt-2 flex flex-col gap-4">
+            <div className="flex items-center justify-between border-b border-[color:var(--color-line)]/50 pb-3">
+              <div>
+                <span className="text-[11px] font-mono uppercase tracking-wider text-[color:var(--color-ink)]/55">
+                  Total
+                </span>
+                <p className="text-[10px] text-[color:var(--color-ink)]/45 -mt-0.5">
+                  Pays directly to {tenantName}
+                </p>
               </div>
-              <div className="font-display text-[28px] font-medium tabular tracking-tight">{formatRupees(total)}</div>
+              <div className="font-display text-[28px] font-semibold tabular tracking-tight text-[color:var(--color-ink)]">
+                {formatRupees(total)}
+              </div>
             </div>
+
             <button
               onClick={onCheckout}
               disabled={pending}
               className={cn(
-                "inline-flex items-center gap-2 h-12 px-6 rounded-full bg-ocean-500 text-black text-[14px] font-medium hover:bg-ocean-600 transition-colors",
-                pending && "opacity-70 cursor-not-allowed"
+                "w-full inline-flex items-center justify-center gap-2 h-12 px-6 rounded-xl bg-ocean-500 text-black text-[15px] font-bold hover:bg-ocean-600 active:scale-[0.98] transition-all shadow-[0_4px_14px_rgba(0,102,255,0.2)]",
+                pending && "opacity-70 cursor-not-allowed active:scale-100"
               )}
             >
               {pending ? "Placing order…" : "Place order →"}
@@ -278,23 +286,29 @@ export function CartDrawer({ tenantSlug, tenantName }: { tenantSlug: string; ten
       <Drawer.Trigger asChild>
         <button
           aria-label={`View cart — ${count} items, ${formatRupees(total)}`}
-          className="fixed bottom-5 left-1/2 -translate-x-1/2 z-30 inline-flex items-center gap-3 rounded-full bg-ocean-500 text-black px-5 h-12 shadow-[0_10px_30px_-10px_rgba(0,102,255,0.6)] hover:bg-ocean-600 transition-colors"
+          className="fixed bottom-0 left-0 right-0 z-30 bg-[color:var(--color-paper)] border-t border-[color:var(--color-line)] shadow-[0_-4px_20px_rgba(0,0,0,0.08)] pb-[env(safe-area-inset-bottom,0px)]"
         >
-          <span className="inline-flex items-center gap-1.5">
-            <motion.span
-              key={count}
-              initial={{ scale: 0.8 }}
-              animate={{ scale: [1, 1.25, 0.9, 1], rotate: [0, -8, 8, 0] }}
-              transition={{ duration: 0.35, ease: "easeOut" }}
-              className="inline-flex items-center gap-1.5"
-            >
-              <ShoppingCart size={15} />
-              <span className="text-[13px] font-medium">{count} item{count === 1 ? "" : "s"}</span>
-            </motion.span>
-          </span>
-          <span className="h-4 w-px bg-black/30" />
-          <span className="text-[13px] font-medium tabular">{formatRupees(total)}</span>
-          <span className="text-[12px] font-mono uppercase tracking-wider opacity-90">View cart →</span>
+          <div className="flex items-center justify-between h-14 px-4">
+            {/* Left: cart icon + count */}
+            <span className="inline-flex items-center gap-2">
+              <motion.span
+                key={count}
+                initial={{ scale: 0.8 }}
+                animate={{ scale: [1, 1.25, 0.9, 1], rotate: [0, -8, 8, 0] }}
+                transition={{ duration: 0.35, ease: "easeOut" }}
+                className="inline-flex items-center justify-center h-8 w-8 rounded-full bg-ocean-500 text-black"
+              >
+                <ShoppingCart size={15} />
+              </motion.span>
+              <span className="text-[14px] font-semibold text-[color:var(--color-ink)]">{count} item{count === 1 ? "" : "s"}</span>
+            </span>
+            {/* Center: total */}
+            <span className="text-[16px] font-bold tabular text-[color:var(--color-ink)]">{formatRupees(total)}</span>
+            {/* Right: CTA */}
+            <span className="inline-flex items-center gap-1 text-[13px] font-semibold text-ocean-600 dark:text-ocean-400">
+              View cart <span aria-hidden="true">→</span>
+            </span>
+          </div>
         </button>
       </Drawer.Trigger>
       <Drawer.Portal>
