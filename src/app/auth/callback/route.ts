@@ -82,22 +82,39 @@ export async function GET(req: NextRequest) {
   if (tenant && u.user) {
     try {
       const admin = getAdminClient(tenant.id);
-      await admin
+      const { data: existingMember } = await admin
         .from("tenant_memberships")
-        .upsert(
-          {
+        .select("role")
+        .eq("user_id", u.user.id)
+        .eq("tenant_id", tenant.id)
+        .maybeSingle();
+
+      if (!existingMember) {
+        await admin
+          .from("tenant_memberships")
+          .insert({
             user_id: u.user.id,
             tenant_id: tenant.id,
             role: "student",
             display_name: (u.user.user_metadata?.display_name as string | undefined) ?? null,
             is_active: true,
-          },
-          { onConflict: "user_id,tenant_id" }
-        );
-    } catch {
-      // membership creation is best-effort — RLS may also handle it on first call
+          });
+      } else {
+        await admin
+          .from("tenant_memberships")
+          .update({
+            display_name: (u.user.user_metadata?.display_name as string | undefined) ?? null,
+          })
+          .eq("user_id", u.user.id)
+          .eq("tenant_id", tenant.id)
+          .is("display_name", null);
+      }
+    } catch (e) {
+      console.error("[auth/callback] membership check/insert failed:", e);
     }
   }
+
+  let redirectUrl = next;
 
   if (u.user) {
     // Step 1 — domain-restricted auto-enroll: enrolls users whose email
@@ -127,7 +144,63 @@ export async function GET(req: NextRequest) {
     } else if ((count ?? 0) === 0) {
       return NextResponse.redirect(new URL("/?msg=no-college", origin));
     }
+
+    // Look up memberships to find the correct tenant and role for redirect
+    const adminClient = getAdminClient();
+    const { data: userMemberships } = await adminClient
+      .from("tenant_memberships")
+      .select("role, tenant:tenants(slug)")
+      .eq("user_id", u.user.id)
+      .eq("is_active", true);
+
+    const typedMemberships = (userMemberships || []) as unknown as {
+      role: string;
+      tenant: { slug: string } | null;
+    }[];
+
+    const adminMember = typedMemberships.find((m) => m.role === "canteen_admin" || m.role === "super_admin");
+    const kitchenMember = typedMemberships.find((m) => m.role === "kitchen_staff");
+    const studentMember = typedMemberships.find((m) => m.role === "student");
+
+    if (adminMember && adminMember.tenant) {
+      const slug = adminMember.tenant.slug;
+      if (next === "/" || next.includes("/menu") || next.includes("/login")) {
+        redirectUrl = `/c/${slug}/admin/dashboard`;
+      } else {
+        const match = next.match(/^\/c\/[^/]+(\/admin\/.*|\/dashboard.*)?$/);
+        if (match) {
+          redirectUrl = `/c/${slug}${match[1] || "/admin/dashboard"}`;
+        } else if (next.startsWith("/admin/")) {
+          redirectUrl = `/c/${slug}${next}`;
+        }
+      }
+    } else if (kitchenMember && kitchenMember.tenant) {
+      const slug = kitchenMember.tenant.slug;
+      if (next === "/" || next.includes("/menu") || next.includes("/login")) {
+        redirectUrl = `/c/${slug}/kitchen`;
+      } else {
+        const match = next.match(/^\/c\/[^/]+(\/kitchen.*)?$/);
+        if (match) {
+          redirectUrl = `/c/${slug}${match[1] || "/kitchen"}`;
+        } else if (next.startsWith("/kitchen")) {
+          redirectUrl = `/c/${slug}${next}`;
+        }
+      }
+    } else if (studentMember && studentMember.tenant) {
+      if (next === "/" || next.includes("/login")) {
+        redirectUrl = `/c/${studentMember.tenant.slug}/menu`;
+      } else {
+        const match = next.match(/^\/c\/([^/]+)(\/.*)?$/);
+        if (match) {
+          const currentSlug = match[1];
+          const hasAccess = typedMemberships.some((m) => m.tenant?.slug === currentSlug);
+          if (!hasAccess) {
+            redirectUrl = `/c/${studentMember.tenant.slug}${match[2] || "/menu"}`;
+          }
+        }
+      }
+    }
   }
 
-  return NextResponse.redirect(new URL(next, origin));
+  return NextResponse.redirect(new URL(redirectUrl, origin));
 }

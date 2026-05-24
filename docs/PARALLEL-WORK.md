@@ -86,6 +86,14 @@ Read AGENTS.md, docs/DEMO-SPEC.md, docs/PARALLEL-WORK.md. One file owner per lan
 
 ## Session log
 
+### 2026-05-24 — Authentication Redirect Loops & Role Demotions Resolved
+
+**Work done:**
+- **OAuth Callback Route (`src/app/auth/callback/route.ts`):** Fixed the bug where user roles were unconditionally overwritten with `"student"`. It now queries `tenant_memberships` first and preserves existing roles. It also queries all memberships globally to dynamically redirect admins to `/c/${slug}/admin/dashboard`, kitchen staff to `/c/${slug}/kitchen`, and students to `/c/${slug}/menu` (preserving their target sub-paths).
+- **Staff Invite Acceptance (`src/app/auth/invite/[token]/route.ts`):** Resolved the tenant slug dynamically and prepended `/c/${tenantSlug}` to the redirect targets (`/c/${tenantSlug}/admin/dashboard` or `/c/${tenantSlug}/kitchen`), avoiding redirection to unauthorized root folders.
+- **Client-Side Login Redirects (`src/components/portal-student/login-form.tsx`):** Added client-side membership lookups to the email/password and Magic Link OTP verification sign-in handlers to dynamically redirect authenticated users to their correct canteen portal instead of defaulting to the `aditya` tenant.
+- **Verification:** Ran `pnpm typecheck` and `pnpm demo:verify` to confirm zero compilation errors and complete compliance.
+
 ### 2026-05-24 — Student Logo Dot Removal & Live Showcase Card iframe Preview
 
 **Work done:**

@@ -104,7 +104,35 @@ export function LoginForm({ next, slug = "" }: { next: string; slug?: string }) 
       setVerifying(false);
       return;
     }
-    window.location.href = getRedirectUrl(email, next);
+    
+    // Resolve correct destination based on memberships
+    const { data: { user } } = await sb.auth.getUser();
+    let finalNext = getRedirectUrl(email, next);
+    if (user) {
+      const { data: memberships } = await sb
+        .from("tenant_memberships")
+        .select("role, tenant:tenants(slug)")
+        .eq("user_id", user.id)
+        .eq("is_active", true);
+
+      const typedMemberships = (memberships || []) as unknown as {
+        role: string;
+        tenant: { slug: string } | null;
+      }[];
+
+      const adminMember = typedMemberships.find((m) => m.role === "canteen_admin" || m.role === "super_admin");
+      const kitchenMember = typedMemberships.find((m) => m.role === "kitchen_staff");
+      const studentMember = typedMemberships.find((m) => m.role === "student");
+
+      if (adminMember && adminMember.tenant) {
+        finalNext = `/c/${adminMember.tenant.slug}/admin/dashboard`;
+      } else if (kitchenMember && kitchenMember.tenant) {
+        finalNext = `/c/${kitchenMember.tenant.slug}/kitchen`;
+      } else if (studentMember && studentMember.tenant) {
+        finalNext = `/c/${studentMember.tenant.slug}/menu`;
+      }
+    }
+    window.location.href = finalNext;
   };
 
   const onSubmit = (e: React.FormEvent) => {
@@ -142,7 +170,34 @@ export function LoginForm({ next, slug = "" }: { next: string; slug?: string }) 
         if (error) {
           setAuthError("Wrong email or password. Check your credentials and try again.");
         } else {
-          window.location.href = targetNext;
+          // Resolve correct destination based on memberships
+          const { data: { user } } = await sb.auth.getUser();
+          let finalNext = targetNext;
+          if (user) {
+            const { data: memberships } = await sb
+              .from("tenant_memberships")
+              .select("role, tenant:tenants(slug)")
+              .eq("user_id", user.id)
+              .eq("is_active", true);
+
+            const typedMemberships = (memberships || []) as unknown as {
+              role: string;
+              tenant: { slug: string } | null;
+            }[];
+
+            const adminMember = typedMemberships.find((m) => m.role === "canteen_admin" || m.role === "super_admin");
+            const kitchenMember = typedMemberships.find((m) => m.role === "kitchen_staff");
+            const studentMember = typedMemberships.find((m) => m.role === "student");
+
+            if (adminMember && adminMember.tenant) {
+              finalNext = `/c/${adminMember.tenant.slug}/admin/dashboard`;
+            } else if (kitchenMember && kitchenMember.tenant) {
+              finalNext = `/c/${kitchenMember.tenant.slug}/kitchen`;
+            } else if (studentMember && studentMember.tenant) {
+              finalNext = `/c/${studentMember.tenant.slug}/menu`;
+            }
+          }
+          window.location.href = finalNext;
         }
       }
     });

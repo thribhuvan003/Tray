@@ -60,11 +60,21 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ toke
     .update({ accepted_at: new Date().toISOString() })
     .eq("id", invite.id);
 
+  const tenantRes = await admin
+    .from("tenants")
+    .select("slug")
+    .eq("id", invite.tenant_id)
+    .single();
+  const tenantSlug = tenantRes.data?.slug;
+  if (!tenantSlug) {
+    return NextResponse.redirect(new URL("/login?error=Tenant+not+found", origin));
+  }
+
   const dest =
     invite.role === "kitchen_staff"
-      ? "/kitchen"
+      ? `/c/${tenantSlug}/kitchen`
       : invite.role === "canteen_admin" || invite.role === "super_admin"
-      ? "/admin/dashboard"
-      : "/menu";
+      ? `/c/${tenantSlug}/admin/dashboard`
+      : `/c/${tenantSlug}/menu`;
   return NextResponse.redirect(new URL(dest, origin));
 }
