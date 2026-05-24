@@ -9,6 +9,8 @@
 - **Implemented Auto-Cycling Adaptivity Simulator**: Upgraded the Landing Line Leave component (`landing-line-leave.tsx`) to auto-cycle through the three operational modes (Between classes, Stuck in line, At the counter) every 1.8 seconds.
 - **Added Hover & Manual Interaction Controls**: Configured the cycle to pause when the mouse is hovered over the card and when a manual tab chip is clicked, automatically resuming after a 4-second delay.
 - **Premium Progress Dots**: Integrated clean, responsive dot/pill indicators showing which slide is currently active (active state shows a wide animated pill, inactive states show small dots).
+- **Kitchen Dashboard Viewport Contained Height**: Locked the kitchen dashboard layout height to exactly `100vh` (`overflow: hidden`) on `.app`, `.main`, and `html/body`. Upgraded the `.queue-shell`, `.queue-board`, and `.queue-cols` to stretch to 100% height, allowing individual ticket columns (`.col-body`) and the specials panel (`.right-panel`) to scroll independently. Also updated the dynamic `.view-pane` (History and Insights views) to scroll internally. This completely eliminates page-wide scrollbars and prevents empty/white spaces at the bottom, creating a premium desktop-native QSR dashboard feel.
+
 
 ## Session log — 2026-05-24 (Search Bar Expansion, Dynamic Status Badge & Grid Layout Bug Fix)
 

@@ -39,8 +39,8 @@
   --mono:'JetBrains Mono',ui-monospace,Menlo,monospace;
 }
 *,*::before,*::after{box-sizing:border-box}
-html,body{margin:0;background:var(--cream);color:var(--ink);font-family:var(--sans);-webkit-font-smoothing:antialiased;font-size:14px;line-height:1.5;font-weight:400}
-body{overflow-x:hidden;min-height:100vh}
+html,body{margin:0;background:var(--cream);color:var(--ink);font-family:var(--sans);-webkit-font-smoothing:antialiased;font-size:14px;line-height:1.5;font-weight:400;height:100vh;overflow:hidden}
+body{overflow:hidden;height:100vh}
 ::selection{background:var(--tomato);color:var(--cream)}
 a{color:inherit;text-decoration:none}
 button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
@@ -56,7 +56,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
 /* =====================================================
    APP SHELL
    ===================================================== */
-.app{display:grid;grid-template-columns:228px 1fr;min-height:100vh;position:relative;z-index:2}
+.app{display:grid;grid-template-columns:228px 1fr;height:100vh;position:relative;z-index:2;overflow:hidden}
 
 /* SIDEBAR */
 .sb{background:var(--paper);border-right:1px solid var(--line);padding:18px 16px;display:flex;flex-direction:column;gap:4px;position:sticky;top:0;height:100vh}
@@ -83,7 +83,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
 .sb-portals a:hover{background:var(--cream-3);color:var(--ink)}
 
 /* MAIN */
-.main{padding:24px 32px 64px;overflow-x:hidden}
+.main{padding:24px 32px 24px;overflow:hidden;display:flex;flex-direction:column;height:100vh}
 
 /* PAGE HEADER */
 .page-head{display:flex;justify-content:space-between;align-items:flex-end;padding-bottom:18px;border-bottom:1px solid var(--line);margin-bottom:24px}
@@ -120,10 +120,10 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
 /* =====================================================
    LIVE QUEUE BOARD
    ===================================================== */
-.queue-shell{display:grid;grid-template-columns:1fr 320px;gap:16px;align-items:flex-start}
-.queue-board{background:var(--paper);border:1px solid var(--ink);border-radius:14px;overflow:hidden;box-shadow:5px 5px 0 var(--ink)}
-.queue-cols{display:grid;grid-template-columns:repeat(4,1fr);min-height:520px}
-.col{border-right:1px solid var(--line);display:flex;flex-direction:column;background:var(--cream-4);min-height:0}
+.queue-shell{display:grid;grid-template-columns:1fr 320px;gap:16px;align-items:stretch;flex:1;min-height:0;overflow:hidden}
+.queue-board{background:var(--paper);border:1px solid var(--ink);border-radius:14px;overflow:hidden;box-shadow:5px 5px 0 var(--ink);display:flex;flex-direction:column;height:100%;min-height:0}
+.queue-cols{display:grid;grid-template-columns:repeat(4,1fr);flex:1;min-height:0}
+.col{border-right:1px solid var(--line);display:flex;flex-direction:column;background:var(--cream-4);height:100%;min-height:0}
 .col:last-child{border-right:none}
 .col-head{padding:12px 16px;border-bottom:1px solid var(--line);background:var(--paper);display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:2}
 .col-head .name{font-family:var(--mono);font-size:11px;letter-spacing:0.14em;text-transform:uppercase;font-weight:700;color:var(--ink)}
@@ -132,7 +132,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
 .col[data-status="preparing"] .col-head .name::before{content:"◐ ";color:var(--tomato)}
 .col[data-status="ready"] .col-head .name::before{content:"✓ ";color:var(--olive)}
 .col[data-status="collected"] .col-head .name::before{content:"▪ ";color:var(--ink-3)}
-.col-body{flex:1;min-height:0;padding:10px;display:flex;flex-direction:column;gap:8px;overflow-y:auto;max-height:min(600px,52vh);scrollbar-width:thin;scrollbar-color:var(--line-2) transparent;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+.col-body{flex:1;min-height:0;padding:10px;display:flex;flex-direction:column;gap:8px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--line-2) transparent;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
 
 /* TICKET */
 .ticket{background:var(--paper);border:1px solid var(--line);border-radius:7px;padding:11px 13px;display:flex;flex-direction:column;gap:7px;position:relative;cursor:pointer;transition:transform .12s,box-shadow .12s,border-color .15s;animation:ticketIn .35s cubic-bezier(.34,1.26,.64,1) backwards}
@@ -173,7 +173,8 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
 /* =====================================================
    RIGHT PANEL — Specials / Activity
    ===================================================== */
-.right-panel{display:flex;flex-direction:column;gap:12px;position:sticky;top:24px}
+.right-panel{display:flex;flex-direction:column;gap:12px;height:100%;overflow-y:auto;padding-bottom:12px;scrollbar-width:none}
+.right-panel::-webkit-scrollbar{display:none}
 .panel{background:var(--paper);border:1px solid var(--ink);border-radius:12px;box-shadow:4px 4px 0 var(--ink);overflow:hidden}
 .panel-head{padding:12px 16px;border-bottom:1px solid var(--line);background:var(--cream-3);display:flex;justify-content:space-between;align-items:center}
 .panel-head h3{font-family:var(--display);font-size:20px;letter-spacing:-0.02em;margin:0;font-weight:500;line-height:1}
@@ -236,7 +237,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
 /* =====================================================
    HISTORY + INSIGHTS VIEWS
    ===================================================== */
-.view-pane{display:flex;flex-direction:column;gap:14px;animation:liveIn .3s ease both}
+.view-pane{display:flex;flex-direction:column;gap:14px;animation:liveIn .3s ease both;flex:1;min-height:0;overflow-y:auto;padding-bottom:24px}
 .view-pane[hidden],.queue-shell[hidden],.queue-page-chrome[hidden]{display:none!important}
 .hist-table{width:100%;border-collapse:collapse;font-family:var(--sans)}
 .hist-table thead th{text-align:left;font-family:var(--mono);font-size:10.5px;letter-spacing:0.08em;text-transform:uppercase;color:var(--ink-3);padding:11px 16px;border-bottom:1px solid var(--line);font-weight:600;background:var(--cream-2)}
