@@ -1,5 +1,15 @@
 # Parallel work log (Tray)
 
+## Session log — 2026-05-25 (Disabled Student Demo Auto-Simulation)
+
+### Keyword: STUDENT-DEMO-AUTO-SIMULATION-DISABLED
+
+### What was done
+- **Disabled Student Demo Auto-Simulation**: Removed the auto-simulation IIFE execution block `if (window.self !== window.top)` in `public/demo/student.html` and its variant templates (`student-variant-a.html`, `student-variant-b.html`, and `student-variant-c.html`) that previously ran background clicks, checkout loops, and mock payments when embedded in iframe cards.
+- **Enabled Manual User Testing**: The student card preview on the landing page now displays a clean, static, high-fidelity initial student portal menu screen. Users can manually click the card to launch the fully interactive, responsive order-and-payment mockup in a new tab to test all user paths themselves.
+- **Verification Checks Passed**: Successfully ran typescript checks (`pnpm typecheck`) and the static demo verifier suite (`pnpm demo:verify`), confirming perfect layout and script compilation.
+
+
 ## Session log — 2026-05-25 (Mobile Navigation Fix & Adaptivity Simulator Auto-Cycle)
 
 ### Keyword: LANDING-MOBILE-NAV-AUTO-CYCLE

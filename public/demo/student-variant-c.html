@@ -1003,68 +1003,7 @@ window.addEventListener("storage",function(e){if(e.key===specialsKey())refreshLi
 
 initCanteenSelect();loadCanteenData(currentCanteenId);renderCategories();renderMenu();renderCart();bindEvents();setView("menu");
 
-if (window.self !== window.top) {
-  (function() {
-    var timeouts = [];
-    function scheduleTimeout(fn, delay) {
-      var id = setTimeout(fn, delay);
-      timeouts.push(id);
-      return id;
-    }
-    function clearAllTimers() {
-      timeouts.forEach(function(id) { clearTimeout(id); });
-      timeouts = [];
-      if (payInterval) { clearInterval(payInterval); payInterval = null; }
-      if (trackInterval) { clearInterval(trackInterval); trackInterval = null; }
-    }
-    
-    var originalResetAll = resetAll;
-    resetAll = function() {
-      clearAllTimers();
-      originalResetAll();
-    };
 
-    function runAutoSimulation() {
-      clearAllTimers();
-      setView("menu");
-      
-      scheduleTimeout(function() {
-        var dishes = allMenuItems();
-        if (dishes.length > 0) {
-          changeQty(dishes[0].id, 1);
-          bumpCart();
-          showToast("Added " + dishes[0].name + " to tray");
-        }
-        
-        scheduleTimeout(function() {
-          var dishes = allMenuItems();
-          if (dishes.length > 1) {
-            changeQty(dishes[1].id, 1);
-            bumpCart();
-            showToast("Added " + dishes[1].name + " to tray");
-          }
-          
-          scheduleTimeout(function() {
-            startPayment();
-            
-            scheduleTimeout(function() {
-              confirmPaid();
-              
-              scheduleTimeout(function() {
-                runAutoSimulation();
-              }, 25000);
-              
-            }, 3000);
-            
-          }, 2000);
-          
-        }, 2000);
-        
-      }, 1500);
-    }
-    scheduleTimeout(runAutoSimulation, 5000);
-  })();
-}
 })();
   </script>
 </body>
