@@ -1602,9 +1602,14 @@ pm run typecheck passes. Restart dev if port 3000 hangs: NODE_OPTIONS=--max-old-
 - **Git Push**: Successfully verified compilation (`pnpm typecheck` ✅, `pnpm demo:verify` ✅) and pushed modifications cleanly to GitHub main (commit `84cb2a1`).
 
 
+### 2026-05-24 — Session: Admin/Student Routing Fixes & Login Form Mock Bypass Resolution
 
-
-
-
-
+**Work done:**
+- **Resolved Admin Relative Link Breaks:** Prefixed all hardcoded absolute links (e.g. `/admin/menu/new`, `/admin/menu/[id]/edit`) in `page.tsx` and `menu-table.tsx` with the correct tenant slug path (`/c/${tenantSlug}/admin/...`) to prevent users from breaking out of their canteen domain and being redirected to `/login`.
+- **Fixed Server Action Redirection Paths:** Updated redirects inside `edit/page.tsx` for updating and deleting menu items to include the dynamic `/c/${tenant.slug}` prefix, adding TypeScript non-null assertions (`tenant!`) to satisfy strict compiler requirements.
+- **Enabled Tenant-Scoped CSV Order Exporting:** Appended `tenant=${tenant.slug}` parameters to all CSV order export endpoints in `orders/page.tsx` and `dashboard-view.tsx`. This allows the Next.js API route to resolve the correct tenant context via the query string override in the middleware, avoiding unauthorized (403/Redirect) failures.
+- **Fixed Login Form Mock Redirect Bypasses:** Corrected logic in `login-form.tsx` so that users are redirected to mock static HTML pages (`/demo/admin.html`, `/demo/kitchen.html`, `/demo/student.html`) *only* when explicit `demo=true`/`sandbox=true` query parameters are in the address bar OR when a test email address is entered. Real emails are now correctly sent to the live database authenticator.
+- **Implemented Dynamic Student Welcome Greetings:** Replaced the hardcoded greeting `"Ananya"` in `menu-board.tsx` by fetching the logged-in user using `getCurrentUser()` in `menu/page.tsx` and passing it to the frontend. Guests are now greeted with `"What's cooking today?"` and logged-in users with their actual name.
+- **Fixed Student Topbar Links & Sign-Out Action:** Updated the User icon in `top-bar.tsx` to target the tenant-scoped `/c/${tenant.slug}/login` route. Added a Log Out button to the topbar for logged-in students to cleanly invalidate their sessions.
+- **Verified:** Ran `pnpm typecheck` ✅ and `pnpm demo:verify` ✅. Verified everything builds cleanly with 0 errors. Pushed all changes to origin/main.
 
