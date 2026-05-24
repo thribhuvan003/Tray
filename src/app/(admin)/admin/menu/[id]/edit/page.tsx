@@ -69,7 +69,7 @@ export default async function EditMenuItemPage({ params }: Props) {
     });
 
     if (result.ok) {
-      redirect("/admin/menu");
+      redirect(`/c/${tenant!.slug}/admin/menu`);
     }
   }
 
@@ -77,7 +77,7 @@ export default async function EditMenuItemPage({ params }: Props) {
     "use server";
     const result = await deleteMenuItem(id);
     if (result.ok) {
-      redirect("/admin/menu");
+      redirect(`/c/${tenant!.slug}/admin/menu`);
     }
   }
 
@@ -87,7 +87,7 @@ export default async function EditMenuItemPage({ params }: Props) {
     <div>
       <div className="mb-5 flex items-center gap-3">
         <Link
-          href="/admin/menu"
+          href={`/c/${tenant.slug}/admin/menu`}
           className="text-[11px] font-mono uppercase tracking-[0.12em] text-graphite-400 hover:text-graphite-700 transition-colors"
         >
           ← Menu
@@ -259,7 +259,7 @@ export default async function EditMenuItemPage({ params }: Props) {
             Save changes
           </button>
           <Link
-            href="/admin/menu"
+            href={`/c/${tenant.slug}/admin/menu`}
             className="rounded-lg px-5 py-2 text-[14px] font-medium text-graphite-600 hover:text-graphite-900 transition-colors"
           >
             Cancel

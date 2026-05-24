@@ -58,7 +58,7 @@ export default async function StudentLayout({ children }: { children: React.Reac
     >
       <CartTenantSync slug={tenant.slug} />
       <OrderReadyListener userId={user?.id ?? null} tenantSlug={tenant.slug} />
-      <StudentTopBar tenant={tenant} siblings={siblings} />
+      <StudentTopBar tenant={tenant} siblings={siblings} user={user} />
       {/* Desktop reserves a 20rem right column for the sticky cart sidebar.
           Mobile stays single-column; the CartDrawer self-promotes to a
           floating button + Vaul drawer below the lg breakpoint. */}

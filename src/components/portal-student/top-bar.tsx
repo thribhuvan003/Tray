@@ -1,13 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { Clock, History, User } from "lucide-react";
+import { Clock, History, User, LogOut } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { ResolvedTenant, CollegeCanteen } from "@/lib/tenant";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { CanteenSwitcher, type CanteenOption } from "@/components/portal-student/canteen-switcher";
 import { getBrowserClient } from "@/lib/supabase/browser";
+import type { CurrentUser } from "@/lib/auth/get-user";
 
 function currentServiceLabel(): string {
   const h = new Date(Date.now() + 5.5 * 3600000).getUTCHours();
@@ -20,12 +21,19 @@ function currentServiceLabel(): string {
 type Props = {
   tenant: ResolvedTenant;
   siblings?: CollegeCanteen[];
+  user?: CurrentUser | null;
 };
 
-export function StudentTopBar({ tenant, siblings = [] }: Props) {
+export function StudentTopBar({ tenant, siblings = [], user }: Props) {
   const [t, setT] = useState("");
   const [serviceLabel, setServiceLabel] = useState(() => currentServiceLabel());
   const router = useRouter();
+
+  async function handleSignOut() {
+    await fetch("/auth/signout", { method: "POST" });
+    router.push(`/c/${tenant.slug}/menu`);
+    router.refresh();
+  }
 
   useEffect(() => {
     const tick = () =>
@@ -187,13 +195,24 @@ export function StudentTopBar({ tenant, siblings = [] }: Props) {
           >
             <History size={15} />
           </Link>
-          <Link
-            href="/login"
-            aria-label="Account"
-            className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[color:var(--color-line)] hover:border-ocean-500 hover:text-ocean-500 transition-colors"
-          >
-            <User size={15} />
-          </Link>
+          {user ? (
+            <button
+              onClick={handleSignOut}
+              aria-label="Sign out"
+              title={`Sign out (${user.email})`}
+              className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[color:var(--color-line)] hover:border-rose-500 hover:text-rose-500 transition-colors"
+            >
+              <LogOut size={15} />
+            </button>
+          ) : (
+            <Link
+              href={`/c/${tenant.slug}/login?next=/c/${tenant.slug}/menu`}
+              aria-label="Account"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[color:var(--color-line)] hover:border-ocean-500 hover:text-ocean-500 transition-colors"
+            >
+              <User size={15} />
+            </Link>
+          )}
         </div>
       </div>
     </header>

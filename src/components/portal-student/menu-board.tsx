@@ -10,6 +10,7 @@ import { cn, formatRupees } from "@/lib/utils";
 import { useCart } from "@/lib/cart/store";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
+import type { CurrentUser } from "@/lib/auth/get-user";
 
 type Props = {
   categories: MenuCategory[];
@@ -17,9 +18,10 @@ type Props = {
   tenantId: string;
   tenantSlug: string;
   siblings?: any[];
+  user?: CurrentUser | null;
 };
 
-export function MenuBoard({ categories, items, tenantId, tenantSlug, siblings = [] }: Props) {
+export function MenuBoard({ categories, items, tenantId, tenantSlug, siblings = [], user }: Props) {
   const [activeCat, setActiveCat] = useState<string>("all");
   const [vegOnly, setVegOnly] = useState(false);
   const [q, setQ] = useState("");
@@ -183,7 +185,15 @@ export function MenuBoard({ categories, items, tenantId, tenantSlug, siblings = 
             Kitchen open · ~7 min wait
           </div>
           <h1 className="text-4xl sm:text-5xl font-medium tracking-tight leading-none text-[color:var(--color-ink)]" style={{ fontFamily: "var(--font-bricolage)" }}>
-            What's <span className="it">cooking, Ananya?</span>
+            {user ? (
+              <>
+                What's <span className="it">cooking, {user.displayName || user.email?.split("@")[0]}?</span>
+              </>
+            ) : (
+              <>
+                What's <span className="it">cooking today?</span>
+              </>
+            )}
           </h1>
         </div>
 

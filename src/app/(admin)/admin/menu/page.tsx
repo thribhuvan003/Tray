@@ -49,13 +49,13 @@ export default async function AdminMenuPage() {
           </div>
         </div>
         <Link
-          href="/admin/menu/new"
+          href={`/c/${tenant.slug}/admin/menu/new`}
           className="shrink-0 rounded-lg bg-primary px-4 py-2 text-[13px] font-medium text-white hover:bg-primary/90 transition-colors"
         >
           + New item
         </Link>
       </div>
-      <MenuTable items={items ?? []} categories={cats ?? []} />
+      <MenuTable items={items ?? []} categories={cats ?? []} tenantSlug={tenant.slug} />
     </div>
   );
 }

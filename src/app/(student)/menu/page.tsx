@@ -2,6 +2,7 @@ import { headers } from "next/headers";
 import { resolveTenant, collegeCanteensUncached } from "@/lib/tenant";
 import { getServerClient } from "@/lib/supabase/server";
 import { getAdminClient } from "@/lib/supabase/admin";
+import { getCurrentUser } from "@/lib/auth/get-user";
 import { MenuBoard } from "@/components/portal-student/menu-board";
 import { ClosedBanner } from "@/components/portal-student/closed-banner";
 import { notFound } from "next/navigation";
@@ -68,6 +69,8 @@ export default async function StudentMenuPage() {
     }
   }
 
+  const user = await getCurrentUser();
+
   return (
     <>
       <ClosedBanner
@@ -81,6 +84,7 @@ export default async function StudentMenuPage() {
         tenantId={tenant.id}
         tenantSlug={tenant.slug}
         siblings={siblings}
+        user={user}
       />
     </>
   );

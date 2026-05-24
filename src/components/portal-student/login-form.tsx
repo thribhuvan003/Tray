@@ -22,9 +22,9 @@ function isTestEmail(emailStr: string): boolean {
 
 function getRedirectUrl(emailStr: string, nextUrl: string): string {
   if (typeof window === "undefined") return nextUrl;
-  const isReal = window.location.search.includes("real=true");
+  const isDemo = window.location.search.includes("demo=true") || window.location.search.includes("sandbox=true");
   const isTest = isTestEmail(emailStr);
-  if (!isReal && !isTest) {
+  if (isDemo || isTest) {
     if (nextUrl.includes("/admin") || nextUrl.includes("/college-admin") || nextUrl.includes("dashboard")) {
       return "/demo/admin.html";
     } else if (nextUrl.includes("/kitchen")) {
@@ -38,8 +38,8 @@ function getRedirectUrl(emailStr: string, nextUrl: string): string {
 
 function getGoogleRedirectUrl(nextUrl: string): string {
   if (typeof window === "undefined") return nextUrl;
-  const isReal = window.location.search.includes("real=true");
-  if (!isReal) {
+  const isDemo = window.location.search.includes("demo=true") || window.location.search.includes("sandbox=true");
+  if (isDemo) {
     if (nextUrl.includes("/admin") || nextUrl.includes("/college-admin") || nextUrl.includes("dashboard")) {
       return "/demo/admin.html";
     } else if (nextUrl.includes("/kitchen")) {
@@ -109,10 +109,10 @@ export function LoginForm({ next, slug = "" }: { next: string; slug?: string }) 
 
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const isReal = typeof window !== "undefined" && window.location.search.includes("real=true");
+    const isDemo = typeof window !== "undefined" && (window.location.search.includes("demo=true") || window.location.search.includes("sandbox=true"));
     const isTest = isTestEmail(email);
 
-    if (!isReal && !isTest) {
+    if (isDemo || isTest) {
       // Instant seamless redirect for standard demo logins!
       const targetNext = getRedirectUrl(email, next);
       window.location.href = targetNext;
