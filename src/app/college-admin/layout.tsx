@@ -31,7 +31,7 @@ export default async function CollegeAdminLayout({
   return (
     <div
       data-portal="college-admin"
-      className="min-h-screen bg-graphite-900 text-graphite-200 relative overflow-x-hidden"
+      className="min-h-screen bg-graphite-900 text-graphite-200 relative"
     >
       <div className="grid-paper fixed inset-0 z-0" />
       <CollegeAdminShell userEmail={user.email ?? null}>

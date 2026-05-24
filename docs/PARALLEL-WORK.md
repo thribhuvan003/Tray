@@ -86,6 +86,13 @@ Read AGENTS.md, docs/DEMO-SPEC.md, docs/PARALLEL-WORK.md. One file owner per lan
 
 ## Session log
 
+### 2026-05-24 — Admin Sticky Sidebar Scrolling & QA Fake Email Invite Resolved
+
+**Work done:**
+- **Sidebar Sticky Scroll Fix:** Completely removed the `overflow-x-clip` and `overflow-x-hidden` rules from layout wrappers in `(admin)/layout.tsx`, `college-admin/layout.tsx`, and `(kitchen)/layout.tsx`. This avoids breaking `position: sticky` on descendant containers relative to the document window viewport, ensuring the left navigation bars in all dashboards remain static/sticky when scrolling.
+- **QA Fake Email Invite Seeding:** Created and successfully ran `scripts/create-fake-invite.mjs` to register a pending staff invite for `fakestaff2026@gmail.com` under the `aditya` canteen. This ensures the fake invite renders dynamically in the pending list on the Canteen Admin's "Staff" page.
+- **Verification:** Successfully executed `pnpm typecheck` (0 errors) and `pnpm demo:verify` (0 warnings).
+
 ### 2026-05-24 — Next.js 15 Server Action Header Resolution & Redirection Fix
 
 **Work done:**
