@@ -60,7 +60,6 @@ interface InteractivePortalCardProps {
 function InteractivePortalCard({ portal, idx, portalRefs }: InteractivePortalCardProps) {
   const [mounted, setMounted] = React.useState(false);
   const [iframeLoaded, setIframeLoaded] = React.useState(true);
-  const [isSandbox, setIsSandbox] = React.useState(false);
   const [syncMessage, setSyncMessage] = React.useState<string | null>(null);
 
   const iframeRef = useRef<HTMLIFrameElement>(null);
@@ -94,21 +93,6 @@ function InteractivePortalCard({ portal, idx, portalRefs }: InteractivePortalCar
     window.addEventListener("message", handleMessage);
     return () => window.removeEventListener("message", handleMessage);
   }, [portal.portalKey]);
-
-  const enterSandbox = () => {
-    setIsSandbox(true);
-    if (iframeRef.current && iframeRef.current.contentWindow) {
-      iframeRef.current.contentWindow.postMessage({ type: 'pause_simulation' }, '*');
-    }
-  };
-
-  const resetAutoplay = () => {
-    setIsSandbox(false);
-    if (iframeRef.current) {
-      setIframeLoaded(false);
-      iframeRef.current.src = portal.previewSrc;
-    }
-  };
 
   const containerBg = portal.portalKey === "admin" ? "#1A1A19" : "#F4EFE6";
 
@@ -233,12 +217,19 @@ function InteractivePortalCard({ portal, idx, portalRefs }: InteractivePortalCar
     : {};
 
   return (
+    <a
+      href={portal.previewSrc}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="block h-full flex-1 cursor-pointer"
+      style={{ textDecoration: "none" }}
+    >
     <motion.article
       ref={cardRef}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
       data-portal-card
-      className="motion-card group relative flex flex-col select-none rounded-[18px] overflow-hidden border border-[var(--tray-border,rgba(26,26,25,0.12))] bg-white h-full flex-1 transition-colors duration-300"
+      className="motion-card group relative flex flex-col select-none rounded-[18px] overflow-hidden border border-[var(--tray-border,rgba(26,26,25,0.12))] bg-white h-full flex-1 transition-colors duration-300 cursor-pointer"
       style={style}
     >
       {/* Spotlight glow overlay */}
@@ -524,8 +515,6 @@ function InteractivePortalCard({ portal, idx, portalRefs }: InteractivePortalCar
               borderBottom: "1px solid var(--tray-border, rgba(26, 26, 25, 0.12))",
               boxShadow: syncMessage
                 ? `inset 0 0 0 2px ${portal.accentColor}`
-                : isSandbox
-                ? "inset 0 0 0 2px #10b981"
                 : "none",
             }}
           >
@@ -568,25 +557,6 @@ function InteractivePortalCard({ portal, idx, portalRefs }: InteractivePortalCar
               </div>
             )}
 
-            {/* Sandbox Mode click overlay */}
-            {!isSandbox && iframeLoaded && (
-              <div
-                onClick={enterSandbox}
-                className="absolute inset-0 bg-neutral-900/10 hover:bg-neutral-900/30 backdrop-blur-[0px] hover:backdrop-blur-[1px] flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 cursor-pointer z-10"
-              >
-                <button
-                  className="px-4 py-2 rounded-full text-xs font-semibold shadow-xl border flex items-center gap-2 transform translate-y-2 hover:scale-105 transition-all duration-200"
-                  style={{
-                    backgroundColor: portal.portalKey === "admin" ? "#cdfa50" : "#334155",
-                    color: portal.portalKey === "admin" ? "#1A1A19" : "#ffffff",
-                    borderColor: portal.portalKey === "admin" ? "#cdfa50" : "#334155",
-                  }}
-                >
-                  <span>⚡</span> Live Sandbox: Click to Interact
-                </button>
-              </div>
-            )}
-
             <iframe
               ref={iframeRef}
               src={portal.previewSrc}
@@ -594,23 +564,11 @@ function InteractivePortalCard({ portal, idx, portalRefs }: InteractivePortalCar
               loading="eager"
               sandbox="allow-scripts allow-same-origin"
               scrolling="no"
-              tabIndex={isSandbox ? 0 : -1}
-              aria-hidden={!isSandbox}
+              tabIndex={-1}
+              aria-hidden={true}
               onLoad={() => setIframeLoaded(true)}
-              className={`border-0 origin-top-left absolute top-0 left-0 transition-all duration-300 ${
-                isSandbox ? "pointer-events-auto" : "pointer-events-none"
-              }`}
+              className="border-0 origin-top-left absolute top-0 left-0 pointer-events-none"
             />
-
-            {/* Floating Reset Autoplay Button */}
-            {isSandbox && (
-              <button
-                onClick={resetAutoplay}
-                className="absolute bottom-4 right-4 z-40 px-3 py-1.5 rounded-full text-[10px] font-mono font-bold tracking-wider uppercase border shadow-md flex items-center gap-1.5 bg-neutral-900 text-white border-neutral-700 hover:bg-neutral-800 transition-all duration-200 hover:scale-105"
-              >
-                Reset Autoplay ↻
-              </button>
-            )}
 
             {/* Bottom fade overlay to soften cropped edge */}
             <div
@@ -668,6 +626,7 @@ function InteractivePortalCard({ portal, idx, portalRefs }: InteractivePortalCar
         </div>
       </motion.div>
     </motion.article>
+    </a>
   );
 }
 

@@ -1,5 +1,34 @@
 # Parallel work log (Tray)
 
+## Session log — 2026-05-24 (landing portal cards clickable & history type-safety)
+
+### What was done
+- **Landing Portal Cards Clickable anywhere**: Refactored `src/components/landing/sections/PiranhaPortalsSection.tsx` to make the entire interactive card clickable. Wrapped each `motion.article` in an `<a>` anchor tag pointing to `previewSrc` with `target="_blank"`.
+- **Remove Sandbox Overlay**: Removed `isSandbox` state, sandbox click overlays, and the "Reset Autoplay" button.
+- **Safe Read-Only Autoplay Previews**: Set `pointer-events: none` and `tabIndex={-1}` always on the preview iframes. Real-time sync pipeline messages remain fully active.
+- **History View Type Safety**: Resolved two critical TypeScript compiler errors in `src/components/portal-kitchen/history-view.tsx` by casting Supabase select returns to typed `OrderRow[]` and `LineRow[]` arrays, eliminating `never[]` inference compile blockers.
+- **Clean Production Build**: Successfully ran a clean production build (`pnpm build`) verifying zero compile errors or warnings.
+
+---
+
+## Session log — 2026-05-24 (kitchen portal demo parity)
+
+### What was done
+- **Modularized Dashboard Tab Components:** Created highly modular `HistoryView` (`src/components/portal-kitchen/history-view.tsx`), `InsightsView` (`src/components/portal-kitchen/insights-view.tsx`), and `SpecialsPanel` (`src/components/portal-kitchen/specials-panel.tsx`) components, which dynamically aggregate live Supabase data, to decouple dashboard views.
+- **Server Actions for Kitchen Operations:** Added three new robust exported Server Actions (`src/app/(kitchen)/_actions.ts`):
+  - `createWalkInOrder()`: Picks 1-3 random live, in-stock canteen menu items, places a real order in Supabase with sequence-backed short codes, and registers a paid `captured` payment record.
+  - `pushSpecialToMenu(form)`: Dynamically resolves/creates a "Specials" category and pushes new menu items to the live menu under this category.
+  - `removeSpecialFromMenu(itemId)`: Archives the menu item to cleanly remove it from the active specials list without breaking foreign keys.
+- **Single-Page Dashboard & Parity Refactor (`board.tsx`):** Rewrote `KitchenBoard` (`src/components/portal-kitchen/board.tsx`) to achieve exact parity with the static demo `public/demo/kitchen.html`:
+  - **Dynamic Tab States**: Implemented state-driven tab switching (Live queue, Today's specials, History, Insights) driven by a sticky left sidebar.
+  - **10-Second Sync Loop**: Integrated a background sync cycle that polls database changes every 10 seconds, animating the refresh button in a 360-degree rotation, pulsing the green status dot, and flashing update headers.
+  - **Walk-In Order Integration**: Tied the '+ Walk-in order' button to the real `createWalkInOrder` server action to place real orders directly from the counter queue.
+  - **Specials Manager**: Integrated the form and live specials listing into the right-side panel, instantly pushing live to students and syncing changes on the fly.
+  - **Insights aggregation**: Computed dynamic KPIs and horizontal Top Items bar charts client-side from real Supabase sales order items.
+- **Verification:** Ran `pnpm typecheck` which passed with **0 errors**. Confirmed strict TypeScript compilation and database integrations.
+
+---
+
 ## Session log — 2026-05-24 (admin login guard)
 
 **Commit:** `e25cc0e` — `feat(auth): guard admin login — sign out + redirect if no canteen found`
@@ -105,6 +134,14 @@ Read AGENTS.md, docs/DEMO-SPEC.md, docs/PARALLEL-WORK.md. One file owner per lan
 ---
 
 ## Session log
+
+### 2026-05-24 — Strict TypeScript, Demos & Production Build Verification Passed
+
+**Work done:**
+- **Duplicate Imports Fixed:** Removed duplicate import declarations of `getTenantSlugFromHeaders` from `src/app/(admin)/admin/page.tsx` and `src/app/(public)/login/page.tsx` to fix TypeScript compilation failures.
+- **Typechecking Verified:** Executed `pnpm typecheck` successfully with 0 type errors.
+- **Demo Verification:** Executed `pnpm demo:verify` which successfully passed static verification checks across student, kitchen, admin, and index pages.
+- **Production Build Compiled:** Ran `pnpm build` to compile the Next.js production build, which optimized all routes and finished cleanly without errors.
 
 ### 2026-05-24 — Admin Sticky Sidebar Scrolling & QA Fake Email Invite Resolved
 
