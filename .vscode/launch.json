@@ -1,0 +1,43 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Next.js: Debug Server-Side Actions",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/node_modules/.bin/next",
+      "args": ["dev", "-p", "3000"],
+      "sourceMaps": true,
+      "console": "integratedTerminal",
+      "env": {
+        "NODE_OPTIONS": "--inspect"
+      }
+    },
+    {
+      "name": "Next.js: Debug Client-Side Components",
+      "type": "chrome",
+      "request": "launch",
+      "url": "http://localhost:3000"
+    },
+    {
+      "name": "Next.js: Debug Full-Stack Process",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/node_modules/.bin/next",
+      "args": ["dev", "-p", "3000"],
+      "serverReadyAction": {
+        "action": "debugWithChrome",
+        "pattern": "Ready in",
+        "url": "http://localhost:3000"
+      },
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Node: Run Script",
+      "type": "node",
+      "request": "launch",
+      "program": "${file}",
+      "console": "integratedTerminal"
+    }
+  ]
+}

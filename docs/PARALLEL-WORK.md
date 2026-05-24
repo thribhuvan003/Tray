@@ -1,5 +1,19 @@
 # Parallel work log (Tray)
 
+## Session log — 2026-05-24 (Google & Apple Repository Standardizations)
+
+### What was done
+- **Git Attributes & Line Endings (`.gitattributes`)**: Created a strict line-endings normalization rule enforcing Unix LF line endings globally across all text files and protecting binary assets from normalization corruption.
+- **Unified Formatting (`.editorconfig`)**: Implemented standard editor configurations (2 spaces indents, trim trailing spaces, insert final newlines) to standardize workspace behavior across all editors.
+- **MIT Licensing (`LICENSE`)**: Seeded the official MIT License file to legally secure the codebase and match package descriptors.
+- **Ignored Cache Cleanup (`.gitignore`)**: Cleaned up cache exclusions, strictly ignoring `.e2e-screenshots/`, `next-dev.log`, and `*.tsbuildinfo` files.
+- **VS Code Workspace Configurations (`.vscode/settings.json`, `.vscode/extensions.json`, `.vscode/launch.json`)**: Deployed full team onboarding workspace files, pre-configuring auto-format on save, ESLint actions on save, path mapping settings, extension recommendations, and full-stack/server action/client debugger triggers.
+- **Elite Contributor Manual (`CONTRIBUTING.md` Overhaul)**: Overhauled guidelines to establish Google/Apple-grade branching namespaces, Conventional Commit structures, Pre-Push Quality Gates, and a mandatory RLS Row-Security verification protocol across all active roles (`student`, `kitchen_staff`, `canteen_admin`, `super_admin`).
+- **Comprehensive Dev & Deployment Manual (`docs/DEVELOPER-GUIDE.md` Overhaul)**: Added clear edge subdomain edge rewrite descriptions, database RLS hooks, whitelisting instructions, and a detailed Razorpay payments webhook signature validation and unique constraint idempotency guide with full Mermaid architecture diagrams.
+- **Staging and Verification**: Tracked all newly standard settings and diagnostics suites in git, compiling perfectly via `pnpm typecheck` (0 errors), passing linter checks (`pnpm lint` 0 errors), and validating structural routers via `pnpm demo:verify` (PASS).
+
+---
+
 ## Session log — 2026-05-24 (referrer-independent multi-tenant server action auth)
 
 ### What was done

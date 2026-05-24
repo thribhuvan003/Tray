@@ -1,0 +1,31 @@
+# Enforce LF line endings for all text files
+* text=auto eol=lf
+
+# Explicitly identify text files to be normalized
+*.ts text
+*.tsx text
+*.js text
+*.mjs text
+*.json text
+*.css text
+*.html text
+*.md text
+*.yml text
+*.yaml text
+*.sql text
+*.example text
+*.local text
+
+# Deny normalization to binary files
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.svg text
+*.webp binary
+*.pdf binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.eot binary

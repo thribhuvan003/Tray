@@ -18,3 +18,4 @@ tsconfig.tsbuildinfo
 .debug-screenshots/
 .playwright-screenshots/
 .playwright-screenshots-simulation/
+.e2e-screenshots/
