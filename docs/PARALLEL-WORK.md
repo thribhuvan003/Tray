@@ -9,6 +9,7 @@
 - **Premium Checkout Tray & Place Order Flow**: Upgraded the checkout area in the slide-up cart sheet (`cart-drawer.tsx`). Instead of a wrapping/misaligned layout on narrow screens, the sheet now features a beautiful horizontal summary row (showing total price and direct payout notes) followed by a bold, full-width, tactile checkout button (`Place order →`) with visual hover, active scaling transitions (`active:scale-[0.98]`), and drop shadow styles.
 - **Demo Cart Alignment parity**: Removed vertical cart bar stacking on small viewports from the static `student.html` demo, replacing it with a scaled-down horizontal single-line design that fits perfectly on all viewports down to 320px (iPhone SE).
 - **Mobile Checkout Navigation Fix**: Discovered and resolved a major legacy bug in `student.html` where `btnCheckoutMobile` ("Review tray →" button) had no event listener bound. Added a click event listener connecting it to `startPayment`, enabling seamless checkout/payment sheet navigation on mobile devices.
+- **Ultra-Clean Mock UPI Payment Details**: Redesigned the mock payment screen in `student.html` to display ONLY the QR code (beautiful sharp inline vector SVG), Order Reference ID, Items count, and Total Amount, with the primary **"Pay Now"** button positioned beautifully at the bottom. This sends the amount directly to the admin's UPI ID and handles loading sequences automatically.
 - **Clean Type & Build Verification**: Completed a clean production build (`pnpm build`) with zero TypeScript errors or compile blockers.
 
 ---

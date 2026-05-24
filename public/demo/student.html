@@ -818,17 +818,51 @@
         <div class="view-panel">
           <button type="button" class="back-link" data-go="menu">← Back to menu</button>
           <h1 class="view-title">Pay by <span class="it">UPI.</span></h1>
-          <p class="view-sub">Open your UPI app and pay. Then tap "I've paid" below.</p>
-          <div class="pay-card">
-            <div class="pay-mobile">
-              <a href="#" id="upiDeepLink" class="btn-upi-open"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/></svg>Open UPI app</a>
-              <p class="btn-upi-hint">Opens GPay, PhonePe, or any UPI app</p>
-              <details class="qr-fold"><summary>On desktop? Scan this QR ↓</summary><div class="qr-box" style="margin:12px auto"><div class="qr-placeholder"></div></div></details>
+          <p class="view-sub">Verify your order details and pay securely</p>
+          
+          <div class="pay-card" style="display: flex; flex-direction: column; align-items: center; text-align: center; gap: 20px; padding: 24px; border-radius: var(--radius); border: 1px solid var(--border); background: var(--surface); box-shadow: 0 4px 20px rgba(0,0,0,0.03);">
+            <!-- 1. Beautiful Mock QR Code (Always Visible) -->
+            <div class="qr-box" style="width: 160px; height: 160px; margin: 0 auto; display: flex; align-items: center; justify-content: center; background: #ffffff; border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.04); overflow: hidden; padding: 10px;">
+              <svg class="qr-placeholder" width="140" height="140" viewBox="0 0 29 29" fill="none" stroke="#1A1A19" stroke-width="1" stroke-linecap="square" style="opacity: 0.95; width: 100%; height: 100%;">
+                <!-- QR Finder patterns -->
+                <path d="M1 1h7v7H1zM2 2h5v5H2zM3 3h3v3H3z"/>
+                <path d="M21 1h7v7H21zM22 2h5v5H22zM23 3h3v3H3z"/>
+                <path d="M1 21h7v7H1zM2 22h5v5H2zM3 23h3v3H3z"/>
+                <!-- Mock data bits -->
+                <path d="M10 1h2v1h-2zM14 1h1v1h-1zM17 1h3v1h-3zM10 3h1v2h-1zM12 4h3v1h-3zM17 3h1v1h-1zM19 4h1v1h-1zM10 6h3v1h-3zM15 6h1v1h-1zM18 6h2v1h-2zM10 8h1v1h-1zM13 8h2v1h-2zM17 8h1v1h-1z"/>
+                <path d="M1 10h1v2H1zM3 11h2v1H3zM7 10h1v1H7zM10 10h2v1h-2zM13 11h1v2h-1zM16 10h3v1h-3zM21 10h1v1h-1zM24 10h3v1h-3zM28 11h1v1H28z"/>
+                <path d="M2 13h2v1H2zM5 14h2v1H5zM10 13h1v1h-1zM12 14h2v1h-2zM15 13h3v1h-3zM19 14h1v1h-1zM22 13h2v1h-2zM25 14h3v1h-3z"/>
+                <path d="M1 16h3v1H1zM6 16h2v1H6zM10 16h2v1h-2zM14 16h1v2h-1zM17 16h3v1h-3zM21 16h1v1h-1zM23 17h2v1h-2zM27 16h2v1h-2z"/>
+                <path d="M2 19h2v1H2zM5 19h1v1H5zM8 19h1v1H8zM11 19h2v1h-2zM15 19h1v1h-1zM18 19h2v1h-2zM21 19h3v1h-3zM25 20h2v1h-2z"/>
+                <path d="M10 21h1v1h-1zM12 22h2v1h-2zM16 21h2v1h-2zM19 22h1v1h-1zM22 21h1v1h-1zM25 21h3v1h-3zM28 22h1v1H28z"/>
+                <path d="M10 24h3v1h-3zM15 24h1v1h-1zM18 24h2v1h-2zM22 24h1v1h-1zM24 25h3v1h-3z"/>
+                <path d="M11 27h2v1h-2zM15 27h1v1h-1zM17 27h3v1h-3zM22 28h2v1h-2zM26 27h2v1h-2z"/>
+              </svg>
             </div>
-            <div class="qr-desktop"><div class="qr-box"><div class="qr-placeholder"></div></div><p class="upi-id">Pay to <strong id="payUpi">canteen@upi</strong></p></div>
-            <div class="timer-ring"><span class="timer-val" id="payTimer">15:00</span><span class="timer-label">minutes<br/>remaining</span></div>
-            <p class="order-ref" id="orderRef">Order —</p>
-            <button type="button" class="btn-primary" id="btnPaid">I've paid — confirm my order</button>
+
+            <!-- 2. Clean Details Summary Table -->
+            <div style="width: 100%; display: flex; flex-direction: column; gap: 10px; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); padding: 18px 0;">
+              <div style="display: flex; justify-content: space-between; align-items: center; font-family: var(--font-ui); font-size: 14px;">
+                <span style="color: var(--muted);">Order ID</span>
+                <span id="orderRef" style="font-weight: 600; font-family: var(--mono); color: var(--text);">Order —</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; align-items: center; font-family: var(--font-ui); font-size: 14px;">
+                <span style="color: var(--muted);">Items</span>
+                <span id="payItemsCount" style="font-weight: 600; color: var(--text);">0 items</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; align-items: center; font-family: var(--font-ui); font-size: 14px;">
+                <span style="color: var(--muted);">Amount</span>
+                <span id="payAmountVal" style="font-size: 20px; font-weight: 700; color: var(--accent);">₹0</span>
+              </div>
+            </div>
+
+            <!-- 3. Dynamic Hidden Elements for Compatibility -->
+            <a href="#" id="upiDeepLink" style="display: none;"></a>
+            <div id="payTimer" style="display: none;">15:00</div>
+            <strong id="payUpi" style="display: none;">canteen@upi</strong>
+
+            <!-- 4. Pay Now Button -->
+            <button type="button" class="btn-primary" id="btnPaid" style="margin-top: 4px; width: 100%; min-height: 48px; border-radius: var(--radius-sm); font-size: 15px; font-weight: 700;">Pay Now</button>
           </div>
         </div>
       </section>
@@ -1215,14 +1249,27 @@ function setView(view){
 
 function startPayment(){
   if(getCartCount()===0)return;
-  orderId=genOrderId();document.getElementById("orderRef").textContent="Order "+orderId;
+  orderId=genOrderId();
+  
+  var refEl = document.getElementById("orderRef");
+  if(refEl) refEl.textContent = "Order " + orderId;
+  
+  var payCountEl = document.getElementById("payItemsCount");
+  if(payCountEl) {
+    var count = getCartCount();
+    payCountEl.textContent = count + (count === 1 ? " item" : " items");
+  }
+  
+  var payAmountEl = document.getElementById("payAmountVal");
+  if(payAmountEl) payAmountEl.textContent = fmt(getCartTotal());
+
   var c=TD.getCanteen(currentCanteenId);
   var upiHref="upi://pay?pa="+encodeURIComponent(c.upi)+"&pn="+encodeURIComponent(c.name)+"&am="+getCartTotal()+"&tn="+encodeURIComponent(orderId);
   var dl=document.getElementById("upiDeepLink");if(dl)dl.href=upiHref;
 
   var btn = document.getElementById("btnPaid");
   if(btn) {
-    btn.textContent = window.innerWidth < 600 ? "Pay Now — " + fmt(getCartTotal()) : "I've paid — confirm my order";
+    btn.textContent = window.innerWidth < 600 ? "Pay Now" : "I've paid — confirm my order";
   }
 
   setView("payment");
