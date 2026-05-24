@@ -11,12 +11,17 @@ import { cn } from "@/lib/utils";
 
 function isTestEmail(emailStr: string): boolean {
   const e = emailStr.toLowerCase().trim();
+  // Only match explicitly known test/demo domains — NOT broad substrings
+  // to avoid matching real users whose email happens to contain 'test' or 'demo'
   return (
     e.endsWith("@harvard.edu") ||
     e.endsWith("@aec.edu.in") ||
     e.endsWith("@traytest.dev") ||
-    e.includes("test") ||
-    e.includes("demo")
+    e.endsWith(".test") ||
+    e.endsWith(".demo") ||
+    e === "demo@tray.in" ||
+    e === "student@demo.tray" ||
+    e === "kitchen@demo.tray"
   );
 }
 

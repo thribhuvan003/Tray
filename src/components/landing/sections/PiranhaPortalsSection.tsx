@@ -217,13 +217,7 @@ function InteractivePortalCard({ portal, idx, portalRefs }: InteractivePortalCar
     : {};
 
   return (
-    <a
-      href={portal.previewSrc}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="block h-full flex-1 cursor-pointer"
-      style={{ textDecoration: "none" }}
-    >
+    <div className="block h-full flex-1 cursor-pointer" onClick={() => window.open(portal.previewSrc, "_blank", "noopener,noreferrer")} role="link" tabIndex={0} style={{ textDecoration: "none" }}>
     <motion.article
       ref={cardRef}
       onMouseMove={handleMouseMove}
@@ -620,13 +614,14 @@ function InteractivePortalCard({ portal, idx, portalRefs }: InteractivePortalCar
             }}
             target="_blank"
             rel="noopener noreferrer"
+            onClick={(e) => e.stopPropagation()}
           >
             LAUNCH DEMO <span className="inline-block transition-transform duration-200 group-hover/btn:translate-x-0.75">→</span>
           </a>
         </div>
       </motion.div>
     </motion.article>
-    </a>
+    </div>
   );
 }
 
