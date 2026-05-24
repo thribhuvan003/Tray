@@ -50,6 +50,8 @@ export function PayPanel({
   });
   const [demoDismissed, setDemoDismissed] = useState(false);
   const isSimMode = !process.env.NEXT_PUBLIC_RAZORPAY_LIVE;
+  const [isPayingMobile, setIsPayingMobile] = useState(false);
+  const [mobileVerifyingText, setMobileVerifyingText] = useState("Paying via UPI...");
 
   useEffect(() => {
     if (!order.payment_expires_at) return;
@@ -132,6 +134,20 @@ export function PayPanel({
       }
     });
 
+  const handleMobilePay = () => {
+    setIsPayingMobile(true);
+    setMobileVerifyingText("Paying via UPI...");
+    
+    // Deep-link to UPI app
+    window.location.href = upiUri;
+    
+    // Start automated loading transition
+    setTimeout(() => {
+      setMobileVerifyingText("Verifying payment...");
+      onIvePaid();
+    }, 1500);
+  };
+
   return (
     <div className="mx-auto max-w-3xl px-4 sm:px-6 pt-6 pb-12 pb-[max(3rem,env(safe-area-inset-bottom))]">
       <Link
@@ -167,43 +183,30 @@ export function PayPanel({
 
       <div className="grid md:grid-cols-[1.1fr_1fr] gap-5">
         <div className="rounded-2xl bg-[color:var(--color-paper)] border border-[color:var(--color-line)] p-6 flex flex-col items-center text-center">
-          {/* Mobile: "Open UPI app" is the hero CTA */}
-          <a
-            href={upiUri}
-            className="md:hidden w-full h-14 text-[15px] inline-flex items-center justify-center gap-2 rounded-full border-2 border-ocean-600 text-ocean-900 bg-transparent font-medium hover:bg-ocean-100/50 dark:hover:bg-ocean-500/15 transition-colors mb-1"
-          >
-            <Smartphone size={16} /> Open UPI app
-          </a>
-          <p className="md:hidden text-[11px] text-center opacity-60 mt-1 mb-4">Opens GPay, PhonePe, or any UPI app</p>
-
-          {/* Desktop: QR is prominent */}
-          <div className="hidden md:block text-[11px] font-mono uppercase tracking-wider text-[color:var(--color-ink)]/55 mb-3">
-            Scan with any UPI app
+          <div className="text-[11px] font-mono uppercase tracking-wider text-[color:var(--color-ink)]/55 mb-4">
+            Scan QR to pay
           </div>
-          <div className="hidden md:block p-4 bg-white rounded-2xl shadow-[inset_0_0_0_1px_rgba(26,26,25,0.06)]">
-            <QRCode value={upiUri} size={208} bgColor="#ffffff" fgColor="#1A1A19" />
+          
+          {/* Beautifully Framed QR Code - Permanently Visible on all screen sizes */}
+          <div className="p-4 bg-white rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.04),inset_0_0_0_1px_rgba(26,26,25,0.06)] transition-all hover:scale-[1.02]">
+            <QRCode value={upiUri} size={190} bgColor="#ffffff" fgColor="#1A1A19" style={{ display: 'block' }} />
           </div>
-          <a
-            href={upiUri}
-            className="hidden md:inline-flex mt-5 items-center gap-2 h-11 px-5 rounded-full bg-ocean-500 text-black text-[13px] font-medium hover:bg-ocean-600 transition-colors"
+
+          {/* Mobile Only: Big "Pay Now" Button directly below the QR code */}
+          <button
+            onClick={handleMobilePay}
+            className="md:hidden mt-6 w-full h-12 text-[15px] inline-flex items-center justify-center gap-2 rounded-xl bg-ocean-500 text-black font-bold hover:bg-ocean-600 transition-colors shadow-lg shadow-ocean-500/10"
           >
-            <Smartphone size={14} /> Open UPI app
-          </a>
+            <Smartphone size={16} /> Pay Now
+          </button>
+          
+          <p className="md:hidden mt-2 text-[11px] text-center opacity-60">
+            Redirects directly to GPay, PhonePe, or any UPI app
+          </p>
 
-          {/* Mobile: QR in a collapsed details section */}
-          <details className="md:hidden w-full text-left mt-2">
-            <summary className="text-[12px] font-mono text-center cursor-pointer text-[color:var(--color-ink)]/55 hover:text-[color:var(--color-ink)] transition-colors">
-              On desktop? Scan this QR
-            </summary>
-            <div className="mt-3 flex flex-col items-center gap-2">
-              <div className="p-4 bg-white rounded-2xl shadow-[inset_0_0_0_1px_rgba(26,26,25,0.06)]">
-                <QRCode value={upiUri} size={180} bgColor="#ffffff" fgColor="#1A1A19" />
-              </div>
-            </div>
-          </details>
-
-          <div className="mt-4 text-[12px] text-[color:var(--color-ink)]/55">
-            Paying <span className="font-semibold text-[color:var(--color-ink)]">{tenantName}</span> · {tenantUpi}
+          <div className="mt-5 text-[12.5px] text-[color:var(--color-ink)]/55">
+            Paying <span className="font-semibold text-[color:var(--color-ink)]">{tenantName}</span>
+            <div className="font-mono text-[11px] mt-0.5 opacity-85">{tenantUpi}</div>
           </div>
         </div>
 
@@ -278,10 +281,11 @@ export function PayPanel({
             </div>
           </div>
 
+          {/* Desktop Only: "I've Paid" Button */}
           <button
             onClick={onIvePaid}
             disabled={verifying || Boolean(expired)}
-            className="inline-flex items-center justify-center gap-2 h-12 rounded-xl bg-ocean-500 text-black text-[14px] font-medium hover:bg-ocean-600 disabled:opacity-50 transition-colors"
+            className="hidden md:inline-flex items-center justify-center gap-2 h-12 rounded-xl bg-ocean-500 text-black text-[14px] font-semibold hover:bg-ocean-600 disabled:opacity-50 transition-colors"
           >
             {verifying ? (
               <>
@@ -291,6 +295,7 @@ export function PayPanel({
               <>I&rsquo;ve paid &mdash; confirm my order</>
             )}
           </button>
+          
           {stillWaiting && !verifying && (
             <p className="text-[12.5px] text-amber-600 text-center -mt-2">
               Still confirming your payment — UPI can take 30–60 seconds. Keep this page open.
@@ -313,6 +318,34 @@ export function PayPanel({
           )}
         </div>
       </div>
+
+      {/* Dynamic UPI payment loader overlay on mobile */}
+      {isPayingMobile && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex flex-col items-center justify-center p-6 text-white animate-in fade-in duration-200">
+          <div className="bg-[color:var(--color-paper)] dark:bg-zinc-900 border border-[color:var(--color-line)] rounded-2xl p-8 max-w-sm w-full text-center flex flex-col items-center gap-6 shadow-2xl">
+            <div className="relative">
+              <Loader2 size={48} className="animate-spin text-ocean-500" />
+              <Sparkles size={16} className="absolute -top-1 -right-1 text-amber-500 animate-pulse" />
+            </div>
+            
+            <div className="flex flex-col gap-2">
+              <h3 className="text-lg font-bold text-[color:var(--color-ink)]">
+                {mobileVerifyingText}
+              </h3>
+              <p className="text-xs text-[color:var(--color-ink)]/60 leading-relaxed">
+                UPI transactions can take a few seconds to sync. Please do not close or refresh this page.
+              </p>
+            </div>
+
+            <button
+              onClick={() => setIsPayingMobile(false)}
+              className="mt-2 text-xs font-semibold text-ocean-500 hover:text-ocean-600 underline transition-colors"
+            >
+              Cancel and try again
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

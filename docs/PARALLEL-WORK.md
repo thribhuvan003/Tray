@@ -1,5 +1,19 @@
 # Parallel work log (Tray)
 
+## Session log — 2026-05-24 (dynamic UPI payment gateway & real scannable QR codes)
+
+### What was done
+- **Dynamic Scannable QR Codes**: Replaced the static placeholder SVG QR in `public/demo/student.html` and the hidden accordion details QR in `src/components/portal-student/pay-panel.tsx` with a permanently visible, beautifully styled dynamic QR code. It is dynamically generated using the exact canteen's admin registered UPI ID, merchant name, and total amount, making it 100% scannable with any real UPI app.
+- **Mobile "Pay Now" Deep-Linking**: Created a bold, prominent hero **"Pay Now"** button on mobile viewports. Tapping this button deep-links students directly to their native mobile UPI app using the official `upi://pay` protocol populated with dynamic parameters.
+- **Automated Verification Loader Loop**: Programmed a seamless gateway-like transition when paying on mobile:
+  - First state: `Paying via UPI...` (deep link triggered).
+  - Second state: `Verifying payment...` (polling the backend).
+  - Automatically transitions to the OTP tracking screen once the transaction captures, backed by the Supabase real-time listener and dynamic interval polling.
+- **Removed Redundant Buttons**: Removed the redundant "Open UPI app" links and "I've paid — confirm my order" buttons from the mobile viewport, leaving a single premium call-to-action that matches user specifications.
+- **Production Build Verification**: Successfully verified type safety and built the production bundles cleanly.
+
+---
+
 ## Session log — 2026-05-24 (student portal phone-first responsiveness & checkout tray layout)
 
 ### What was done
