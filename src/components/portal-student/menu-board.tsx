@@ -438,7 +438,7 @@ export function MenuBoard({
                       return (
                         <button
                           key={sib.slug}
-                          onClick={() => { if (!isCurrent) router.push(`/c/${sib.slug}/menu`); }}
+                          onClick={() => { if (!isCurrent) window.location.href = `/c/${sib.slug}/menu`; }}
                           style={{
                             minWidth: 0,
                             padding: "10px 12px",

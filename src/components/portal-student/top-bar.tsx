@@ -151,7 +151,7 @@ export function StudentTopBar({ tenant, siblings = [], user }: Props) {
 
   function handleCanteenSelect(canteen: CanteenOption) {
     if (canteen.id !== tenant.slug) {
-      router.push(`/c/${canteen.id}/menu`);
+      window.location.href = `/c/${canteen.id}/menu`;
     }
   }
 
