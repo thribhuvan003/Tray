@@ -47,13 +47,40 @@ export const getCurrentUser = cache(async (tenantIdOverride?: string): Promise<C
 
   console.log("[getCurrentUser] MEMBERSHIP FOUND:", m, "ERROR:", memError?.message);
 
+  let role: MemberRole | null = m?.role ?? null;
+  let displayName: string | null = m?.display_name ?? null;
+
+  if (!role) {
+    const { data: tenantData } = await supabase
+      .from("tenants")
+      .select("college_id")
+      .eq("id", tenant.id)
+      .maybeSingle<{ college_id: string | null }>();
+
+    if (tenantData?.college_id) {
+      const { data: cm } = await supabase
+        .from("college_memberships")
+        .select("is_active")
+        .eq("user_id", data.user.id)
+        .eq("college_id", tenantData.college_id)
+        .eq("is_active", true)
+        .limit(1)
+        .maybeSingle();
+
+      if (cm) {
+        role = "canteen_admin";
+        displayName = data.user.user_metadata?.full_name || data.user.email?.split("@")[0] || "College Admin";
+      }
+    }
+  }
+
   return {
     id: data.user.id,
     email: data.user.email ?? null,
     tenantId: tenant.id,
     tenantSlug: tenant.slug,
-    role: m?.role ?? null,
-    displayName: m?.display_name ?? null,
+    role,
+    displayName,
   };
 });
 

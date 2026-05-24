@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 const OPTIONS = [
@@ -51,9 +51,32 @@ const PREVIEWS = {
   },
 } as const;
 
+const IDS = OPTIONS.map((o) => o.id) as Array<(typeof OPTIONS)[number]["id"]>;
+
 export function LandingLineLeave() {
-  const [active, setActive] = useState<(typeof OPTIONS)[number]["id"]>("queue");
+  const [active, setActive] = useState<(typeof OPTIONS)[number]["id"]>("class");
+  const paused = useRef(false);
+  const resumeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const preview = PREVIEWS[active];
+
+  // Auto-cycle every 1.8 s; pauses on user interaction, resumes after 4 s
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (paused.current) return;
+      setActive((cur) => {
+        const idx = IDS.indexOf(cur);
+        return IDS[(idx + 1) % IDS.length];
+      });
+    }, 1800);
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleManualSelect = (id: (typeof OPTIONS)[number]["id"]) => {
+    setActive(id);
+    paused.current = true;
+    if (resumeTimer.current) clearTimeout(resumeTimer.current);
+    resumeTimer.current = setTimeout(() => { paused.current = false; }, 4000);
+  };
 
   return (
     <section className="px-5 py-24 sm:px-8 lg:px-10 bg-[#FAF8F5] border-b border-[var(--tray-border)] tl-arrival-host lg:min-h-screen lg:flex lg:flex-col lg:justify-center lg:py-24" id="where">
@@ -96,7 +119,11 @@ export function LandingLineLeave() {
           </div>
 
           {/* Right Column: Interactive Card */}
-          <div className="relative rounded-[2.5rem] border border-[var(--tray-border)] bg-[var(--tray-bg)] p-8 sm:p-10 flex flex-col gap-6 shadow-sm">
+          <div
+            className="relative rounded-[2.5rem] border border-[var(--tray-border)] bg-[var(--tray-bg)] p-8 sm:p-10 flex flex-col gap-6 shadow-sm"
+            onMouseEnter={() => { paused.current = true; }}
+            onMouseLeave={() => { paused.current = false; }}
+          >
             {/* Sliding Tab Chips */}
             <div className="flex flex-col sm:flex-row gap-2.5 p-1.5 rounded-2xl bg-neutral-200/40 relative">
               {OPTIONS.map((opt) => (
@@ -108,7 +135,7 @@ export function LandingLineLeave() {
                     color: active === opt.id ? "var(--tray-cream)" : "var(--tray-muted)",
                     fontFamily: "var(--font-ui)",
                   }}
-                  onClick={() => setActive(opt.id)}
+                  onClick={() => handleManualSelect(opt.id)}
                 >
                   {active === opt.id && (
                     <motion.span
@@ -162,10 +189,24 @@ export function LandingLineLeave() {
               </AnimatePresence>
             </div>
             
-            {/* Context/Hint description */}
-            <p className="text-center text-xs text-neutral-400 font-code tracking-wider uppercase">
-              Adaptability simulator
-            </p>
+            {/* Context/Hint description + dots */}
+            <div className="flex flex-col items-center gap-2">
+              <div className="flex gap-1.5">
+                {IDS.map((id) => (
+                  <span
+                    key={id}
+                    className="block h-1.5 rounded-full transition-all duration-500"
+                    style={{
+                      width: active === id ? "1.5rem" : "0.375rem",
+                      background: active === id ? "var(--tray-ink)" : "var(--tray-border)",
+                    }}
+                  />
+                ))}
+              </div>
+              <p className="text-center text-xs text-neutral-400 font-code tracking-wider uppercase">
+                Adaptability simulator
+              </p>
+            </div>
           </div>
         </div>
       </div>

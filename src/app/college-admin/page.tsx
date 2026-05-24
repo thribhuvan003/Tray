@@ -60,9 +60,9 @@ export default async function CollegeAdminDashboard() {
   if (!membership) redirect("/login?next=/college-admin");
   const { college_id } = membership;
 
-  // 2. Fetch college info and canteens in parallel
+  // 2. Fetch college info, canteens, and administrators in parallel
   // Use tenants directly (not college_canteens RPC) so we have tenant IDs for order aggregation
-  const [{ data: college }, { data: canteensData }] = await Promise.all([
+  const [{ data: college }, { data: canteensData }, { data: adminMemberships }] = await Promise.all([
     admin.from("colleges").select("id, name, slug").eq("id", college_id).single(),
     admin
       .from("tenants")
@@ -70,7 +70,31 @@ export default async function CollegeAdminDashboard() {
       .eq("college_id", college_id)
       .eq("is_active", true)
       .order("name"),
+    admin
+      .from("college_memberships")
+      .select("user_id")
+      .eq("college_id", college_id)
+      .eq("is_active", true),
   ]);
+
+  const adminUserIds = (adminMemberships ?? []).map((m) => m.user_id);
+  let collegeAdminsInfo: { id: string; email: string | null; name: string | null; avatar_url: string | null }[] = [];
+
+  if (adminUserIds.length > 0) {
+    try {
+      const { data: { users: authUsers } } = await admin.auth.admin.listUsers();
+      collegeAdminsInfo = authUsers
+        .filter((u) => adminUserIds.includes(u.id))
+        .map((u) => ({
+          id: u.id,
+          email: u.email ?? null,
+          name: u.user_metadata?.full_name || u.user_metadata?.name || u.email?.split("@")[0] || "Administrator",
+          avatar_url: u.user_metadata?.avatar_url || null,
+        }));
+    } catch (err) {
+      console.error("Failed to list college admins:", err);
+    }
+  }
 
   // Fetch aggregate order stats per canteen for the last 24h
   const tenantIds = (canteensData ?? []).map((t) => t.id);
@@ -246,6 +270,41 @@ export default async function CollegeAdminDashboard() {
               No canteens found for your college.
             </div>
           )}
+        </div>
+      </div>
+
+      {/* College Administrators section */}
+      <div className="border-t border-graphite-200/[0.08] pt-8">
+        <div className="text-[10px] font-mono uppercase tracking-[0.14em] text-graphite-400 font-semibold mb-3">
+          College Administrators ({collegeAdminsInfo.length})
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+          {collegeAdminsInfo.map((adm) => (
+            <div
+              key={adm.id}
+              className="bg-graphite-700 border border-graphite-200/[0.08] rounded-xl p-4 flex items-center gap-3"
+            >
+              {adm.avatar_url ? (
+                <img
+                  src={adm.avatar_url}
+                  alt={adm.name ?? "Avatar"}
+                  className="h-9 w-9 rounded-full object-cover border border-graphite-200/10 shrink-0"
+                />
+              ) : (
+                <div className="h-9 w-9 rounded-full bg-graphite-200/[0.06] border border-graphite-200/10 flex items-center justify-center font-display text-[13px] font-medium text-graphite-300 shrink-0">
+                  {(adm.name || "A").charAt(0).toUpperCase()}
+                </div>
+              )}
+              <div className="min-w-0">
+                <div className="text-[13px] font-medium text-graphite-200 truncate">
+                  {adm.name}
+                </div>
+                <div className="text-[11px] text-graphite-400 truncate">
+                  {adm.email}
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </div>

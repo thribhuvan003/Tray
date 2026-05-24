@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Activity, BookOpen, ClipboardList, Copy, ExternalLink, LayoutGrid, LineChart, ListOrdered, LogOut, Settings, Users } from "lucide-react";
-import { ThemeToggle } from "@/components/ui/theme-toggle";
+
 
 const NAV_ITEMS = [
   { group: "Operations" },
@@ -89,10 +89,10 @@ export function AdminShell({
   }
 
   return (
-    <div className="relative z-10 flex" style={{ background: "var(--admin-bg)", minHeight: "100vh" }}>
+    <div className="relative z-10 flex h-screen overflow-hidden" style={{ background: "var(--admin-bg)" }}>
       {/* ── Sidebar ─────────────────────────────────────────── */}
       <aside
-        className="hidden lg:flex w-[248px] shrink-0 sticky top-0 self-start h-screen flex-col"
+        className="hidden lg:flex w-[280px] shrink-0 sticky top-0 self-start h-screen flex-col"
         style={{
           background: "var(--admin-bg-2)",
           borderRight: "1px solid var(--admin-line)",
@@ -150,12 +150,16 @@ export function AdminShell({
               <Link
                 key={n.key}
                 href={navHref(n.key)}
-                className="group flex items-center gap-[11px] rounded-[7px] font-medium transition-colors"
+                className="group flex items-center gap-[11px] rounded-[7px] font-medium transition-all duration-200"
                 style={{
                   padding: "8px 11px",
-                  background: isActive(n.key) ? "var(--admin-lime-soft)" : "transparent",
+                  background: isActive(n.key) ? "var(--admin-bg-3)" : "transparent",
                   color: isActive(n.key) ? "var(--admin-lime)" : "var(--admin-ink-2)",
                   fontWeight: isActive(n.key) ? 600 : 500,
+                  borderLeft: isActive(n.key) ? "3px solid var(--admin-lime)" : "3px solid transparent",
+                  borderRadius: isActive(n.key) ? "0 8px 8px 0" : "8px",
+                  paddingLeft: isActive(n.key) ? "8px" : "11px",
+                  fontFamily: "var(--font-manrope), ui-sans-serif, system-ui",
                 }}
               >
                 <n.icon
@@ -194,24 +198,39 @@ export function AdminShell({
               { label: "Kitchen", href: `/c/${tenantSlug}/kitchen` },
               { label: "Student menu", href: `/c/${tenantSlug}/menu` },
             ].map((pl) => (
-              <Link
+              <a
                 key={pl.href}
                 href={pl.href}
-                className="flex items-center justify-between rounded-md transition-colors"
+                className="flex items-center justify-between transition-all duration-200"
                 style={{
                   padding: "7px 11px",
+                  paddingLeft: "11px",
                   fontFamily: "var(--font-geist-mono), ui-monospace, monospace",
                   fontSize: 11,
                   color: "var(--admin-ink-3)",
                   letterSpacing: "0.04em",
                   textTransform: "uppercase",
+                  borderLeft: "3px solid transparent",
+                  borderRadius: "0 6px 6px 0",
                 }}
-                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--admin-bg-3)"; (e.currentTarget as HTMLElement).style.color = "var(--admin-ink)"; }}
-                onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = ""; (e.currentTarget as HTMLElement).style.color = "var(--admin-ink-3)"; }}
+                onMouseEnter={(e) => {
+                  const target = e.currentTarget as HTMLElement;
+                  target.style.background = "var(--admin-bg-3)";
+                  target.style.color = "var(--admin-ink)";
+                  target.style.borderLeftColor = "var(--admin-lime)";
+                  target.style.paddingLeft = "8px";
+                }}
+                onMouseLeave={(e) => {
+                  const target = e.currentTarget as HTMLElement;
+                  target.style.background = "";
+                  target.style.color = "var(--admin-ink-3)";
+                  target.style.borderLeftColor = "transparent";
+                  target.style.paddingLeft = "11px";
+                }}
               >
                 <span>{pl.label}</span>
                 <ExternalLink size={10} />
-              </Link>
+              </a>
             ))}
           </div>
 
@@ -263,13 +282,13 @@ export function AdminShell({
       </aside>
 
       {/* ── Main area ───────────────────────────────────────── */}
-      <div className="flex-1 min-w-0">
+      <div className="flex-1 min-w-0 flex flex-col h-screen overflow-hidden">
         {/* Topbar: sticky, blur backdrop, border-bottom */}
         <header
-          className="sticky top-0 z-20 flex items-center justify-between gap-3"
+          className="sticky top-0 z-20 flex items-center justify-between gap-3 shrink-0"
           style={{
-            height: 52,
-            padding: "0 16px",
+            height: 64,
+            padding: "0 24px",
             background: "rgba(26,26,25,0.85)",
             backdropFilter: "blur(10px)",
             WebkitBackdropFilter: "blur(10px)",
@@ -279,35 +298,34 @@ export function AdminShell({
           {/* Left: tenant context */}
           <div
             className="flex items-center gap-2 font-mono"
-            style={{ fontSize: 11, color: "var(--admin-ink-3)" }}
+            style={{ fontSize: 13.5, color: "var(--admin-ink-2)" }}
           >
             <span className="hidden sm:inline">
-              <span style={{ color: "var(--admin-lime)" }}>{tenantSlug}</span>.tray.app/admin
+              <span style={{ color: "var(--admin-lime)", fontWeight: 600 }}>{tenantSlug}</span>.tray.app/admin
             </span>
           </div>
-          {/* Right: theme toggle + kitchen link */}
+          {/* Right: kitchen link */}
           <div className="flex items-center gap-2">
-            <ThemeToggle className="text-[var(--admin-ink-2)]" />
-            <Link
+            <a
               href={`/c/${tenantSlug}/kitchen`}
-              className="hidden md:inline-flex items-center gap-1.5 font-mono uppercase tracking-wider transition-colors"
+              className="hidden md:inline-flex items-center gap-2 font-mono uppercase tracking-wider transition-colors font-semibold"
               style={{
-                height: 32,
-                padding: "0 12px",
-                borderRadius: 7,
+                height: 38,
+                padding: "0 16px",
+                borderRadius: 8,
                 border: "1px solid var(--admin-line-2)",
-                fontSize: 11,
+                fontSize: 12,
                 color: "var(--admin-ink-2)",
               }}
               onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "var(--admin-lime)"; (e.currentTarget as HTMLElement).style.color = "var(--admin-lime)"; }}
               onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "var(--admin-line-2)"; (e.currentTarget as HTMLElement).style.color = "var(--admin-ink-2)"; }}
             >
-              <Activity size={11} /> Kitchen
-            </Link>
+              <Activity size={13.5} /> Kitchen
+            </a>
           </div>
         </header>
 
-        <main className="px-4 sm:px-8 py-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] lg:pb-6">{children}</main>
+        <main className="flex-1 overflow-y-auto px-4 sm:px-8 py-6 pb-[calc(4.5rem+env(safe-area-inset-bottom))] lg:pb-6 scrollbar-none">{children}</main>
 
         {/* Mobile bottom nav */}
         <nav

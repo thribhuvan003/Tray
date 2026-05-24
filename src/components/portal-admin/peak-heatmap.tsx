@@ -6,31 +6,31 @@ export function PeakHeatmap({ grid }: { grid: number[][] }) {
   const max = Math.max(1, ...grid.flat());
   const rows = ["M", "T", "W", "T", "F", "S", "S"];
   return (
-    <section className="bg-graphite-700 border border-graphite-200/[0.08] rounded-xl p-4 min-h-[260px] flex flex-col">
+    <section className="bg-[var(--admin-bg-2)] border border-[var(--admin-line)] rounded-xl p-4 min-h-[260px] flex flex-col">
       <header className="mb-3">
-        <h3 className="text-[13px] font-semibold text-graphite-200">Peak-hour heatmap</h3>
-        <p className="text-[10px] font-mono uppercase tracking-[0.08em] text-graphite-400 mt-0.5">
+        <h3 className="text-[13px] font-semibold text-[var(--admin-ink)]">Peak-hour heatmap</h3>
+        <p className="text-[10px] font-mono uppercase tracking-[0.08em] text-[var(--admin-ink-3)] mt-0.5">
           Orders · last 7 days · 8am–8pm
         </p>
       </header>
       <div className="flex-1 grid gap-1" style={{ gridTemplateColumns: "auto repeat(12, 1fr)" }}>
         {grid.map((row, ri) => (
           <div key={ri} className="contents">
-            <div className="text-[10px] font-mono text-graphite-400 self-center justify-self-end pr-1">
+            <div className="text-[10px] font-mono text-[var(--admin-ink-3)] self-center justify-self-end pr-1">
               {rows[ri]}
             </div>
             {row.map((v, ci) => {
               const intensity = max > 0 ? v / max : 0;
               const cls =
                 intensity === 0
-                  ? "bg-graphite-600"
+                  ? "bg-[var(--admin-bg-3)]"
                   : intensity < 0.25
-                  ? "bg-lime/15"
+                  ? "bg-[var(--admin-lime-soft)]"
                   : intensity < 0.5
-                  ? "bg-lime/35"
+                  ? "bg-[var(--admin-lime)]/30"
                   : intensity < 0.75
-                  ? "bg-lime/60"
-                  : "bg-lime";
+                  ? "bg-[var(--admin-lime)]/60"
+                  : "bg-[var(--admin-lime)]";
               return (
                 <motion.div
                   key={ci}
@@ -49,7 +49,7 @@ export function PeakHeatmap({ grid }: { grid: number[][] }) {
           </div>
         ))}
       </div>
-      <div className="mt-2 grid grid-cols-[auto_repeat(12,1fr)] gap-1 text-[9px] font-mono text-graphite-400 pt-1">
+      <div className="mt-2 grid grid-cols-[auto_repeat(12,1fr)] gap-1 text-[9px] font-mono text-[var(--admin-ink-3)] pt-1">
         <div />
         {Array.from({ length: 12 }, (_, i) => {
           const h = i + 8;

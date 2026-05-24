@@ -23,7 +23,8 @@ export async function sendEmail(args: SendArgs) {
   });
   if (!res.ok) {
     const body = await res.text();
-    throw new Error(`Resend send failed: ${res.status} ${body}`);
+    console.error(`Resend send failed: ${res.status} ${body}`);
+    return { id: "failed", queued: false };
   }
   const data = (await res.json()) as { id: string };
   return { id: data.id, queued: true };

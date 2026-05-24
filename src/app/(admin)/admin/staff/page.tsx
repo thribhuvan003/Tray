@@ -46,8 +46,8 @@ export default async function StaffPage() {
   return (
     <div>
       <div className="mb-5">
-        <h1 className="font-display text-[26px] sm:text-[30px] font-semibold tracking-tight">Staff</h1>
-        <div className="text-[11px] font-mono uppercase tracking-[0.12em] text-graphite-400 mt-0.5">
+        <h1 className="font-display text-[26px] sm:text-[30px] font-semibold tracking-tight text-[var(--admin-ink)]">Staff</h1>
+        <div className="text-[11px] font-mono uppercase tracking-[0.12em] text-[var(--admin-ink-3)] mt-0.5">
           Members &amp; pending invites
         </div>
       </div>

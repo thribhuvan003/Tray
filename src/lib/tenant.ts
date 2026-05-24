@@ -135,7 +135,9 @@ const fetchTenantEdgeCached = unstable_cache(
 );
 
 export const resolveTenant = cache(async (slug: string): Promise<ResolvedTenant | null> => {
-  return fetchTenantEdgeCached(slug);
+  const cached = await fetchTenantEdgeCached(slug);
+  if (cached) return cached;
+  return fetchTenantUncached(slug);
 });
 
 // College portal: list all canteens at a college with live wait/open status.

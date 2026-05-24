@@ -13,12 +13,10 @@ export default async function PayPage({ params }: { params: Promise<{ orderId: s
   if (!tenant) notFound();
 
   const user = await getCurrentUser();
-  if (!user) redirect(`/c/${tenant.slug}/login?next=/c/${tenant.slug}/pay/${orderId}`);
-
   const supabase = await getServerClient(tenant.id);
   const { data: order } = await supabase
     .from("orders")
-    .select("id, short_code, total_paise, status, payment_expires_at, customer_name")
+    .select("id, short_code, total_paise, status, payment_expires_at, customer_name, user_id")
     .eq("id", orderId)
     .eq("tenant_id", tenant.id)
     .maybeSingle<{
@@ -28,8 +26,15 @@ export default async function PayPage({ params }: { params: Promise<{ orderId: s
       status: string;
       payment_expires_at: string | null;
       customer_name: string | null;
+      user_id: string | null;
     }>();
   if (!order) notFound();
+
+  // If the order belongs to a registered user, ensure the visitor is that user.
+  // Anonymous guest orders (user_id = null) can be paid without signing in.
+  if (order.user_id && (!user || user.id !== order.user_id)) {
+    redirect(`/c/${tenant.slug}/login?next=/c/${tenant.slug}/pay/${orderId}`);
+  }
   if (order.status !== "pending_payment") {
     redirect(`/c/${tenant.slug}/track/${orderId}`);
   }
@@ -58,6 +63,8 @@ export default async function PayPage({ params }: { params: Promise<{ orderId: s
     .eq("order_id", orderId)
     .maybeSingle<{ razorpay_order_id: string | null }>();
 
+  const isSimMode = !process.env.NEXT_PUBLIC_RAZORPAY_LIVE || process.env.NEXT_PUBLIC_RAZORPAY_LIVE === "false" || process.env.NEXT_PUBLIC_RAZORPAY_LIVE === "0";
+
   return (
     <PayPanel
       tenantSlug={tenant.slug}
@@ -67,6 +74,7 @@ export default async function PayPage({ params }: { params: Promise<{ orderId: s
       lines={lines ?? []}
       razorpayKeyId={process.env.RAZORPAY_KEY_ID ?? ""}
       razorpayOrderId={payment?.razorpay_order_id ?? null}
+      isSimMode={isSimMode}
     />
   );
 }

@@ -17,6 +17,8 @@ type State = {
   note: string;
   orderType: "takeaway" | "dine_in";
   tableLabel: string;
+  isOpen: boolean;
+  setIsOpen: (open: boolean) => void;
   add: (item: Omit<CartLine, "qty">, qty?: number) => void;
   increment: (id: string) => void;
   decrement: (id: string) => void;
@@ -38,6 +40,8 @@ export const useCart = create<State>()(
       note: "",
       orderType: "takeaway",
       tableLabel: "",
+      isOpen: false,
+      setIsOpen: (isOpen) => set({ isOpen }),
       add: (item, qty = 1) =>
         set(({ lines }) => {
           const existing = lines.find((l) => l.menuItemId === item.menuItemId);

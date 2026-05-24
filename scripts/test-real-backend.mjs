@@ -265,7 +265,7 @@ async function main() {
     // In UPI-direct mode (no Razorpay keys), the student clicks "I've paid".
     // The server-side verifyPaymentNow action trusts the tap and transitions
     // the order from pending_payment → placed.
-    const ivePaidBtn = studentPage.locator('button:has-text("paid")');
+    const ivePaidBtn = studentPage.locator('button:has-text("confirm my order")');
     await ivePaidBtn.waitFor({ state: "visible", timeout: 10000 });
     await ivePaidBtn.click();
     info("Clicked 'I've paid — confirm my order'");
@@ -327,7 +327,7 @@ async function main() {
     info("Submitted kitchen login — waiting for redirect…");
 
     // Wait for kitchen board to load
-    await kitchenPage.waitForLoadState("networkidle", { timeout: 30000 }).catch(() => {});
+    await kitchenPage.waitForLoadState("load", { timeout: 30000 }).catch(() => {});
     // Wait extra long for React hydration recovery — the kitchen board has a
     // hydration mismatch on the elapsed-time display (server vs client clock).
     // React recovers by re-rendering the tree, temporarily disconnecting handlers.
@@ -343,7 +343,7 @@ async function main() {
     async function clickTicketAction(page, sc, btnText, expectedStatus, maxRetries = 3) {
       for (let attempt = 1; attempt <= maxRetries; attempt++) {
         info(`Attempt ${attempt}/${maxRetries}: looking for "${btnText}" on ticket ${sc}`);
-        const t = page.locator(`article:has-text("${sc}")`).first();
+        const t = page.locator(`.ticket:has-text("${sc}")`).first();
         await t.waitFor({ state: "visible", timeout: 20000 });
         const btn = t.locator(`button:has-text("${btnText}")`);
         const btnVisible = await btn.isVisible().catch(() => false);
@@ -368,7 +368,7 @@ async function main() {
 
         if (attempt < maxRetries) {
           info("Reloading kitchen page and retrying…");
-          await page.reload({ waitUntil: "networkidle", timeout: 30000 });
+          await page.reload({ waitUntil: "load", timeout: 30000 });
           await page.waitForTimeout(5000); // wait for hydration recovery
         }
       }
@@ -415,7 +415,7 @@ async function main() {
 
     // Reload to get fresh board showing the order in the Preparing column
     info("Reloading kitchen page for Preparing column…");
-    await kitchenPage.reload({ waitUntil: "networkidle", timeout: 30000 });
+    await kitchenPage.reload({ waitUntil: "load", timeout: 30000 });
     await kitchenPage.waitForTimeout(5000); // hydration recovery
 
     const readyResult = await clickTicketAction(
@@ -426,11 +426,12 @@ async function main() {
     if (!readyResult.ok) {
       // Fallback: simulate markReady via admin client
       info("⚠ UI click didn't transition order — falling back to admin DB update");
-      const bcrypt = await import("bcryptjs").catch(() => null);
+      const bcryptModule = await import("bcryptjs").catch(() => null);
+      const bcrypt = bcryptModule?.default || bcryptModule;
       const otp_fallback = String(Math.floor(1000 + Math.random() * 9000));
       const tenantId = (await supabase.from("tenants").select("id").eq("slug", TENANT_SLUG).single()).data?.id;
 
-      if (bcrypt) {
+      if (bcrypt && typeof bcrypt.hash === "function") {
         const hash = await bcrypt.hash(otp_fallback, 10);
         await supabase
           .from("orders")
@@ -489,11 +490,11 @@ async function main() {
 
     // Reload kitchen page to get fresh board with "Ready" column
     info("Reloading kitchen page for Ready column…");
-    await kitchenPage.reload({ waitUntil: "networkidle", timeout: 30000 });
+    await kitchenPage.reload({ waitUntil: "load", timeout: 30000 });
     await kitchenPage.waitForTimeout(5000); // hydration recovery
 
     // Click "Verify OTP" on the kitchen ticket
-    const ticketR = kitchenPage.locator(`article:has-text("${shortCode}")`).first();
+    const ticketR = kitchenPage.locator(`.ticket:has-text("${shortCode}")`).first();
     await ticketR.waitFor({ state: "visible", timeout: 15000 });
     const verifyOtpBtn = ticketR.locator('button:has-text("Verify OTP")');
     await verifyOtpBtn.waitFor({ state: "visible", timeout: 10000 });
@@ -501,11 +502,11 @@ async function main() {
     info("Clicked 'Verify OTP' — dialog should open");
 
     // Wait for OTP dialog to appear (Radix Dialog renders with role="dialog")
-    await kitchenPage.waitForSelector('[role="dialog"]', { timeout: 5000 });
+    await kitchenPage.waitForSelector('#otpModal', { timeout: 5000 });
     info("OTP dialog opened");
 
     // Enter the 4 OTP digits — each input is inputMode="numeric", maxLength=1
-    const otpInputs = kitchenPage.locator('[role="dialog"] input[inputmode="numeric"]');
+    const otpInputs = kitchenPage.locator('#otpModal input');
     const inputCount = await otpInputs.count();
     info(`Found ${inputCount} OTP input fields`);
 
@@ -518,7 +519,7 @@ async function main() {
     info(`Entered OTP digits: ${otp.split("").join(" ")}`);
 
     // Click "Verify & hand over"
-    const handoverBtn = kitchenPage.locator('[role="dialog"] button:has-text("Verify")');
+    const handoverBtn = kitchenPage.locator('#otpModal button:has-text("Verify")');
     await handoverBtn.click({ force: true });
     info("Clicked 'Verify & hand over'");
 

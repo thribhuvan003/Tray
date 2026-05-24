@@ -44,16 +44,16 @@ export default async function AnalyticsPage() {
   return (
     <div>
       <div className="mb-5">
-        <h1 className="font-display text-[26px] sm:text-[30px] font-semibold tracking-tight">Insights</h1>
-        <div className="text-[11px] font-mono uppercase tracking-[0.12em] text-graphite-400 mt-0.5">
+        <h1 className="font-display text-[26px] sm:text-[30px] font-semibold tracking-tight text-[var(--admin-ink)]">Insights</h1>
+        <div className="text-[11px] font-mono uppercase tracking-[0.12em] text-[var(--admin-ink-3)] mt-0.5">
           Last 30 days
         </div>
       </div>
       <div className="grid grid-cols-2 lg:grid-cols-3 gap-2">
         {cells.map((c) => (
-          <div key={c.label} className="bg-graphite-700 border border-graphite-200/[0.08] rounded-xl p-5">
-            <div className="text-[10px] font-mono uppercase tracking-[0.14em] text-graphite-400">{c.label}</div>
-            <div className="font-display text-[28px] sm:text-[32px] font-medium tabular leading-none text-graphite-200 mt-2">
+          <div key={c.label} className="bg-[var(--admin-bg-2)] border border-[var(--admin-line)] rounded-xl p-5">
+            <div className="text-[10px] font-mono uppercase tracking-[0.14em] text-[var(--admin-ink-3)]">{c.label}</div>
+            <div className="font-display text-[28px] sm:text-[32px] font-medium tabular leading-none text-[var(--admin-ink)] mt-2">
               {c.value}
             </div>
           </div>

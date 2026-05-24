@@ -41,7 +41,8 @@ export function CartDrawer({ tenantSlug, tenantName }: { tenantSlug: string; ten
   const remove = useCart((s) => s.remove);
   const clear = useCart((s) => s.clear);
 
-  const [open, setOpen] = useState(false);
+  const open = useCart((s) => s.isOpen);
+  const setOpen = useCart((s) => s.setIsOpen);
   const [mounted, setMounted] = useState(false);
   const [pending, start] = useTransition();
   const [orderType, setOrderType] = useState<OrderType>("takeaway");
@@ -59,7 +60,6 @@ export function CartDrawer({ tenantSlug, tenantName }: { tenantSlug: string; ten
   // column doesn't collapse and reflow the menu. Mobile: hide entirely until
   // there's something in the tray (original behavior).
   const empty = count === 0;
-  if (empty && !isDesktop) return null;
 
   const onCheckout = () => {
     if (orderType === "dine_in" && !tableLabel.trim()) {
@@ -104,15 +104,13 @@ export function CartDrawer({ tenantSlug, tenantName }: { tenantSlug: string; ten
             Paying to: {tenantName} · ready in ~7 min
           </div>
         </div>
-        {!isDesktop && (
-          <button
-            aria-label="Close cart"
-            onClick={() => setOpen(false)}
-            className="h-9 w-9 inline-flex items-center justify-center rounded-full border border-[color:var(--color-line)]"
-          >
-            <X size={15} />
-          </button>
-        )}
+        <button
+          aria-label="Close cart"
+          onClick={() => setOpen(false)}
+          className="h-9 w-9 inline-flex items-center justify-center rounded-full border border-[color:var(--color-line)] hover:bg-[color:var(--color-paper-dim)] transition"
+        >
+          <X size={15} />
+        </button>
       </div>
 
       <ul className="flex-1 overflow-y-auto px-4 sm:px-5 py-4 flex flex-col gap-3">
@@ -267,58 +265,58 @@ export function CartDrawer({ tenantSlug, tenantName }: { tenantSlug: string; ten
     </>
   );
 
-  // Desktop: render as a sticky right column, no Drawer wrapping. The
-  // surrounding layout already reserves a 20rem column in the main grid.
-  if (isDesktop) {
-    return (
-      <aside
-        aria-label="Your cart"
-        className="lg:sticky lg:top-20 lg:w-80 lg:h-[calc(100vh-5rem)] lg:overflow-y-auto rounded-2xl border border-[color:var(--color-line)] bg-[color:var(--color-paper)] flex flex-col mt-6 pt-3"
-      >
-        {cartBody}
-      </aside>
-    );
-  }
-
-  // Mobile: original Vaul drawer behavior — floating CTA + bottom sheet.
   return (
-    <Drawer.Root open={open} onOpenChange={setOpen}>
-      <Drawer.Trigger asChild>
+    <>
+      {/* Desktop Floating Cart Button in bottom-right corner when cart has items */}
+      {count > 0 && !open && (
         <button
-          aria-label={`View cart — ${count} items, ${formatRupees(total)}`}
-          className="fixed bottom-0 left-0 right-0 z-30 bg-[color:var(--color-paper)] border-t border-[color:var(--color-line)] shadow-[0_-4px_20px_rgba(0,0,0,0.08)] pb-[env(safe-area-inset-bottom,0px)]"
+          onClick={() => setOpen(true)}
+          className="fixed bottom-6 right-6 z-40 hidden lg:flex items-center gap-3 px-6 h-14 rounded-full bg-rose-500 hover:bg-rose-600 text-white font-bold shadow-lg hover:shadow-xl transition-all hover:scale-105 active:scale-[0.98] cursor-pointer"
         >
-          <div className="flex items-center justify-between h-14 px-4">
-            {/* Left: cart icon + count */}
-            <span className="inline-flex items-center gap-2">
-              <motion.span
-                key={count}
-                initial={{ scale: 0.8 }}
-                animate={{ scale: [1, 1.25, 0.9, 1], rotate: [0, -8, 8, 0] }}
-                transition={{ duration: 0.35, ease: "easeOut" }}
-                className="inline-flex items-center justify-center h-8 w-8 rounded-full bg-ocean-500 text-black"
-              >
-                <ShoppingCart size={15} />
-              </motion.span>
-              <span className="text-[14px] font-semibold text-[color:var(--color-ink)]">{count} item{count === 1 ? "" : "s"}</span>
-            </span>
-            {/* Center: total */}
-            <span className="text-[16px] font-bold tabular text-[color:var(--color-ink)]">{formatRupees(total)}</span>
-            {/* Right: CTA */}
-            <span className="inline-flex items-center gap-1 text-[13px] font-semibold text-ocean-600 dark:text-ocean-400">
-              View cart <span aria-hidden="true">→</span>
-            </span>
-          </div>
+          <ShoppingCart size={18} />
+          <span>{count} item{count === 1 ? "" : "s"} · {formatRupees(total)}</span>
+          <span className="text-[12px] opacity-80 border-l border-white/20 pl-2">View Cart →</span>
         </button>
-      </Drawer.Trigger>
-      <Drawer.Portal>
-        <Drawer.Overlay className="fixed inset-0 z-40 bg-black/40" />
-        <Drawer.Content className="fixed bottom-0 left-0 right-0 z-50 mt-24 flex h-[88vh] sm:h-[80vh] flex-col rounded-t-3xl bg-[color:var(--color-paper)] focus:outline-none pb-[env(safe-area-inset-bottom)]">
-          <Drawer.Title className="sr-only">Your cart</Drawer.Title>
-          <div className="mx-auto w-12 h-1.5 rounded-full bg-[color:var(--color-line-strong)] mt-3 mb-2" />
-          {cartBody}
-        </Drawer.Content>
-      </Drawer.Portal>
-    </Drawer.Root>
+      )}
+
+      <Drawer.Root open={open} onOpenChange={setOpen} direction={isDesktop ? "right" : "bottom"}>
+        {/* Mobile Sticky Bottom Cart Bar */}
+        {count > 0 && (
+          <Drawer.Trigger asChild>
+            <button
+              aria-label={`View cart — ${count} items, ${formatRupees(total)}`}
+              className="fixed bottom-0 left-0 right-0 z-30 lg:hidden bg-[color:var(--color-paper)] border-t border-[color:var(--color-line)] shadow-[0_-4px_20px_rgba(0,0,0,0.08)] pb-[env(safe-area-inset-bottom,0px)]"
+            >
+              <div className="flex items-center justify-between h-14 px-4">
+                <span className="inline-flex items-center gap-2">
+                  <motion.span
+                    key={count}
+                    initial={{ scale: 0.8 }}
+                    animate={{ scale: [1, 1.25, 0.9, 1], rotate: [0, -8, 8, 0] }}
+                    transition={{ duration: 0.35, ease: "easeOut" }}
+                    className="inline-flex items-center justify-center h-8 w-8 rounded-full bg-ocean-500 text-black"
+                  >
+                    <ShoppingCart size={15} />
+                  </motion.span>
+                  <span className="text-[14px] font-semibold text-[color:var(--color-ink)]">{count} item{count === 1 ? "" : "s"}</span>
+                </span>
+                <span className="text-[16px] font-bold tabular text-[color:var(--color-ink)]">{formatRupees(total)}</span>
+                <span className="inline-flex items-center gap-1 text-[13px] font-semibold text-ocean-600 dark:text-ocean-400">
+                  View cart <span aria-hidden="true">→</span>
+                </span>
+              </div>
+            </button>
+          </Drawer.Trigger>
+        )}
+        <Drawer.Portal>
+          <Drawer.Overlay className="fixed inset-0 z-40 bg-black/40 backdrop-blur-[1px]" />
+          <Drawer.Content className="fixed bottom-0 right-0 z-50 mt-24 flex h-[88vh] lg:h-full w-full lg:max-w-md flex-col rounded-t-3xl lg:rounded-t-none lg:rounded-l-3xl bg-[color:var(--color-paper)] border-l border-[color:var(--color-line)] focus:outline-none pb-[env(safe-area-inset-bottom)]">
+            <Drawer.Title className="sr-only">Your cart</Drawer.Title>
+            <div className="mx-auto w-12 h-1.5 rounded-full bg-[color:var(--color-line-strong)] mt-3 mb-2 lg:hidden" />
+            {cartBody}
+          </Drawer.Content>
+        </Drawer.Portal>
+      </Drawer.Root>
+    </>
   );
 }

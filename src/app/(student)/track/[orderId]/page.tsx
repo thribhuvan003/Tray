@@ -15,8 +15,6 @@ export default async function TrackPage({ params }: { params: Promise<{ orderId:
   const tenant = await resolveTenant(slug);
   if (!tenant) notFound();
   const user = await getCurrentUser();
-  if (!user) redirect(`/c/${tenant.slug}/login?next=/c/${tenant.slug}/track/${orderId}`);
-
   const supabase = await getServerClient(tenant.id);
   type OrderRow = {
     id: string;
@@ -27,14 +25,23 @@ export default async function TrackPage({ params }: { params: Promise<{ orderId:
     ready_at: string | null;
     collected_at: string | null;
     customer_name: string | null;
+    order_type: "takeaway" | "dine_in";
+    table_label: string | null;
+    user_id: string | null;
   };
   const { data: order } = await supabase
     .from("orders")
-    .select("id, short_code, status, total_paise, placed_at, ready_at, collected_at, customer_name")
+    .select("id, short_code, status, total_paise, placed_at, ready_at, collected_at, customer_name, order_type, table_label, user_id")
     .eq("id", orderId)
     .eq("tenant_id", tenant.id)
     .maybeSingle<OrderRow>();
   if (!order) notFound();
+
+  // If the order belongs to a registered user, ensure the visitor is that user.
+  // Anonymous guest orders (user_id = null) can be tracked without signing in.
+  if (order.user_id && (!user || user.id !== order.user_id)) {
+    redirect(`/c/${tenant.slug}/login?next=/c/${tenant.slug}/track/${orderId}`);
+  }
   const { data: lines } = await supabase
     .from("order_items")
     .select("id, name_snapshot, qty, diet_snapshot, price_paise_snapshot")

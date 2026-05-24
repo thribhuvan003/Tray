@@ -15,7 +15,7 @@ function isTestEmail(emailStr: string): boolean {
   // to avoid matching real users whose email happens to contain 'test' or 'demo'
   return (
     e.endsWith("@harvard.edu") ||
-    e.endsWith("@aec.edu.in") ||
+    (e.endsWith("@aec.edu.in") && !e.startsWith("admin_fresh_")) ||
     e.endsWith("@traytest.dev") ||
     e.endsWith(".test") ||
     e.endsWith(".demo") ||
@@ -28,8 +28,7 @@ function isTestEmail(emailStr: string): boolean {
 function getRedirectUrl(emailStr: string, nextUrl: string): string {
   if (typeof window === "undefined") return nextUrl;
   const isDemo = window.location.search.includes("demo=true") || window.location.search.includes("sandbox=true");
-  const isTest = isTestEmail(emailStr);
-  if (isDemo || isTest) {
+  if (isDemo) {
     if (nextUrl.includes("/admin") || nextUrl.includes("/college-admin") || nextUrl.includes("dashboard")) {
       return "/demo/admin.html";
     } else if (nextUrl.includes("/kitchen")) {
@@ -129,16 +128,47 @@ export function LoginForm({ next, slug = "", loginRole = "" }: { next: string; s
       const kitchenMember = typedMemberships.find((m) => m.role === "kitchen_staff");
       const studentMember = typedMemberships.find((m) => m.role === "student");
 
-      if (adminMember && adminMember.tenant) {
-        finalNext = `/c/${adminMember.tenant.slug}/admin/dashboard`;
-      } else if (loginRole === "owner" && !adminMember) {
-        await sb.auth.signOut();
+      if (loginRole === "owner" && !adminMember) {
+        const sb2 = getBrowserClient();
+        await sb2.auth.signOut();
         window.location.href = "/login?error=no-admin-account&role=owner";
         return;
-      } else if (kitchenMember && kitchenMember.tenant) {
-        finalNext = `/c/${kitchenMember.tenant.slug}/kitchen`;
-      } else if (studentMember && studentMember.tenant) {
-        finalNext = `/c/${studentMember.tenant.slug}/menu`;
+      }
+
+      const hasAdmin = !!adminMember;
+      const hasKitchen = hasAdmin || !!kitchenMember;
+      const hasStudent = hasKitchen || !!studentMember;
+
+      const isNextVal = finalNext && finalNext !== "/" && !finalNext.includes("/login") && !finalNext.includes("/auth/callback") && !finalNext.includes("/get-started");
+
+      if (isNextVal) {
+        let authorized = false;
+        if (finalNext.includes("/admin") || finalNext.includes("/dashboard")) {
+          authorized = hasAdmin;
+        } else if (finalNext.includes("/kitchen")) {
+          authorized = hasKitchen;
+        } else if (finalNext.includes("/menu")) {
+          authorized = hasStudent;
+        } else {
+          authorized = true;
+        }
+        if (!authorized) {
+          if (adminMember && adminMember.tenant) {
+            finalNext = `/c/${adminMember.tenant.slug}/admin/dashboard`;
+          } else if (kitchenMember && kitchenMember.tenant) {
+            finalNext = `/c/${kitchenMember.tenant.slug}/kitchen`;
+          } else if (studentMember && studentMember.tenant) {
+            finalNext = `/c/${studentMember.tenant.slug}/menu`;
+          }
+        }
+      } else {
+        if (adminMember && adminMember.tenant) {
+          finalNext = `/c/${adminMember.tenant.slug}/admin/dashboard`;
+        } else if (kitchenMember && kitchenMember.tenant) {
+          finalNext = `/c/${kitchenMember.tenant.slug}/kitchen`;
+        } else if (studentMember && studentMember.tenant) {
+          finalNext = `/c/${studentMember.tenant.slug}/menu`;
+        }
       }
     }
     window.location.href = finalNext;
@@ -147,9 +177,8 @@ export function LoginForm({ next, slug = "", loginRole = "" }: { next: string; s
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const isDemo = typeof window !== "undefined" && (window.location.search.includes("demo=true") || window.location.search.includes("sandbox=true"));
-    const isTest = isTestEmail(email);
 
-    if (isDemo || isTest) {
+    if (isDemo) {
       // Instant seamless redirect for standard demo logins!
       const targetNext = getRedirectUrl(email, next);
       window.location.href = targetNext;
@@ -198,17 +227,47 @@ export function LoginForm({ next, slug = "", loginRole = "" }: { next: string; s
             const kitchenMember = typedMemberships.find((m) => m.role === "kitchen_staff");
             const studentMember = typedMemberships.find((m) => m.role === "student");
 
-            if (adminMember && adminMember.tenant) {
-              finalNext = `/c/${adminMember.tenant.slug}/admin/dashboard`;
-            } else if (loginRole === "owner" && !adminMember) {
+            if (loginRole === "owner" && !adminMember) {
               // User tried to sign in as canteen owner but has no admin membership
               await sb.auth.signOut();
               window.location.href = "/login?error=no-admin-account&role=owner";
               return;
-            } else if (kitchenMember && kitchenMember.tenant) {
-              finalNext = `/c/${kitchenMember.tenant.slug}/kitchen`;
-            } else if (studentMember && studentMember.tenant) {
-              finalNext = `/c/${studentMember.tenant.slug}/menu`;
+            }
+
+            const hasAdmin = !!adminMember;
+            const hasKitchen = hasAdmin || !!kitchenMember;
+            const hasStudent = hasKitchen || !!studentMember;
+
+            const isNextVal = finalNext && finalNext !== "/" && !finalNext.includes("/login") && !finalNext.includes("/auth/callback") && !finalNext.includes("/get-started");
+
+            if (isNextVal) {
+              let authorized = false;
+              if (finalNext.includes("/admin") || finalNext.includes("/dashboard")) {
+                authorized = hasAdmin;
+              } else if (finalNext.includes("/kitchen")) {
+                authorized = hasKitchen;
+              } else if (finalNext.includes("/menu")) {
+                authorized = hasStudent;
+              } else {
+                authorized = true;
+              }
+              if (!authorized) {
+                if (adminMember && adminMember.tenant) {
+                  finalNext = `/c/${adminMember.tenant.slug}/admin/dashboard`;
+                } else if (kitchenMember && kitchenMember.tenant) {
+                  finalNext = `/c/${kitchenMember.tenant.slug}/kitchen`;
+                } else if (studentMember && studentMember.tenant) {
+                  finalNext = `/c/${studentMember.tenant.slug}/menu`;
+                }
+              }
+            } else {
+              if (adminMember && adminMember.tenant) {
+                finalNext = `/c/${adminMember.tenant.slug}/admin/dashboard`;
+              } else if (kitchenMember && kitchenMember.tenant) {
+                finalNext = `/c/${kitchenMember.tenant.slug}/kitchen`;
+              } else if (studentMember && studentMember.tenant) {
+                finalNext = `/c/${studentMember.tenant.slug}/menu`;
+              }
             }
           }
           window.location.href = finalNext;
@@ -246,7 +305,7 @@ export function LoginForm({ next, slug = "", loginRole = "" }: { next: string; s
                 value={otp}
                 onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
                 placeholder="123456"
-                className="flex-1 h-12 px-4 rounded-xl border border-[color:var(--color-line)] bg-[color:var(--color-paper)] text-[15px] tracking-[0.4em] text-center focus:outline-none focus:border-ocean-500"
+                className="flex-1 h-12 px-4 rounded-xl border border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 text-[15px] tracking-[0.4em] text-center focus:outline-none focus:border-ocean-500"
               />
               <button
                 type="submit"
@@ -276,7 +335,7 @@ export function LoginForm({ next, slug = "", loginRole = "" }: { next: string; s
           type="button"
           onClick={onGoogleSignIn}
           disabled={pending}
-          className="w-full h-12 rounded-xl border border-[color:var(--color-line)] bg-[color:var(--color-paper)] text-[14px] font-medium inline-flex items-center justify-center gap-2.5 hover:border-ocean-500/50 hover:bg-ocean-500/5 transition-colors"
+          className="w-full h-12 rounded-xl border border-slate-200 bg-white text-slate-800 text-[14px] font-medium inline-flex items-center justify-center gap-2.5 hover:border-ocean-500/50 hover:bg-ocean-500/5 transition-colors"
         >
           <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
             <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z" fill="#4285F4"/>
@@ -293,13 +352,13 @@ export function LoginForm({ next, slug = "", loginRole = "" }: { next: string; s
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-1 p-1 rounded-full border border-[color:var(--color-line)] bg-[color:var(--color-paper-dim)] text-[12.5px] font-medium">
+      <div className="grid grid-cols-2 gap-1 p-1 rounded-full border border-slate-200 bg-slate-100 text-[12.5px] font-medium">
         <button
           type="button"
           onClick={() => setMode("magic")}
           className={cn(
             "h-9 rounded-full inline-flex items-center justify-center gap-1.5 transition-colors",
-            mode === "magic" ? "bg-ocean-500 text-black" : "text-[color:var(--color-ink)]/65"
+            mode === "magic" ? "bg-ocean-500 text-black font-semibold" : "text-slate-600 hover:text-slate-900"
           )}
         >
           <Mail size={13} /> Magic link
@@ -309,7 +368,7 @@ export function LoginForm({ next, slug = "", loginRole = "" }: { next: string; s
           onClick={() => setMode("password")}
           className={cn(
             "h-9 rounded-full inline-flex items-center justify-center gap-1.5 transition-colors",
-            mode === "password" ? "bg-ocean-500 text-black" : "text-[color:var(--color-ink)]/65"
+            mode === "password" ? "bg-ocean-500 text-black font-semibold" : "text-slate-600 hover:text-slate-900"
           )}
         >
           <KeyRound size={13} /> Use password
@@ -324,7 +383,7 @@ export function LoginForm({ next, slug = "", loginRole = "" }: { next: string; s
           onChange={(e) => setEmail(e.target.value)}
           autoComplete="email"
           placeholder="you@yourcollege.edu"
-          className="w-full h-12 px-4 rounded-xl border border-[color:var(--color-line)] bg-[color:var(--color-paper)] text-[14px] focus:outline-none focus:border-ocean-500"
+          className="w-full h-12 px-4 rounded-xl border border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 text-[14px] focus:outline-none focus:border-ocean-500"
         />
       </label>
       {mode === "password" && (
@@ -337,7 +396,7 @@ export function LoginForm({ next, slug = "", loginRole = "" }: { next: string; s
             onChange={(e) => setPassword(e.target.value)}
             autoComplete="current-password"
             placeholder="Password"
-            className="w-full h-12 px-4 rounded-xl border border-[color:var(--color-line)] bg-[color:var(--color-paper)] text-[14px] focus:outline-none focus:border-ocean-500"
+            className="w-full h-12 px-4 rounded-xl border border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 text-[14px] focus:outline-none focus:border-ocean-500"
           />
         </label>
       )}

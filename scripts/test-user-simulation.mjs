@@ -43,7 +43,8 @@ if (fs.existsSync(envPath)) {
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
-const BASE = "http://localhost:3005";
+const PORT = process.env.PORT || "4892";
+const BASE = `http://localhost:${PORT}`;
 
 if (!SUPABASE_URL || !SERVICE_KEY) {
   console.error("❌ Missing NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY in .env.local");
@@ -322,7 +323,7 @@ async function main() {
     await screenshot(studentPage, "13-student-payment-page");
 
     // Confirm Payment
-    const ivePaidBtn = studentPage.locator('button:has-text("paid")');
+    const ivePaidBtn = studentPage.locator('button:has-text("simulate paid")');
     await ivePaidBtn.click();
     info("Clicked paid");
 
@@ -365,12 +366,12 @@ async function main() {
     await screenshot(kitchenPage, "15-kitchen-credentials");
 
     await waitAndClick(kitchenPage, 'button[type="submit"]', "Kitchen Login Submit");
-    await kitchenPage.waitForLoadState("networkidle", { timeout: 120000 }).catch(() => {});
+    await kitchenPage.waitForLoadState("load", { timeout: 120000 }).catch(() => {});
     await kitchenPage.waitForTimeout(5000); // Wait for hydration
     await screenshot(kitchenPage, "16-kitchen-board-loaded");
 
     // Verify the placed order is visible in the Kitchen's placed list! (Student -> Kitchen Sync)
-    const ticketLocator = kitchenPage.locator(`article:has-text("${shortCode}")`).first();
+    const ticketLocator = kitchenPage.locator(`.ticket:has-text("${shortCode}")`).first();
     await ticketLocator.waitFor({ state: "visible", timeout: 15000 }).catch(() => {});
     const isTicketVisibleInKitchen = await ticketLocator.isVisible();
     recordResult("Student order syncs instantly to Kitchen Board queue", isTicketVisibleInKitchen);
@@ -379,7 +380,7 @@ async function main() {
     async function clickTicketAction(page, sc, btnText, expectedStatus, maxRetries = 3) {
       for (let attempt = 1; attempt <= maxRetries; attempt++) {
         info(`Attempt ${attempt}/${maxRetries}: looking for "${btnText}" on ticket ${sc}`);
-        const t = page.locator(`article:has-text("${sc}")`).first();
+        const t = page.locator(`.ticket:has-text("${sc}")`).first();
         await t.waitFor({ state: "visible", timeout: 15000 }).catch(() => {});
         const btn = t.locator(`button:has-text("${btnText}")`);
         const btnVisible = await btn.isVisible().catch(() => false);
@@ -404,7 +405,7 @@ async function main() {
 
         if (attempt < maxRetries) {
           info("Reloading kitchen page and retrying…");
-          await page.reload({ waitUntil: "networkidle", timeout: 30000 });
+          await page.reload({ waitUntil: "load", timeout: 30000 });
           await page.waitForTimeout(5000); // wait for hydration recovery
         }
       }
@@ -429,7 +430,7 @@ async function main() {
     recordResult("Kitchen transitions status: placed → preparing", orderPrep?.status === "preparing");
 
     // 2. preparing -> ready
-    await kitchenPage.reload({ waitUntil: "networkidle" });
+    await kitchenPage.reload({ waitUntil: "load", timeout: 30000 });
     await kitchenPage.waitForTimeout(5000); // Wait for hydration
     await screenshot(kitchenPage, "17-kitchen-preparing");
 
@@ -437,9 +438,10 @@ async function main() {
     if (!readyResult.ok) {
       info("⚠ UI click didn't transition order — falling back to admin DB update");
       const otpCode = Math.floor(1000 + Math.random() * 9000).toString();
-      const bcrypt = await import("bcryptjs").catch(() => null);
+      const bcryptModule = await import("bcryptjs").catch(() => null);
+      const bcrypt = bcryptModule?.default || bcryptModule;
       let hash = "";
-      if (bcrypt) {
+      if (bcrypt && typeof bcrypt.hash === "function") {
         hash = await bcrypt.hash(otpCode, 10);
       } else {
         // pre-computed bcrypt hash of the otpCode if bcrypt fails to import
@@ -466,25 +468,25 @@ async function main() {
     otp = secret.otp_plain;
     info(`Retrieved verification OTP from DB: ${otp}`);
     // Click "Verify OTP" (with hydration retry)
-    await kitchenPage.reload({ waitUntil: "networkidle" });
+    await kitchenPage.reload({ waitUntil: "load", timeout: 30000 });
     await kitchenPage.waitForTimeout(4000); // Wait for hydration
     await screenshot(kitchenPage, "18-kitchen-ready-list");
 
     let dialogOpened = false;
     for (let attempt = 1; attempt <= 3; attempt++) {
-      const verifyOtpBtn = kitchenPage.locator(`article:has-text("${shortCode}")`).first().locator('button:has-text("Verify OTP")');
+      const verifyOtpBtn = kitchenPage.locator(`.ticket:has-text("${shortCode}")`).first().locator('button:has-text("Verify OTP")');
       const verifyOtpBtnVisible = await verifyOtpBtn.isVisible().catch(() => false);
       if (verifyOtpBtnVisible) {
         await verifyOtpBtn.click({ force: true });
         info(`Clicked 'Verify OTP' button (attempt ${attempt}/3)`);
       }
       try {
-        await kitchenPage.waitForSelector('[role="dialog"]', { timeout: 3000 });
+        await kitchenPage.waitForSelector('#otpModal', { timeout: 3000 });
         dialogOpened = true;
         break;
       } catch {
         info("Dialog didn't open, reloading and retrying...");
-        await kitchenPage.reload({ waitUntil: "networkidle" });
+        await kitchenPage.reload({ waitUntil: "load", timeout: 30000 });
         await kitchenPage.waitForTimeout(4000);
       }
     }
@@ -495,7 +497,7 @@ async function main() {
     await screenshot(kitchenPage, "19-otp-dialog-opened");
 
     // Fill OTP digits one by one
-    const otpInputs = kitchenPage.locator('[role="dialog"] input[inputmode="numeric"]');
+    const otpInputs = kitchenPage.locator('#otpModal input');
     await otpInputs.first().click();
     for (const digit of otp) {
       await kitchenPage.keyboard.press(digit);
@@ -504,7 +506,7 @@ async function main() {
     await screenshot(kitchenPage, "20-otp-dialog-filled");
 
     // Submit handover
-    const verifyBtn = kitchenPage.locator('[role="dialog"] button:has-text("Verify")');
+    const verifyBtn = kitchenPage.locator('#otpModal button:has-text("Verify")');
     await verifyBtn.click({ force: true });
     info("Submitted OTP verification");
     await kitchenPage.waitForTimeout(3000);

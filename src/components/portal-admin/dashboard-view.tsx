@@ -1,6 +1,8 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
+import { subscribeToTenant } from "@/lib/supabase/realtime";
 import { motion } from "framer-motion";
 import { ArrowDown, ArrowRight, ArrowUp, Copy, Download, IndianRupee, ListOrdered, Receipt, Timer } from "lucide-react";
 import dayjs from "dayjs";
@@ -59,7 +61,12 @@ export function DashboardView({
   logs: StatusLog[];
   todayItems: ItemRow[];
 }) {
+  const router = useRouter();
   const [logs, setLogs] = useState(initialLogs);
+
+  useEffect(() => {
+    setLogs(initialLogs);
+  }, [initialLogs]);
 
   useEffect(() => {
     const sb = getBrowserClient();
@@ -77,6 +84,22 @@ export function DashboardView({
       sb.removeChannel(ch);
     };
   }, [tenantId]);
+
+  // Subscribe to order updates for live KPI refresh
+  useEffect(() => {
+    const unsubscribe = subscribeToTenant(tenantId, "order_updates", () => {
+      router.refresh();
+    });
+    return unsubscribe;
+  }, [tenantId, router]);
+
+  // Subscribe to menu/item updates (e.g., specials) for live KPI refresh
+  useEffect(() => {
+    const unsubscribe = subscribeToTenant(tenantId, "menu_updates", () => {
+      router.refresh();
+    });
+    return unsubscribe;
+  }, [tenantId, router]);
 
   const kpis = useMemo(() => {
     const paid = (rows: OrderRow[]) =>

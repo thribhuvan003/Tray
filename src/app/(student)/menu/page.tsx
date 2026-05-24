@@ -17,7 +17,7 @@ export default async function StudentMenuPage() {
   if (!tenant) notFound();
 
   const supabase = await getServerClient(tenant.id);
-  const [{ data: cats }, { data: items }, { data: tenantStatus }] = await Promise.all([
+  const [{ data: cats }, { data: items }, { data: tenantStatus }, { data: adminMember }] = await Promise.all([
     supabase
       .from("menu_categories")
       .select("*")
@@ -34,10 +34,19 @@ export default async function StudentMenuPage() {
       .select("is_open, paused_until")
       .eq("id", tenant.id)
       .maybeSingle<{ is_open: boolean; paused_until: string | null }>(),
+    supabase
+      .from("tenant_memberships")
+      .select("display_name")
+      .eq("tenant_id", tenant.id)
+      .eq("role", "canteen_admin")
+      .eq("is_active", true)
+      .limit(1)
+      .maybeSingle<{ display_name: string | null }>(),
   ]);
 
   const isClosed = tenantStatus ? !tenantStatus.is_open : false;
   const pausedUntil = tenantStatus?.paused_until ?? null;
+  const adminName = adminMember?.display_name ?? null;
 
   // Fetch sibling canteens for the switcher segments
   const siblings = tenant.college_slug
@@ -70,6 +79,8 @@ export default async function StudentMenuPage() {
   }
 
   const user = await getCurrentUser();
+  const currentSibling = siblings.find((s) => s.slug === tenant.slug);
+  const pendingCount = currentSibling ? Number(currentSibling.pending_orders_count || 0) : 0;
 
   return (
     <>
@@ -83,8 +94,14 @@ export default async function StudentMenuPage() {
         items={items ?? []}
         tenantId={tenant.id}
         tenantSlug={tenant.slug}
+        tenantName={tenant.name}
         siblings={siblings}
         user={user}
+        adminName={adminName}
+        isOpen={!isClosed}
+        pausedUntil={pausedUntil}
+        pendingCount={pendingCount}
+        collegeSlug={tenant.college_slug}
       />
     </>
   );

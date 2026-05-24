@@ -268,14 +268,16 @@ html.dark [data-portal="kitchen"] {
 @layer base {
   html { color-scheme: light; }
   html.dark { color-scheme: dark; }
-  html, body {
+  html {
+    overflow-x: hidden;
+  }
+  body {
     background: var(--color-paper);
     color: var(--color-ink);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
     font-feature-settings: "ss01", "cv11";
-    overflow-x: hidden;
   }
   ::selection { background: var(--color-ocean-500); color: white; }
   [data-portal="student"] ::selection { background: var(--color-ocean-500); color: var(--color-ink); }
@@ -602,4 +604,108 @@ html.dark [data-portal="kitchen"] {
   mask-image: linear-gradient(to right, transparent, black 16px, black calc(100% - 16px), transparent);
   -webkit-mask-image: linear-gradient(to right, transparent, black 16px, black calc(100% - 16px), transparent);
 }
+
+/* ────────────────────────────────────────────────────────────────────
+   STUDENT PORTAL STYLES (OTP DIGITS, OTP DISPLAY AND PICKUP RIBBON)
+   ──────────────────────────────────────────────────────────────────── */
+.otp-display {
+  text-align: center;
+  padding: 40px 24px;
+  border-radius: var(--radius, 14px);
+  border: 1px solid rgba(178, 200, 237, 0.5);
+  background: linear-gradient(180deg, #1c2330 0%, #0f131a 100%);
+  box-shadow: 0 0 60px rgba(178, 200, 237, 0.2);
+  margin-bottom: 24px;
+  cursor: pointer;
+}
+.otp-display:hover .otp-digits {
+  filter: brightness(1.15);
+}
+.otp-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(178, 200, 237, 0.8);
+  margin-bottom: 18px;
+}
+.otp-digits {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}
+.otp-digit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 60px;
+  height: 80px;
+  font-family: var(--font-mono);
+  font-size: 3rem;
+  font-weight: 700;
+  color: var(--color-ocean-300, #5aa3df);
+  border-radius: 10px;
+  background: rgba(178, 200, 237, 0.1);
+  border: 1px solid rgba(178, 200, 237, 0.35);
+  text-shadow: 0 0 30px rgba(178, 200, 237, 0.15);
+}
+.otp-digit.flip-in {
+  animation: digitFlip 0.25s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes digitFlip {
+  0% {
+    transform: rotateX(90deg) scale(0.8);
+    opacity: 0;
+  }
+  100% {
+    transform: rotateX(0) scale(1);
+    opacity: 1;
+  }
+}
+.otp-hint {
+  margin: 16px auto 0;
+  font-size: 15px;
+  color: rgba(200, 215, 240, 0.6);
+  max-width: 280px;
+}
+.otp-copied {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: #0c8a43;
+  margin-top: 8px;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.otp-copied.show {
+  opacity: 1;
+}
+.pickup-ribbon {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  margin-bottom: 18px;
+  border-radius: var(--radius-sm, 10px);
+  border: 1px solid rgba(178, 200, 237, 0.5);
+  background: rgba(178, 200, 237, 0.08);
+}
+.pickup-ribbon__eta {
+  font-family: var(--font-mono);
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--color-ocean-400, #2e80ef);
+  min-width: 4.5ch;
+}
+.pickup-ribbon__text {
+  font-size: 14px;
+  color: var(--color-ink);
+  line-height: 1.45;
+}
+
+@media(max-width:390px){
+  .otp-digits{gap:8px}
+  .otp-digit{width:48px;height:64px;font-size:2.25rem;border-radius:8px}
+  .otp-hint{font-size:13px}
+}
+
 

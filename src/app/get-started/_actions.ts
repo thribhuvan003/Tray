@@ -1,6 +1,7 @@
 "use server";
 
 import { getAdminClient } from "@/lib/supabase/admin";
+import { getServerClient } from "@/lib/supabase/server";
 import { sendEmail } from "@/lib/email/resend";
 import { env } from "@/lib/env";
 import { revalidateTag } from "next/cache";
@@ -205,6 +206,20 @@ export async function createInstitution(
   }).catch((e) => {
     console.error("[get-started] welcome email failed", e);
   });
+
+  // Auto sign-in the new admin on the server so session cookies are written on response
+  try {
+    const supabase = await getServerClient(tenant.id);
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email: form.adminEmail,
+      password: form.adminPassword,
+    });
+    if (signInError) {
+      console.error("[get-started] auto sign-in failed:", signInError.message);
+    }
+  } catch (err) {
+    console.error("[get-started] auto sign-in error:", err);
+  }
 
   revalidateTag("tenant");
   return { ok: true, canteenSlug };

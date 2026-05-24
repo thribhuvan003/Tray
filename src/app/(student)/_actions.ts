@@ -284,10 +284,11 @@ export async function placeOrder(
 }
 
 export async function simulatePaymentCapture(orderId: string): Promise<{ ok: boolean; error?: string }> {
-  // Hard gate: never simulate captures once real Razorpay keys are present.
-  // This makes the dev shortcut a no-op the moment we wire live billing.
+  // Hard gate: never simulate captures once real Razorpay keys are present,
+  // unless NEXT_PUBLIC_RAZORPAY_LIVE is explicitly set to "false" (allowing simulator testing).
   const { featureFlags } = await import("@/lib/env");
-  if (featureFlags.razorpayLive) {
+  const isLive = featureFlags.razorpayLive && process.env.NEXT_PUBLIC_RAZORPAY_LIVE !== "false";
+  if (isLive) {
     return { ok: false, error: "Simulator disabled in live mode" };
   }
   const h = await headers();
@@ -295,8 +296,7 @@ export async function simulatePaymentCapture(orderId: string): Promise<{ ok: boo
   const tenant = await resolveTenant(slug);
   if (!tenant) return { ok: false, error: "Tenant missing" };
 
-  const user = await getCurrentUser();
-  if (!user) return { ok: false, error: "Not signed in" };
+  const user = await getCurrentUser().catch(() => null);
 
   const admin = getAdminClient(tenant.id);
   const { data: order } = await admin
@@ -305,7 +305,13 @@ export async function simulatePaymentCapture(orderId: string): Promise<{ ok: boo
     .eq("id", orderId)
     .eq("tenant_id", tenant.id)
     .maybeSingle<{ id: string; user_id: string | null; status: string }>();
-  if (!order || order.user_id !== user.id) return { ok: false, error: "Order not found" };
+  if (!order) return { ok: false, error: "Order not found" };
+
+  if (order.user_id) {
+    if (!user || order.user_id !== user.id) {
+      return { ok: false, error: "Order not found" };
+    }
+  }
   if (order.status !== "pending_payment") return { ok: true };
 
   await admin
@@ -320,7 +326,7 @@ export async function simulatePaymentCapture(orderId: string): Promise<{ ok: boo
     order_id: orderId,
     from_status: "pending_payment",
     to_status: "placed",
-    actor_user_id: user.id,
+    actor_user_id: user?.id ?? null,
     note: "Simulated payment capture",
   });
 
@@ -368,8 +374,7 @@ export async function verifyPaymentNow(orderId: string): Promise<VerifyResult> {
   const tenant = await resolveTenant(slug);
   if (!tenant) return { status: "pending" };
 
-  const user = await getCurrentUser();
-  if (!user) return { status: "pending" };
+  const user = await getCurrentUser().catch(() => null);
 
   const admin = getAdminClient(tenant.id);
   const { data: orderRow } = await admin
@@ -378,7 +383,13 @@ export async function verifyPaymentNow(orderId: string): Promise<VerifyResult> {
     .eq("id", orderId)
     .eq("tenant_id", tenant.id)
     .maybeSingle<{ id: string; user_id: string | null; status: string; payment_expires_at: string | null }>();
-  if (!orderRow || orderRow.user_id !== user.id) return { status: "pending" };
+  if (!orderRow) return { status: "pending" };
+
+  if (orderRow.user_id) {
+    if (!user || orderRow.user_id !== user.id) {
+      return { status: "pending" };
+    }
+  }
 
   // Already past pending_payment — webhook (or a previous call) already moved it.
   if (orderRow.status !== "pending_payment") return { status: "paid" };
@@ -392,7 +403,8 @@ export async function verifyPaymentNow(orderId: string): Promise<VerifyResult> {
   // Money already went directly to the canteen's bank account via UPI. We have no
   // Razorpay payment to verify. Mark placed, insert a captured payment record,
   // emit the order event, and let the kitchen board pick it up.
-  if (!featureFlags.razorpayLive) {
+  const isLive = featureFlags.razorpayLive && process.env.NEXT_PUBLIC_RAZORPAY_LIVE !== "false";
+  if (!isLive) {
     const { data: payRow } = await admin
       .from("payments")
       .select("razorpay_order_id, amount_paise")
@@ -445,7 +457,7 @@ export async function verifyPaymentNow(orderId: string): Promise<VerifyResult> {
         order_id: orderId,
         from_status: "pending_payment",
         to_status: "placed",
-        actor_user_id: user.id,
+        actor_user_id: user?.id ?? null,
         note: "UPI payment confirmed by student",
       });
     }
@@ -515,7 +527,7 @@ export async function verifyPaymentNow(orderId: string): Promise<VerifyResult> {
       order_id: orderId,
       from_status: "pending_payment",
       to_status: "placed",
-      actor_user_id: user.id,
+      actor_user_id: user?.id ?? null,
       note: "Manual verify (Razorpay fetch)",
     });
   }

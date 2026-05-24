@@ -7,23 +7,23 @@ export function TopItems({
 }) {
   const max = Math.max(1, ...items.map((i) => i.qty));
   return (
-    <section className="bg-graphite-700 border border-graphite-200/[0.08] rounded-xl p-4 min-h-[260px]">
+    <section className="bg-[var(--admin-bg-2)] border border-[var(--admin-line)] rounded-xl p-4 min-h-[260px]">
       <header className="flex items-start justify-between mb-4">
         <div>
-          <h3 className="text-[13px] font-semibold text-graphite-200">Top items today</h3>
-          <p className="text-[10px] font-mono uppercase tracking-[0.08em] text-graphite-400 mt-0.5">
+          <h3 className="text-[13px] font-semibold text-[var(--admin-ink)]">Top items today</h3>
+          <p className="text-[10px] font-mono uppercase tracking-[0.08em] text-[var(--admin-ink-3)] mt-0.5">
             By units sold
           </p>
         </div>
-        <span className="text-[10px] font-mono text-graphite-400">QTY · REV</span>
+        <span className="text-[10px] font-mono text-[var(--admin-ink-3)]">QTY · REV</span>
       </header>
       {items.length === 0 ? (
-        <div className="text-[12px] text-graphite-400 text-center py-8">No items sold yet today.</div>
+        <div className="text-[12px] text-[var(--admin-ink-3)] text-center py-8">No items sold yet today.</div>
       ) : (
         <ul className="flex flex-col gap-2.5">
           {items.map((it, i) => (
             <li key={it.name} className="flex items-center gap-3 text-[13px]">
-              <span className="font-mono text-[11px] text-graphite-400 w-5">
+              <span className="font-mono text-[11px] text-[var(--admin-ink-3)] w-5">
                 {String(i + 1).padStart(2, "0")}
               </span>
               <span
@@ -47,15 +47,15 @@ export function TopItems({
                   }
                 />
               </span>
-              <span className="flex-1 min-w-0 truncate text-graphite-200 font-medium">{it.name}</span>
-              <div className="w-32 h-1.5 bg-graphite-600 rounded-full overflow-hidden">
+              <span className="flex-1 min-w-0 truncate text-[var(--admin-ink)] font-medium">{it.name}</span>
+              <div className="w-32 h-1.5 bg-[var(--admin-bg-3)] rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-gradient-to-r from-lime/70 to-lime"
+                  className="h-full bg-gradient-to-r from-[var(--admin-lime)]/70 to-[var(--admin-lime)]"
                   style={{ width: `${Math.max(8, (it.qty / max) * 100)}%` }}
                 />
               </div>
-              <span className="font-mono tabular text-[12px] text-graphite-300 w-10 text-right">{it.qty}</span>
-              <span className="font-mono tabular text-[11px] text-graphite-400 w-16 text-right">
+              <span className="font-mono tabular text-[12px] text-[var(--admin-ink-2)] w-10 text-right">{it.qty}</span>
+              <span className="font-mono tabular text-[11px] text-[var(--admin-ink-3)] w-16 text-right">
                 {formatRupees(it.revenue)}
               </span>
             </li>

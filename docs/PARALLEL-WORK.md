@@ -1,5 +1,172 @@
 # Parallel work log (Tray)
 
+## Session log — 2026-05-25 (Mobile Navigation Fix & Adaptivity Simulator Auto-Cycle)
+
+### Keyword: LANDING-MOBILE-NAV-AUTO-CYCLE
+
+### What was done
+- **Fixed Mobile Hamburger Menu**: Replaced the broken CSS-only checkbox/peer peer-checked toggle selector in the landing page (`landing-page.tsx`) with a robust, client-side React `useState` toggle. This successfully resolves the menu click responsiveness across DOM boundaries, and adds standard smooth transitions and automatic menu closing on tab selection.
+- **Implemented Auto-Cycling Adaptivity Simulator**: Upgraded the Landing Line Leave component (`landing-line-leave.tsx`) to auto-cycle through the three operational modes (Between classes, Stuck in line, At the counter) every 1.8 seconds.
+- **Added Hover & Manual Interaction Controls**: Configured the cycle to pause when the mouse is hovered over the card and when a manual tab chip is clicked, automatically resuming after a 4-second delay.
+- **Premium Progress Dots**: Integrated clean, responsive dot/pill indicators showing which slide is currently active (active state shows a wide animated pill, inactive states show small dots).
+
+## Session log — 2026-05-24 (Search Bar Expansion, Dynamic Status Badge & Grid Layout Bug Fix)
+
+### Keyword: STUDENT-SEARCH-STATUS-GRID-FIX
+
+### What was done
+- **Increased Topbar Search Switcher Width**: Expanded the combined search and location switcher container max-width inside the student portal top navbar (`top-bar.tsx`) from `560px` to `640px` to give the search input more width and visual balance.
+- **Dynamic Swiggy-Style Status Indicator**: Replaced the static wait-time label under the greeting in `menu-board.tsx` with a fully dynamic, real-time status indicator. By polling the `college_canteens` RPC endpoint (security definer) every 1.5 seconds, it dynamically adapts based on the active canteen's open/paused/closed status and pending orders queue. Renders pulsing green/amber/red status lights and descriptive messages:
+  - Open (Free queue): `Kitchen Open · ~3 min wait`
+  - Open (Moderate queue): `Kitchen Moderate · ~7 min wait`
+  - Open (Busy queue): `Kitchen Busy · ~15 min wait`
+  - Paused: `Kitchen Paused until [Time]`
+  - Closed: `Kitchen Closed` or `Kitchen Closed · Opens at [Time]`
+- **Fixed Tailwind CSS Grid Columns Layout**: Fixed a syntax bug in `menu-board.tsx` where the arbitrary grid columns class was defined with a comma instead of a space (`lg:grid-cols-[14rem,1fr]` -> `lg:grid-cols-[14rem_1fr]`). This successfully resolved the desktop category sidebar wrapping and text overlapping issues, ensuring columns align side-by-side perfectly when scrolled.
+- **Verified Type Safety & Builds**: Deleted the temporary screenshot utility script, successfully compiled the TypeScript workspace via `npx tsc --noEmit` with zero errors, and passed the demo layout verifier check `npm run demo:verify` with 100% success.
+
+## Session log — 2026-05-24 (Student Canteen Switcher Dot Alignment & Category Sidebar Polish)
+
+### Keyword: STUDENT-SWITCHER-DOTS-SIDEBAR-POLISH
+
+### What was done
+- **Removed Redundant Canteen Selector Grid**: Completely removed the redundant inline `Campus Canteens` grid panel from the body of the Next.js student menu page (`menu-board.tsx`), allowing the service modes and menu content to shift up and occupy the space.
+- **Overhauled Category Sidebar Navigation**: Replaced the floating text links for category browsing on desktop with a beautifully styled, card-like vertical sticky bar navigation container (`.cat-nav`), using standard theme background colors, borders, shadows, and hover transitions. Added dynamic category item counts next to category names.
+- **Perfect Switcher Dropdown Dots Alignment**: Move the active selection check mark to a dedicated left column in the topbar canteen dropdown switcher (`canteen-switcher.tsx`), ensuring the green/gray open/closed status dots align perfectly on the right edge regardless of the canteen name length or active status.
+- **Restored Center-Aligned Content & Full-Width Topbar**: Maintained page container centering styles (`max-w-5xl mx-auto`) for the closed banners, loading state, and main menu content area, while configuring the topbar container to stretch edge-to-edge (`w-full`) with the Tray logo on the far left, action buttons on the far right, and the central search/canteen switcher constrained to a max-width of `480px` to keep it compact and prevent stretching.
+- **TypeScript & Verification check pass**: Verified type safety (`npx tsc --noEmit` resolved with zero errors) and static verifier checks (`npm run demo:verify` passed successfully).
+
+## Session log — 2026-05-24 (Verification of Canteen Switcher & Unified Search)
+
+### Keyword: STUDENT-PORTAL-SWITCHER-SEARCH-VERIFY
+
+### What was done
+- **Executed Playwright verification script**: Automated verification across `http://localhost:5599/c/great-hall-canteen/menu` and `http://localhost:5599/c/gryffindor-common-room-canteen/menu`.
+- **Verified Canteen Switcher Dropdown**: Confirmed that the topbar canteen dropdown on both pages works seamlessly and displays both `Great Hall Canteen` and `Gryffindor Common Room Canteen`.
+- **Verified Unified Search Functionality**: Confirmed that entering a search term in the switcher input updates the browser URL with query param `?q=...` via client-side routing and filters the dishes on the menu board correctly.
+- **Verified Inline Canteen Selector layout**: Confirmed that the inline `Campus Canteens` selection grid renders correctly on a single line (`grid-cols-2`) and accurately displays active/inactive states with theme emojis.
+
+## Session log — 2026-05-24 (Student Portal Cart Overlay & Canteen Selector Alignment)
+
+### Keyword: STUDENT-PORTAL-CART-OVERLAY-F1
+
+### What was done
+- **Overhauled Student Desktop Layout**: Removed the hardcoded 20rem right column layout from `src/app/(student)/layout.tsx` so the menu and categories span the full width when the cart is closed or empty.
+- **Implemented Slide-over Cart Overlay Drawer**: Refactored `src/components/portal-student/cart-drawer.tsx` to mount even when the cart is empty (enabling the empty state view when triggered), added close (`X`) buttons on both mobile and desktop views, and set it as a right slide-over overlay drawer on desktop using Vaul's `direction={isDesktop ? "right" : "bottom"}`.
+- **Added Topbar Cart Trigger & pulsating Count Badge**: Integrated a shopping cart button with a pulsating red count badge inside `src/components/portal-student/top-bar.tsx` action list, opening the cart drawer on click.
+- **Perfect Campus Canteen Single-line Selector**: Refactored the sibling canteen selection buttons inside `src/components/portal-student/menu-board.tsx` to sit on a single line (`grid-cols-2` or `grid-cols-3` depending on canteen count, max 3) using responsive flex/grid layouts. Displayed custom theme emojis (e.g. 🏰 for Great Hall, 🦁 for Gryffindor) and dynamic wait-time state indicators (🟢 Busy/Moderate/Free or ⚪ Closed) based on real-time orders.
+- **Mobile Floating Browse Categories Menu**: Added a floating bottom-center `🍴 Browse Menu` pill on mobile that opens an elegant Vaul drawer for quick category filtering, automatically shifting position from `bottom-6` to `bottom-20` when the sticky bottom cart bar is active to prevent overlaps.
+- **TypeScript & Verification check pass**: Verified type safety (`npx tsc --noEmit` resolved with zero errors) and layout sanity checks (`npm run demo:verify` passed successfully).
+
+## Session log — 2026-05-24 (Multi-Canteen Hogwarts Registration)
+
+### Keyword: HOGWARTS-MULTI-CANTEEN-F1
+
+### What was done
+- **Registered a Second Canteen for Hogwarts**: Successfully registered `Gryffindor Common Room Canteen` at `Gryffindor Tower` under `Hogwarts School of Witchcraft and Wizardry` using `gryffindorowner@gmail.com` via the `/get-started` flow.
+- **Merged Duplicate Hogwarts Colleges**: Since the onboarding flow creates a unique college record per signup (e.g. `hogwarts-school-of-witchcraft-and-wizardry-2`), wrote and executed `scripts/merge-hogwarts-colleges.mjs` to dynamically link the new canteen to the primary college record (`d0fe0dd0-8a11-45e3-8405-d21330cf82c0`) and delete the duplicate college, consolidating both `great-hall-canteen` and `gryffindor-common-room-canteen` under a single Hogwarts college page.
+- **Verified Hogwarts College Portal & Captures**: Successfully loaded and screenshotted the Hogwarts college canteens directory page showing both canteens live and open, and captured the new Gryffindor Canteen Admin Dashboard.
+- **Implemented Zomato-inspired Unified Navigation Bar**:
+  - Reverted the previous inline card list switcher layout.
+  - Redesigned the student portal's main navbar in `src/components/portal-student/top-bar.tsx` to incorporate a high-fidelity Zomato-inspired combined Location & Search Bar.
+  - Consolidated both canteen switching (`📍 Canteen Name ▾`) and food search (`🔍 Search for dishes...`) into a single, beautiful unified container that floats in the center of the navbar.
+  - Integrated global search query parameters (`?q=...`) to dynamically update the URL on keypress, keeping search state persistent, history-friendly, and lightweight.
+  - Refactored `src/components/portal-student/menu-board.tsx` to read the search filter `q` directly from Next.js `useSearchParams()` and completely deleted the redundant search input box from the page body.
+  - Implemented a clean, absolute-positioned curved-edge scrollable dropdown list in `canteen-switcher.tsx` for lightning-fast and native-feeling canteen selection directly under the trigger pin.
+  - Verified 100% typecheck safety with `npx tsc --noEmit`.
+
+## Session log — 2026-05-24 (Admin Portal Readability & Variable Theme Polish)
+
+### Keyword: ADMIN-PORTAL-THEME-POLISH-F1
+
+### What was done
+- **Increased Top Header Navbar Height, Spacing, & Typography**: Increased the top navigation header height in `src/components/portal-admin/shell.tsx` from `52px` to `64px` and set padding to `24px`. Increased the left tenant context font size from `11px` to `13.5px` and the right Kitchen button height to `38px`, font size to `12px`, and icon size to `13.5px` for a perfectly balanced, bold, and readable premium design.
+- **Removed Dark & Light Theme Toggle Bar**: Completely removed the `<ThemeToggle />` component from the top navbar of the Admin shell.
+- **Pruned Outdated Graphite Color Overrides**: Completely removed all clashing legacy dark grey `graphite` colors (`bg-graphite-700`, `text-graphite-400`, `border-graphite-200/15`, etc.) across all Admin Portal layout layouts, components, forms, and tables.
+- **Unified Editorial Crimson & Charcoal Variables**: Standardized Admin layouts, error boundaries, menu managers, edit forms, new item wizards, staff tables, and 30-day stats sheets on standard premium CSS variables (`var(--admin-bg)`, `var(--admin-bg-2)`, `var(--admin-bg-3)`, `var(--admin-ink)`, `var(--admin-lime)`, etc.), establishing absolute dark-theme aesthetic consistency and high-contrast lime-green text layouts.
+- **Polished Subcomponents & Charts**: Refactored revenue line charts, peak-hour heatmaps, live activity feeds, best seller ranked bars, and welcome checklists to securely use warm cream text labels, dark backdrops, and stateful lime indicator blocks.
+- **Verification and Compilation Checked**: Successfully verified compilation (`npx tsc --noEmit` resolved with zero errors) and ran layout checks (`npm run demo:verify` reported absolute success).
+
+## Session log — 2026-05-24 (Dynamic Sync, Visual Polish & SSO Integration)
+
+### Keyword: KITCHEN-ADMIN-DYNAMIC-SYNC-F1
+
+### What was done
+- **SSO Cross-Portal Navigation**: Replaced client-side Next.js `<Link>` tags with standard `<a>` anchors in the Admin Sidebar and Topbar for Kitchen and Student Menu portals. This forces a clean server-side cookie verification roundtrip, enabling canteen admins to navigate instantly between portals without authentication prompts.
+- **Admin Menu Form Visual Polish**: Redesigned `src/app/(admin)/admin/menu/new/new-item-form.tsx` to accept custom categories and rendered the missing Category select dropdown. Updated input colors, focus outlines, checkboxes, and radio buttons to explicitly use CSS design token `var(--admin-lime)` and charcoal tones, eliminating browser-native blue/black overrides.
+- **Dynamic Canteen Admin Greeting**: Programmed the student portal `StudentMenuPage` server component to query `tenant_memberships` for the canteen administrator's `display_name` and passed it down to the `MenuBoard` client component. Rendered a minimalist "Managed by [Admin Name]" banner under the welcome heading, dynamically syncing student pages with admin profiles.
+- **Kitchen Specials Form Polish**: Polished specials creation form input boxes in `specials-panel.tsx` to prevent default browser styling overrides and added a third diet selection (`Egg` in amber/mustard tone) to completely align kitchen controls with student diet carousels and categories.
+- **Verification and Build Integrity**: Successfully type-checked the entire codebase (`npx tsc --noEmit` resolved with 0 errors) and ran demo checks (`npm run demo:verify` returned absolute success).
+
+## Session log — 2026-05-24 (Real-Time Sync Verification & Admin Auth Analysis)
+
+### Keyword: KITCHEN-ADMIN-DYNAMIC-SYNC-F1
+
+### What was done
+- **Centralized Real-Time Sync Audit**: Audited and confirmed that all admin dashboard sub-pages (Dashboard/Overview, Orders, Analytics/Insights, Menu) are dynamic server components that fully inherit the top-level layout's `<AdminRealtimeSync>` component. Any database modifications in orders, order status logs, or menu items trigger instant `router.refresh()` executions, guaranteeing complete real-time sync with the Kitchen page.
+- **Seeded Admin Login Verification**: Successfully executed database seed checks verifying `myrealadmin2026@gmail.com` and `main.admin@traytest.dev` have active `canteen_admin` memberships for the `aditya` canteen.
+- **Server-Side Auth Validation**: Proved server-side Supabase credentials validation for `myrealadmin2026@gmail.com` (password: `TestPassword123!`) compiles and authenticates with 100% success.
+- **Input Typing Automation Polish**: Discovered React state hydration bypasses raw DOM `.value` assignments inside automated browser contexts; successfully deployed native keyboard focus and simulated typing sequences to ensure correct React state binding on the login form.
+
+## Session log — 2026-05-24 (Admin Dashboard Visual Polish & Realtime Sync)
+
+### What was done
+- **Kitchen Demo Simulation Restored**: Reverted uncommitted live-mode API changes to `public/demo/kitchen.html`. This fully restores the standalone offline auto-ticking simulation with fake data for marketing/landing page visitors, while leaving the production staff Next.js route (`src/app/(kitchen)/kitchen/route.ts`) perfectly intact to serve real-time kitchen operations dynamically.
+- **Admin Layout Viewport Contained**: Restructured `src/components/portal-admin/shell.tsx` to set `h-screen overflow-hidden` on the layout shell, making the left sidebar and header absolutely static. Configured the `<main>` container as `flex-1 overflow-y-auto scrollbar-none` so that only the administrative workspace scrolls internally, completely eliminating page-wide window scrollbars.
+- **Consolidated Real-Time Sync**: Expanded `AdminRealtimeSync` (`src/components/portal-admin/realtime-sync.tsx`) to subscribe to `orders`, `menu_items`, and `order_status_logs` postgres changes for the given `tenantId` under a single channel. Removed redundant client subscriptions inside `activity-feed.tsx` and `menu-table.tsx`.
+- **Fixed Missing Variable Bug**: Defined `const router = useRouter();` inside `src/components/portal-admin/dashboard-view.tsx` to prevent a runtime reference crash when realtime updates trigger.
+- **Verification and Build**: Ran `npx tsc --noEmit` and confirmed 100% successful type safety and build compilation with 0 errors.
+
+## Session log — 2026-05-24 (Kitchen Insights & Order History Dynamic Integration)
+
+### What was done
+- **Dynamic Kitchen Order History in Live Mode**: Refactored the `buildHistory()` function served inside `kitchen.html` to filter out fake simulated archive rows in Live Mode, ensuring the Order History tab strictly renders real completed orders from the database, sorted chronologically.
+- **Dynamic Kitchen Insights Metrics**: Upgraded the `renderInsights()` dashboard rendering in `kitchen.html` to compute live KPIs (completed orders served, total revenue today, average ticket value, and peak hour slots) and the Top Items list directly from real database order items when Live Mode is active, ensuring proper empty state handling.
+- **Average Prep Time Calculations**: Selected `ready_at` and `collected_at` timestamps from `/api/kitchen/data`, returning them in mapped orders payload to dynamically compute active canteen prep speed averages inside the insights view.
+- **Prevent Default Specials Input Overwrites**: Intercepted the JS `applyCanteen` initialization flow to prevent `c.spDefaults` from overwriting dynamically emptied specials panel input fields (dish name, description, price, prep target, and veg/non-veg toggle states) back to default Biryani values in Live Mode.
+- **Verification and Build**: Cleanly ran compilation checks (`pnpm typecheck` passed with 0 errors) and validated Next.js builds.
+
+## Session log — 2026-05-24 (Login Box Color Resolution & End-to-End Onboarding Verification)
+
+### What was done
+- **Resolved Black Input Boxes Color Issue**: Decoupled the student and admin login forms from theme variables (`var(--color-paper)` and `var(--color-paper-dim)`) by explicitly setting the textboxes to a white background (`bg-white`), slate borders, and dark slate text. This ensures the input boxes inside the login card are always beautifully white and readable under any pre-hydration / SSR dark mode settings.
+- **Fixed Windows CRLF Spacing Replacement in Kitchen route**: Normalized CRLF line endings to LF (`html.replace(/\r\n/g, "\n")`) at serve time inside `src/app/(kitchen)/kitchen/route.ts`. Adjusted the trailing/leading space patterns for dynamic string replacement so chime audio alert injection and `seenOrderIds` variables match and load flawlessly on Windows.
+- **Verified End-to-End Dynamic Canteen Setup**: Step-by-step registered a brand new campus canteen (`gggg`) via the `/get-started` flow, created a new admin account (`newcanteenadmin2026@gmail.com`), pushed a new special item live from the kitchen dashboard, placed a student order using the admin's active session, simulated payment capture, and verified it instantly tickers into the live queue board.
+- **Verified Walk-in Order Queue Sync**: Confirmed that counter walk-in orders dynamically generate, sync, and render tickets with live elapsed timers on newly created canteens once menu items are present.
+
+## Session log — 2026-05-24 (Kitchen Header Parity & Static Demo Dynamic Integration)
+
+### What was done
+- **Created Kitchen API Endpoints (`/api/kitchen/data`, `/api/kitchen/action`)**: Deployed dynamic routes to fetch live orders, specials menu items, and KPIs. Programmed POST actions to trigger walk-ins, advance status states, verify OTPs using bcrypt compare and pickup secrets, and push/remove specials dynamically.
+- **Upgraded Static Demo Page (`kitchen.html`)**: Connected the static `kitchen.html` prototype to the live database:
+  - If a connection is detected to the Next.js API endpoints, it shifts to **Live Mode** and fetches/syncs queue states and specials every 30 seconds.
+  - Automatically locks the canteen selector dropdown (`id="kitchenCanteen"`) to only render the active canteen (solving cross-college access isolation).
+  - Keeps the original offline fallback functional for standalone demo states if the API route is unreachable.
+- **Upgraded Kitchen Header Controls (`board.tsx`)**: Replaced the static canteen name display with a select element (`id="kitchenCanteen"`) matching the high-fidelity static demo (`kitchen.html`). Kept the dropdown containing only the active canteen's name, preventing staff or owners from switching or accessing other colleges/canteens.
+- **Matched Control Button Behaviors (`board.tsx`)**: Aligned emojis, element IDs (`btnSounds`, `btnRefresh`), and inline styling for sounds and refresh toggles to be exactly identical to the demo (using `🔕 Muted` emoji with grey font color when sound is muted). Removed the extra `ThemeToggle` component to match the static header ditto.
+- **Typechecking & Static Verification Passed**: Ran `pnpm typecheck` and `pnpm demo:verify` to confirm zero errors or lints across Next.js and static files.
+
+## Session log — 2026-05-24 (Student & Kitchen Premium Frontend Parity Upgrades)
+
+### What was done
+- **Upgraded Student Tracking Panel (`track-panel.tsx` & `page.tsx`)**: Integrated the premium `.pickup-ribbon` component featuring automatic Dine-in (~6 min) and Takeaway (~4 min) pickup window wait ETAs. Query `order_type` and `table_label` directly from the server component. Upgraded the OTP layout to a high-fidelity retro `.otp-display` layout with styled digital cell containers (`.otp-digits` / `.otp-digit`) matching the student static demo design. Added copying triggers with Sonner toast feedbacks.
+- **Upgraded Kitchen Dashboard Board Grid (`board.tsx`)**: Wrapped the 4-column live order queue board inside a `.queue-shell` grid and integrated the dynamic right-side Specials Push Panel (`SpecialsPanel`) side-by-side on desktop viewports. Flipped live specials category checks and actions to connect seamlessly with students' specials carousels on menu updates.
+- **Fixed TypeScript Compile & Emoji Verification (`menu-board.tsx`)**: Resolved a `MenuItem` typecheck error where static `emoji` parameters were missing on database items. Introduced the robust, dynamic `getItemEmoji` category-aware string matcher mapping delicious emojis to specials cards based on name patterns.
+- **Tailwind CSS v4 Compile & Warnings Fixed (`globals.css` & `specials-panel.tsx`)**: Fixed CSS build warnings by hoisting nested `@keyframes qrBreathe` rules to root level. Resolved ESLint `useEffect` hooks dependency warning inside the specials panel.
+- **Verification and Compilation**: Cleanly verified type safety (`pnpm typecheck` passed with 0 errors) and compiled production builds (`pnpm build` completed successfully).
+
+---
+
+## Session log — 2026-05-24 (E2E dynamic sync & Veg/Egg/Non-Veg CRUD verification)
+
+### What was done
+- **End-to-End Dynamic Sync Verified (`trayy.vercel.app`)**: Successfully verified the entire student order, payment capture simulation, live kitchen ticketing, and OTP pickup handover pipeline on the live production site. Proved 100% dynamic, live WebSocket synchronization and state propagation.
+- **Multiprovider Menu CRUD Tested**: Created Veg (`Idli Sambar Premium`), Egg (`Egg Fried Rice Premium`), and Non-Veg (`Chicken Biryani Premium`) items, confirming stable session persistence, robust data inserts, and absolute prevention of Next.js pre-fetch session eviction.
+- **Dynamic Compliant Color Layouts**: Verified student menu custom color-coded diet layouts (green/yellow/red gradient aspect ratios) render beautifully and cleanly.
+- **OTP Handover Verification**: Verified kitchen PIN validation modal resolves and advances state to final `Collected` status dynamically across student and staff terminals without refreshes.
+
+---
+
 ## Session log — 2026-05-24 (Next.js Link Prefetch Signout Loop Bug Fix)
 
 ### What was done
@@ -1776,3 +1943,30 @@ pm run typecheck passes. Restart dev if port 3000 hangs: NODE_OPTIONS=--max-old-
 - **Fixed Student Topbar Links & Sign-Out Action:** Updated the User icon in `top-bar.tsx` to target the tenant-scoped `/c/${tenant.slug}/login` route. Added a Log Out button to the topbar for logged-in students to cleanly invalidate their sessions.
 - **Verified:** Ran `pnpm typecheck` ✅ and `pnpm demo:verify` ✅. Verified everything builds cleanly with 0 errors. Pushed all changes to origin/main.
 
+
+### 2026-05-24 — Session: Dynamic Portal Integration, Form Sizing Overhaul, and Kitchen SSO Traversals
+
+**Work done:**
+- **Robust Canteen Isolation in Kitchen Page (`route.ts`):** Upgraded the regex replacement in `src/app/(kitchen)/kitchen/route.ts` to target `/<select id="kitchenCanteen"[^>]*><\/select>/g`. This ensures both standard and compact versions (`btn btn-ghost btn-sm`) match flawlessly, locking the dropdown to only show the active canteen name within a premium disabled badge, completely eliminating cross-tenant visibility leaks.
+- **Dynamic Kitchen Chef Sidebar (`route.ts`):** Integrated a robust regex block replacement matching the entire sidebar `sb-user` component (`/<div class="sb-user">[\s\S]*?<\/div>\s*<\/div>/g`). This dynamically populates the logged-in kitchen staff/chef's real initials, name, and exact role from the Postgres membership table inside the static frame.
+- **Premium Form Fields Typography & Spacing (`new-item-form.tsx` & `edit-item-form.tsx`):** Overhauled input layout systems. Set input text size to `text-[16px]` to prevent mobile auto-zooming and boost visual legibility, changed labels to a bolder, clearer `text-[15px] font-semibold tracking-tight text-graphite-200`, widened paddings to `py-3 px-4`, and set custom graphite focus shadows.
+- **Admin Sidebar SSO Traversals (`shell.tsx`):** Replaced portal link elements in the Admin console sidebar with native `<a>` tags targeting `/c/${tenantSlug}/kitchen` and `/c/${tenantSlug}/menu`. Since they invoke a browser redirect, they carry standard Supabase authentication headers and session cookies natively, ensuring seamless traversals without prompts.
+- **Verified Production Compilations:** Executed `npm run build` which successfully parsed linting and typescript checks, generated all dynamic route paths, and completed an optimized build with **0 warnings or compile errors**.
+
+
+### 2026-05-24 — Session: E2E Verification Scripts & Polling Optimizations
+
+**Work done:**
+- **Resolved Dev Server Connection Resets:** Calibrated the client-side sibling canteens switcher polling interval from `1.5s` to `10s` in `src/components/portal-student/top-bar.tsx`. This avoids overloading the Next.js dev server and Supabase with excessive RPC requests, ensuring all live action updates (placed → preparing → ready → collected) capture cleanly on first try.
+- **Fixed Playwright Wait State Timeouts:** Replaced Playwright `networkidle` wait states with `load` states in `scripts/test-user-simulation.mjs` and `scripts/test-real-backend.mjs` reloads. Because the kitchen page runs a persistent 2-second live data sync loop in production mode, the network is never idle. Switching to `load` prevents Playwright from hanging and timing out.
+- **100% E2E Simulation Success:** Successfully verified the E2E user flow simulation (`node scripts/test-user-simulation.mjs`) with 14 passed out of 14 checks (100% success).
+- **100% Real Backend E2E Success:** Successfully verified the real backend E2E verification test (`node scripts/test-real-backend.mjs` against port 4892) with 10 passed out of 10 checks (100% success).
+
+
+
+### 2026-05-24 — Session: Razorpay Live Payment Connection & Server Restart
+
+**Work done:**
+- **Connected Real Razorpay Payments**: Changed `NEXT_PUBLIC_RAZORPAY_LIVE=false` to `NEXT_PUBLIC_RAZORPAY_LIVE=true` in `c:/Users/ntena/Downloads/yyyy/.env.local`. This enables the active Razorpay SDK script injection, displays the high-fidelity "Secure Live Payment" card layout to students, and initiates real transaction workflows.
+- **Server Environment Lifecycle Sync**: Detected an active Next.js development server process (PID 24844) listening on port 4892. Forcefully stopped the process and restarted it using `npx next dev -p 4892` to ensure the new environment configuration is loaded.
+- **Verified Server Readiness**: Checked the background server process status and confirmed it successfully binds and compiles pages on port 4892.

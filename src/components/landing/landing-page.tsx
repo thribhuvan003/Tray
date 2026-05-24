@@ -41,6 +41,7 @@ function BrandMark() {
 export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
   const campusName = tenant?.college_name ?? null;
   const [hoveredStep, setHoveredStep] = React.useState<number | null>(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
 
   return (
     <div className="tray-landing tray-page min-h-svh overflow-x-hidden tray-landing-wrapper" style={{ fontFamily: "var(--font-ui)" }}>
@@ -49,7 +50,6 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
       <LandingMotion />
 
       {/* ── NAV ─────────────────────────────────────────────────────────── */}
-      <input type="checkbox" id="tl-ham" className="sr-only peer" aria-hidden />
 
       <AnimatedNav
         className="sticky top-0 z-50 backdrop-blur-xl px-5 sm:px-8 lg:px-10"
@@ -94,49 +94,64 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
           </div>
 
           {/* Mobile hamburger */}
-          <label
-            htmlFor="tl-ham"
-            className="flex h-9 w-9 cursor-pointer flex-col items-center justify-center gap-[5px] lg:hidden"
-            aria-label="Open menu"
+          <button
+            className="flex h-9 w-9 cursor-pointer flex-col items-center justify-center gap-[5px] lg:hidden rounded-lg transition hover:bg-[var(--tray-surface)]"
+            aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
+            aria-expanded={mobileMenuOpen}
+            onClick={() => setMobileMenuOpen((v) => !v)}
           >
-            <span className="h-0.5 w-5 rounded-full bg-[var(--tray-ink)] transition-transform peer-checked:rotate-45 peer-checked:translate-y-1.5" />
-            <span className="h-0.5 w-5 rounded-full bg-[var(--tray-ink)] transition-opacity peer-checked:opacity-0" />
-            <span className="h-0.5 w-5 rounded-full bg-[var(--tray-ink)] transition-transform peer-checked:-rotate-45 peer-checked:-translate-y-1.5" />
-          </label>
+            <span
+              className="h-0.5 w-5 rounded-full bg-[var(--tray-ink)] transition-transform duration-300"
+              style={{ transform: mobileMenuOpen ? "translateY(6.5px) rotate(45deg)" : "none" }}
+            />
+            <span
+              className="h-0.5 w-5 rounded-full bg-[var(--tray-ink)] transition-opacity duration-300"
+              style={{ opacity: mobileMenuOpen ? 0 : 1 }}
+            />
+            <span
+              className="h-0.5 w-5 rounded-full bg-[var(--tray-ink)] transition-transform duration-300"
+              style={{ transform: mobileMenuOpen ? "translateY(-6.5px) rotate(-45deg)" : "none" }}
+            />
+          </button>
         </div>
 
         {/* Mobile sheet */}
-        <div className="hidden max-h-0 overflow-hidden transition-all peer-checked:block peer-checked:max-h-screen border-t border-[var(--tray-border)] bg-[var(--tray-bg)] lg:hidden">
-          <nav className="flex flex-col gap-1 px-5 py-4" aria-label="Mobile navigation">
-            {[
-              ["Product",  "#portals"],
-              ["Campus",   "#campus"],
-              ["Stack",    "#stack"],
-            ].map(([label, href]) => (
-              <a
-                key={label}
-                href={href}
-                className="rounded-xl px-3 py-3 font-code text-xs uppercase tracking-[0.2em] text-[var(--tray-muted)] transition hover:bg-[var(--tray-surface)] hover:text-[var(--tray-ink)]"
-              >
-                {label}
-              </a>
-            ))}
-            <div className="mt-3 flex flex-col gap-2 border-t border-[var(--tray-border)] pt-4">
-              <Link
-                href="/login"
-                className="rounded-xl px-3 py-3 text-sm font-medium transition hover:bg-[var(--tray-surface)]"
-              >
-                Sign in
-              </Link>
-              <a
-                href="#portals"
-                className="rounded-xl bg-[var(--tray-ink)] px-3 py-3 text-center text-sm font-semibold text-[var(--tray-cream)]"
-              >
-                Demo →
-              </a>
-            </div>
-          </nav>
-        </div>
+        {mobileMenuOpen && (
+          <div className="border-t border-[var(--tray-border)] bg-[var(--tray-bg)] lg:hidden">
+            <nav className="flex flex-col gap-1 px-5 py-4" aria-label="Mobile navigation">
+              {[
+                ["Product",  "#portals"],
+                ["Campus",   "#campus"],
+                ["Stack",    "#stack"],
+              ].map(([label, href]) => (
+                <a
+                  key={label}
+                  href={href}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="rounded-xl px-3 py-3 font-code text-xs uppercase tracking-[0.2em] text-[var(--tray-muted)] transition hover:bg-[var(--tray-surface)] hover:text-[var(--tray-ink)]"
+                >
+                  {label}
+                </a>
+              ))}
+              <div className="mt-3 flex flex-col gap-2 border-t border-[var(--tray-border)] pt-4">
+                <Link
+                  href="/login"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="rounded-xl px-3 py-3 text-sm font-medium transition hover:bg-[var(--tray-surface)]"
+                >
+                  Sign in
+                </Link>
+                <a
+                  href="#portals"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="rounded-xl bg-[var(--tray-ink)] px-3 py-3 text-center text-sm font-semibold text-[var(--tray-cream)]"
+                >
+                  Demo →
+                </a>
+              </div>
+            </nav>
+          </div>
+        )}
       </header>
       </AnimatedNav>
 

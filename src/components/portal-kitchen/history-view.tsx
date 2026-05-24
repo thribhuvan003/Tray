@@ -122,7 +122,7 @@ export function HistoryView({
 
   return (
     <div className="view-pane flex flex-col gap-4 animate-[liveIn_.3s_ease_both]">
-      <div className="page-head flex justify-between items-end pb-[18px] border-b border-[var(--line)] mb-6">
+      <div className="page-head flex justify-between items-end pb-[18px] border-b border-[var(--kt-line)] mb-6">
         <div className="l flex flex-col gap-1.5">
           <span className="eyebrow text-xs tracking-widest uppercase font-mono text-[var(--kt-ink-3)]">
             Last 24 hours · {rows.length} completed
@@ -140,7 +140,7 @@ export function HistoryView({
         </div>
         <div className="r flex gap-2 items-center">
           <button
-            className="btn btn-ghost btn-sm text-xs font-semibold px-3 py-1.5 rounded-[7px] border border-[var(--line-2)] background-[var(--kt-cream-4)] transition-all hover:background-[var(--kt-paper)]"
+            className="btn btn-ghost btn-sm text-xs font-semibold px-3 py-1.5 rounded-[7px] border border-[var(--kt-line-2)] background-[var(--kt-cream-4)] transition-all hover:background-[var(--kt-paper)]"
             onClick={exportCsv}
           >
             ⇣ Export CSV
@@ -157,7 +157,7 @@ export function HistoryView({
       <div className="queue-board rounded-[14px] border border-[var(--kt-ink)] overflow-hidden bg-[var(--kt-paper)]">
         <table className="hist-table w-full border-collapse">
           <thead>
-            <tr className="bg-[var(--kt-cream-3)] border-b border-[var(--line)]">
+            <tr className="bg-[var(--kt-cream-3)] border-b border-[var(--kt-line)]">
               <th className="text-left font-mono text-[10.5px] uppercase tracking-wider font-semibold text-[var(--kt-ink-3)] p-3 pl-4">
                 Ticket
               </th>
@@ -206,7 +206,7 @@ export function HistoryView({
                 });
 
                 return (
-                  <tr key={r.id} className="border-b border-[var(--line)] hover:bg-[var(--kt-cream-3)] transition-colors">
+                  <tr key={r.id} className="border-b border-[var(--kt-line)] hover:bg-[var(--kt-cream-3)] transition-colors">
                     <td className="p-3 pl-4">
                       <span className="hist-id font-mono text-[11.5px] font-semibold bg-[var(--kt-ink)] text-[var(--kt-cream)] px-2 py-0.5 rounded-[5px] tracking-wide">
                         {r.short_code}

@@ -98,19 +98,19 @@ export default async function SettingsPage() {
   return (
     <div>
       {/* Page header */}
-      <div className="mb-7">
-        <h1 className="font-display text-[26px] sm:text-[30px] font-semibold tracking-tight">
-          Settings
+      <div className="mb-8 border-b border-[var(--admin-line)] pb-5">
+        <h1 className="font-display text-[30px] sm:text-[36px] font-medium tracking-tight text-[var(--admin-ink)]">
+          Manage Canteen <span className="it text-[var(--admin-lime)]">Settings</span>
         </h1>
-        <div className="text-[11px] font-mono uppercase tracking-[0.12em] text-graphite-400 mt-0.5">
-          Canteen configuration
+        <div className="text-[10px] font-mono uppercase tracking-[0.16em] text-[var(--admin-ink-3)] mt-1">
+          Canteen configuration & portal preferences
         </div>
       </div>
 
       <div className="flex flex-col gap-6 max-w-xl">
         {/* ── 1. Canteen status ─────────────────────────────────────── */}
-        <section className="rounded-xl border border-graphite-200/10 bg-graphite-800/40 p-5">
-          <h2 className="text-[13px] font-semibold uppercase tracking-[0.1em] text-graphite-300 mb-4">
+        <section className="rounded-xl border border-[var(--admin-line-2)] bg-[var(--admin-bg-2)] p-6 shadow-sm">
+          <h2 className="text-[12px] font-mono font-semibold uppercase tracking-[0.16em] text-[var(--admin-lime)] mb-4">
             Canteen status
           </h2>
 
@@ -121,29 +121,29 @@ export default async function SettingsPage() {
                 type="checkbox"
                 name="is_open"
                 defaultChecked={row.is_open}
-                className="h-4 w-4 rounded border-graphite-400 accent-lime bg-graphite-700 focus:ring-lime"
+                className="h-4 w-4 rounded border-[var(--admin-line-3)] accent-[var(--admin-lime)] bg-[var(--admin-bg-3)] focus:ring-[var(--admin-lime)]"
               />
               {/* hidden time fields preserve current values when toggling */}
               <input type="hidden" name="opens_at" value={row.opens_at ?? ""} />
               <input type="hidden" name="closes_at" value={row.closes_at ?? ""} />
-              <span className="text-[13px] text-graphite-200 font-medium">
+              <span className="text-[14px] text-[var(--admin-ink)] font-semibold">
                 Canteen is open
               </span>
             </label>
             <button
               type="submit"
-              className="mt-3 h-8 px-4 rounded-md bg-lime text-graphite-900 text-[12px] font-semibold hover:bg-lime/90 transition-colors"
+              className="mt-4 h-9 px-4 rounded-md bg-[var(--admin-lime)] text-[var(--admin-bg)] text-[12px] font-bold hover:bg-[var(--admin-lime-2)] transition-all duration-200 hover:scale-[1.01] active:scale-[0.99] cursor-pointer"
             >
               Save open/close
             </button>
           </form>
 
           {/* Pause orders */}
-          <div className="border-t border-graphite-200/10 pt-4">
-            <div className="text-[12px] text-graphite-300 font-medium mb-2">
+          <div className="border-t border-[var(--admin-line)] pt-4">
+            <div className="text-[13px] text-[var(--admin-ink-2)] font-semibold mb-3">
               Pause orders
               {isPaused && (
-                <span className="ml-2 px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-400 text-[10px] font-mono">
+                <span className="ml-2 px-2 py-0.5 rounded-full bg-[var(--admin-amber-soft)] text-[var(--admin-amber)] text-[10px] font-mono">
                   Paused — resumes in {pauseCountdown}
                 </span>
               )}
@@ -152,7 +152,7 @@ export default async function SettingsPage() {
               <form action={handlePause15}>
                 <button
                   type="submit"
-                  className="h-8 px-3 rounded-md border border-graphite-200/15 text-[11px] font-mono text-graphite-300 hover:border-amber-400 hover:text-amber-400 transition-colors"
+                  className="h-9 px-3.5 rounded-md border border-[var(--admin-line-2)] bg-[var(--admin-bg-3)] text-[11px] font-mono text-[var(--admin-ink-2)] hover:border-[var(--admin-lime)] hover:text-[var(--admin-lime)] transition-all duration-200 cursor-pointer"
                 >
                   15 min
                 </button>
@@ -160,7 +160,7 @@ export default async function SettingsPage() {
               <form action={handlePause30}>
                 <button
                   type="submit"
-                  className="h-8 px-3 rounded-md border border-graphite-200/15 text-[11px] font-mono text-graphite-300 hover:border-amber-400 hover:text-amber-400 transition-colors"
+                  className="h-9 px-3.5 rounded-md border border-[var(--admin-line-2)] bg-[var(--admin-bg-3)] text-[11px] font-mono text-[var(--admin-ink-2)] hover:border-[var(--admin-lime)] hover:text-[var(--admin-lime)] transition-all duration-200 cursor-pointer"
                 >
                   30 min
                 </button>
@@ -168,7 +168,7 @@ export default async function SettingsPage() {
               <form action={handlePause60}>
                 <button
                   type="submit"
-                  className="h-8 px-3 rounded-md border border-graphite-200/15 text-[11px] font-mono text-graphite-300 hover:border-amber-400 hover:text-amber-400 transition-colors"
+                  className="h-9 px-3.5 rounded-md border border-[var(--admin-line-2)] bg-[var(--admin-bg-3)] text-[11px] font-mono text-[var(--admin-ink-2)] hover:border-[var(--admin-lime)] hover:text-[var(--admin-lime)] transition-all duration-200 cursor-pointer"
                 >
                   60 min
                 </button>
@@ -177,7 +177,7 @@ export default async function SettingsPage() {
                 <form action={handleClearPause}>
                   <button
                     type="submit"
-                    className="h-8 px-3 rounded-md border border-emerald-500/40 text-[11px] font-mono text-emerald-400 hover:bg-emerald-500/10 transition-colors"
+                    className="h-9 px-3.5 rounded-md border border-[var(--admin-mint)] text-[var(--admin-mint)] hover:bg-[var(--admin-mint-soft)] text-[11px] font-mono transition-all duration-200 cursor-pointer"
                   >
                     Clear pause
                   </button>
@@ -188,8 +188,8 @@ export default async function SettingsPage() {
         </section>
 
         {/* ── 2. Operating hours ────────────────────────────────────── */}
-        <section className="rounded-xl border border-graphite-200/10 bg-graphite-800/40 p-5">
-          <h2 className="text-[13px] font-semibold uppercase tracking-[0.1em] text-graphite-300 mb-4">
+        <section className="rounded-xl border border-[var(--admin-line-2)] bg-[var(--admin-bg-2)] p-6 shadow-sm">
+          <h2 className="text-[12px] font-mono font-semibold uppercase tracking-[0.16em] text-[var(--admin-lime)] mb-4">
             Operating hours
           </h2>
           <form action={handleHours} className="flex flex-col gap-4">
@@ -197,32 +197,32 @@ export default async function SettingsPage() {
             <input type="hidden" name="is_open" value={row.is_open ? "on" : ""} />
             <div className="flex gap-4 flex-wrap">
               <label className="flex flex-col gap-1.5">
-                <span className="text-[11px] font-mono uppercase tracking-[0.1em] text-graphite-400">
+                <span className="text-[11px] font-mono uppercase tracking-[0.16em] text-[var(--admin-ink-3)]">
                   Opens at
                 </span>
                 <input
                   type="time"
                   name="opens_at"
                   defaultValue={row.opens_at ?? ""}
-                  className="h-9 px-3 rounded-md border border-graphite-200/15 bg-graphite-700/60 text-[13px] text-graphite-200 focus:outline-none focus:border-lime/60 transition-colors"
+                  className="h-10 px-3.5 rounded-md border border-[var(--admin-line-2)] bg-[var(--admin-bg-3)] text-[14px] text-[var(--admin-ink)] focus:border-[var(--admin-lime)] focus:ring-[var(--admin-lime)] focus:outline-none transition-colors"
                 />
               </label>
               <label className="flex flex-col gap-1.5">
-                <span className="text-[11px] font-mono uppercase tracking-[0.1em] text-graphite-400">
+                <span className="text-[11px] font-mono uppercase tracking-[0.16em] text-[var(--admin-ink-3)]">
                   Closes at
                 </span>
                 <input
                   type="time"
                   name="closes_at"
                   defaultValue={row.closes_at ?? ""}
-                  className="h-9 px-3 rounded-md border border-graphite-200/15 bg-graphite-700/60 text-[13px] text-graphite-200 focus:outline-none focus:border-lime/60 transition-colors"
+                  className="h-10 px-3.5 rounded-md border border-[var(--admin-line-2)] bg-[var(--admin-bg-3)] text-[14px] text-[var(--admin-ink)] focus:border-[var(--admin-lime)] focus:ring-[var(--admin-lime)] focus:outline-none transition-colors"
                 />
               </label>
             </div>
-            <div>
+            <div className="mt-2">
               <button
                 type="submit"
-                className="h-8 px-4 rounded-md bg-lime text-graphite-900 text-[12px] font-semibold hover:bg-lime/90 transition-colors"
+                className="h-9 px-4 rounded-md bg-[var(--admin-lime)] text-[var(--admin-bg)] text-[12px] font-bold hover:bg-[var(--admin-lime-2)] transition-all duration-200 hover:scale-[1.01] active:scale-[0.99] cursor-pointer"
               >
                 Save hours
               </button>
@@ -231,8 +231,8 @@ export default async function SettingsPage() {
         </section>
 
         {/* ── 3 & 4. Guest orders + UPI VPA (single form) ───────────── */}
-        <section className="rounded-xl border border-graphite-200/10 bg-graphite-800/40 p-5">
-          <h2 className="text-[13px] font-semibold uppercase tracking-[0.1em] text-graphite-300 mb-4">
+        <section className="rounded-xl border border-[var(--admin-line-2)] bg-[var(--admin-bg-2)] p-6 shadow-sm">
+          <h2 className="text-[12px] font-mono font-semibold uppercase tracking-[0.16em] text-[var(--admin-lime)] mb-4">
             Ordering settings
           </h2>
           <form action={handleSettings} className="flex flex-col gap-5">
@@ -243,13 +243,13 @@ export default async function SettingsPage() {
                   type="checkbox"
                   name="guest_orders_enabled"
                   defaultChecked={row.guest_orders_enabled}
-                  className="mt-0.5 h-4 w-4 rounded border-graphite-400 accent-lime bg-graphite-700 focus:ring-lime"
+                  className="mt-1 h-4 w-4 rounded border-[var(--admin-line-3)] accent-[var(--admin-lime)] bg-[var(--admin-bg-3)] focus:ring-[var(--admin-lime)]"
                 />
                 <div>
-                  <div className="text-[13px] text-graphite-200 font-medium">
+                  <div className="text-[14px] text-[var(--admin-ink)] font-semibold">
                     Allow guest orders
                   </div>
-                  <div className="text-[11px] text-graphite-400 mt-0.5">
+                  <div className="text-[12px] text-[var(--admin-ink-3)] mt-1">
                     Allow visitors without a college email to order
                   </div>
                 </div>
@@ -257,12 +257,12 @@ export default async function SettingsPage() {
             </div>
 
             {/* UPI ID */}
-            <div className="border-t border-graphite-200/10 pt-4 flex flex-col gap-1.5">
+            <div className="border-t border-[var(--admin-line)] pt-4 flex flex-col gap-1.5">
               <label
                 htmlFor="upi_vpa"
-                className="text-[11px] font-mono uppercase tracking-[0.1em] text-graphite-400"
+                className="text-[11px] font-mono uppercase tracking-[0.16em] text-[var(--admin-ink-3)]"
               >
-                UPI ID <span className="normal-case tracking-normal font-sans text-graphite-500">(your payment address)</span>
+                UPI ID <span className="normal-case tracking-normal font-sans text-[var(--admin-ink-3)]/70">(your payment address)</span>
               </label>
               <input
                 id="upi_vpa"
@@ -270,17 +270,17 @@ export default async function SettingsPage() {
                 name="upi_vpa"
                 defaultValue={row.upi_vpa ?? ""}
                 placeholder="e.g. canteen@okaxis or 9876543210@ybl"
-                className="h-9 px-3 rounded-md border border-graphite-200/15 bg-graphite-700/60 text-[13px] text-graphite-200 placeholder:text-graphite-500 focus:outline-none focus:border-lime/60 transition-colors"
+                className="h-10 px-3.5 rounded-md border border-[var(--admin-line-2)] bg-[var(--admin-bg-3)] text-[14px] text-[var(--admin-ink)] placeholder:text-[var(--admin-ink-3)]/40 focus:border-[var(--admin-lime)] focus:ring-[var(--admin-lime)] focus:outline-none transition-colors"
               />
-              <p className="text-[11px] text-graphite-500">
+              <p className="text-[12px] text-[var(--admin-ink-3)] mt-2 leading-relaxed">
                 Your UPI ID (e.g. yourname@okaxis). Students will pay directly to this ID — money goes straight to your bank. No platform cut.
               </p>
             </div>
 
-            <div>
+            <div className="mt-2">
               <button
                 type="submit"
-                className="h-8 px-4 rounded-md bg-lime text-graphite-900 text-[12px] font-semibold hover:bg-lime/90 transition-colors"
+                className="h-9 px-4 rounded-md bg-[var(--admin-lime)] text-[var(--admin-bg)] text-[12px] font-bold hover:bg-[var(--admin-lime-2)] transition-all duration-200 hover:scale-[1.01] active:scale-[0.99] cursor-pointer"
               >
                 Save settings
               </button>

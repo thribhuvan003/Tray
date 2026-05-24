@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Check, ChefHat, BellRing, HandPlatter, XCircle, AlertTriangle } from "lucide-react";
+import { toast } from "sonner";
 import { formatRupees, formatTimeIST, cn } from "@/lib/utils";
 import { getBrowserClient } from "@/lib/supabase/browser";
 import { getMyOrderOtp, cancelOrderByStudent } from "@/app/(student)/_actions";
@@ -28,6 +29,8 @@ type Order = {
   ready_at: string | null;
   collected_at: string | null;
   customer_name: string | null;
+  order_type: "takeaway" | "dine_in";
+  table_label: string | null;
 };
 type Line = {
   id: string;
@@ -173,10 +176,9 @@ export function TrackPanel({ tenantSlug, tenantName, order: initial, lines }: { 
   const currentIdx = Math.max(0, STEPS.findIndex((s) => s.v === effectiveStatus));
   const isReady = order.status === "ready";
   const isCollected = order.status === "collected";
-
   return (
     <div className="mx-auto max-w-3xl px-4 sm:px-6 pt-6 pb-12 pb-[max(3rem,env(safe-area-inset-bottom))]">
-      <div className="flex items-center gap-3 mb-4">
+      <div className="flex items-center gap-3 mb-6">
         <Link
           href={`/c/${tenantSlug}/menu`}
           className="inline-flex items-center gap-1.5 text-[13px] text-[color:var(--color-ink)]/60 hover:text-ocean-500"
@@ -192,211 +194,272 @@ export function TrackPanel({ tenantSlug, tenantName, order: initial, lines }: { 
         </Link>
       </div>
 
-      <div className="mb-6 flex items-start justify-between flex-wrap gap-3">
-        <div>
-          <div className="text-[11px] font-mono uppercase tracking-wider text-[color:var(--color-ink)]/55">
-            {tenantName} · {order.short_code}
-          </div>
-          <h1 className="font-display text-[clamp(28px,5vw,40px)] font-medium tracking-tight leading-tight">
-            {isCancelled ? (
-              <>
-                Order <span className="it">cancelled.</span>
-              </>
-            ) : (
-              <>
-                {STEPS[currentIdx]?.label === "Placed" && <>Order <span className="it">placed.</span></>}
-                {STEPS[currentIdx]?.label === "Preparing" && <>Almost <span className="it">there.</span></>}
-                {STEPS[currentIdx]?.label === "Ready" && <>Ready for <span className="it">pickup.</span></>}
-                {STEPS[currentIdx]?.label === "Collected" && <>Order <span className="it">collected.</span></>}
-              </>
-            )}
-          </h1>
-          {!isCancelled && (
-            <p className="text-[13.5px] text-[color:var(--color-ink)]/65 mt-1.5 font-medium">
-              {STEPS[currentIdx]?.copy}
-            </p>
-          )}
-        </div>
-        <div className="text-[12px] font-mono tabular text-[color:var(--color-ink)]/55">
-          Placed {formatTimeIST(order.placed_at)}
-        </div>
-      </div>
-
-      {isCancelled && (
-        <div className="mb-6 rounded-2xl border border-amber-500/40 bg-amber-500/10 p-5 flex items-start gap-3">
-          <AlertTriangle size={20} className="text-amber-600 shrink-0 mt-0.5" />
-          <div>
-            <div className="font-display text-[18px] font-medium tracking-tight text-[color:var(--color-ink)]">
-              Your order was cancelled.
-            </div>
-            <p className="text-[13.5px] text-[color:var(--color-ink)]/70 mt-1">
-              {order.status === "refunded"
-                ? "Refund has been completed. It should reflect in your UPI app within 3–5 business days."
-                : "Refund has been initiated. It should reflect in your UPI app within 3–5 business days."}
+      {isReady ? (
+        /* ====================================================================
+           READY FOR PICKUP VIEW (matches student_mobile_otp_delivered.png)
+           ==================================================================== */
+        <div className="animate-in fade-in slide-in-from-bottom-4 duration-300">
+          <div className="mb-8 text-center">
+            <h1 className="font-display text-[clamp(32px,5vw,42px)] font-medium tracking-tight leading-tight mb-2">
+              Ready for <span className="italic text-ocean-500">pickup.</span>
+            </h1>
+            <p className="text-[14.5px] text-[color:var(--color-ink)]/60">
+              Show this 4-digit code at the counter to verify your order.
             </p>
           </div>
-        </div>
-      )}
 
-      {!isCancelled && isReady && otp && (
-        <div className="mb-6 rounded-3xl bg-ocean-500 text-black p-6 sm:p-8 relative overflow-hidden">
-          <div
-            aria-hidden
-            className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(0,0,0,0.06),transparent_60%)]"
-          />
-          <div className="relative">
-            <div className="text-[11px] font-mono uppercase tracking-wider text-black/75 mb-2">
-              Your pickup code · show at counter
-            </div>
+          {otp ? (
             <div
-              className="tabular leading-none text-[clamp(60px,14vw,140px)] tracking-[0.06em] cursor-pointer select-all"
-              style={{ fontFamily: "var(--font-bebas, Impact, sans-serif)" }}
-              title="Tap to copy"
-              onClick={() => navigator.clipboard.writeText(otp).catch(() => null)}
+              onClick={() => {
+                navigator.clipboard.writeText(otp).catch(() => null);
+                toast.success("Code copied!");
+              }}
+              className="otp-display select-none mx-auto max-w-md"
+              title="Click to copy pickup code"
             >
-              {otp.split("").join(" ")}
+              <p className="otp-label">Pickup code</p>
+              <div className="otp-digits">
+                {otp.split("").map((digit, i) => (
+                  <span key={i} className="otp-digit">
+                    {digit}
+                  </span>
+                ))}
+              </div>
+              <p className="otp-hint">Show this code at the counter. Tap to copy.</p>
             </div>
-            <p className="text-[13px] text-black/80 mt-3">
-              Show this code at the counter. You have 3 tries — if it doesn&rsquo;t work, show your order number #{order.short_code} to the staff.
-            </p>
+          ) : (
+            <div className="mx-auto max-w-md rounded-3xl border border-amber-500/30 bg-amber-500/5 p-5 text-[13px] text-[color:var(--color-ink)]/70 flex items-center justify-center gap-3">
+              <span className="animate-spin inline-block h-4 w-4 border-2 border-amber-500 border-t-transparent rounded-full shrink-0" />
+              <span>Your order is ready — fetching your pickup code…</span>
+            </div>
+          )}
+
+          <div className="text-center font-mono text-[13px] text-[color:var(--color-ink)]/50 my-6">
+            {order.short_code}
+          </div>
+
+          <div className="mx-auto max-w-md mt-6">
+            <Link
+              href={`/c/${tenantSlug}/menu`}
+              className="w-full h-12 text-[15px] inline-flex items-center justify-center rounded-xl bg-ocean-500 text-black font-bold hover:bg-ocean-600 transition-all active:scale-[0.98] shadow-sm"
+            >
+              ← Back to menu
+            </Link>
           </div>
         </div>
-      )}
-      {!isCancelled && isReady && !otp && (
-        <div className="mb-6 rounded-3xl border border-amber-500/30 bg-amber-500/5 p-5 text-[13px] text-[color:var(--color-ink)]/70 flex items-center gap-3">
-          <span className="animate-spin inline-block h-4 w-4 border-2 border-amber-500 border-t-transparent rounded-full shrink-0" />
-          <span>Your order is ready — fetching your pickup code…</span>
-        </div>
-      )}
-
-      {isPartiallyReady && (
-        <div className="mb-4 rounded-2xl border border-amber-500/40 bg-amber-500/10 p-4 flex items-start gap-3">
-          <AlertTriangle size={18} className="text-amber-600 shrink-0 mt-0.5" />
-          <div>
-            <div className="text-[13.5px] font-medium text-[color:var(--color-ink)]">Some items still preparing</div>
-            <p className="text-[12px] text-[color:var(--color-ink)]/65 mt-0.5">
-              Part of your order is almost ready — the kitchen will call you when everything&rsquo;s done.
+      ) : (
+        /* ====================================================================
+           PREPARING / TRACKING VIEW (matches student_mobile_paying_loader.png)
+           ==================================================================== */
+        <div className="space-y-6 animate-in fade-in duration-300">
+          <div className="mb-6">
+            <div className="text-[11px] font-mono uppercase tracking-wider text-[color:var(--color-ink)]/55">
+              {tenantName} · {order.short_code}
+            </div>
+            <h1 className="font-display text-[clamp(28px,5vw,40px)] font-medium tracking-tight leading-tight mt-1">
+              Order <span className="italic text-ocean-500">status.</span>
+            </h1>
+            <p className="text-[13.5px] text-[color:var(--color-ink)]/65 mt-1.5 font-medium">
+              {isCancelled ? "Your order was cancelled." : "We're preparing your food."}
             </p>
           </div>
-        </div>
-      )}
 
-      {!isCancelled && (
-        <ol className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-6">
-          {STEPS.map((s, i) => {
-            const done = i < currentIdx || isCollected;
-            const active = i === currentIdx && !isCollected;
-            const Icon = s.icon;
-            return (
-              <li
-                key={s.v}
-                className={cn(
-                  "rounded-2xl border p-4 flex flex-col gap-1",
-                  done
-                    ? "border-emerald-500/30 bg-emerald-500/5"
-                    : active
-                    ? "border-ocean-500 bg-ocean-50 dark:bg-ocean-500/10"
-                    : "border-[color:var(--color-line)]"
-                )}
-              >
-                <div
-                  className={cn(
-                    "inline-flex h-7 w-7 items-center justify-center rounded-full",
-                    done
-                      ? "bg-emerald-500 text-white"
-                      : active
-                      ? "bg-ocean-500 text-black animate-pulse"
-                      : "bg-[color:var(--color-paper-dim)] text-[color:var(--color-ink)]/35"
-                  )}
-                >
-                  <Icon size={13} />
+          {isCancelled && (
+            <div className="rounded-2xl border border-amber-500/40 bg-amber-500/10 p-5 flex items-start gap-3">
+              <AlertTriangle size={20} className="text-amber-600 shrink-0 mt-0.5" />
+              <div>
+                <div className="font-display text-[18px] font-medium tracking-tight text-[color:var(--color-ink)]">
+                  Your order was cancelled.
                 </div>
-                <div className="text-[13.5px] font-medium">{s.label}</div>
-              </li>
-            );
-          })}
-        </ol>
-      )}
+                <p className="text-[13.5px] text-[color:var(--color-ink)]/70 mt-1">
+                  {order.status === "refunded"
+                    ? "Refund has been completed. It should reflect in your UPI app within 3–5 business days."
+                    : "Refund has been initiated. It should reflect in your UPI app within 3–5 business days."}
+                </p>
+              </div>
+            </div>
+          )}
 
-      {cancelWindowOpen && (
-        <div className="mb-6 rounded-2xl border border-[color:var(--color-line)] p-4 flex items-center justify-between flex-wrap gap-3">
-          <div>
-            <div className="text-[13.5px] font-medium">Changed your mind?</div>
-            <p className="text-[12px] text-[color:var(--color-ink)]/55">
-              You can cancel for a full refund within 5 minutes of placing.
-            </p>
-            {cancelError && (
-              <p className="text-[12px] text-rose-500 mt-1">{cancelError}</p>
-            )}
-          </div>
-          <button
-            type="button"
-            disabled={cancelPending}
-            onClick={() => {
-              setCancelError(null);
-              startCancel(async () => {
-                const res = await cancelOrderByStudent(order.id);
-                if (!res.ok) {
-                  setCancelError(res.error ?? "Could not cancel");
-                  return;
+          {!isCancelled && (
+            <div className="success-note">
+              Order confirmed. We&rsquo;ve got your order!
+            </div>
+          )}
+
+          {!isCancelled && !isCollected && (
+            <div className="pickup-ribbon">
+              <span className="pickup-ribbon__eta">
+                {order.order_type === "dine_in" ? "~6 min" : "~4 min"}
+              </span>
+              <span className="pickup-ribbon__text">
+                {order.order_type === "dine_in"
+                  ? (order.table_label
+                      ? `We'll bring your order to table ${order.table_label} when ready.`
+                      : "Find a seat — we'll call your table.")
+                  : "Walk to the pickup counter when status hits ready."}
+              </span>
+            </div>
+          )}
+
+          {!isCancelled && (
+            <div className="progress-bar my-6">
+              <div
+                className="progress-bar__fill"
+                style={{
+                  width:
+                    effectiveStatus === "placed"
+                      ? "25%"
+                      : effectiveStatus === "preparing"
+                      ? "50%"
+                      : effectiveStatus === "ready"
+                      ? "75%"
+                      : "100%",
+                }}
+              />
+            </div>
+          )}
+
+          {isPartiallyReady && (
+            <div className="rounded-2xl border border-amber-500/40 bg-amber-500/10 p-4 flex items-start gap-3">
+              <AlertTriangle size={18} className="text-amber-600 shrink-0 mt-0.5" />
+              <div>
+                <div className="text-[13.5px] font-medium text-[color:var(--color-ink)]">Some items still preparing</div>
+                <p className="text-[12px] text-[color:var(--color-ink)]/65 mt-0.5">
+                  Part of your order is almost ready — the kitchen will call you when everything&rsquo;s done.
+                </p>
+              </div>
+            </div>
+          )}
+
+          {!isCancelled && (
+            <ol className="track-steps mb-8">
+              {STEPS.map((s, i) => {
+                const done = i < currentIdx || isCollected;
+                const active = i === currentIdx && !isCollected;
+                const Icon = s.icon;
+                
+                // Dynamic description matching screenshots
+                let stepCopy = s.copy;
+                if (s.v === "placed") {
+                  stepCopy = done ? `Order confirmed · ${formatTimeIST(order.placed_at)}` : "Waiting for kitchen to accept";
+                } else if (s.v === "preparing") {
+                  stepCopy = done ? "Prepared by kitchen" : active ? "Collect at the pickup counter" : "Waiting to start";
+                } else if (s.v === "ready") {
+                  stepCopy = done ? "Ready for pickup" : active ? `Otp: ${otp || "—"}` : "Otp: —";
+                } else if (s.v === "collected") {
+                  stepCopy = "Handed over";
                 }
-                router.refresh();
-              });
-            }}
-            className={cn(
-              "inline-flex items-center gap-1.5 h-10 px-4 rounded-full border border-rose-500/40 text-rose-600 text-[13px] font-medium hover:bg-rose-500/10 transition-colors",
-              cancelPending && "opacity-60 cursor-not-allowed"
-            )}
-          >
-            {cancelPending ? "Cancelling…" : "Cancel order"}
-          </button>
-        </div>
-      )}
 
-      <div className="rounded-2xl border border-[color:var(--color-line)] p-5">
-        <div className="text-[11px] font-mono uppercase tracking-wider text-[color:var(--color-ink)]/55 mb-3">
-          You ordered
-        </div>
-        <ul className="flex flex-col gap-2">
-          {lines.map((l) => (
-            <li key={l.id} className="flex items-center gap-3 text-[14px]">
-              <span
+                return (
+                  <li
+                    key={s.v}
+                    className={cn(
+                      "track-step",
+                      done ? "is-done" : active ? "is-current" : "is-pending"
+                    )}
+                  >
+                    <div className="track-dot">
+                      {done ? (
+                        <Check size={14} className="text-emerald-600" />
+                      ) : (
+                        <Icon size={14} className={cn(active ? "text-ocean-500" : "text-graphite-400")} />
+                      )}
+                    </div>
+                    <div className="track-step__body">
+                      <h4 className={cn("text-[16px] font-semibold", active ? "text-ocean-500" : "text-[color:var(--color-ink)]")}>
+                        {s.label}
+                      </h4>
+                      <p className="text-[13.5px] text-[color:var(--color-ink)]/55">
+                        {stepCopy}
+                      </p>
+                    </div>
+                  </li>
+                );
+              })}
+            </ol>
+          )}
+
+          {cancelWindowOpen && (
+            <div className="rounded-2xl border border-[color:var(--color-line)] p-4 flex items-center justify-between flex-wrap gap-3">
+              <div>
+                <div className="text-[13.5px] font-medium">Changed your mind?</div>
+                <p className="text-[12px] text-[color:var(--color-ink)]/55">
+                  You can cancel for a full refund within 5 minutes of placing.
+                </p>
+                {cancelError && (
+                  <p className="text-[12px] text-rose-500 mt-1">{cancelError}</p>
+                )}
+              </div>
+              <button
+                type="button"
+                disabled={cancelPending}
+                onClick={() => {
+                  setCancelError(null);
+                  startCancel(async () => {
+                    const res = await cancelOrderByStudent(order.id);
+                    if (!res.ok) {
+                      setCancelError(res.error ?? "Could not cancel");
+                      return;
+                    }
+                    router.refresh();
+                  });
+                }}
                 className={cn(
-                  "h-3.5 w-3.5 inline-flex items-center justify-center border-2 rounded-sm",
-                  l.diet_snapshot === "veg"
-                    ? "border-emerald-500"
-                    : l.diet_snapshot === "egg"
-                    ? "border-amber-500"
-                    : "border-rose-500"
+                  "inline-flex items-center gap-1.5 h-10 px-4 rounded-full border border-rose-500/40 text-rose-600 text-[13px] font-medium hover:bg-rose-500/10 transition-colors",
+                  cancelPending && "opacity-60 cursor-not-allowed"
                 )}
               >
-                <span
-                  className={cn(
-                    "h-1.5 w-1.5 rounded-full",
-                    l.diet_snapshot === "veg"
-                      ? "bg-emerald-500"
-                      : l.diet_snapshot === "egg"
-                      ? "bg-amber-500"
-                      : "bg-rose-500"
-                  )}
-                />
+                {cancelPending ? "Cancelling…" : "Cancel order"}
+              </button>
+            </div>
+          )}
+
+          <div className="rounded-2xl border border-[color:var(--color-line)] p-5">
+            <div className="text-[11px] font-mono uppercase tracking-wider text-[color:var(--color-ink)]/55 mb-3">
+              You ordered
+            </div>
+            <ul className="flex flex-col gap-2">
+              {lines.map((l) => (
+                <li key={l.id} className="flex items-center gap-3 text-[14px]">
+                  <span
+                    className={cn(
+                      "h-3.5 w-3.5 inline-flex items-center justify-center border-2 rounded-sm",
+                      l.diet_snapshot === "veg"
+                        ? "border-emerald-500"
+                        : l.diet_snapshot === "egg"
+                        ? "border-amber-500"
+                        : "border-rose-500"
+                    )}
+                  >
+                    <span
+                      className={cn(
+                        "h-1.5 w-1.5 rounded-full",
+                        l.diet_snapshot === "veg"
+                          ? "bg-emerald-500"
+                          : l.diet_snapshot === "egg"
+                          ? "bg-amber-500"
+                          : "bg-rose-500"
+                      )}
+                    />
+                  </span>
+                  <span className="flex-1 min-w-0 truncate">
+                    {l.qty} × {l.name_snapshot}
+                  </span>
+                  <span className="tabular text-[color:var(--color-ink)]/70">
+                    {formatRupees(l.qty * l.price_paise_snapshot)}
+                  </span>
+                </li>
+              ))}
+            </ul>
+            <div className="mt-4 pt-4 border-t border-[color:var(--color-line)] flex justify-between items-baseline">
+              <span className="text-[12px] font-mono uppercase tracking-wider text-[color:var(--color-ink)]/55">
+                {isCancelled ? "Refund amount" : "Total paid"}
               </span>
-              <span className="flex-1 min-w-0 truncate">
-                {l.qty} × {l.name_snapshot}
-              </span>
-              <span className="tabular text-[color:var(--color-ink)]/70">
-                {formatRupees(l.qty * l.price_paise_snapshot)}
-              </span>
-            </li>
-          ))}
-        </ul>
-        <div className="mt-4 pt-4 border-t border-[color:var(--color-line)] flex justify-between items-baseline">
-          <span className="text-[12px] font-mono uppercase tracking-wider text-[color:var(--color-ink)]/55">
-            {isCancelled ? "Refund amount" : "Total paid"}
-          </span>
-          <span className="font-display text-[20px] font-medium tabular">{formatRupees(order.total_paise)}</span>
+              <span className="font-display text-[20px] font-medium tabular">{formatRupees(order.total_paise)}</span>
+            </div>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

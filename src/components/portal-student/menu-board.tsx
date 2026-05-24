@@ -1,169 +1,354 @@
 "use client";
 
+// Shared constant (matches demo --radius-sm: 10px)
+const S_RADIUS_SM = 10;
+
 import { useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
-import { Search, Minus, Plus } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Minus, Plus } from "lucide-react";
 import type { MenuItem, MenuCategory } from "@/lib/db/types";
 import { getBrowserClient } from "@/lib/supabase/browser";
-import { MenuItemCard } from "./menu-item-card";
 import { cn, formatRupees } from "@/lib/utils";
 import { useCart } from "@/lib/cart/store";
 import { toast } from "sonner";
-import { motion } from "framer-motion";
 import type { CurrentUser } from "@/lib/auth/get-user";
+import { Drawer } from "vaul";
+
+function getCanteenEmoji(slug: string, name: string): string {
+  const s = slug.toLowerCase();
+  const n = name.toLowerCase();
+  if (s.includes("great-hall") || n.includes("great hall")) return "ðŸ°";
+  if (s.includes("gryffindor") || n.includes("gryffindor")) return "ðŸ¦";
+  if (s.includes("slytherin") || n.includes("slytherin")) return "ðŸ";
+  if (s.includes("hufflepuff") || n.includes("hufflepuff")) return "ðŸ¦¡";
+  if (s.includes("ravenclaw") || n.includes("ravenclaw")) return "ðŸ¦…";
+  if (s.includes("aditya") || n.includes("aditya")) return "ðŸŽ“";
+  return "ðŸ´";
+}
+
+function formatPausedTime(iso: string): string {
+  try {
+    return new Intl.DateTimeFormat("en-IN", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+      timeZone: "Asia/Kolkata",
+    }).format(new Date(iso));
+  } catch {
+    return iso;
+  }
+}
+
+function dietEmoji(diet: string): string {
+  if (diet === "veg") return "ðŸ¥—";
+  if (diet === "egg") return "ðŸ³";
+  return "ðŸ—";
+}
 
 type Props = {
   categories: MenuCategory[];
   items: MenuItem[];
   tenantId: string;
   tenantSlug: string;
+  tenantName?: string;
   siblings?: any[];
   user?: CurrentUser | null;
+  adminName?: string | null;
+  isOpen: boolean;
+  pausedUntil: string | null;
+  pendingCount: number;
+  collegeSlug: string | null;
 };
 
-export function MenuBoard({ categories, items, tenantId, tenantSlug, siblings = [], user }: Props) {
+export function MenuBoard({
+  categories,
+  items,
+  tenantId,
+  tenantSlug,
+  tenantName: tenantNameProp,
+  siblings = [],
+  user,
+  adminName = null,
+  isOpen: initialIsOpen,
+  pausedUntil: initialPausedUntil,
+  pendingCount: initialPendingCount,
+  collegeSlug,
+}: Props) {
   const [activeCat, setActiveCat] = useState<string>("all");
+  const [isBrowseOpen, setIsBrowseOpen] = useState(false);
   const [vegOnly, setVegOnly] = useState(false);
-  const [q, setQ] = useState("");
+  const searchParams = useSearchParams();
+  const q = searchParams.get("q") || "";
   const router = useRouter();
 
-  const specialsCategory = useMemo(() => {
-    return categories.find(c => c.name.toLowerCase() === "specials");
-  }, [categories]);
+  const [liveStatus, setLiveStatus] = useState({
+    isOpen: initialIsOpen,
+    pausedUntil: initialPausedUntil,
+    pendingCount: initialPendingCount,
+  });
 
-  const specialsItems = useMemo(() => {
-    if (!specialsCategory) return [];
-    return items.filter(it => it.category_id === specialsCategory.id);
-  }, [items, specialsCategory]);
+  // Derive tenant name from siblings if not passed directly
+  const tenantName = useMemo(() => {
+    if (tenantNameProp) return tenantNameProp;
+    const sib = siblings.find((s: any) => s.slug === tenantSlug);
+    return sib?.name ?? tenantSlug;
+  }, [tenantNameProp, siblings, tenantSlug]);
 
-  const showSpecials = activeCat === "all" || (specialsCategory && activeCat === specialsCategory.id);
-  const visibleSpecials = useMemo(() => {
-    if (!showSpecials || specialsItems.length === 0 || q.trim() !== "") return [];
-    return specialsItems.filter(it => !vegOnly || it.diet === "veg");
-  }, [showSpecials, specialsItems, q, vegOnly]);
+  // Sync state with prop updates
+  useEffect(() => {
+    setLiveStatus({
+      isOpen: initialIsOpen,
+      pausedUntil: initialPausedUntil,
+      pendingCount: initialPendingCount,
+    });
+  }, [initialIsOpen, initialPausedUntil, initialPendingCount]);
 
-  const { orderType, setOrderType, tableLabel, setTableLabel } = useCart();
-
+  // Poll live status every 1.5s
   useEffect(() => {
     const sb = getBrowserClient();
-    
-    // Subscribe to menu_items changes with robust client-side filter
-    // to bypass PostgreSQL REPLICA IDENTITY DEFAULT constraints
-    const menuCh = sb
-      .channel(`realtime-menu-${tenantId}`)
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "menu_items" },
-        (payload) => {
-          const newId = (payload.new as any)?.id;
-          const oldId = (payload.old as any)?.id;
-          const newTenantId = (payload.new as any)?.tenant_id;
-          
-          const isOurItem = 
-            (newId && items.some(it => it.id === newId)) ||
-            (oldId && items.some(it => it.id === oldId)) ||
-            (newTenantId === tenantId);
-            
-          if (isOurItem) {
-            router.refresh();
+    let isMounted = true;
+    async function updateStatus() {
+      if (!collegeSlug) return;
+      try {
+        const { data, error } = await (sb as any).rpc("college_canteens", { p_college_slug: collegeSlug });
+        if (!error && data && isMounted) {
+          const current = (data as any[]).find((c) => c.slug === tenantSlug);
+          if (current) {
+            setLiveStatus({
+              isOpen: current.is_open,
+              pausedUntil: current.paused_until,
+              pendingCount: Number(current.pending_orders_count || 0),
+            });
           }
         }
-      )
-      .subscribe();
-
-    // Subscribe to tenants changes for this tenant
-    const tenantCh = sb
-      .channel(`realtime-tenant-${tenantId}`)
-      .on(
-        "postgres_changes",
-        { event: "UPDATE", schema: "public", table: "tenants", filter: `id=eq.${tenantId}` },
-        () => {
-          router.refresh();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      sb.removeChannel(menuCh);
-      sb.removeChannel(tenantCh);
-    };
-  }, [tenantId, router, items]);
-
-  useEffect(() => {
-    const handleVisibility = () => {
-      if (document.visibilityState === "visible") {
-        router.refresh();
+      } catch (err) {
+        console.error("Error polling live status:", err);
       }
-    };
-    document.addEventListener("visibilitychange", handleVisibility);
-    return () => {
-      document.removeEventListener("visibilitychange", handleVisibility);
-    };
-  }, [router]);
+    }
+    updateStatus();
+    const intervalId = setInterval(updateStatus, 1500);
+    return () => { isMounted = false; clearInterval(intervalId); };
+  }, [collegeSlug, tenantSlug]);
 
-  const filtered = useMemo(() => {
+  const statusInfo = useMemo(() => {
+    const isClosed = !liveStatus.isOpen;
+    const isPaused =
+      !isClosed && !!liveStatus.pausedUntil && new Date(liveStatus.pausedUntil) > new Date();
+    if (isClosed) return { text: "Kitchen Closed", dotColor: "#ef4444", textColor: "#dc2626" };
+    if (isPaused)
+      return {
+        text: `Kitchen Paused until ${formatPausedTime(liveStatus.pausedUntil!)}`,
+        dotColor: "#f59e0b",
+        textColor: "#d97706",
+      };
+    const waitMinutes = Math.min(20, Math.max(3, 3 + liveStatus.pendingCount));
+    if (liveStatus.pendingCount >= 10)
+      return { text: `Kitchen Busy Â. ~${waitMinutes} min wait`, dotColor: "#ef4444", textColor: "#dc2626" };
+    if (liveStatus.pendingCount >= 5)
+      return { text: `Kitchen Moderate Â. ~${waitMinutes} min wait`, dotColor: "#f59e0b", textColor: "#d97706" };
+    return { text: `Kitchen Open Â. ~${waitMinutes} min wait`, dotColor: "#0c8a43", textColor: "#0c8a43" };
+  }, [liveStatus]);
+
+  // Specials category
+  const specialsCategory = useMemo(() => categories.find((c) => c.name.toLowerCase() === "specials"), [categories]);
+  const specialsItems = useMemo(
+    () => (!specialsCategory ? [] : items.filter((it) => it.category_id === specialsCategory.id)),
+    [items, specialsCategory]
+  );
+  const showSpecials = activeCat === "all" || (specialsCategory && activeCat === specialsCategory.id);
+  const filteredSpecials = useMemo(() => {
+    if (!showSpecials) return [];
     const needle = q.trim().toLowerCase();
-    return items.filter((it) => {
+    return specialsItems.filter((it) => {
       if (vegOnly && it.diet !== "veg") return false;
       if (!needle) return true;
       return it.name.toLowerCase().includes(needle) || (it.description ?? "").toLowerCase().includes(needle);
     });
-  }, [items, vegOnly, q]);
+  }, [showSpecials, specialsItems, vegOnly, q]);
+
+  // Other items (non-specials)
+  const otherItems = useMemo(
+    () => (!specialsCategory ? items : items.filter((it) => it.category_id !== specialsCategory.id)),
+    [items, specialsCategory]
+  );
+  const filteredOther = useMemo(() => {
+    const needle = q.trim().toLowerCase();
+    return otherItems.filter((it) => {
+      if (vegOnly && it.diet !== "veg") return false;
+      if (!needle) return true;
+      return it.name.toLowerCase().includes(needle) || (it.description ?? "").toLowerCase().includes(needle);
+    });
+  }, [otherItems, vegOnly, q]);
 
   const byCat = useMemo(() => {
     const m = new Map<string | null, MenuItem[]>();
-    for (const it of filtered) {
+    for (const it of filteredOther) {
       const k = it.category_id;
       if (!m.has(k)) m.set(k, []);
       m.get(k)!.push(it);
     }
     return m;
-  }, [filtered]);
+  }, [filteredOther]);
 
-  const activeCategoryList = useMemo(() => {
-    if (activeCat === "all") return categories;
-    return categories.filter((c) => c.id === activeCat);
-  }, [categories, activeCat]);
+  const showOther =
+    activeCat === "all" ||
+    (!!specialsCategory && activeCat !== specialsCategory.id) ||
+    !specialsCategory;
+
+  const activeCategoryList = useMemo(
+    () => (activeCat === "all" ? categories : categories.filter((c) => c.id === activeCat)),
+    [categories, activeCat]
+  );
+
+  // Cart state
+  const { orderType, setOrderType, tableLabel, setTableLabel, lines, clear } = useCart();
+  const cartDec = useCart((s) => s.decrement);
+  const cartInc = useCart((s) => s.increment);
+  const cartAdd = useCart((s) => s.add);
+  const setCartOpen = useCart((s) => s.setIsOpen);
+  const cartCount = lines.reduce((acc, l) => acc + l.qty, 0);
+  const cartTotal = lines.reduce((acc, l) => acc + l.pricePaise * l.qty, 0);
+
+  // Realtime subscriptions
+  useEffect(() => {
+    const sb = getBrowserClient();
+    const menuCh = sb
+      .channel(`realtime-menu-${tenantId}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "menu_items" }, (payload) => {
+        const newId = (payload.new as any)?.id;
+        const oldId = (payload.old as any)?.id;
+        const newTenantId = (payload.new as any)?.tenant_id;
+        if (
+          (newId && items.some((it) => it.id === newId)) ||
+          (oldId && items.some((it) => it.id === oldId)) ||
+          newTenantId === tenantId
+        ) {
+          router.refresh();
+        }
+      })
+      .subscribe();
+    const tenantCh = sb
+      .channel(`realtime-tenant-${tenantId}`)
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "tenants", filter: `id=eq.${tenantId}` },
+        () => router.refresh()
+      )
+      .subscribe();
+    return () => { sb.removeChannel(menuCh); sb.removeChannel(tenantCh); };
+  }, [tenantId, router, items]);
+
+  useEffect(() => {
+    const handleVisibility = () => { if (document.visibilityState === "visible") router.refresh(); };
+    document.addEventListener("visibilitychange", handleVisibility);
+    return () => document.removeEventListener("visibilitychange", handleVisibility);
+  }, [router]);
+
+  const totalFilteredCount = filteredSpecials.length + filteredOther.length;
+
+  // Canteen segment grid columns: 1â†’1col 2â†’2col 3+â†’3col
+  const canteenGridCols = siblings.length <= 1 ? 1 : siblings.length === 2 ? 2 : 3;
+
+  function sibWait(sib: any): string {
+    if (!sib.is_open) return "Closed";
+    const wait = Math.min(20, Math.max(3, 3 + (sib.pending_orders_count ?? 0)));
+    return `~${wait} min wait`;
+  }
+
+  // â”€â”€ Shared inline style constants (matching demo CSS vars) â”€â”€
+  const S = {
+    text: "#1A1A19",
+    muted: "rgba(26,26,25,.58)",
+    muted2: "rgba(26,26,25,.38)",
+    accent: "#334155",
+    accentDim: "rgba(51,65,85,.08)",
+    border: "rgba(26,26,25,.12)",
+    surface: "rgba(26,26,25,.04)",
+    surface2: "rgba(26,26,25,.07)",
+    fontDisplay: "var(--font-bricolage, 'Bricolage Grotesque', system-ui, sans-serif)",
+    fontMono: "var(--font-jetbrains, 'JetBrains Mono', monospace)",
+    radius: 14,
+    radiusSm: 10,
+  } as const;
 
   return (
-    <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:max-w-none pt-4 pb-10 lg:grid lg:grid-cols-[14rem,1fr] lg:gap-8 lg:items-start">
-      
-      {/* ── Desktop Category Sidebar (.cat-nav) ── */}
-      <nav className="hidden lg:block w-56 shrink-0 sticky top-20 self-start" aria-label="Categories">
-        <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[color:var(--color-ink)]/45 mb-3 px-3">
+    /* shell: 3-column flex row matching demo layout */
+    <div style={{ display: "flex", flex: 1, minHeight: 0, position: "relative" }}>
+
+      {/* â”€â”€ LEFT: Desktop Category Nav (200px, demo .cat-nav) â”€â”€ */}
+      <nav
+        aria-label="Categories"
+        className="hidden lg:block"
+        style={{
+          width: 200,
+          flexShrink: 0,
+          padding: "20px 12px 20px 16px",
+          borderRight: `1px solid ${S.border}`,
+        }}
+      >
+        <p style={{
+          fontFamily: S.fontDisplay,
+          fontSize: 11,
+          letterSpacing: "0.14em",
+          textTransform: "uppercase",
+          color: S.muted,
+          margin: "0 12px 14px",
+        }}>
           Browse
         </p>
-        <ul className="flex flex-col gap-1">
+        <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", gap: 4 }}>
           <li>
             <button
               onClick={() => setActiveCat("all")}
-              className={cn(
-                "w-full text-left px-3 py-2.5 rounded-xl text-[14px] font-semibold transition-all border",
-                activeCat === "all"
-                  ? "bg-ocean-500/10 text-ocean-600 dark:text-ocean-400 font-bold border-ocean-500/20"
-                  : "border-transparent text-[color:var(--color-ink)]/65 hover:bg-[color:var(--color-paper-dim)]"
-              )}
+              style={{
+                width: "100%",
+                textAlign: "left",
+                padding: "10px 14px",
+                borderRadius: S.radiusSm,
+                fontSize: 15,
+                fontWeight: 500,
+                background: activeCat === "all" ? S.accentDim : "transparent",
+                boxShadow: activeCat === "all" ? "inset 0 0 0 1px rgba(51,65,85,.15)" : "none",
+                color: activeCat === "all" ? S.accent : S.muted,
+                cursor: "pointer",
+                border: "none",
+                transition: "color .2s, background .2s",
+                fontFamily: S.fontDisplay,
+              }}
             >
               All items
+              <span style={{ display: "block", fontSize: 11, color: S.muted2, marginTop: 2, fontWeight: 500 }}>
+                {items.length} dishes
+              </span>
             </button>
           </li>
           {categories.map((cat) => {
-            const catItemsCount = byCat.get(cat.id)?.length ?? 0;
-            if (catItemsCount === 0) return null;
+            const cnt = byCat.get(cat.id)?.length ?? 0;
+            const isActive = activeCat === cat.id;
+            if (cnt === 0 && !isActive) return null;
             return (
               <li key={cat.id}>
                 <button
                   onClick={() => setActiveCat(cat.id)}
-                  className={cn(
-                    "w-full text-left px-3 py-2.5 rounded-xl text-[14px] font-semibold transition-all border",
-                    activeCat === cat.id
-                      ? "bg-ocean-500/10 text-ocean-600 dark:text-ocean-400 font-bold border-ocean-500/20"
-                      : "border-transparent text-[color:var(--color-ink)]/65 hover:bg-[color:var(--color-paper-dim)]"
-                  )}
+                  style={{
+                    width: "100%",
+                    textAlign: "left",
+                    padding: "10px 14px",
+                    borderRadius: S.radiusSm,
+                    fontSize: 15,
+                    fontWeight: 500,
+                    background: isActive ? S.accentDim : "transparent",
+                    boxShadow: isActive ? "inset 0 0 0 1px rgba(51,65,85,.15)" : "none",
+                    color: isActive ? S.accent : S.muted,
+                    cursor: "pointer",
+                    border: "none",
+                    transition: "color .2s, background .2s",
+                    fontFamily: S.fontDisplay,
+                  }}
                 >
                   {cat.name}
-                  <span className="block text-[11px] text-[color:var(--color-ink)]/45 font-medium mt-0.5">
-                    {catItemsCount} items
+                  <span style={{ display: "block", fontSize: 11, color: S.muted2, marginTop: 2, fontWeight: 500 }}>
+                    {cnt} dish{cnt === 1 ? "" : "es"}
                   </span>
                 </button>
               </li>
@@ -172,450 +357,1000 @@ export function MenuBoard({ categories, items, tenantId, tenantSlug, siblings = 
         </ul>
       </nav>
 
-      {/* ── Main content area ── */}
-      <div className="min-w-0">
-        
-        {/* signature welcome greeting */}
-        <div className="mb-6">
-          <div className="text-[10px] font-mono uppercase tracking-[0.14em] text-[color:var(--color-ink)]/45 mb-1.5 flex items-center gap-1.5">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-            </span>
-            Kitchen open · ~7 min wait
+      {/* â”€â”€ MIDDLE: Main content (flex-1) â”€â”€ */}
+      <main style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
+        <div
+          style={{ flex: 1, padding: "24px 28px 40px", maxWidth: 900, width: "100%", margin: "0 auto" }}
+          className="px-4 sm:px-5 lg:px-7"
+        >
+
+          {/* Menu hero */}
+          <div style={{ marginBottom: 24 }}>
+            <div style={{
+              fontFamily: S.fontMono,
+              fontSize: 11,
+              letterSpacing: "0.12em",
+              textTransform: "uppercase",
+              color: statusInfo.textColor,
+              marginBottom: 6,
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+            }}>
+              <span style={{
+                width: 8, height: 8,
+                borderRadius: "50%",
+                background: statusInfo.dotColor,
+                display: "inline-block",
+              }} />
+              {statusInfo.text}
+            </div>
+            <h1 style={{
+              fontFamily: S.fontDisplay,
+              fontSize: "clamp(1.75rem, 8vw, 42px)",
+              fontWeight: 500,
+              lineHeight: 1.05,
+              letterSpacing: "-0.035em",
+              margin: "4px 0 0",
+            }}>
+              What&apos;s{" "}
+              <span style={{ fontStyle: "italic", fontWeight: 400 }}>
+                cooking{user
+                  ? `, ${user.displayName || user.email?.split("@")[0]}`
+                  : " today"}?
+              </span>
+            </h1>
           </div>
-          <h1 className="text-4xl sm:text-5xl font-medium tracking-tight leading-none text-[color:var(--color-ink)]" style={{ fontFamily: "var(--font-bricolage)" }}>
-            {user ? (
+
+          {/* â”€â”€ Menu controls white card (demo .menu-controls) â”€â”€ */}
+          <div style={{
+            marginBottom: 18,
+            padding: 16,
+            borderRadius: S.radius,
+            border: `1px solid ${S.border}`,
+            background: "#ffffff",
+            boxShadow: "inset 0 1px 0 rgba(255,255,255,.65), 0 1px 2px rgba(0,0,0,.05)",
+          }}>
+
+            {/* Canteen segments â€” only shown when college has multiple canteens */}
+            {siblings.length > 0 && (
               <>
-                What's <span className="it">cooking, {user.displayName || user.email?.split("@")[0]}?</span>
-              </>
-            ) : (
-              <>
-                What's <span className="it">cooking today?</span>
+                <div>
+                  <p style={{
+                    fontFamily: S.fontDisplay,
+                    fontSize: 12,
+                    fontWeight: 600,
+                    letterSpacing: "0.1em",
+                    textTransform: "uppercase",
+                    color: "rgba(0,0,0,.62)",
+                    margin: "0 0 6px",
+                  }}>
+                    Canteen
+                  </p>
+                  <div style={{
+                    display: "grid",
+                    gridTemplateColumns: `repeat(${canteenGridCols}, minmax(0, 1fr))`,
+                    gap: 8,
+                    marginTop: 8,
+                  }}>
+                    {siblings.map((sib: any) => {
+                      const isCurrent = sib.slug === tenantSlug;
+                      return (
+                        <button
+                          key={sib.slug}
+                          onClick={() => { if (!isCurrent) router.push(`/c/${sib.slug}/menu`); }}
+                          style={{
+                            minWidth: 0,
+                            padding: "10px 12px",
+                            borderRadius: S.radiusSm,
+                            border: isCurrent ? "1px solid rgba(51,65,85,.65)" : `1px solid ${S.border}`,
+                            background: "#ffffff",
+                            boxShadow: isCurrent ? "0 0 0 1px rgba(51,65,85,.15), 0 10px 26px rgba(26,26,25,.10)" : "none",
+                            transform: isCurrent ? "translateY(-1px)" : "none",
+                            color: S.text,
+                            fontFamily: S.fontDisplay,
+                            fontSize: 14,
+                            fontWeight: 600,
+                            textAlign: "left",
+                            cursor: isCurrent ? "default" : "pointer",
+                            transition: "border-color .15s, box-shadow .15s, transform .15s",
+                          }}
+                        >
+                          {sib.name}
+                          <small style={{
+                            display: "block",
+                            marginTop: 2,
+                            fontFamily: S.fontDisplay,
+                            fontSize: 12,
+                            fontWeight: 500,
+                            color: S.muted,
+                          }}>
+                            {sibWait(sib)}
+                          </small>
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <p style={{
+                    marginTop: 8,
+                    paddingTop: 8,
+                    borderTop: "1px solid rgba(0,0,0,.08)",
+                    fontFamily: S.fontDisplay,
+                    fontSize: 13,
+                    fontWeight: 500,
+                    color: S.muted,
+                    lineHeight: 1.45,
+                    marginBottom: 0,
+                  }}>
+                    Each canteen has its own menu and kitchen queue.
+                  </p>
+                </div>
+                {/* Divider */}
+                <div style={{ height: 1, background: "rgba(0,0,0,.08)", margin: "14px 0 12px" }} />
               </>
             )}
-          </h1>
-        </div>
 
-        {/* ── .menu-controls block ── */}
-        <div className="mb-6 p-5 rounded-2xl border border-[color:var(--color-line)] bg-[color:var(--color-paper-dim)] shadow-sm flex flex-col gap-5">
-          {/* Canteen Selector / Switcher */}
-          {siblings.length > 1 && (
-            <div className="canteen-bar">
-              <p className="text-[12px] font-bold uppercase tracking-[0.1em] text-[color:var(--color-ink)]/55 mb-2.5">
-                Canteen
-              </p>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                {siblings.map((sib) => {
-                  const isActive = sib.slug === tenantSlug;
+            {/* Service bar */}
+            <div>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 12 }}>
+                <p style={{
+                  margin: 0,
+                  fontFamily: S.fontDisplay,
+                  fontSize: 12,
+                  fontWeight: 600,
+                  letterSpacing: "0.11em",
+                  textTransform: "uppercase",
+                  color: S.muted,
+                }}>
+                  How are you eating today?
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setVegOnly(!vegOnly)}
+                  style={{
+                    fontFamily: S.fontDisplay,
+                    fontSize: 12,
+                    fontWeight: 600,
+                    letterSpacing: "0.06em",
+                    textTransform: "uppercase",
+                    padding: "6px 12px",
+                    borderRadius: 999,
+                    border: vegOnly ? "1px solid rgba(94,224,138,.55)" : `1px solid ${S.border}`,
+                    background: vegOnly ? "rgba(94,224,138,.12)" : "transparent",
+                    color: vegOnly ? "#0c8a43" : S.muted,
+                    cursor: "pointer",
+                    transition: "border-color .2s, background .2s, color .2s",
+                  }}
+                >
+                  ðŸŒ¿ Veg only
+                </button>
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                {(["takeaway", "dine_in"] as const).map((type) => {
+                  const isActive = orderType === type;
                   return (
                     <button
-                      key={sib.slug}
+                      key={type}
                       type="button"
-                      onClick={() => {
-                        if (!isActive) {
-                          router.push(`/c/${sib.slug}/menu`);
-                        }
+                      onClick={() => setOrderType(type)}
+                      style={{
+                        textAlign: "left",
+                        padding: "14px 14px 12px",
+                        borderRadius: S.radiusSm,
+                        border: isActive ? "1px solid rgba(51,65,85,.65)" : `1px solid ${S.border}`,
+                        background: "#ffffff",
+                        boxShadow: isActive ? "0 0 0 1px rgba(51,65,85,.15), 0 10px 26px rgba(26,26,25,.10)" : "none",
+                        transform: isActive ? "translateY(-1px)" : "none",
+                        cursor: "pointer",
+                        color: S.text,
+                        transition: "border-color .2s, box-shadow .2s, transform .2s",
+                        fontFamily: S.fontDisplay,
                       }}
-                      className={cn(
-                        "p-3 rounded-xl border text-left transition-all hover:bg-[color:var(--color-paper)]",
-                        isActive
-                          ? "border-ocean-500 bg-[color:var(--color-paper)] shadow-[0_4px_12px_rgba(0,0,0,0.04)]"
-                          : "border-[color:var(--color-line)] bg-[color:var(--color-paper)]/50"
-                      )}
                     >
-                      <div className="font-bold text-[14px] truncate">{sib.name}</div>
-                      <div className="text-[11px] text-[color:var(--color-ink)]/55 mt-0.5">
-                        {sib.building || "Campus block"} · {sib.dishCount ?? 0} dishes
-                      </div>
+                      <span style={{ fontSize: "1.45rem", display: "block", marginBottom: 6 }}>
+                        {type === "takeaway" ? "ðŸ¥¡" : "ðŸ½"}
+                      </span>
+                      <span style={{ display: "block", fontWeight: 600, fontSize: 15 }}>
+                        {type === "takeaway" ? "Takeaway" : "Dine in"}
+                      </span>
+                      <span style={{ display: "block", marginTop: 4, fontSize: 13, fontWeight: 500, color: S.muted, lineHeight: 1.4 }}>
+                        {type === "takeaway" ? "Counter pickup Â. OTP handover" : "Mess seating Â. optional table"}
+                      </span>
                     </button>
                   );
                 })}
               </div>
+
+              {orderType === "dine_in" && (
+                <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 6 }}>
+                  <label style={{
+                    fontFamily: S.fontDisplay,
+                    fontSize: 12,
+                    fontWeight: 600,
+                    letterSpacing: "0.1em",
+                    textTransform: "uppercase",
+                    color: S.muted,
+                  }}>
+                    Table or block (optional)
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. T4, Block B"
+                    value={tableLabel}
+                    onChange={(e) => setTableLabel(e.target.value)}
+                    style={{
+                      width: "100%",
+                      padding: "10px 12px",
+                      borderRadius: S.radiusSm,
+                      border: `1px solid ${S.border}`,
+                      background: "rgba(228,228,228,.72)",
+                      fontFamily: S.fontDisplay,
+                      fontSize: 14,
+                      fontWeight: 500,
+                      outline: "none",
+                      boxSizing: "border-box",
+                    }}
+                  />
+                </div>
+              )}
             </div>
-          )}
-
-          {siblings.length > 1 && (
-            <div className="h-px bg-[color:var(--color-line)]" />
-          )}
-
-          {/* Eating modes & Veg only */}
-          <div className="service-bar">
-            <div className="flex items-center justify-between gap-4 mb-3.5">
-              <p className="text-[12px] font-bold uppercase tracking-[0.11em] text-[color:var(--color-ink)]/55">
-                How are you eating today?
-              </p>
-              <button
-                type="button"
-                onClick={() => setVegOnly(!vegOnly)}
-                className={cn(
-                  "text-[12px] font-bold uppercase tracking-[0.06em] py-1.5 px-3.5 rounded-full border transition-all flex items-center gap-1",
-                  vegOnly
-                    ? "border-emerald-500/50 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold"
-                    : "border-[color:var(--color-line)] text-[color:var(--color-ink)]/55 bg-[color:var(--color-paper)] hover:bg-[color:var(--color-paper-dim)]"
-                )}
-              >
-                🌿 Veg only
-              </button>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <button
-                type="button"
-                onClick={() => setOrderType("takeaway")}
-                className={cn(
-                  "p-4 rounded-xl border text-left transition-all hover:bg-[color:var(--color-paper)]",
-                  orderType === "takeaway"
-                    ? "border-ocean-500 bg-[color:var(--color-paper)] shadow-[0_4px_12px_rgba(0,0,0,0.04)]"
-                    : "border-[color:var(--color-line)] bg-[color:var(--color-paper)]/50"
-                )}
-              >
-                <span className="text-xl block mb-1">🥡</span>
-                <span className="font-bold text-[15px] block">Takeaway</span>
-                <span className="text-[12px] text-[color:var(--color-ink)]/55 block mt-0.5 leading-relaxed">
-                  Counter pickup · OTP handover
-                </span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setOrderType("dine_in")}
-                className={cn(
-                  "p-4 rounded-xl border text-left transition-all hover:bg-[color:var(--color-paper)]",
-                  orderType === "dine_in"
-                    ? "border-ocean-500 bg-[color:var(--color-paper)] shadow-[0_4px_12px_rgba(0,0,0,0.04)]"
-                    : "border-[color:var(--color-line)] bg-[color:var(--color-paper)]/50"
-                )}
-              >
-                <span className="text-xl block mb-1">🍽</span>
-                <span className="font-bold text-[15px] block">Dine in</span>
-                <span className="text-[12px] text-[color:var(--color-ink)]/55 block mt-0.5 leading-relaxed">
-                  Mess seating · optional table
-                </span>
-              </button>
-            </div>
-
-            {orderType === "dine_in" && (
-              <div className="mt-4 flex flex-col gap-1.5 animate-in fade-in duration-200">
-                <label htmlFor="tableInput" className="text-[12px] font-bold uppercase tracking-[0.1em] text-[color:var(--color-ink)]/55">
-                  Table or block (optional)
-                </label>
-                <input
-                  id="tableInput"
-                  type="text"
-                  placeholder="e.g. T4, Block B"
-                  value={tableLabel}
-                  onChange={(e) => setTableLabel(e.target.value)}
-                  className="w-full h-11 px-3.5 rounded-xl border border-[color:var(--color-line)] bg-[color:var(--color-paper)] text-[14px] focus:outline-none focus:border-ocean-500 focus:bg-[color:var(--color-paper)]"
-                />
-              </div>
-            )}
           </div>
-        </div>
 
-        {/* ── Mobile Category Pills (.cat-pills) ── */}
-        <div className="lg:hidden flex gap-2 overflow-x-auto pb-3 mb-5 scrollbar-none -mx-4 px-4 sticky top-16 bg-[color:var(--color-paper)]/95 backdrop-blur-md z-20 border-b border-[color:var(--color-line)] py-2.5">
-          <button
-            onClick={() => setActiveCat("all")}
-            className={cn(
-              "shrink-0 px-4 py-2 rounded-full text-[13px] font-semibold border transition-all",
-              activeCat === "all"
-                ? "border-ocean-500 bg-ocean-500/10 text-ocean-600 dark:text-ocean-400 font-bold"
-                : "border-[color:var(--color-line)] bg-[color:var(--color-paper-dim)] text-[color:var(--color-ink)]/65"
-            )}
+          {/* â”€â”€ Mobile category pills â”€â”€ */}
+          <div
+            className="lg:hidden"
+            style={{
+              display: "flex",
+              gap: 8,
+              overflowX: "auto",
+              paddingBottom: 16,
+              margin: "0 -4px",
+              scrollbarWidth: "none",
+            }}
           >
-            All items
-          </button>
-          {categories.map((cat) => {
-            const catItemsCount = byCat.get(cat.id)?.length ?? 0;
-            if (catItemsCount === 0) return null;
-            return (
-              <button
-                key={cat.id}
-                onClick={() => setActiveCat(cat.id)}
-                className={cn(
-                  "shrink-0 px-4 py-2 rounded-full text-[13px] font-semibold border transition-all",
-                  activeCat === cat.id
-                    ? "border-ocean-500 bg-ocean-500/10 text-ocean-600 dark:text-ocean-400 font-bold"
-                    : "border-[color:var(--color-line)] bg-[color:var(--color-paper-dim)] text-[color:var(--color-ink)]/65"
-                )}
-              >
-                {cat.name}
-              </button>
-            );
-          })}
-        </div>
-
-        {/* ── Search Bar ── */}
-        <div className="mb-6">
-          <label className="relative block">
-            <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-[color:var(--color-ink)]/40" />
-            <input
-              value={q}
-              onChange={(e) => setQ(e.target.value)}
-              placeholder="Search menu items…"
-              className="w-full h-11 pl-11 pr-4 rounded-xl border border-[color:var(--color-line)] bg-[color:var(--color-paper-dim)] text-[14px] focus:outline-none focus:border-ocean-500 focus:bg-[color:var(--color-paper)]"
-            />
-          </label>
-        </div>
-
-        {/* Today's Specials Section */}
-        {visibleSpecials.length > 0 && (
-          <div className="mb-8 animate-in fade-in duration-300">
-            <div className="flex items-baseline justify-between mb-3">
-              <div>
-                <h2 className="font-display text-[22px] sm:text-[26px] font-medium tracking-tight animate-fade-in" style={{ fontFamily: "var(--font-bricolage)" }}>
-                  Today's <span className="it">specials.</span>
-                </h2>
-                <p className="text-[11px] font-mono uppercase tracking-wider text-[color:var(--color-ink)]/45">
-                  Live from kitchen
-                </p>
-              </div>
-              <div className="text-[10px] font-mono uppercase tracking-[0.12em] text-[color:var(--color-accent)] mb-1 flex items-center gap-1.5">
-                <span className="relative flex h-1.5 w-1.5">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
-                </span>
-                Just Added
-              </div>
-            </div>
-            <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-none -mx-4 px-4">
-              {visibleSpecials.map((item) => (
-                <SpecialCard key={item.id} item={item} />
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* ── Menu Grid ── */}
-        {filtered.length === 0 ? (
-          <div className="py-16 text-center text-[color:var(--color-ink)]/55">
-            <div className="font-display italic text-[24px] text-ocean-500">Nothing found.</div>
-            <p className="text-[14px] mt-2">
-              {q || vegOnly
-                ? "Clear the filters or search term to see more dishes."
-                : "Check back at lunchtime."}
-            </p>
-          </div>
-        ) : (
-          <div className="flex flex-col gap-8">
-            {activeCategoryList.map((cat) => {
-              const list = byCat.get(cat.id) ?? [];
-              if (list.length === 0) return null;
+            {[{ id: "all", name: "All items" }, ...categories].map((cat) => {
+              const isActive = activeCat === cat.id;
               return (
-                <section key={cat.id} className="animate-in fade-in duration-300">
-                  <div className="flex items-end justify-between mb-4 border-b border-[color:var(--color-line)] pb-2">
-                    <h2 className="font-display text-[22px] sm:text-[26px] font-medium tracking-tight">
-                      {cat.name}
-                    </h2>
-                    <span className="text-[11px] font-mono uppercase tracking-wider text-[color:var(--color-ink)]/45">
-                      {list.length} item{list.length === 1 ? "" : "s"}
-                    </span>
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 2xl:grid-cols-3 gap-3">
-                    {list.map((it) => (
-                      <MenuItemCard key={it.id} item={it} />
-                    ))}
-                  </div>
-                </section>
+                <button
+                  key={cat.id}
+                  onClick={() => setActiveCat(cat.id)}
+                  style={{
+                    flexShrink: 0,
+                    padding: "8px 14px",
+                    borderRadius: 999,
+                    fontSize: 14,
+                    fontWeight: 500,
+                    border: isActive ? "1px solid transparent" : `1px solid ${S.border}`,
+                    color: isActive ? "#F4EFE6" : S.muted,
+                    background: isActive ? S.accent : S.surface,
+                    cursor: "pointer",
+                    transition: "all .2s",
+                    fontFamily: S.fontDisplay,
+                  }}
+                >
+                  {cat.name}
+                </button>
               );
             })}
+          </div>
 
-            {/* Uncategorized items */}
-            {(activeCat === "all" || activeCat === "uncategorised") && (() => {
-              const uncategorised = byCat.get(null) ?? [];
-              if (uncategorised.length === 0) return null;
-              return (
-                <section key="__uncategorised" className="animate-in fade-in duration-300">
-                  {categories.length > 0 && (
-                    <div className="flex items-end justify-between mb-4 border-b border-[color:var(--color-line)] pb-2">
-                      <h2 className="font-display text-[22px] sm:text-[26px] font-medium tracking-tight">Other</h2>
-                      <span className="text-[11px] font-mono uppercase tracking-wider text-[color:var(--color-ink)]/45">
-                        {uncategorised.length} item{uncategorised.length === 1 ? "" : "s"}
-                      </span>
+          {/* Empty state */}
+          {totalFilteredCount === 0 && (
+            <div style={{ padding: "64px 0", textAlign: "center", color: S.muted }}>
+              <div style={{ fontFamily: S.fontDisplay, fontStyle: "italic", fontSize: 24, color: S.accent }}>
+                Nothing found.
+              </div>
+              <p style={{ fontSize: 14, marginTop: 8 }}>
+                {q || vegOnly
+                  ? "Clear the filters or search term to see more dishes."
+                  : "Check back at lunchtime."}
+              </p>
+            </div>
+          )}
+
+          {/* â”€â”€ Specials horizontal carousel (demo .specials-carousel) â”€â”€ */}
+          {showSpecials && filteredSpecials.length > 0 && (
+            <div style={{ marginBottom: 32 }}>
+              <div style={{
+                display: "flex",
+                alignItems: "baseline",
+                justifyContent: "space-between",
+                gap: 12,
+                marginBottom: 16,
+              }}>
+                <h2 style={{
+                  margin: 0,
+                  fontFamily: S.fontDisplay,
+                  fontSize: "clamp(1.5rem, 5vw, 1.95rem)",
+                  fontWeight: 400,
+                  letterSpacing: "-0.02em",
+                  lineHeight: 1.15,
+                }}>
+                  Today&apos;s <span style={{ fontStyle: "italic" }}>specials.</span>
+                </h2>
+                <span style={{
+                  fontFamily: S.fontMono,
+                  fontSize: 11,
+                  letterSpacing: "0.06em",
+                  color: "#0c8a43",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6,
+                  whiteSpace: "nowrap",
+                }}>
+                  <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#0c8a43", display: "inline-block" }} />
+                  LIVE FROM KITCHEN
+                </span>
+              </div>
+              {/* Horizontal scroll carousel */}
+              <div style={{
+                display: "flex",
+                gap: 14,
+                overflowX: "auto",
+                padding: "4px 4px 16px",
+                margin: "0 -4px",
+                scrollbarWidth: "none",
+              }}>
+                {filteredSpecials.map((item) => (
+                  <SpecialCard key={item.id} item={item} onAdd={cartAdd} onInc={cartInc} onDec={cartDec} />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* â”€â”€ Other menu grid (demo .menu-grid) â”€â”€ */}
+          {showOther && filteredOther.length > 0 && (
+            <div>
+              <div style={{
+                display: "flex",
+                alignItems: "baseline",
+                justifyContent: "space-between",
+                gap: 12,
+                marginBottom: 16,
+              }}>
+                <h2 style={{
+                  margin: 0,
+                  fontFamily: S.fontDisplay,
+                  fontSize: "clamp(1.5rem, 5vw, 1.95rem)",
+                  fontWeight: 400,
+                  letterSpacing: "-0.02em",
+                  lineHeight: 1.15,
+                }}>
+                  {activeCat === "all"
+                    ? "Menu"
+                    : (categories.find((c) => c.id === activeCat)?.name ?? "Menu")}
+                </h2>
+                <p style={{ margin: 0, fontFamily: S.fontMono, fontSize: 12, color: S.muted }}>
+                  {filteredOther.length} item{filteredOther.length === 1 ? "" : "s"}
+                </p>
+              </div>
+
+              <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+                {activeCategoryList
+                  .filter((cat) => !specialsCategory || cat.id !== specialsCategory.id)
+                  .map((cat) => {
+                    const list = byCat.get(cat.id) ?? [];
+                    if (list.length === 0) return null;
+                    return (
+                      <div key={cat.id}>
+                        <h3 style={{
+                          fontSize: 11,
+                          fontWeight: 700,
+                          textTransform: "uppercase",
+                          letterSpacing: "0.1em",
+                          color: S.muted,
+                          margin: "0 0 12px",
+                          paddingLeft: 8,
+                          borderLeft: `2px solid ${S.accent}`,
+                          fontFamily: S.fontDisplay,
+                        }}>
+                          {cat.name}
+                        </h3>
+                        <div style={{
+                          display: "grid",
+                          gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))",
+                          gap: 14,
+                        }}>
+                          {list.map((it) => (
+                            <RegularCard key={it.id} item={it} onAdd={cartAdd} onInc={cartInc} onDec={cartDec} />
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
+
+                {/* Uncategorized items */}
+                {activeCat === "all" && (() => {
+                  const uncategorised = byCat.get(null) ?? [];
+                  if (uncategorised.length === 0) return null;
+                  return (
+                    <div key="__uncategorised">
+                      <h3 style={{
+                        fontSize: 11,
+                        fontWeight: 700,
+                        textTransform: "uppercase",
+                        letterSpacing: "0.1em",
+                        color: S.muted,
+                        margin: "0 0 12px",
+                        paddingLeft: 8,
+                        borderLeft: `2px solid ${S.accent}`,
+                        fontFamily: S.fontDisplay,
+                      }}>
+                        Other
+                      </h3>
+                      <div style={{
+                        display: "grid",
+                        gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))",
+                        gap: 14,
+                      }}>
+                        {uncategorised.map((it) => (
+                          <RegularCard key={it.id} item={it} onAdd={cartAdd} onInc={cartInc} onDec={cartDec} />
+                        ))}
+                      </div>
                     </div>
-                  )}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 2xl:grid-cols-3 gap-3">
-                    {uncategorised.map((it) => (
-                      <MenuItemCard key={it.id} item={it} />
-                    ))}
-                  </div>
-                </section>
-              );
-            })()}
+                  );
+                })()}
+              </div>
+            </div>
+          )}
+        </div>
+      </main>
+
+      {/* â”€â”€ RIGHT: Persistent Desktop Cart Sidebar (demo .cart-sidebar) â”€â”€ */}
+      <aside
+        className="hidden lg:flex"
+        style={{
+          width: 320,
+          flexShrink: 0,
+          flexDirection: "column",
+          border: `1px solid ${S.border}`,
+          borderRadius: S.radius,
+          background: "#ffffff",
+          position: "sticky",
+          top: "calc(56px + 16px)",
+          height: "calc(100dvh - 56px - 32px)",
+          alignSelf: "flex-start",
+          margin: "16px 16px 16px 8px",
+          boxShadow: "0 4px 20px rgba(0,0,0,0.04), 0 1px 3px rgba(0,0,0,0.02)",
+          overflow: "hidden",
+        }}
+      >
+        {/* Cart header */}
+        <div style={{ padding: "20px 20px 12px", borderBottom: `1px solid ${S.border}` }}>
+          <h3 style={{
+            margin: 0,
+            fontFamily: S.fontDisplay,
+            fontSize: "1.5rem",
+            fontWeight: 400,
+            lineHeight: 1.12,
+          }}>
+            Your <span style={{ fontStyle: "italic" }}>order.</span>
+          </h3>
+          <p style={{ margin: "4px 0 0", fontSize: 14, color: S.muted }}>
+            Paying to: {tenantName}
+          </p>
+        </div>
+
+        {/* Cart lines */}
+        <div style={{ flex: 1, overflowY: "auto", padding: "12px 16px" }}>
+          {cartCount === 0 ? (
+            <div style={{ padding: "32px 12px", textAlign: "center", color: S.muted, fontSize: 15, lineHeight: 1.5 }}>
+              <div style={{ fontSize: 34, opacity: 0.5, marginBottom: 8 }}>ðŸ›’</div>
+              <p style={{ margin: 0 }}>Your tray is empty.</p>
+              <p style={{ margin: "4px 0 0", fontSize: 13 }}>Add items from the menu.</p>
+            </div>
+          ) : (
+            lines.map((l) => (
+              <div
+                key={l.menuItemId}
+                style={{
+                  display: "flex",
+                  gap: 10,
+                  alignItems: "flex-start",
+                  padding: "12px 0",
+                  borderBottom: `1px solid ${S.border}`,
+                }}
+              >
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <p style={{ margin: "0 0 2px", fontSize: 15, fontWeight: 600, lineHeight: 1.3, fontFamily: S.fontDisplay }}>
+                    {l.name}
+                  </p>
+                  <p style={{ margin: 0, fontFamily: S.fontMono, fontSize: 12, color: S.muted }}>
+                    {formatRupees(l.pricePaise)} each
+                  </p>
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
+                  <button
+                    aria-label="Decrease"
+                    onClick={() => cartDec(l.menuItemId)}
+                    style={{
+                      width: 28, height: 28,
+                      borderRadius: 8,
+                      border: `1px solid ${S.border}`,
+                      fontSize: 15,
+                      cursor: "pointer",
+                      background: "transparent",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <Minus size={12} />
+                  </button>
+                  <span style={{ fontFamily: S.fontMono, fontSize: 13, minWidth: 18, textAlign: "center" }}>
+                    {l.qty}
+                  </span>
+                  <button
+                    aria-label="Increase"
+                    onClick={() => cartInc(l.menuItemId)}
+                    style={{
+                      width: 28, height: 28,
+                      borderRadius: 8,
+                      border: `1px solid ${S.border}`,
+                      fontSize: 15,
+                      cursor: "pointer",
+                      background: "transparent",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <Plus size={12} />
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+
+        {/* Cart footer */}
+        {cartCount > 0 && (
+          <div style={{ padding: "16px 20px 20px", borderTop: `1px solid ${S.border}` }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 14 }}>
+              <span style={{ color: S.muted, fontSize: 15 }}>Total</span>
+              <span style={{
+                fontFamily: S.fontDisplay,
+                fontSize: "1.35rem",
+                fontWeight: 700,
+                fontVariantNumeric: "tabular-nums",
+                color: S.accent,
+              }}>
+                {formatRupees(cartTotal)}
+              </span>
+            </div>
+            <button
+              onClick={() => setCartOpen(true)}
+              style={{
+                width: "100%",
+                padding: "14px 20px",
+                borderRadius: S.radiusSm,
+                fontSize: 16,
+                fontWeight: 600,
+                background: S.accent,
+                color: "#ffffff",
+                border: "none",
+                cursor: "pointer",
+                fontFamily: S.fontDisplay,
+                transition: "filter .2s, transform .15s",
+              }}
+            >
+              Place order â†’
+            </button>
+            <button
+              onClick={() => clear()}
+              style={{
+                width: "100%",
+                padding: 12,
+                marginTop: 8,
+                borderRadius: S.radiusSm,
+                fontSize: 15,
+                color: S.muted,
+                border: `1px solid ${S.border}`,
+                background: "transparent",
+                cursor: "pointer",
+                fontFamily: S.fontDisplay,
+              }}
+            >
+              Clear cart
+            </button>
           </div>
         )}
+      </aside>
 
-      </div>
+      {/* â”€â”€ Mobile Floating Browse Button â”€â”€ */}
+      <Drawer.Root open={isBrowseOpen} onOpenChange={setIsBrowseOpen}>
+        <Drawer.Trigger asChild>
+          <button
+            type="button"
+            className={cn(
+              "fixed left-1/2 -translate-x-1/2 z-30 lg:hidden flex items-center gap-2 px-5 py-3 rounded-full bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 font-bold shadow-lg hover:shadow-xl transition-all active:scale-95 cursor-pointer text-[13.5px]",
+              cartCount > 0 ? "bottom-20" : "bottom-6"
+            )}
+          >
+            <span>ðŸ´</span>
+            <span>Browse Menu</span>
+          </button>
+        </Drawer.Trigger>
+        <Drawer.Portal>
+          <Drawer.Overlay className="fixed inset-0 z-40 bg-black/40 backdrop-blur-[1px]" />
+          <Drawer.Content className="fixed bottom-0 left-0 right-0 z-50 mt-24 flex max-h-[70vh] flex-col rounded-t-3xl bg-[color:var(--color-paper)] border-t border-[color:var(--color-line)] focus:outline-none pb-[env(safe-area-inset-bottom)]">
+            <Drawer.Title className="sr-only">Categories</Drawer.Title>
+            <div className="mx-auto w-12 h-1.5 rounded-full bg-[color:var(--color-line-strong)] mt-3 mb-2" />
+            <div className="px-5 py-3 border-b border-[color:var(--color-line)]">
+              <h3 className="font-display text-[18px] font-bold">Browse Menu</h3>
+            </div>
+            <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-2">
+              <button
+                onClick={() => { setActiveCat("all"); setIsBrowseOpen(false); }}
+                className={cn(
+                  "w-full text-left px-4 py-3.5 rounded-2xl text-[14.5px] font-semibold transition-all border flex items-center justify-between",
+                  activeCat === "all"
+                    ? "bg-ocean-500/10 text-ocean-600 dark:text-ocean-400 font-bold border-ocean-500/20"
+                    : "border-[color:var(--color-line)] text-[color:var(--color-ink)] bg-[color:var(--color-paper)]"
+                )}
+              >
+                <span>All items</span>
+                <span className="text-[12px] opacity-60 font-normal">
+                  {items.filter((it) => !vegOnly || it.diet === "veg").length} items
+                </span>
+              </button>
+              {categories.map((cat) => {
+                const catCount = byCat.get(cat.id)?.length ?? 0;
+                if (catCount === 0) return null;
+                const isActive = activeCat === cat.id;
+                return (
+                  <button
+                    key={cat.id}
+                    onClick={() => { setActiveCat(cat.id); setIsBrowseOpen(false); }}
+                    className={cn(
+                      "w-full text-left px-4 py-3.5 rounded-2xl text-[14.5px] font-semibold transition-all border flex items-center justify-between",
+                      isActive
+                        ? "bg-ocean-500/10 text-ocean-600 dark:text-ocean-400 font-bold border-ocean-500/20"
+                        : "border-[color:var(--color-line)] text-[color:var(--color-ink)] bg-[color:var(--color-paper)]"
+                    )}
+                  >
+                    <span>{cat.name}</span>
+                    <span className="text-[12px] opacity-60 font-normal">{catCount} items</span>
+                  </button>
+                );
+              })}
+            </div>
+          </Drawer.Content>
+        </Drawer.Portal>
+      </Drawer.Root>
     </div>
   );
 }
 
-function SpecialCard({ item }: { item: MenuItem }) {
+type CartAddFn = (item: { menuItemId: string; name: string; pricePaise: number; diet: "veg" | "nonveg" | "egg" }) => void;
+type CartQtyFn = (menuItemId: string) => void;
+
+/* â”€â”€ SpecialCard: horizontal carousel card (demo .special-card) 220px wide â”€â”€ */
+function SpecialCard({
+  item,
+  onAdd,
+  onInc,
+  onDec,
+}: {
+  item: MenuItem;
+  onAdd: CartAddFn;
+  onInc: CartQtyFn;
+  onDec: CartQtyFn;
+}) {
   const line = useCart((s) => s.lines.find((l) => l.menuItemId === item.id));
-  const add = useCart((s) => s.add);
-  const inc = useCart((s) => s.increment);
-  const dec = useCart((s) => s.decrement);
   const oos = !item.in_stock || item.status !== "live";
-
-  const dietRing =
-    item.diet === "veg"
-      ? "border-emerald-600 text-emerald-600"
-      : item.diet === "egg"
-      ? "border-amber-600 text-amber-600"
-      : "border-rose-600 text-rose-600";
-  const dietFill =
-    item.diet === "veg" ? "bg-emerald-600" : item.diet === "egg" ? "bg-amber-600" : "bg-rose-600";
-
-  const nameParts = item.name.split(" ");
-  const lastName = nameParts[nameParts.length - 1];
-  const firstNames = nameParts.slice(0, -1).join(" ");
+  const accent = "#334155";
+  const border = "rgba(26,26,25,.12)";
 
   return (
     <article
-      className={cn(
-        "group relative w-56 shrink-0 rounded-2xl border bg-gradient-to-br from-white/65 to-[color:var(--color-ink)]/5 dark:from-white/10 dark:to-white/0 p-4.5 flex flex-col gap-3 transition-all",
-        oos ? "opacity-60 border-[color:var(--color-line)]" : "border-[color:var(--color-line)] hover:border-ocean-500/40 hover:-translate-y-1 hover:shadow-md"
-      )}
+      style={{
+        flexShrink: 0,
+        width: 220,
+        background: "linear-gradient(145deg, rgba(255,255,255,.65) 0%, rgba(51,65,85,.06) 100%)",
+        border: `1px solid ${border}`,
+        borderRadius: 14,
+        padding: 18,
+        display: "flex",
+        flexDirection: "column",
+        gap: 12,
+        position: "relative",
+        opacity: oos ? 0.6 : 1,
+        transition: "border-color .2s, transform .2s, box-shadow .2s",
+        cursor: oos ? "not-allowed" : "default",
+      }}
+      className={oos ? "" : "hover:-translate-y-[3px] hover:shadow-[0_8px_24px_rgba(26,26,25,.08)] hover:border-[rgba(51,65,85,.15)]"}
     >
-      <span className="absolute top-4.5 right-4.5 bg-rose-600 text-white text-[9px] font-mono font-bold tracking-widest px-2 py-0.5 rounded uppercase z-10 shadow-sm">
-        NEW
+      {/* SPECIAL badge */}
+      <span style={{
+        position: "absolute", top: 12, right: 12,
+        background: "#b32b2b", color: "#fff",
+        fontFamily: "monospace",
+        fontSize: 9, letterSpacing: "0.08em",
+        padding: "2px 6px", borderRadius: 4,
+        fontWeight: 700, textTransform: "uppercase",
+      }}>
+        SPECIAL
       </span>
 
-      <div className="relative w-14 h-14 rounded-xl overflow-hidden flex-shrink-0">
-        {item.image_url ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={item.image_url}
-            alt={item.name}
-            className="w-full h-full object-cover"
-          />
-        ) : (
-          <div
-            className="w-full h-full flex items-center justify-center font-serif italic text-2xl text-ocean-500 border border-[color:var(--color-line)] bg-white dark:bg-neutral-800"
-            style={{
-              background:
-                item.diet === "veg"
-                  ? "linear-gradient(135deg,#e8f5e9,#a5d6a7)"
-                  : item.diet === "egg"
-                  ? "linear-gradient(135deg,#fff8e1,#ffe082)"
-                  : "linear-gradient(135deg,#fce4ec,#ef9a9a)",
-            }}
-          >
-            {item.name.charAt(0)}
-          </div>
-        )}
-
-        {/* FSSAI Badge absolute on bottom-right of thumbnail */}
-        <motion.span
-          aria-label={item.diet}
-          className={cn(
-            "absolute bottom-0 right-0 inline-flex h-4.5 w-4.5 items-center justify-center border bg-white z-10 rounded-tl-md shadow-sm",
-            dietRing
-          )}
-          whileHover={{ rotate: 180 }}
-          transition={{ duration: 0.4, ease: "easeInOut" }}
-        >
-          {item.diet === "nonveg" ? (
-            <span className="w-0 h-0 border-l-[3.5px] border-l-transparent border-r-[3.5px] border-r-transparent border-b-[7px] border-b-rose-600 block" />
-          ) : (
-            <span className={cn("h-2.5 w-2.5 rounded-full block", dietFill)} />
-          )}
-        </motion.span>
+      {/* Top row: icon + diet dot */}
+      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8 }}>
+        <div style={{
+          width: 56, height: 56, borderRadius: 12,
+          background: item.image_url ? "transparent" : "#fff",
+          border: `1px solid ${border}`,
+          display: "flex", alignItems: "center", justifyContent: "center",
+          fontSize: 26,
+          boxShadow: "0 4px 12px rgba(51,65,85,.06)",
+          overflow: "hidden", flexShrink: 0,
+        }}>
+          {item.image_url
+            // eslint-disable-next-line @next/next/no-img-element
+            ? <img src={item.image_url} alt={item.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+            : dietEmoji(item.diet)
+          }
+        </div>
+        <DietDot diet={item.diet} />
       </div>
 
-      <div className="flex flex-col gap-1">
-        <h3 className="text-[16px] font-semibold leading-tight text-[color:var(--color-ink)]" style={{ fontFamily: "var(--font-bricolage)" }}>
-          {firstNames} <span className="it">{lastName}.</span>
+      {/* Body */}
+      <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+        <h3 style={{
+          margin: 0,
+          fontFamily: "var(--font-bricolage, system-ui)",
+          fontSize: 18, fontWeight: 500,
+          letterSpacing: "-0.02em", lineHeight: 1.25,
+          color: "#1A1A19",
+        }}>
+          {item.name}
         </h3>
         {item.description && (
-          <p className="text-[12px] leading-[1.4] text-[color:var(--color-ink)]/55 line-clamp-2">
+          <p style={{ margin: 0, fontSize: 13, color: "rgba(26,26,25,.58)", lineHeight: 1.45 }}>
             {item.description}
           </p>
         )}
       </div>
 
-      <div className="mt-auto pt-3 flex items-center justify-between gap-2">
-        <div className="text-[17px] font-bold tabular tracking-[0.01em] text-ocean-500">
+      {/* Footer: price + qty */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "auto", paddingTop: 8 }}>
+        <span style={{
+          fontFamily: "var(--font-bricolage, system-ui)",
+          fontSize: 15, fontWeight: 700,
+          fontVariantNumeric: "tabular-nums", color: accent,
+        }}>
           {formatRupees(item.price_paise)}
-        </div>
+        </span>
         {line ? (
-          <motion.div
-            initial={{ scale: 0.85, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ type: "spring", stiffness: 400, damping: 22 }}
-            className="inline-flex items-center rounded-full bg-ocean-500 text-black"
-          >
-            <button
-              aria-label="Decrease"
-              disabled={oos}
-              onClick={() => dec(item.id)}
-              className="h-8 w-8 inline-flex items-center justify-center transition-opacity hover:opacity-75"
-            >
-              <Minus size={14} />
-            </button>
-            <span className="text-[13px] font-bold tabular w-5 text-center">{line.qty}</span>
-            <button
-              aria-label="Increase"
-              disabled={oos}
-              onClick={() => inc(item.id)}
-              className="h-8 w-8 inline-flex items-center justify-center transition-opacity hover:opacity-75"
-            >
-              <Plus size={14} />
-            </button>
-          </motion.div>
-        ) : (
-          <motion.button
+          <QtyControl
+            qty={line.qty}
+            onDec={() => onDec(item.id)}
+            onInc={() => onInc(item.id)}
             disabled={oos}
-            whileTap={{ scale: 0.95 }}
-            whileHover={{ scale: 1.05 }}
-            onClick={() => {
-              add({
-                menuItemId: item.id,
-                name: item.name,
-                pricePaise: item.price_paise,
-                diet: item.diet,
-              });
-              const nameLower = item.name.toLowerCase();
-              let message = `Added ${item.name} to tray!`;
-              if (nameLower.includes("biryani")) {
-                message = `Aromatic Biryani added to your tray! 🍛`;
-              } else if (nameLower.includes("coffee") || nameLower.includes("cappuccino")) {
-                message = `Freshly brewed coffee added! ☕`;
-              } else if (nameLower.includes("tea") || nameLower.includes("chai")) {
-                message = `Hot steaming chai added! ☕`;
-              } else if (nameLower.includes("burger")) {
-                message = `Juicy burger added! 🍔`;
-              } else if (nameLower.includes("sandwich")) {
-                message = `Crispy sandwich added! 🥪`;
-              } else if (nameLower.includes("dosa")) {
-                message = `Crispy golden Dosa added! 🥞`;
-              } else if (nameLower.includes("momo")) {
-                message = `Steaming hot momos added! 🥟`;
-              } else if (nameLower.includes("maggi") || nameLower.includes("noodle")) {
-                message = `Slurpy noodles added! 🍜`;
-              } else if (nameLower.includes("shake") || nameLower.includes("smoothie") || nameLower.includes("juice")) {
-                message = `Chilled shake added! 🥤`;
-              } else if (item.diet === "veg") {
-                message = `Fresh & green ${item.name} added! 🟢`;
-              } else if (item.diet === "egg") {
-                message = `Egg-cellent choice of ${item.name}! 🍳`;
-              } else if (item.diet === "nonveg") {
-                message = `Savory ${item.name} added to tray! 🍖`;
-              }
-              toast.success(message);
+            btnSize={32}
+          />
+        ) : (
+          <button
+            disabled={oos}
+            onClick={() => { onAdd({ menuItemId: item.id, name: item.name, pricePaise: item.price_paise, diet: item.diet as "veg" | "nonveg" | "egg" }); toast.success(`Added ${item.name}!`); }}
+            style={{
+              padding: "6px 12px", borderRadius: S_RADIUS_SM,
+              fontSize: 13, fontWeight: 600,
+              background: "rgba(51,65,85,.08)", color: accent,
+              border: `1px solid ${border}`,
+              cursor: oos ? "not-allowed" : "pointer",
+              opacity: oos ? 0.5 : 1,
+              transition: "background .2s",
+              fontFamily: "var(--font-bricolage, system-ui)",
             }}
-            className={cn(
-              "inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-[12.5px] font-semibold transition-colors",
-              oos
-                ? "bg-[color:var(--color-line)] text-[color:var(--color-ink)]/40 cursor-not-allowed"
-                : "bg-ocean-500 text-black hover:bg-ocean-600"
-            )}
           >
-            <Plus size={14} /> Add
-          </motion.button>
+            + Add
+
+          </button>
         )}
       </div>
     </article>
   );
 }
+
+/* â”€â”€ RegularCard: horizontal card with 72Ã—72 icon (demo .menu-card) â”€â”€ */
+function RegularCard({
+  item,
+  onAdd,
+  onInc,
+  onDec,
+}: {
+  item: MenuItem;
+  onAdd: CartAddFn;
+  onInc: CartQtyFn;
+  onDec: CartQtyFn;
+}) {
+  const line = useCart((s) => s.lines.find((l) => l.menuItemId === item.id));
+  const oos = !item.in_stock || item.status !== "live";
+  const accent = "#334155";
+  const border = "rgba(26,26,25,.12)";
+
+  return (
+    <article
+      style={{
+        display: "flex", gap: 14,
+        padding: 16, borderRadius: 14,
+        border: `1px solid ${border}`,
+        background: "linear-gradient(145deg, rgba(255,255,255,.35) 0%, rgba(255,255,255,.1) 100%)",
+        transition: "border-color .2s, transform .2s, box-shadow .2s",
+        opacity: oos ? 0.6 : 1,
+      }}
+      className={oos ? "" : "hover:-translate-y-[3px] hover:shadow-[0_8px_24px_rgba(26,26,25,.08)] hover:border-[rgba(51,65,85,.15)]"}
+    >
+      {/* 72Ã—72 icon */}
+      <div style={{
+        width: 72, height: 72, borderRadius: 12, flexShrink: 0,
+        background: "rgba(26,26,25,.07)",
+        display: "grid", placeItems: "center",
+        fontSize: 30, border: `1px solid rgba(26,26,25,.08)`,
+        overflow: "hidden",
+      }}>
+        {item.image_url
+          // eslint-disable-next-line @next/next/no-img-element
+          ? <img src={item.image_url} alt={item.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+          : dietEmoji(item.diet)
+        }
+      </div>
+
+      {/* Body */}
+      <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
+        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8 }}>
+          <h3 style={{
+            margin: 0,
+            fontFamily: "var(--font-bricolage, system-ui)",
+            fontSize: 17, fontWeight: 500,
+            letterSpacing: "-0.015em", lineHeight: 1.25,
+            color: "#1A1A19",
+          }}>
+            {item.name}
+          </h3>
+          <DietDot diet={item.diet} />
+        </div>
+        {item.description && (
+          <p style={{ margin: "4px 0 0", fontSize: 14, color: "rgba(26,26,25,.58)", lineHeight: 1.45 }}>
+            {item.description}
+          </p>
+        )}
+        <div style={{
+          marginTop: "auto", paddingTop: 12,
+          display: "flex", alignItems: "center",
+          justifyContent: "space-between", gap: 10,
+        }}>
+          <span style={{
+            fontFamily: "var(--font-bricolage, system-ui)",
+            fontSize: 15, fontWeight: 700,
+            fontVariantNumeric: "tabular-nums", color: accent,
+          }}>
+            {formatRupees(item.price_paise)}
+          </span>
+          {line ? (
+            <QtyControl
+              qty={line.qty}
+              onDec={() => onDec(item.id)}
+              onInc={() => onInc(item.id)}
+              disabled={oos}
+              btnSize={38}
+            />
+          ) : (
+            <button
+              disabled={oos}
+              onClick={() => { onAdd({ menuItemId: item.id, name: item.name, pricePaise: item.price_paise, diet: item.diet as "veg" | "nonveg" | "egg" }); toast.success(`Added ${item.name}!`); }}
+              style={{
+                padding: "8px 14px", borderRadius: S_RADIUS_SM,
+                fontSize: 14, fontWeight: 600,
+                background: "rgba(51,65,85,.08)", color: accent,
+                border: `1px solid ${border}`,
+                cursor: oos ? "not-allowed" : "pointer",
+                opacity: oos ? 0.5 : 1,
+                transition: "background .2s, transform .15s",
+                fontFamily: "var(--font-bricolage, system-ui)",
+              }}
+            >
+              + Add
+            </button>
+          )}
+        </div>
+      </div>
+    </article>
+  );
+}
+
+/* â”€â”€ Shared qty stepper control (demo .qty-control) â”€â”€ */
+function QtyControl({
+  qty, onDec, onInc, disabled, btnSize,
+}: {
+  qty: number; onDec: () => void; onInc: () => void; disabled: boolean; btnSize: number;
+}) {
+  return (
+    <div style={{
+      display: "flex", alignItems: "center",
+      borderRadius: S_RADIUS_SM, border: "1px solid rgba(26,26,25,.12)",
+      overflow: "hidden", background: "rgba(228,228,228,.72)",
+    }}>
+      <button
+        aria-label="Decrease"
+        disabled={disabled}
+        onClick={onDec}
+        style={{
+          width: btnSize, height: btnSize,
+          display: "grid", placeItems: "center",
+          fontSize: 19, fontWeight: 500,
+          cursor: disabled ? "not-allowed" : "pointer",
+          background: "transparent", border: "none",
+          color: "#1A1A19",
+          transition: "background .15s",
+        }}
+      >
+        <Minus size={Math.round(btnSize * 0.37)} />
+      </button>
+      <span style={{
+        minWidth: btnSize - 8, textAlign: "center",
+        fontFamily: "var(--font-jetbrains, monospace)",
+        fontSize: 14, fontWeight: 700,
+        fontVariantNumeric: "tabular-nums",
+      }}>
+        {qty}
+      </span>
+      <button
+        aria-label="Increase"
+        disabled={disabled}
+        onClick={onInc}
+        style={{
+          width: btnSize, height: btnSize,
+          display: "grid", placeItems: "center",
+          fontSize: 19, fontWeight: 500,
+          cursor: disabled ? "not-allowed" : "pointer",
+          background: "transparent", border: "none",
+          color: "#334155",
+          transition: "background .15s",
+        }}
+      >
+        <Plus size={Math.round(btnSize * 0.37)} />
+      </button>
+    </div>
+  );
+}
+
+/* â”€â”€ FSSAI diet indicator dot (demo .diet-dot) â”€â”€ */
+function DietDot({ diet }: { diet: string }) {
+  const color =
+    diet === "veg" ? "#0c8a43" : diet === "egg" ? "#f59e0b" : "#b32b2b";
+  return (
+    <span style={{
+      width: 18, height: 18,
+      border: `2px solid ${color}`,
+      borderRadius: 3,
+      display: "inline-flex",
+      alignItems: "center",
+      justifyContent: "center",
+      flexShrink: 0,
+      marginTop: 4,
+      background: "#ffffff",
+    }}>
+      {diet === "nonveg" ? (
+        <span style={{
+          width: 0, height: 0,
+          borderLeft: "4.5px solid transparent",
+          borderRight: "4.5px solid transparent",
+          borderBottom: `8px solid ${color}`,
+          display: "block",
+        }} />
+      ) : (
+        <span style={{
+          height: 8, width: 8,
+          borderRadius: "50%",
+          background: color,
+          display: "block",
+        }} />
+      )}
+    </span>
+  );
+}
+
+// (S_RADIUS_SM is defined at the top of the file)
+

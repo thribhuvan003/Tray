@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { getBrowserClient } from "@/lib/supabase/browser";
 import { pushSpecialToMenu, removeSpecialFromMenu } from "@/app/(kitchen)/_actions";
 import { toast } from "sonner";
@@ -24,8 +24,10 @@ const SAMPLES = [
 
 export function SpecialsPanel({
   tenantId,
+  tenantSlug = "",
 }: {
   tenantId: string;
+  tenantSlug?: string;
 }) {
   const [specials, setSpecials] = useState<SpecialItem[]>([]);
   const [sampleIdx, setSampleIdx] = useState(0);
@@ -40,7 +42,7 @@ export function SpecialsPanel({
 
   const sb = getBrowserClient();
 
-  const fetchSpecials = async () => {
+  const fetchSpecials = useCallback(async () => {
     // Resolve "Specials" category first
     const { data: cat } = await sb
       .from("menu_categories")
@@ -62,13 +64,13 @@ export function SpecialsPanel({
       .eq("status", "live");
 
     setSpecials((items as SpecialItem[]) || []);
-  };
+  }, [tenantId, sb]);
 
   useEffect(() => {
     void fetchSpecials();
     const interval = setInterval(fetchSpecials, 15_000);
     return () => clearInterval(interval);
-  }, [tenantId]);
+  }, [fetchSpecials]);
 
   const handlePush = async () => {
     if (!name.trim()) {
@@ -91,7 +93,7 @@ export function SpecialsPanel({
         price: numPrice,
         prep: numPrep,
         diet,
-      });
+      }, tenantSlug);
 
       if (!res.ok) {
         toast.error(res.error ?? "Failed to push special");
@@ -117,7 +119,7 @@ export function SpecialsPanel({
 
   const handleRemove = async (itemId: string, itemName: string) => {
     try {
-      const res = await removeSpecialFromMenu(itemId);
+      const res = await removeSpecialFromMenu(itemId, tenantSlug);
       if (!res.ok) {
         toast.error(res.error ?? "Failed to remove special");
       } else {
@@ -132,7 +134,7 @@ export function SpecialsPanel({
   return (
     <div className="right-panel flex flex-col gap-3 sticky top-6">
       <div className="panel bg-[var(--kt-paper)] border border-[var(--kt-ink)] rounded-xl overflow-hidden shadow-[4px_4px_0_var(--kt-ink)]">
-        <div className="panel-head px-4 py-3 border-b border-[var(--line)] bg-[var(--kt-cream-3)] flex justify-between items-center">
+        <div className="panel-head px-4 py-3 border-b border-[var(--kt-line)] bg-[var(--kt-cream-3)] flex justify-between items-center">
           <h3 className="font-display font-medium text-xl leading-none text-[var(--kt-ink)]">
             Today's <span className="italic text-[var(--kt-tomato)]">special.</span>
           </h3>
@@ -147,7 +149,7 @@ export function SpecialsPanel({
               Dish name
             </label>
             <input
-              className="px-3 py-2 bg-[var(--kt-cream-4)] border border-[var(--line-2)] rounded-md font-medium text-sm text-[var(--kt-ink)] outline-none focus:border-[var(--kt-tomato)] focus:bg-[var(--kt-paper)] transition-all"
+              className="px-3 py-2 bg-[var(--kt-cream-4)] border border-[var(--kt-line-2)] rounded-md font-sans font-medium text-sm text-[var(--kt-ink)] outline-none focus:border-[var(--kt-tomato)] focus:bg-[var(--kt-paper)] focus:ring-2 focus:ring-[var(--kt-tomato)]/30 transition-all placeholder:text-[var(--kt-ink-3)]/60"
               value={name}
               onChange={e => setName(e.target.value)}
               placeholder="e.g. Andhra Special Mutton"
@@ -159,7 +161,7 @@ export function SpecialsPanel({
               Description
             </label>
             <textarea
-              className="px-3 py-2 bg-[var(--kt-cream-4)] border border-[var(--line-2)] rounded-md font-medium text-sm text-[var(--kt-ink)] outline-none focus:border-[var(--kt-tomato)] focus:bg-[var(--kt-paper)] transition-all resize-none"
+              className="px-3 py-2 bg-[var(--kt-cream-4)] border border-[var(--kt-line-2)] rounded-md font-sans font-medium text-sm text-[var(--kt-ink)] outline-none focus:border-[var(--kt-tomato)] focus:bg-[var(--kt-paper)] focus:ring-2 focus:ring-[var(--kt-tomato)]/30 transition-all resize-none placeholder:text-[var(--kt-ink-3)]/60"
               rows={2}
               value={description}
               onChange={e => setDescription(e.target.value)}
@@ -173,7 +175,7 @@ export function SpecialsPanel({
                 Price (₹)
               </label>
               <input
-                className="px-3 py-2 bg-[var(--kt-cream-4)] border border-[var(--line-2)] rounded-md font-medium text-sm text-[var(--kt-ink)] outline-none focus:border-[var(--kt-tomato)] focus:bg-[var(--kt-paper)] transition-all"
+                className="px-3 py-2 bg-[var(--kt-cream-4)] border border-[var(--kt-line-2)] rounded-md font-sans font-medium text-sm text-[var(--kt-ink)] outline-none focus:border-[var(--kt-tomato)] focus:bg-[var(--kt-paper)] focus:ring-2 focus:ring-[var(--kt-tomato)]/30 transition-all"
                 value={price}
                 onChange={e => setPrice(e.target.value)}
               />
@@ -183,7 +185,7 @@ export function SpecialsPanel({
                 Prep (min)
               </label>
               <input
-                className="px-3 py-2 bg-[var(--kt-cream-4)] border border-[var(--line-2)] rounded-md font-medium text-sm text-[var(--kt-ink)] outline-none focus:border-[var(--kt-tomato)] focus:bg-[var(--kt-paper)] transition-all"
+                className="px-3 py-2 bg-[var(--kt-cream-4)] border border-[var(--kt-line-2)] rounded-md font-sans font-medium text-sm text-[var(--kt-ink)] outline-none focus:border-[var(--kt-tomato)] focus:bg-[var(--kt-paper)] focus:ring-2 focus:ring-[var(--kt-tomato)]/30 transition-all"
                 value={prep}
                 onChange={e => setPrep(e.target.value)}
               />
@@ -197,7 +199,7 @@ export function SpecialsPanel({
             <div className="diet-toggle flex gap-1.5">
               <button
                 type="button"
-                className={`flex-1 py-1.5 bg-[var(--kt-cream-4)] border border-[var(--line-2)] rounded-md text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${diet === "veg" ? "bg-[var(--kt-ink)] text-[var(--kt-cream)] border-[var(--kt-ink)]" : "text-[var(--kt-ink-2)]"}`}
+                className={`flex-1 py-1.5 bg-[var(--kt-cream-4)] border border-[var(--kt-line-2)] rounded-md text-[11px] font-semibold flex items-center justify-center gap-1 transition-all ${diet === "veg" ? "bg-[var(--kt-ink)] text-[var(--kt-cream)] border-[var(--kt-ink)]" : "text-[var(--kt-ink-2)]"}`}
                 onClick={() => setDiet("veg")}
               >
                 <span className="veg-dot inline-block w-2.5 h-2.5 border border-[var(--kt-olive)] relative rounded-[2px] after:content-[''] after:absolute after:inset-[1.5px] after:bg-[var(--kt-olive)] after:rounded-full" />
@@ -205,7 +207,15 @@ export function SpecialsPanel({
               </button>
               <button
                 type="button"
-                className={`flex-1 py-1.5 bg-[var(--kt-cream-4)] border border-[var(--line-2)] rounded-md text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${diet === "nonveg" ? "bg-[var(--kt-ink)] text-[var(--kt-cream)] border-[var(--kt-ink)]" : "text-[var(--kt-ink-2)]"}`}
+                className={`flex-1 py-1.5 bg-[var(--kt-cream-4)] border border-[var(--kt-line-2)] rounded-md text-[11px] font-semibold flex items-center justify-center gap-1 transition-all ${diet === "egg" ? "bg-[var(--kt-ink)] text-[var(--kt-cream)] border-[var(--kt-ink)]" : "text-[var(--kt-ink-2)]"}`}
+                onClick={() => setDiet("egg")}
+              >
+                <span className="veg-dot eg inline-block w-2.5 h-2.5 border border-[#c69214] relative rounded-[2px] after:content-[''] after:absolute after:inset-[1.5px] after:bg-[#c69214] after:rounded-full" />
+                Egg
+              </button>
+              <button
+                type="button"
+                className={`flex-1 py-1.5 bg-[var(--kt-cream-4)] border border-[var(--kt-line-2)] rounded-md text-[11px] font-semibold flex items-center justify-center gap-1 transition-all ${diet === "nonveg" ? "bg-[var(--kt-ink)] text-[var(--kt-cream)] border-[var(--kt-ink)]" : "text-[var(--kt-ink-2)]"}`}
                 onClick={() => setDiet("nonveg")}
               >
                 <span className="veg-dot nv inline-block w-2.5 h-2.5 border border-[var(--kt-tomato)] relative rounded-[2px] after:content-[''] after:absolute after:inset-[1.5px] after:bg-[var(--kt-tomato)] after:rounded-full" />
@@ -234,9 +244,9 @@ export function SpecialsPanel({
             </div>
           ) : (
             specials.map(s => (
-              <div key={s.id} className="live-spec p-[9px_10px] bg-[var(--kt-cream-3)] border border-[var(--line)] rounded-[7px] flex justify-between items-center gap-2 text-xs animate-[liveIn_.4s_cubic-bezier(.34,1.26,.64,1)]">
+              <div key={s.id} className="live-spec p-[9px_10px] bg-[var(--kt-cream-3)] border border-[var(--kt-line)] rounded-[7px] flex justify-between items-center gap-2 text-xs animate-[liveIn_.4s_cubic-bezier(.34,1.26,.64,1)]">
                 <span className="nm font-semibold text-[var(--kt-ink)] flex items-center gap-1.5 min-w-0 flex-1 leading-snug">
-                  <span className={`veg-dot ${s.diet === "nonveg" ? "nv" : ""} inline-block w-2 h-2 rounded-[2px] flex-shrink-0`} />
+                  <span className={`veg-dot vd ${s.diet === "nonveg" ? "nv" : s.diet === "egg" ? "eg" : ""}`} />
                   <span className="nm-text overflow-hidden text-ellipsis whitespace-nowrap">{s.name}</span>
                 </span>
                 <span className="pr font-mono font-semibold text-[var(--kt-ink-2)] flex-shrink-0">

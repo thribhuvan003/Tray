@@ -130,7 +130,7 @@ export function InsightsView({
 
   return (
     <div className="view-pane flex flex-col gap-4 animate-[liveIn_.3s_ease_both]">
-      <div className="page-head flex justify-between items-end pb-[18px] border-b border-[var(--line)] mb-6">
+      <div className="page-head flex justify-between items-end pb-[18px] border-b border-[var(--kt-line)] mb-6">
         <div className="l flex flex-col gap-1.5">
           <span className="eyebrow text-xs tracking-widest uppercase font-mono text-[var(--kt-ink-3)]">
             Tuesday · lunch service
@@ -199,7 +199,7 @@ export function InsightsView({
       </div>
 
       <div className="queue-board rounded-[14px] border border-[var(--kt-ink)] overflow-hidden bg-[var(--kt-paper)]">
-        <div className="px-[18px] py-[14px] border-b border-[var(--line)] flex items-baseline justify-between">
+        <div className="px-[18px] py-[14px] border-b border-[var(--kt-line)] flex items-baseline justify-between">
           <h3 className="font-display font-medium text-2xl text-[var(--kt-ink)]">
             Top items <span className="italic text-[var(--kt-tomato)]">today.</span>
           </h3>
@@ -218,7 +218,7 @@ export function InsightsView({
             </div>
           ) : (
             topItems.map((it, i) => (
-              <div key={it.name} className="ins-row grid grid-cols-[auto_1fr_auto] gap-4 items-center p-[14px_18px] border-b border-[var(--line)] last:border-b-0">
+              <div key={it.name} className="ins-row grid grid-cols-[auto_1fr_auto] gap-4 items-center p-[14px_18px] border-b border-[var(--kt-line)] last:border-b-0">
                 <span className="ins-rk font-mono text-sm font-bold text-[var(--kt-ink-3)] tracking-wider">
                   {String(i + 1).padStart(2, "0")}
                 </span>

@@ -1,10 +1,30 @@
 "use client";
+
 import { Minus, Plus } from "lucide-react";
 import type { MenuItem } from "@/lib/db/types";
 import { formatRupees, cn } from "@/lib/utils";
 import { useCart } from "@/lib/cart/store";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
+
+// Helper to match emoji by name pattern
+function getItemEmoji(name: string, diet: string): string {
+  const n = name.toLowerCase();
+  if (n.includes("biryani") || n.includes("rice")) return "🍛";
+  if (n.includes("coffee") || n.includes("cappuccino") || n.includes("latte")) return "☕";
+  if (n.includes("tea") || n.includes("chai")) return "☕";
+  if (n.includes("burger")) return "🍔";
+  if (n.includes("sandwich")) return "🥪";
+  if (n.includes("dosa") || n.includes("idli") || n.includes("uthappam")) return "🥞";
+  if (n.includes("momo") || n.includes("dumpling")) return "🥟";
+  if (n.includes("maggi") || n.includes("noodle") || n.includes("pasta")) return "🍜";
+  if (n.includes("shake") || n.includes("smoothie") || n.includes("juice") || n.includes("drink")) return "🥤";
+  if (n.includes("pizza")) return "🍕";
+  if (n.includes("roll")) return "🌯";
+  if (diet === "veg") return "🌿";
+  if (diet === "egg") return "🍳";
+  return "🍗";
+}
 
 export function MenuItemCard({ item }: { item: MenuItem }) {
   const line = useCart((s) => s.lines.find((l) => l.menuItemId === item.id));
@@ -13,108 +33,56 @@ export function MenuItemCard({ item }: { item: MenuItem }) {
   const dec = useCart((s) => s.decrement);
   const oos = !item.in_stock || item.status !== "live";
 
-  const dietRing =
-    item.diet === "veg"
-      ? "border-emerald-600 text-emerald-600"
-      : item.diet === "egg"
-      ? "border-amber-600 text-amber-600"
-      : "border-rose-600 text-rose-600";
-  const dietFill =
-    item.diet === "veg" ? "bg-emerald-600" : item.diet === "egg" ? "bg-amber-600" : "bg-rose-600";
+  const hasQty = !!line;
+  const q = line?.qty ?? 0;
 
   return (
     <article
       className={cn(
-        "group relative rounded-2xl border bg-[color:var(--color-paper)] overflow-hidden flex flex-col transition-all",
-        oos ? "opacity-60" : "border-[color:var(--color-line)] hover:border-ocean-500/40 hover:shadow-[0_8px_24px_-12px_rgba(26,26,25,0.12)]"
+        "menu-card",
+        hasQty && "has-qty",
+        oos && "opacity-60 pointer-events-none"
       )}
+      data-id={item.id}
     >
-      <div className="relative aspect-[4/3] overflow-hidden">
-        {item.image_url ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img 
-            src={item.image_url} 
-            alt={item.name} 
-            className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" 
-          />
-        ) : (
-          <div
-            className="absolute inset-0 transition-transform duration-500 group-hover:scale-105"
-            style={{
-              background:
-                item.diet === "veg"
-                  ? "linear-gradient(135deg,#e8f5e9,#a5d6a7)"
-                  : item.diet === "egg"
-                  ? "linear-gradient(135deg,#fff8e1,#ffe082)"
-                  : "linear-gradient(135deg,#fce4ec,#ef9a9a)",
-            }}
-          />
-        )}
-        
-        {/* Premium FSSAI badge with hover rotation and shape accuracy */}
-        <motion.span
-          aria-label={item.diet}
-          className={cn(
-            "absolute top-3 left-3 inline-flex h-5 w-5 items-center justify-center border-2 rounded-sm bg-white z-10 shadow-sm",
-            dietRing
-          )}
-          whileHover={{ rotate: 180 }}
-          transition={{ duration: 0.4, ease: "easeInOut" }}
-        >
-          {item.diet === "nonveg" ? (
-            <span className="w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-b-[8.5px] border-b-rose-600 block" />
-          ) : (
-            <span className={cn("h-2.5 w-2.5 rounded-full block", dietFill)} />
-          )}
-        </motion.span>
-
-        {oos && (
-          <span className="absolute top-2 right-2 text-[10px] font-mono uppercase tracking-wider bg-[color:var(--color-paper)]/90 text-[color:var(--color-ink)]/70 px-2 py-1 rounded-full">
-            Out of stock
-          </span>
-        )}
+      {/* Visual icon/emoji container + Price */}
+      <div className="menu-card__visual flex flex-col items-center gap-1 justify-center bg-graphite-100 rounded-xl border border-graphite-200">
+        <span className="text-3xl select-none leading-none">
+          {getItemEmoji(item.name, item.diet)}
+        </span>
       </div>
-      <div className="p-3.5 flex flex-col flex-1 gap-1.5">
-        <h3 className="text-[15px] font-semibold leading-tight" style={{ fontFamily: "var(--font-jakarta, var(--font-manrope))" }}>{item.name}</h3>
+
+      {/* Body details */}
+      <div className="menu-card__body">
+        <div className="menu-card__top flex items-start justify-between gap-2">
+          <h3 className="menu-card__title font-semibold text-[16px] leading-tight text-slate-800">
+            {item.name}
+          </h3>
+          {/* FSSAI indicator badge */}
+          <span
+            className={cn("diet-dot", item.diet === "nonveg" ? "diet-dot--nv" : "diet-dot--veg")}
+            title={item.diet === "nonveg" ? "Non-vegetarian" : "Vegetarian"}
+            aria-label={item.diet === "nonveg" ? "Non-vegetarian" : "Vegetarian"}
+          />
+        </div>
+        
         {item.description && (
-          <p className="text-[12px] leading-[1.4] text-[color:var(--color-ink)]/55 line-clamp-2">
+          <p className="menu-card__desc text-[13px] text-slate-500 mt-1 leading-normal line-clamp-2">
             {item.description}
           </p>
         )}
-        <div className="mt-auto pt-2 flex items-center justify-between">
-          <div
-            className="text-[20px] font-bold leading-none tracking-[0.01em] text-ocean-500 tabular"
-          >
+
+        {/* Footer controls: Price + Quantity triggers */}
+        <div className="menu-card__foot flex items-center justify-between gap-4 mt-auto pt-2.5">
+          <span className="price font-mono font-bold text-[16px] text-slate-900 tabular-nums">
             {formatRupees(item.price_paise)}
-          </div>
-          {line ? (
-            <motion.div 
-              initial={{ scale: 0.85, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ type: "spring", stiffness: 400, damping: 22 }}
-              className="inline-flex items-center rounded-full bg-ocean-500 text-black"
-            >
-              <button
-                aria-label="Decrease"
-                onClick={() => dec(item.id)}
-                className="h-8 w-8 inline-flex items-center justify-center transition-opacity hover:opacity-75"
-              >
-                <Minus size={14} />
-              </button>
-              <span className="text-[13px] font-bold tabular w-5 text-center">{line.qty}</span>
-              <button
-                aria-label="Increase"
-                onClick={() => inc(item.id)}
-                className="h-8 w-8 inline-flex items-center justify-center transition-opacity hover:opacity-75"
-              >
-                <Plus size={14} />
-              </button>
-            </motion.div>
-          ) : (
-            <motion.button
+          </span>
+
+          <div className="flex items-center gap-2">
+            {/* Default + Add button */}
+            <button
+              type="button"
               disabled={oos}
-              whileTap={{ scale: 0.95 }}
-              whileHover={{ scale: 1.05 }}
               onClick={() => {
                 add({
                   menuItemId: item.id,
@@ -123,7 +91,7 @@ export function MenuItemCard({ item }: { item: MenuItem }) {
                   diet: item.diet,
                 });
                 const nameLower = item.name.toLowerCase();
-                let message = `Added ${item.name} to your tray!`;
+                let message = `Added ${item.name} to tray!`;
                 if (nameLower.includes("biryani")) {
                   message = `Aromatic Biryani added to your tray! 🍛`;
                 } else if (nameLower.includes("coffee") || nameLower.includes("cappuccino")) {
@@ -151,16 +119,34 @@ export function MenuItemCard({ item }: { item: MenuItem }) {
                 }
                 toast.success(message);
               }}
-              className={cn(
-                "inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-[12.5px] font-semibold transition-colors",
-                oos
-                  ? "bg-[color:var(--color-line)] text-[color:var(--color-ink)]/40 cursor-not-allowed"
-                  : "bg-ocean-500 text-black hover:bg-ocean-600"
-              )}
+              className="btn-add-initial cursor-pointer hover:bg-opacity-90 active:scale-[0.98] transition-all"
             >
-              <Plus size={14} /> Add
-            </motion.button>
-          )}
+              + Add
+            </button>
+
+            {/* Quantity selector control */}
+            <div className="qty-control">
+              <button
+                type="button"
+                disabled={oos}
+                onClick={() => dec(item.id)}
+                className="qty-btn qty-minus cursor-pointer"
+                aria-label="Remove one"
+              >
+                −
+              </button>
+              <span className="qty-val">{q}</span>
+              <button
+                type="button"
+                disabled={oos}
+                onClick={() => inc(item.id)}
+                className="qty-btn qty-btn--add cursor-pointer"
+                aria-label="Add one"
+              >
+                +
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </article>

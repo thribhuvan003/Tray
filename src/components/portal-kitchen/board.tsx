@@ -1,15 +1,15 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { Bell, BellOff, ChefHat, History as HistoryIcon, Radio, UserRoundCog } from "lucide-react";
 import { toast } from "sonner";
 import { getBrowserClient } from "@/lib/supabase/browser";
 import { cn, formatRupees, formatTimeIST } from "@/lib/utils";
-import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { OrderColumn } from "./order-column";
 import { OtpVerifyDialog } from "./otp-verify-dialog";
 import { KitchenMarquee } from "./marquee";
+import { SpecialsPanel } from "./specials-panel";
 
 type Status = "placed" | "preparing" | "ready" | "collected";
 type OrderRow = {
@@ -69,6 +69,86 @@ export function KitchenBoard({
     }
   };
 
+  const [walkInPending, setWalkInPending] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const refresh = useCallback(async (onNewPlaced?: () => void) => {
+    const sb = getBrowserClient();
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const { data } = await sb
+      .from("orders")
+      .select(
+        "id, short_code, status, total_paise, placed_at, ready_at, collected_at, customer_name, order_type, table_label"
+      )
+      .eq("tenant_id", tenantId)
+      .in("status", ["placed", "preparing", "ready", "collected"])
+      .gte("placed_at", today.toISOString())
+      .order("placed_at", { ascending: true })
+      .limit(120)
+      .returns<OrderRow[]>();
+    if (data) {
+      const seen = seenOrderIdsRef.current;
+      const newPlaced = data.some((o) => o.status === "placed" && !seen.has(o.id));
+      for (const o of data) seen.add(o.id);
+      setOrders(data);
+      const ids = data.map((o) => o.id);
+      if (ids.length === 0) {
+        setLines([]);
+      } else {
+        const { data: l } = await sb
+          .from("order_items")
+          .select("id, order_id, name_snapshot, qty, diet_snapshot")
+          .in("order_id", ids)
+          .returns<LineRow[]>();
+        setLines(l ?? []);
+      }
+      if (newPlaced) onNewPlaced?.();
+    }
+    const { data: freshMarquee } = await sb
+      .from("menu_items")
+      .select("id, name, price_paise, diet")
+      .eq("tenant_id", tenantId)
+      .eq("status", "live")
+      .eq("in_stock", true)
+      .order("sort_order")
+      .limit(24)
+      .returns<{ id: string; name: string; price_paise: number; diet: "veg" | "nonveg" | "egg" }[]>();
+    if (freshMarquee) setMarqueeItems(freshMarquee);
+  }, [tenantId]);
+
+  const handleWalkIn = async () => {
+    if (walkInPending) return;
+    setWalkInPending(true);
+    try {
+      const { createWalkInOrder } = await import("@/app/(kitchen)/_actions");
+      const res = await createWalkInOrder();
+      if (res.ok) {
+        toast.success("Walk-in order created successfully!");
+        void refresh();
+      } else {
+        handleActionError(res.error ?? "Failed to create walk-in order");
+      }
+    } catch (err: any) {
+      toast.error(err.message ?? "Failed to create walk-in order");
+    } finally {
+      setWalkInPending(false);
+    }
+  };
+
+  const handleManualRefresh = async () => {
+    if (refreshing) return;
+    setRefreshing(true);
+    try {
+      await refresh();
+      toast.success("Queue refreshed");
+    } catch (err: any) {
+      toast.error("Failed to refresh: " + err.message);
+    } finally {
+      setTimeout(() => setRefreshing(false), 500);
+    }
+  };
+
   useEffect(() => {
     bellOnRef.current = bellOn;
   }, [bellOn]);
@@ -106,56 +186,8 @@ export function KitchenBoard({
   useEffect(() => {
     const sb = getBrowserClient();
 
-    const refresh = async (onNewPlaced?: () => void) => {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const { data } = await sb
-        .from("orders")
-        .select(
-          "id, short_code, status, total_paise, placed_at, ready_at, collected_at, customer_name, order_type, table_label"
-        )
-        .eq("tenant_id", tenantId)
-        .in("status", ["placed", "preparing", "ready", "collected"])
-        .gte("placed_at", today.toISOString())
-        .order("placed_at", { ascending: true })
-        .limit(120)
-        .returns<OrderRow[]>();
-      if (data) {
-        const seen = seenOrderIdsRef.current;
-        const newPlaced = data.some((o) => o.status === "placed" && !seen.has(o.id));
-        for (const o of data) seen.add(o.id);
-        setOrders(data);
-        const ids = data.map((o) => o.id);
-        if (ids.length === 0) {
-          setLines([]);
-        } else {
-          const { data: l } = await sb
-            .from("order_items")
-            .select("id, order_id, name_snapshot, qty, diet_snapshot")
-            .in("order_id", ids)
-            .returns<LineRow[]>();
-          setLines(l ?? []);
-        }
-        if (newPlaced) onNewPlaced?.();
-      }
-      // Refresh the live-menu marquee on every cycle so admin stock/status
-      // changes mid-shift propagate to the kitchen ticker without a page
-      // reload. Cheap, indexed query (limit 24, scoped by tenant + status).
-      const { data: freshMarquee } = await sb
-        .from("menu_items")
-        .select("id, name, price_paise, diet")
-        .eq("tenant_id", tenantId)
-        .eq("status", "live")
-        .eq("in_stock", true)
-        .order("sort_order")
-        .limit(24)
-        .returns<{ id: string; name: string; price_paise: number; diet: "veg" | "nonveg" | "egg" }[]>();
-      if (freshMarquee) setMarqueeItems(freshMarquee);
-    };
+    void refresh();
 
-    // Subscribe to the append-only order_events log (migration 0009 + 0011).
-    // Cheaper + safer than postgres_changes on the orders table, and survives
-    // the WAL-bomb pattern (REPLICA IDENTITY FULL is not needed).
     const channel = sb
       .channel(`kitchen:${tenantId}`)
       .on(
@@ -186,9 +218,6 @@ export function KitchenBoard({
     };
     document.addEventListener("visibilitychange", onVis);
 
-    // Lightweight safety-net poll for kitchens on flaky campus Wi-Fi where
-    // the WS may silently die. 20s is far below the 60s connection timeout
-    // and won't add meaningful DB load (one indexed query).
     const pollId = setInterval(() => {
       if (document.visibilityState === "visible") void refresh();
     }, 20_000);
@@ -198,7 +227,7 @@ export function KitchenBoard({
       document.removeEventListener("visibilitychange", onVis);
       clearInterval(pollId);
     };
-  }, [tenantId]);
+  }, [tenantId, refresh]);
 
   const groups = useMemo(() => {
     const g: Record<Status, OrderRow[]> = { placed: [], preparing: [], ready: [], collected: [] };
@@ -647,68 +676,44 @@ export function KitchenBoard({
               </div>
             </div>
 
-            {/* Right controls */}
-            <div className="flex items-center gap-2">
-              {/* Bell toggle — always visible */}
+            {/* Right controls — matches kitchen.html exactly */}
+            <div className="r flex items-center gap-2">
+              <select
+                id="kitchenCanteen"
+                className="btn btn-ghost"
+                aria-label="Kitchen canteen"
+                title="Canteen queue"
+                value={tenantId}
+                onChange={() => {}}
+              >
+                <option value={tenantId}>{tenantName}</option>
+              </select>
               <button
+                id="btnSounds"
                 type="button"
                 onClick={() => setBellOn((v) => !v)}
-                aria-label={bellOn ? "Mute new-order chime" : "Unmute new-order chime"}
-                title={bellOn ? "New-order chime: on" : "New-order chime: off"}
-                className="inline-flex items-center gap-2 transition-all"
-                style={{
-                  height: "34px",
-                  padding: "0 12px",
-                  borderRadius: "7px",
-                  fontSize: "12px",
-                  fontWeight: 600,
-                  border: "1px solid var(--kt-line-2)",
-                  background: "var(--kt-cream-4)",
-                  color: bellOn ? "var(--kt-ink)" : "var(--kt-ink-3)",
-                  cursor: "pointer",
-                }}
+                className="btn btn-ghost"
+                style={{ color: bellOn ? "" : "var(--kt-ink-3)" }}
               >
-                {bellOn ? <Bell size={12} /> : <BellOff size={12} />}
-                {bellOn ? "Sounds" : "Muted"}
+                {bellOn ? "🔔 Sounds" : "🔕 Muted"}
               </button>
-              <ThemeToggle className="text-[var(--kt-ink-3)]" />
-              {/* Mobile-only quick links */}
-              <Link
-                href={`/c/${tenantSlug}/kitchen/history`}
-                className="lg:hidden inline-flex items-center gap-1.5 transition-colors"
-                style={{
-                  height: "34px",
-                  padding: "0 12px",
-                  borderRadius: "7px",
-                  border: "1px solid var(--kt-line-2)",
-                  background: "var(--kt-cream-4)",
-                  color: "var(--kt-ink)",
-                  fontSize: "12px",
-                  fontWeight: 600,
-                  textDecoration: "none",
-                }}
-                title="Today's completed orders"
+              <button
+                type="button"
+                onClick={handleWalkIn}
+                disabled={walkInPending}
+                className="btn btn-ghost"
               >
-                <HistoryIcon size={12} /> History
-              </Link>
-              <Link
-                href={`/c/${tenantSlug}/kitchen/staff-select`}
-                className="lg:hidden inline-flex items-center gap-1.5 transition-colors"
-                style={{
-                  height: "34px",
-                  padding: "0 12px",
-                  borderRadius: "7px",
-                  border: "1px solid var(--kt-line-2)",
-                  background: "var(--kt-cream-4)",
-                  color: "var(--kt-ink)",
-                  fontSize: "12px",
-                  fontWeight: 600,
-                  textDecoration: "none",
-                }}
-                title="Switch logged-in staff member"
+                {walkInPending ? "⌛ Adding..." : "+ Walk-in order"}
+              </button>
+              <button
+                id="btnRefresh"
+                type="button"
+                onClick={handleManualRefresh}
+                disabled={refreshing}
+                className={cn("btn btn-pri", refreshing && "opacity-80")}
               >
-                <UserRoundCog size={12} /> Staff
-              </Link>
+                <span className={cn("inline-block", refreshing && "animate-spin")}>⟳</span> Refresh
+              </button>
             </div>
           </div>
 
@@ -722,95 +727,113 @@ export function KitchenBoard({
         <main style={{ padding: "16px 16px 64px" }} className="sm:p-6 sm:pb-16 pb-[calc(4rem+env(safe-area-inset-bottom))]">
           <PrepTotalsStrip orders={orders} lines={lines} onSessionExpired={() => setSessionExpired(true)} />
 
-          {/* 4-column queue board — matches .queue-board + .queue-cols */}
-          <div
-            style={{
-              background: "var(--kt-paper)",
-              border: "1px solid var(--kt-ink)",
-              borderRadius: "14px",
-              overflow: "hidden",
-              boxShadow: "5px 5px 0 var(--kt-ink)",
-            }}
-          >
-            <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0">
-              <div className="grid grid-cols-4 min-w-[680px]" style={{ minHeight: "520px" }}>
-                <OrderColumn
-                  title="Incoming"
-                  subtitle="Just paid · awaiting kitchen"
-                  status="placed"
-                  orders={groups.placed}
-                  linesByOrder={linesByOrder}
-                  onAction={async (id, action) => {
-                    const { markPreparing } = await import("@/app/(kitchen)/_actions");
-                    const r = await markPreparing(id);
-                    if (!r.ok) handleActionError(r.error);
-                    if (action === "start" && r.ok) toast.success(`Started ${id.slice(0, 6)}`);
-                  }}
-                  onReject={async (id, reason) => {
-                    const { rejectOrder } = await import("@/app/(kitchen)/_actions");
-                    const r = await rejectOrder(id, reason);
-                    if (!r.ok) handleActionError(r.error ?? "Failed to reject order");
-                    else toast.success("Order rejected — refund queued");
-                  }}
-                />
-                <OrderColumn
-                  title="Preparing"
-                  subtitle="Currently cooking"
-                  status="preparing"
-                  orders={groups.preparing}
-                  linesByOrder={linesByOrder}
-                  onAction={async (id) => {
-                    const { markReady } = await import("@/app/(kitchen)/_actions");
-                    const r = await markReady(id);
-                    if (!r.ok) handleActionError(r.error);
-                    else toast.success("Ready — pickup code issued");
-                  }}
-                />
-                <OrderColumn
-                  title="Ready"
-                  subtitle="Student will show a code"
-                  status="ready"
-                  orders={groups.ready}
-                  linesByOrder={linesByOrder}
-                  onAction={(id) => setVerifyId(id)}
-                />
-                <OrderColumn
-                  title="Collected"
-                  subtitle="Today · last 10"
-                  status="collected"
-                  orders={groups.collected}
-                  linesByOrder={linesByOrder}
-                  onAction={() => { }}
-                />
-              </div>
-            </div>
-            {/* Queue footer — matches .queue-foot */}
+          {/* 2-column queue board + specials layout — matches .queue-shell */}
+          <div className="queue-shell">
+            {/* Left Column: 4-column queue board */}
             <div
-              className="flex justify-between items-center"
               style={{
-                padding: "10px 16px",
-                borderTop: "1px solid var(--kt-line)",
-                background: "var(--kt-cream-4)",
-                fontFamily: "var(--font-jetbrains), ui-monospace, Menlo, monospace",
-                fontSize: "13px",
-                color: "var(--kt-ink-3)",
-                letterSpacing: "0.04em",
+                background: "var(--kt-paper)",
+                border: "1px solid var(--kt-ink)",
+                borderRadius: "14px",
+                overflow: "hidden",
+                boxShadow: "5px 5px 0 var(--kt-ink)",
               }}
             >
-              <span>TAP any card to move it forward · TAP VERIFY CODE when student arrives</span>
-              <span style={{ color: "var(--kt-tomato)", fontWeight: 600 }}>
-                {groups.placed.length + groups.preparing.length} active
-              </span>
+              <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0">
+                <div className="grid grid-cols-4 min-w-[680px]" style={{ minHeight: "520px" }}>
+                  <OrderColumn
+                    title="Incoming"
+                    subtitle="Just paid · awaiting kitchen"
+                    status="placed"
+                    orders={groups.placed}
+                    linesByOrder={linesByOrder}
+                    onAction={async (id, action) => {
+                      const { markPreparing } = await import("@/app/(kitchen)/_actions");
+                      const r = await markPreparing(id);
+                      if (!r.ok) handleActionError(r.error);
+                      else {
+                        if (action === "start") toast.success(`Started ${id.slice(0, 6)}`);
+                        void refresh();
+                      }
+                    }}
+                    onReject={async (id, reason) => {
+                      const { rejectOrder } = await import("@/app/(kitchen)/_actions");
+                      const r = await rejectOrder(id, reason);
+                      if (!r.ok) handleActionError(r.error ?? "Failed to reject order");
+                      else {
+                        toast.success("Order rejected — refund queued");
+                        void refresh();
+                      }
+                    }}
+                  />
+                  <OrderColumn
+                    title="Preparing"
+                    subtitle="Currently cooking"
+                    status="preparing"
+                    orders={groups.preparing}
+                    linesByOrder={linesByOrder}
+                    onAction={async (id) => {
+                      const { markReady } = await import("@/app/(kitchen)/_actions");
+                      const r = await markReady(id);
+                      if (!r.ok) handleActionError(r.error);
+                      else {
+                        toast.success("Ready — pickup code issued");
+                        void refresh();
+                      }
+                    }}
+                  />
+                  <OrderColumn
+                    title="Ready"
+                    subtitle="Student will show a code"
+                    status="ready"
+                    orders={groups.ready}
+                    linesByOrder={linesByOrder}
+                    onAction={(id) => setVerifyId(id)}
+                  />
+                  <OrderColumn
+                    title="Collected"
+                    subtitle="Today · last 10"
+                    status="collected"
+                    orders={groups.collected}
+                    linesByOrder={linesByOrder}
+                    onAction={() => { }}
+                  />
+                </div>
+              </div>
+              {/* Queue footer — matches .queue-foot */}
+              <div
+                className="flex justify-between items-center"
+                style={{
+                  padding: "10px 16px",
+                  borderTop: "1px solid var(--kt-line)",
+                  background: "var(--kt-cream-4)",
+                  fontFamily: "var(--font-jetbrains), ui-monospace, Menlo, monospace",
+                  fontSize: "13px",
+                  color: "var(--kt-ink-3)",
+                  letterSpacing: "0.04em",
+                }}
+              >
+                <span>TAP any card to move it forward · TAP VERIFY CODE when student arrives</span>
+                <span style={{ color: "var(--kt-tomato)", fontWeight: 600 }}>
+                  {groups.placed.length + groups.preparing.length} active
+                </span>
+              </div>
             </div>
+ 
+            {/* Right Column: Specials Manager Panel */}
+            <SpecialsPanel tenantId={tenantId} tenantSlug={tenantSlug} />
           </div>
         </main>
-
+ 
         <OtpVerifyDialog
           open={Boolean(verifyId)}
           order={verifyOrder}
           onClose={() => setVerifyId(null)}
           onResult={(ok) => {
-            if (ok) setVerifyId(null);
+            if (ok) {
+              setVerifyId(null);
+              void refresh();
+            }
           }}
         />
       </div>

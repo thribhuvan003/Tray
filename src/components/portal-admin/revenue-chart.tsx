@@ -20,17 +20,17 @@ export function RevenueChart({ days }: { days: { label: string; revenue: number 
   const todayPt = points[todayIdx];
 
   return (
-    <section className="bg-graphite-700 border border-graphite-200/[0.08] rounded-xl p-4 min-h-[260px] flex flex-col">
+    <section className="bg-[var(--admin-bg-2)] border border-[var(--admin-line)] rounded-xl p-4 min-h-[260px] flex flex-col">
       <header className="flex items-start justify-between mb-3">
         <div>
-          <h3 className="text-[13px] font-semibold text-graphite-200">Revenue this week</h3>
-          <p className="text-[10px] font-mono uppercase tracking-[0.08em] text-graphite-400 mt-0.5">
+          <h3 className="text-[13px] font-semibold text-[var(--admin-ink)]">Revenue this week</h3>
+          <p className="text-[10px] font-mono uppercase tracking-[0.08em] text-[var(--admin-ink-3)] mt-0.5">
             Daily total · INR
           </p>
         </div>
-        <div className="flex items-center gap-3 text-[10px] font-mono text-graphite-400">
+        <div className="flex items-center gap-3 text-[10px] font-mono text-[var(--admin-ink-3)]">
           <span className="inline-flex items-center gap-1.5">
-            <span className="inline-block h-0.5 w-3 bg-lime" /> Revenue
+            <span className="inline-block h-0.5 w-3 bg-[var(--admin-lime)]" /> Revenue
           </span>
         </div>
       </header>
@@ -71,8 +71,8 @@ export function RevenueChart({ days }: { days: { label: string; revenue: number 
               cx={p.x}
               cy={p.y}
               r={i === todayIdx ? 4 : 2.5}
-              fill={i === todayIdx ? "#0a0d12" : "#d2fb50"}
-              stroke={i === todayIdx ? "#d2fb50" : "transparent"}
+              fill={i === todayIdx ? "var(--admin-bg)" : "var(--admin-lime)"}
+              stroke={i === todayIdx ? "var(--admin-lime)" : "transparent"}
               strokeWidth={2}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -84,7 +84,7 @@ export function RevenueChart({ days }: { days: { label: string; revenue: number 
               key={i}
               x={pad.l + i * step}
               y={h - pad.b + 16}
-              fill="#646d80"
+              fill="var(--admin-ink-3)"
               fontSize="10"
               fontFamily="monospace"
               textAnchor="middle"
@@ -97,7 +97,7 @@ export function RevenueChart({ days }: { days: { label: string; revenue: number 
               <text
                 x={todayPt.x}
                 y={todayPt.y - 12}
-                fill="#d2fb50"
+                fill="var(--admin-lime)"
                 fontSize="10"
                 fontFamily="monospace"
                 textAnchor="middle"

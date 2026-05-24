@@ -36,6 +36,7 @@ export function PayPanel({
   lines,
   razorpayKeyId,
   razorpayOrderId,
+  isSimMode = false,
 }: {
   tenantSlug: string;
   tenantName: string;
@@ -44,6 +45,7 @@ export function PayPanel({
   lines: Line[];
   razorpayKeyId: string;
   razorpayOrderId: string | null;
+  isSimMode?: boolean;
 }) {
   const router = useRouter();
   const [pending, start] = useTransition();
@@ -54,7 +56,6 @@ export function PayPanel({
     return Math.max(0, Math.floor((new Date(order.payment_expires_at).getTime() - Date.now()) / 1000));
   });
   const [demoDismissed, setDemoDismissed] = useState(false);
-  const isSimMode = !process.env.NEXT_PUBLIC_RAZORPAY_LIVE;
   const [isPayingMobile, setIsPayingMobile] = useState(false);
   const [mobileVerifyingText, setMobileVerifyingText] = useState("Paying via UPI...");
 
@@ -237,183 +238,151 @@ export function PayPanel({
         </div>
       )}
 
-      <div className="mb-6">
-        <div className="text-[11px] font-mono uppercase tracking-wider text-[color:var(--color-ink)]/55">
-          Order {order.short_code}
-        </div>
-        <h1 className="font-display text-[clamp(28px,5vw,42px)] font-medium tracking-tight leading-tight">
-          Pay <span className="italic text-ocean-500">{formatRupees(order.total_paise)}</span> by <span className="it">UPI.</span>
+      <div className="mb-8 text-center">
+        <h1 className="font-display text-[clamp(32px,5vw,42px)] font-medium tracking-tight leading-tight mb-2">
+          Pay by <span className="italic text-ocean-500">UPI.</span>
         </h1>
+        <p className="text-[14.5px] text-[color:var(--color-ink)]/60">
+          Verify your order details and pay securely
+        </p>
       </div>
 
-      <div className="grid md:grid-cols-[1.1fr_1fr] gap-5">
-        <div className="rounded-2xl bg-[color:var(--color-paper)] border border-[color:var(--color-line)] p-6 flex flex-col items-center text-center justify-center">
-          {isSimMode ? (
-            <>
-              <div className="text-[11px] font-mono uppercase tracking-wider text-[color:var(--color-ink)]/55 mb-4">
-                Scan QR to pay
-              </div>
-              
-              {/* Beautifully Framed QR Code - Permanently Visible on all screen sizes */}
-              <div className="p-4 bg-white rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.04),inset_0_0_0_1px_rgba(26,26,25,0.06)] transition-all hover:scale-[1.02]">
-                <QRCode value={upiUri} size={190} bgColor="#ffffff" fgColor="#1A1A19" style={{ display: 'block' }} />
-              </div>
+      <div className="mx-auto max-w-md rounded-[24px] bg-[color:var(--color-paper)] border border-[color:var(--color-line)] p-6 shadow-[0_4px_24px_rgba(0,0,0,0.02)]">
+        {isSimMode ? (
+          <div className="flex flex-col items-center">
+            {/* Beautifully Framed QR Code - Permanently Visible on all screen sizes */}
+            <div className="p-4 bg-white rounded-2xl border border-[color:var(--color-line)] shadow-[0_2px_12px_rgba(0,0,0,0.03)] transition-all hover:scale-[1.01] mb-6">
+              <QRCode value={upiUri} size={190} bgColor="#ffffff" fgColor="#1A1A19" style={{ display: 'block' }} />
+            </div>
 
-              {/* Mobile Only: Big "Pay Now" Button directly below the QR code */}
-              <button
-                onClick={handleMobilePay}
-                className="md:hidden mt-6 w-full h-12 text-[15px] inline-flex items-center justify-center gap-2 rounded-xl bg-ocean-500 text-black font-bold hover:bg-ocean-600 transition-colors shadow-lg shadow-ocean-500/10"
-              >
-                <Smartphone size={16} /> Pay Now
-              </button>
-              
-              <p className="md:hidden mt-2 text-[11px] text-center opacity-60">
-                Redirects directly to GPay, PhonePe, or any UPI app
-              </p>
+            <div className="border-t border-[color:var(--color-line)] w-full my-6" />
 
-              <div className="mt-5 text-[12.5px] text-[color:var(--color-ink)]/55">
-                Paying <span className="font-semibold text-[color:var(--color-ink)]">{tenantName}</span>
-                <div className="font-mono text-[11px] mt-0.5 opacity-85">{tenantUpi}</div>
+            <div className="w-full space-y-4 text-[14.5px]">
+              <div className="flex justify-between items-center">
+                <span className="text-[color:var(--color-ink)]/60">Order ID</span>
+                <span className="font-semibold text-[color:var(--color-ink)] font-mono">Order {order.short_code}</span>
               </div>
-            </>
+              <div className="flex justify-between items-center">
+                <span className="text-[color:var(--color-ink)]/60">Items</span>
+                <span className="text-[color:var(--color-ink)] font-medium">{lines.reduce((s, l) => s + l.qty, 0)} items</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-[color:var(--color-ink)]/60">Amount</span>
+                <span className="font-bold text-[color:var(--color-ink)] text-lg">{formatRupees(order.total_paise)}</span>
+              </div>
+            </div>
+
+            <div className="border-t border-[color:var(--color-line)] w-full my-6" />
+
+            {/* Mobile Only: Pay Now button */}
+            <button
+              onClick={handleMobilePay}
+              className="md:hidden w-full h-12 text-[15px] inline-flex items-center justify-center gap-2 rounded-xl bg-ocean-500 text-black font-bold hover:bg-ocean-600 transition-all shadow-lg active:scale-[0.98] shadow-ocean-500/10 mb-2"
+            >
+              <Smartphone size={16} /> Pay Now
+            </button>
+
+            {/* Desktop/Tablet Only: "I've Paid" confirm button */}
+            <button
+              onClick={onIvePaid}
+              disabled={verifying || Boolean(expired)}
+              className="hidden md:inline-flex w-full h-12 text-[15px] items-center justify-center gap-2 rounded-xl bg-ocean-500 text-black font-bold hover:bg-ocean-600 disabled:opacity-50 transition-all active:scale-[0.98] mb-2"
+            >
+              {verifying ? (
+                <>
+                  <Loader2 size={14} className="animate-spin" /> Confirming…
+                </>
+              ) : (
+                <>I&rsquo;ve paid &mdash; confirm my order</>
+              )}
+            </button>
+          </div>
+        ) : (
+          <div className="flex flex-col items-center text-center">
+            <div className="h-16 w-16 bg-ocean-500/10 text-ocean-500 rounded-full flex items-center justify-center mb-5 animate-pulse">
+              <Sparkles size={32} />
+            </div>
+            
+            <h3 className="font-display text-[22px] font-medium tracking-tight mb-2">
+              Secure Live <span className="it">Payment</span>
+            </h3>
+            
+            <p className="text-[12.5px] text-[color:var(--color-ink)]/60 max-w-[240px] mb-6 leading-normal">
+              Pay using UPI, Google Pay, PhonePe, Cards, or Netbanking securely processed by Razorpay.
+            </p>
+
+            <div className="border-t border-[color:var(--color-line)] w-full my-6" />
+
+            <div className="w-full space-y-4 text-[14.5px] text-left mb-6">
+              <div className="flex justify-between items-center">
+                <span className="text-[color:var(--color-ink)]/60">Order ID</span>
+                <span className="font-semibold text-[color:var(--color-ink)] font-mono">Order {order.short_code}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-[color:var(--color-ink)]/60">Items</span>
+                <span className="text-[color:var(--color-ink)] font-medium">{lines.reduce((s, l) => s + l.qty, 0)} items</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-[color:var(--color-ink)]/60">Amount</span>
+                <span className="font-bold text-[color:var(--color-ink)] text-lg">{formatRupees(order.total_paise)}</span>
+              </div>
+            </div>
+
+            <button
+              onClick={handleRazorpayPay}
+              className="w-full h-12 text-[14.5px] inline-flex items-center justify-center gap-2 rounded-xl bg-ocean-500 text-black font-bold hover:bg-ocean-600 transition-all shadow-lg active:scale-[0.98] shadow-ocean-500/10 mb-2"
+            >
+              <Smartphone size={16} /> Pay Securely Now
+            </button>
+            
+            <p className="mt-3 text-[11px] opacity-50">
+              Authorized signature webhook confirmation active.
+            </p>
+          </div>
+        )}
+
+        {/* Status / Expiry details */}
+        <div className="mt-4 text-center">
+          <div className="flex items-center justify-between text-xs text-[color:var(--color-ink)]/55 bg-[color:var(--color-paper-dim)] rounded-xl p-3 border border-[color:var(--color-line)]">
+            <span>Payment window expires in:</span>
+            <span className={cn("font-mono font-semibold text-sm tabular", expired ? "text-rose-500" : remaining < 60 ? "text-amber-600" : "text-[color:var(--color-ink)]")}>
+              {String(mins).padStart(2, "0")}:{String(secs).padStart(2, "0")}
+            </span>
+          </div>
+
+          {expired ? (
+            <p className="mt-2 text-xs text-rose-500">
+              Payment window closed. <Link href={`/c/${tenantSlug}/menu`} className="underline">Start a new order</Link>.
+            </p>
           ) : (
-            <div className="w-full flex flex-col items-center py-6 px-2">
-              <div className="h-16 w-16 bg-ocean-500/10 text-ocean-500 rounded-full flex items-center justify-center mb-5 animate-pulse">
-                <Sparkles size={32} />
-              </div>
-              
-              <h3 className="font-display text-[22px] font-medium tracking-tight mb-2">
-                Secure Live <span className="it">Payment</span>
-              </h3>
-              
-              <p className="text-[12.5px] text-[color:var(--color-ink)]/60 max-w-[240px] mb-8 leading-normal">
-                Pay using UPI, Google Pay, PhonePe, Cards, or Netbanking securely processed by Razorpay.
-              </p>
-
-              <button
-                onClick={handleRazorpayPay}
-                className="w-full h-12 text-[14px] inline-flex items-center justify-center gap-2 rounded-xl bg-ocean-500 text-black font-bold hover:bg-ocean-600 transition-all shadow-lg active:scale-[0.98] shadow-ocean-500/10"
-              >
-                <Smartphone size={16} /> Pay Securely Now
-              </button>
-              
-              <p className="mt-3 text-[11px] text-center opacity-50">
-                Authorized signature webhook confirmation active.
-              </p>
-            </div>
-          )}
-        </div>
-
-        <div className="flex flex-col gap-4">
-          <div className="rounded-2xl bg-[color:var(--color-paper-dim)] border border-[color:var(--color-line)] p-5">
-            <div className="flex items-center justify-between">
-              <div className="text-[11px] font-mono uppercase tracking-wider text-[color:var(--color-ink)]/55">
-                Time to pay
-              </div>
-              <div
-                className={cn(
-                  "font-mono text-[20px] font-semibold tabular",
-                  expired ? "text-rose-500" : remaining < 60 ? "text-amber-600" : "text-[color:var(--color-ink)]"
-                )}
-              >
-                {String(mins).padStart(2, "0")}:{String(secs).padStart(2, "0")}
-              </div>
-            </div>
-            {expired ? (
-              <p className="mt-2 text-[12.5px] text-rose-500">
-                Payment window closed. <Link href={`/c/${tenantSlug}/menu`} className="underline">Start a new order</Link>.
-              </p>
-            ) : (
-              <p className="mt-2 text-[12.5px] text-[color:var(--color-ink)]/55">
-                You have 15 min to pay — after that, we&rsquo;ll cancel and refund automatically.
-              </p>
-            )}
-          </div>
-
-          <div className="rounded-2xl border border-[color:var(--color-line)] p-5">
-            <div className="text-[11px] font-mono uppercase tracking-wider text-[color:var(--color-ink)]/55 mb-3">
-              Order summary
-            </div>
-            <ul className="flex flex-col gap-2">
-              {lines.map((l) => (
-                <li key={l.id} className="flex items-center gap-3 text-[14px]">
-                  <span
-                    className={cn(
-                      "h-3.5 w-3.5 inline-flex items-center justify-center border-2 rounded-sm",
-                      l.diet_snapshot === "veg"
-                        ? "border-emerald-500"
-                        : l.diet_snapshot === "egg"
-                        ? "border-amber-500"
-                        : "border-rose-500"
-                    )}
-                  >
-                    <span
-                      className={cn(
-                        "h-1.5 w-1.5 rounded-full",
-                        l.diet_snapshot === "veg"
-                          ? "bg-emerald-500"
-                          : l.diet_snapshot === "egg"
-                          ? "bg-amber-500"
-                          : "bg-rose-500"
-                      )}
-                    />
-                  </span>
-                  <span className="flex-1 min-w-0 truncate">
-                    {l.qty} × {l.name_snapshot}
-                  </span>
-                  <span className="tabular text-[color:var(--color-ink)]/70">
-                    {formatRupees(l.qty * l.price_paise_snapshot)}
-                  </span>
-                </li>
-              ))}
-            </ul>
-            <div className="mt-4 pt-4 border-t border-[color:var(--color-line)] flex justify-between items-baseline">
-              <span className="text-[10px] uppercase tracking-[0.18em] text-[color:var(--color-ink)]/50" style={{ fontFamily: "var(--font-barlow, var(--font-manrope))" }}>Total</span>
-              <span className="text-[32px] leading-none tabular text-ocean-600 dark:text-ocean-400" style={{ fontFamily: "var(--font-bebas, Impact, sans-serif)" }}>
-                {formatRupees(order.total_paise)}
-              </span>
-            </div>
-          </div>
-
-          {/* Desktop Only: "I've Paid" or "Verify Status" Button */}
-          <button
-            onClick={onIvePaid}
-            disabled={verifying || Boolean(expired)}
-            className="hidden md:inline-flex items-center justify-center gap-2 h-12 rounded-xl bg-ocean-500 text-black text-[14px] font-semibold hover:bg-ocean-600 disabled:opacity-50 transition-colors"
-          >
-            {verifying ? (
-              <>
-                <Loader2 size={14} className="animate-spin" /> Confirming…
-              </>
-            ) : isSimMode ? (
-              <>I&rsquo;ve paid &mdash; confirm my order</>
-            ) : (
-              <>Verify payment status</>
-            )}
-          </button>
-          
-          {stillWaiting && !verifying && (
-            <p className="text-[12.5px] text-amber-600 text-center -mt-2">
-              Still confirming your payment — UPI can take 30–60 seconds. Keep this page open.
+            <p className="mt-2 text-[11px] text-[color:var(--color-ink)]/45">
+              Please pay within 15 min or the order will cancel automatically.
             </p>
           )}
-
-          {isSimMode && (
-            <>
-              <button
-                onClick={onSimulate}
-                disabled={pending}
-                className="inline-flex items-center justify-center gap-2 h-11 rounded-xl border border-dashed border-ocean-600/40 text-ocean-900 text-[13px] font-medium hover:bg-ocean-50 dark:hover:bg-ocean-500/10 transition-colors"
-              >
-                <Sparkles size={14} /> DEV · simulate paid
-              </button>
-              <p className="text-[11px] text-[color:var(--color-ink)]/45 text-center -mt-2">
-                Dev-only shortcut — flips the order to <b>placed</b> without a real payment.
-              </p>
-            </>
-          )}
         </div>
+
+        {stillWaiting && !verifying && (
+          <p className="text-[12px] text-amber-600 text-center mt-3 leading-normal">
+            Still confirming your payment — UPI can take 30–60 seconds. Keep this page open.
+          </p>
+        )}
+
+        {isSimMode && (
+          <div className="mt-6 pt-6 border-t border-dashed border-[color:var(--color-line)] flex flex-col gap-2">
+            <button
+              onClick={onSimulate}
+              disabled={pending}
+              className="inline-flex items-center justify-center gap-2 h-11 rounded-xl border border-dashed border-ocean-600/40 text-ocean-900 text-[13px] font-medium hover:bg-ocean-50 dark:hover:bg-ocean-500/10 transition-colors"
+            >
+              <Sparkles size={14} /> DEV · simulate paid
+            </button>
+            <p className="text-[11px] text-[color:var(--color-ink)]/45 text-center leading-normal">
+              Dev-only shortcut — flips the order to <b>placed</b> without a real payment.
+            </p>
+          </div>
+        )}
       </div>
+
 
       {/* Dynamic UPI payment loader overlay on mobile */}
       {isPayingMobile && (

@@ -38,6 +38,7 @@ export async function setMenuItemStatus(
   if (error) return { ok: false, error: error.message };
   revalidatePath(`/c/${c.tenant.slug}/admin/menu`);
   revalidatePath(`/c/${c.tenant.slug}/menu`);
+  revalidateTag('admin-live');
   return { ok: true };
 }
 
@@ -53,6 +54,7 @@ export async function setMenuItemStock(id: string, inStock: boolean, tenantSlug?
   if (error) return { ok: false, error: error.message };
   revalidatePath(`/c/${c.tenant.slug}/admin/menu`);
   revalidatePath(`/c/${c.tenant.slug}/menu`);
+  revalidateTag('admin-live');
   return { ok: true };
 }
 
@@ -89,6 +91,7 @@ export async function inviteStaff(
     meta: { email, role },
   });
   revalidatePath(`/c/${c.tenant.slug}/admin/staff`);
+  revalidateTag('admin-live');
   return { ok: true, url };
 }
 
@@ -110,6 +113,7 @@ export async function revokeStaff(membershipId: string, tenantSlug?: string): Pr
     target_id: membershipId,
   });
   revalidatePath(`/c/${c.tenant.slug}/admin/staff`);
+  revalidateTag('admin-live');
   return { ok: true };
 }
 
@@ -136,6 +140,7 @@ export async function updateCanteenHours(opts: {
   revalidatePath(`/c/${c.tenant.slug}/admin/settings`);
   revalidatePath(`/c/${c.tenant.slug}/menu`);
   revalidateTag("tenant");
+  revalidateTag('admin-live');
   return { ok: true };
 }
 
@@ -153,6 +158,7 @@ export async function pauseCanteen(minutes: number, tenantSlug?: string): Promis
   revalidatePath(`/c/${c.tenant.slug}/admin/settings`);
   revalidatePath(`/c/${c.tenant.slug}/menu`);
   revalidateTag("tenant");
+  revalidateTag('admin-live');
   return { ok: true };
 }
 
@@ -175,6 +181,7 @@ export async function updateCanteenSettings(opts: {
   revalidatePath(`/c/${c.tenant.slug}/admin/settings`);
   revalidatePath(`/c/${c.tenant.slug}/menu`);
   revalidateTag("tenant");
+  revalidateTag('admin-live');
   return { ok: true };
 }
 
@@ -224,6 +231,7 @@ export async function createMenuItem(form: {
     .select("id")
     .single();
   if (error) return { ok: false, error: error.message };
+  revalidateTag('admin-live');
   revalidatePath(`/c/${c.tenant.slug}/admin/menu`);
   revalidatePath(`/c/${c.tenant.slug}/menu`);
   return { ok: true, id: data.id };
@@ -280,6 +288,7 @@ export async function updateMenuItem(
   if (error) return { ok: false, error: error.message };
   revalidatePath(`/c/${c.tenant.slug}/admin/menu`);
   revalidatePath(`/c/${c.tenant.slug}/menu`);
+  revalidateTag('admin-live');
   return { ok: true };
 }
 
@@ -295,5 +304,6 @@ export async function deleteMenuItem(id: string, tenantSlug?: string): Promise<{
   if (error) return { ok: false, error: error.message };
   revalidatePath(`/c/${c.tenant.slug}/admin/menu`);
   revalidatePath(`/c/${c.tenant.slug}/menu`);
+  revalidateTag('admin-live');
   return { ok: true };
 }

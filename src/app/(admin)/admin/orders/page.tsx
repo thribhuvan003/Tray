@@ -20,7 +20,7 @@ const TONE: Record<string, string> = {
   pending_payment: "bg-amber-500/15 text-amber-400 border-amber-500/30",
   placed: "bg-ocean-500/15 text-ocean-500 border-ocean-500/30",
   preparing: "bg-amber-500/15 text-amber-400 border-amber-500/30",
-  ready: "bg-lime/15 text-lime border-lime/30",
+  ready: "bg-[var(--admin-lime)]/15 text-[var(--admin-lime)] border-[var(--admin-lime)]/30",
   collected: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30",
   rejected: "bg-rose-500/15 text-rose-400 border-rose-500/30",
   expired: "bg-rose-500/15 text-rose-400 border-rose-500/30",
@@ -58,23 +58,25 @@ export default async function OrdersPage() {
 
   return (
     <div>
-      <div className="flex flex-wrap items-end justify-between gap-3 mb-5">
+      <div className="flex flex-wrap items-end justify-between gap-3 mb-8 border-b border-[var(--admin-line)] pb-5">
         <div>
-          <h1 className="font-display text-[26px] sm:text-[30px] font-semibold tracking-tight">Orders</h1>
-          <div className="text-[11px] font-mono uppercase tracking-[0.12em] text-graphite-400 mt-0.5">
+          <h1 className="font-display text-[30px] sm:text-[36px] font-medium tracking-tight text-[var(--admin-ink)]">
+            Customer <span className="it text-[var(--admin-lime)]">Orders</span>
+          </h1>
+          <div className="text-[10px] font-mono uppercase tracking-[0.16em] text-[var(--admin-ink-3)] mt-1">
             Last 100 · all statuses
           </div>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           <a
             href={todayExportUrl}
-            className="inline-flex items-center gap-1.5 h-9 px-3 rounded-md border border-graphite-200/15 text-[11px] font-mono uppercase tracking-wider text-graphite-300 hover:border-lime hover:text-lime transition-colors"
+            className="inline-flex items-center gap-1.5 h-9 px-4 rounded-md border border-[var(--admin-line-2)] bg-[var(--admin-bg-2)] text-[11px] font-mono uppercase tracking-wider text-[var(--admin-ink-2)] hover:border-[var(--admin-lime)] hover:text-[var(--admin-lime)] transition-colors"
           >
             <Download size={11} /> Export today&apos;s CSV
           </a>
           <a
             href={`/api/admin/export/orders?tenant=${tenant.slug}`}
-            className="inline-flex items-center gap-1.5 h-9 px-3 rounded-md border border-graphite-200/15 text-[11px] font-mono uppercase tracking-wider text-graphite-300 hover:border-lime hover:text-lime transition-colors"
+            className="inline-flex items-center gap-1.5 h-9 px-4 rounded-md border border-[var(--admin-line-2)] bg-[var(--admin-bg-2)] text-[11px] font-mono uppercase tracking-wider text-[var(--admin-ink-2)] hover:border-[var(--admin-lime)] hover:text-[var(--admin-lime)] transition-colors"
           >
             <Download size={11} /> Export all
           </a>
@@ -82,51 +84,51 @@ export default async function OrdersPage() {
       </div>
 
       {/* Today's summary strip */}
-      <div className="mb-4 flex flex-wrap gap-4 rounded-xl border border-graphite-200/[0.08] bg-graphite-700/60 px-5 py-3">
+      <div className="mb-6 flex flex-wrap gap-6 rounded-xl border border-[var(--admin-line-2)] bg-[var(--admin-bg-2)] px-5 py-3 shadow-sm">
         <div>
-          <div className="text-[10px] font-mono uppercase tracking-[0.12em] text-graphite-400">Today&apos;s orders</div>
-          <div className="font-display text-[22px] font-semibold text-graphite-200 leading-tight">{todayOrders.length}</div>
+          <div className="text-[10px] font-mono uppercase tracking-[0.16em] text-[var(--admin-ink-3)]">Today&apos;s orders</div>
+          <div className="font-display text-[22px] font-semibold text-[var(--admin-ink)] leading-tight mt-1">{todayOrders.length}</div>
         </div>
         <div>
-          <div className="text-[10px] font-mono uppercase tracking-[0.12em] text-graphite-400">Today&apos;s revenue</div>
-          <div className="font-display text-[22px] font-semibold text-lime leading-tight">
+          <div className="text-[10px] font-mono uppercase tracking-[0.16em] text-[var(--admin-ink-3)]">Today&apos;s revenue</div>
+          <div className="font-display text-[22px] font-semibold text-[var(--admin-lime)] leading-tight mt-1">
             {new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(todayRevenue / 100)}
           </div>
         </div>
       </div>
 
-      <div className="overflow-x-auto rounded-xl border border-graphite-200/[0.08]">
-      <div className="bg-graphite-700 min-w-[640px] rounded-xl overflow-hidden">
-        <table className="w-full text-[13px]">
+      <div className="overflow-x-auto rounded-xl border border-[var(--admin-line-2)] bg-[var(--admin-bg-2)] shadow-sm">
+      <div className="min-w-[640px] overflow-hidden">
+        <table className="w-full text-[13.5px]">
           <thead>
-            <tr className="text-[10px] font-mono uppercase tracking-wider text-graphite-400 border-b border-graphite-200/[0.08]">
-              <th className="text-left px-4 py-3 font-medium">Code</th>
-              <th className="text-left px-4 py-3 font-medium">Placed</th>
-              <th className="text-left px-4 py-3 font-medium">Customer</th>
-              <th className="text-left px-4 py-3 font-medium">Type</th>
-              <th className="text-right px-4 py-3 font-medium">Total</th>
-              <th className="text-left px-4 py-3 font-medium">Status</th>
+            <tr className="text-[10px] font-mono uppercase tracking-[0.16em] text-[var(--admin-lime)] border-b border-[var(--admin-line)]">
+              <th className="text-left px-5 py-4 font-medium">Code</th>
+              <th className="text-left px-5 py-4 font-medium">Placed</th>
+              <th className="text-left px-5 py-4 font-medium">Customer</th>
+              <th className="text-left px-5 py-4 font-medium">Type</th>
+              <th className="text-right px-5 py-4 font-medium">Total</th>
+              <th className="text-left px-5 py-4 font-medium">Status</th>
             </tr>
           </thead>
           <tbody>
             {(orders ?? []).map((o) => (
-              <tr key={o.id} className="border-b border-graphite-200/[0.05] last:border-0 hover:bg-graphite-200/[0.03]">
-                <td className="px-4 py-2.5 font-mono tabular text-graphite-200">{o.short_code}</td>
-                <td className="px-4 py-2.5 text-graphite-300 font-mono tabular">
+              <tr key={o.id} className="border-b border-[var(--admin-line)] last:border-0 hover:bg-[var(--admin-bg-3)]/60 transition-colors">
+                <td className="px-5 py-3.5 font-mono tabular text-[var(--admin-ink)]">{o.short_code}</td>
+                <td className="px-5 py-3.5 text-[var(--admin-ink-2)] font-mono tabular">
                   {formatDateIST(o.placed_at).split(",")[0]} · {formatTimeIST(o.placed_at)}
                 </td>
-                <td className="px-4 py-2.5 text-graphite-300">{o.customer_name ?? "—"}</td>
-                <td className="px-4 py-2.5 text-graphite-300">
+                <td className="px-5 py-3.5 text-[var(--admin-ink-2)]">{o.customer_name ?? "—"}</td>
+                <td className="px-5 py-3.5 text-[var(--admin-ink-2)]">
                   {o.order_type === "dine_in" ? `Dine-in · ${o.table_label ?? "—"}` : "Takeaway"}
                 </td>
-                <td className="px-4 py-2.5 text-right font-mono tabular text-graphite-200">
+                <td className="px-5 py-3.5 text-right font-mono tabular text-[var(--admin-ink)]">
                   {formatRupees(o.total_paise)}
                 </td>
-                <td className="px-4 py-2.5">
+                <td className="px-5 py-3.5">
                   <span
                     className={
                       "inline-block text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 rounded-full border " +
-                      (TONE[o.status] ?? "bg-graphite-600 text-graphite-300 border-graphite-500/30")
+                      (TONE[o.status] ?? "bg-[var(--admin-bg-3)] text-[var(--admin-ink-3)] border-[var(--admin-line-2)]")
                     }
                   >
                     {o.status.replace("_", " ")}
@@ -136,7 +138,7 @@ export default async function OrdersPage() {
             ))}
             {(!orders || orders.length === 0) && (
               <tr>
-                <td colSpan={6} className="text-center py-12 text-graphite-400 text-[13px]">
+                <td colSpan={6} className="text-center py-12 text-[var(--admin-ink-3)] text-[13.5px]">
                   No orders yet.
                 </td>
               </tr>

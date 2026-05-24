@@ -18,12 +18,12 @@ type Ctx =
   | { ok: false; error: string }
   | { ok: true; tenant: ResolvedTenant; user: CurrentUser };
 
-async function staffContext(): Promise<Ctx> {
+async function staffContext(tenantSlugOverride?: string): Promise<Ctx> {
   const h = await headers();
-  const slug = getTenantSlugFromHeaders(h);
+  const slug = tenantSlugOverride || getTenantSlugFromHeaders(h);
   const tenant = await resolveTenant(slug);
   if (!tenant) return { ok: false, error: "Tenant not found" };
-  const user = await requireRole(["kitchen_staff", "canteen_admin", "super_admin"]);
+  const user = await requireRole(["kitchen_staff", "canteen_admin", "super_admin"], tenant.id);
   if (!user) return { ok: false, error: "Not authorised" };
   return { ok: true, tenant, user };
 }
@@ -390,7 +390,7 @@ export async function createWalkInOrder(): Promise<{ ok: boolean; error?: string
   const admin = getAdminClient(ctx.tenant.id);
 
   // Fetch 1-3 random live, in-stock menu items from the tenant
-  const { data: items, error: itemsErr } = await admin
+  const { data: fetchedItems, error: itemsErr } = await admin
     .from("menu_items")
     .select("id, name, price_paise, diet, prep_target_seconds")
     .eq("tenant_id", ctx.tenant.id)
@@ -398,7 +398,55 @@ export async function createWalkInOrder(): Promise<{ ok: boolean; error?: string
     .eq("in_stock", true)
     .limit(10);
 
-  if (itemsErr || !items || items.length === 0) {
+  let items = fetchedItems || [];
+
+  if (items.length === 0) {
+    // Find or create the "Specials" category for this tenant
+    let { data: cat } = await admin
+      .from("menu_categories")
+      .select("id")
+      .eq("tenant_id", ctx.tenant.id)
+      .eq("name", "Specials")
+      .maybeSingle<{ id: string }>();
+
+    if (!cat) {
+      const catInsert = await admin
+        .from("menu_categories")
+        .insert({
+          tenant_id: ctx.tenant.id,
+          name: "Specials",
+          sort_order: 99,
+        })
+        .select("id")
+        .single<{ id: string }>();
+      cat = catInsert.data;
+    }
+
+    if (cat) {
+      const { data: newItem } = await admin
+        .from("menu_items")
+        .insert({
+          tenant_id: ctx.tenant.id,
+          category_id: cat.id,
+          name: "Samosa",
+          description: "Fresh crispy samosa",
+          price_paise: 2000,
+          diet: "veg",
+          status: "live",
+          prep_target_seconds: 300,
+          in_stock: true,
+          sort_order: 999,
+        })
+        .select("id, name, price_paise, diet, prep_target_seconds")
+        .single<{ id: string; name: string; price_paise: number; diet: "veg" | "nonveg" | "egg"; prep_target_seconds: number }>();
+
+      if (newItem) {
+        items = [newItem];
+      }
+    }
+  }
+
+  if (items.length === 0) {
     return { ok: false, error: "No menu items available to create a walk-in order" };
   }
 
@@ -503,14 +551,17 @@ export async function createWalkInOrder(): Promise<{ ok: boolean; error?: string
   return { ok: true, orderId };
 }
 
-export async function pushSpecialToMenu(form: {
-  name: string;
-  description: string;
-  price: number;
-  prep: number;
-  diet: "veg" | "nonveg" | "egg";
-}): Promise<{ ok: boolean; error?: string; itemId?: string }> {
-  const ctx = await staffContext();
+export async function pushSpecialToMenu(
+  form: {
+    name: string;
+    description: string;
+    price: number;
+    prep: number;
+    diet: "veg" | "nonveg" | "egg";
+  },
+  tenantSlug?: string
+): Promise<{ ok: boolean; error?: string; itemId?: string }> {
+  const ctx = await staffContext(tenantSlug);
   if (!ctx.ok) return ctx;
 
   const admin = getAdminClient(ctx.tenant.id);
@@ -587,8 +638,8 @@ export async function pushSpecialToMenu(form: {
   return { ok: true, itemId };
 }
 
-export async function removeSpecialFromMenu(itemId: string): Promise<Outcome> {
-  const ctx = await staffContext();
+export async function removeSpecialFromMenu(itemId: string, tenantSlug?: string): Promise<Outcome> {
+  const ctx = await staffContext(tenantSlug);
   if (!ctx.ok) return ctx;
 
   const admin = getAdminClient(ctx.tenant.id);
