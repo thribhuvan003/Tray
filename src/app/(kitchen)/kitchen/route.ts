@@ -74,11 +74,13 @@ export async function GET(req: NextRequest) {
   const roleLabel = user.role === "canteen_admin" ? "CANTEEN ADMIN" : user.role === "super_admin" ? "SUPER ADMIN" : "KITCHEN STAFF";
   
   html = html.replace(
-    /<div class="sb-user">[\s\S]*?<\/div>\s*<\/div>/g,
+    /<div class="sb-user">[\s\S]*?<\/aside>/g,
     `<div class="sb-user">
         <div class="av">${avatarChar}</div>
         <div class="info"><div class="n">${displayName}</div><div class="r">${roleLabel}</div></div>
-      </div>`
+      </div>
+    </div>
+  </aside>`
   );
 
   // 6. Hide canteen select dropdown and render plain text canteen label badge in the top bar

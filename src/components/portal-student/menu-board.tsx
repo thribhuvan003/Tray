@@ -17,13 +17,13 @@ import { Drawer } from "vaul";
 function getCanteenEmoji(slug: string, name: string): string {
   const s = slug.toLowerCase();
   const n = name.toLowerCase();
-  if (s.includes("great-hall") || n.includes("great hall")) return "ðŸ°";
-  if (s.includes("gryffindor") || n.includes("gryffindor")) return "ðŸ¦";
-  if (s.includes("slytherin") || n.includes("slytherin")) return "ðŸ";
-  if (s.includes("hufflepuff") || n.includes("hufflepuff")) return "ðŸ¦¡";
-  if (s.includes("ravenclaw") || n.includes("ravenclaw")) return "ðŸ¦…";
-  if (s.includes("aditya") || n.includes("aditya")) return "ðŸŽ“";
-  return "ðŸ´";
+  if (s.includes("great-hall") || n.includes("great hall")) return "🏰";
+  if (s.includes("gryffindor") || n.includes("gryffindor")) return "🦁";
+  if (s.includes("slytherin") || n.includes("slytherin")) return "🐍";
+  if (s.includes("hufflepuff") || n.includes("hufflepuff")) return "🦡";
+  if (s.includes("ravenclaw") || n.includes("ravenclaw")) return "🦅";
+  if (s.includes("aditya") || n.includes("aditya")) return "🎓";
+  return "🍴";
 }
 
 function formatPausedTime(iso: string): string {
@@ -40,9 +40,9 @@ function formatPausedTime(iso: string): string {
 }
 
 function dietEmoji(diet: string): string {
-  if (diet === "veg") return "ðŸ¥—";
-  if (diet === "egg") return "ðŸ³";
-  return "ðŸ—";
+  if (diet === "veg") return "🥬";
+  if (diet === "egg") return "🍳";
+  return "🍗";
 }
 
 type Props = {
@@ -143,10 +143,10 @@ export function MenuBoard({
       };
     const waitMinutes = Math.min(20, Math.max(3, 3 + liveStatus.pendingCount));
     if (liveStatus.pendingCount >= 10)
-      return { text: `Kitchen Busy Â. ~${waitMinutes} min wait`, dotColor: "#ef4444", textColor: "#dc2626" };
+      return { text: `Kitchen Busy · ~${waitMinutes} min wait`, dotColor: "#ef4444", textColor: "#dc2626" };
     if (liveStatus.pendingCount >= 5)
-      return { text: `Kitchen Moderate Â. ~${waitMinutes} min wait`, dotColor: "#f59e0b", textColor: "#d97706" };
-    return { text: `Kitchen Open Â. ~${waitMinutes} min wait`, dotColor: "#0c8a43", textColor: "#0c8a43" };
+      return { text: `Kitchen Moderate · ~${waitMinutes} min wait`, dotColor: "#f59e0b", textColor: "#d97706" };
+    return { text: `Kitchen Open · ~${waitMinutes} min wait`, dotColor: "#0c8a43", textColor: "#0c8a43" };
   }, [liveStatus]);
 
   // Specials category
@@ -246,7 +246,7 @@ export function MenuBoard({
 
   const totalFilteredCount = filteredSpecials.length + filteredOther.length;
 
-  // Canteen segment grid columns: 1â†’1col 2â†’2col 3+â†’3col
+  // Canteen segment grid columns: 1→1col 2→2col 3+→3col
   const canteenGridCols = siblings.length <= 1 ? 1 : siblings.length === 2 ? 2 : 3;
 
   function sibWait(sib: any): string {
@@ -255,7 +255,7 @@ export function MenuBoard({
     return `~${wait} min wait`;
   }
 
-  // â”€â”€ Shared inline style constants (matching demo CSS vars) â”€â”€
+  // ——— Shared inline style constants (matching demo CSS vars) ———
   const S = {
     text: "#1A1A19",
     muted: "rgba(26,26,25,.58)",
@@ -275,7 +275,7 @@ export function MenuBoard({
     /* shell: 3-column flex row matching demo layout */
     <div style={{ display: "flex", flex: 1, minHeight: 0, position: "relative" }}>
 
-      {/* â”€â”€ LEFT: Desktop Category Nav (200px, demo .cat-nav) â”€â”€ */}
+      {/* ——— LEFT: Desktop Category Nav (200px, demo .cat-nav) ——— */}
       <nav
         aria-label="Categories"
         className="hidden lg:block"
@@ -357,7 +357,7 @@ export function MenuBoard({
         </ul>
       </nav>
 
-      {/* â”€â”€ MIDDLE: Main content (flex-1) â”€â”€ */}
+      {/* ——— MIDDLE: Main content (flex-1) ——— */}
       <main style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
         <div
           style={{ flex: 1, padding: "24px 28px 40px", maxWidth: 900, width: "100%", margin: "0 auto" }}
@@ -402,7 +402,7 @@ export function MenuBoard({
             </h1>
           </div>
 
-          {/* â”€â”€ Menu controls white card (demo .menu-controls) â”€â”€ */}
+          {/* ——— Menu controls white card (demo .menu-controls) ——— */}
           <div style={{
             marginBottom: 18,
             padding: 16,
@@ -412,7 +412,7 @@ export function MenuBoard({
             boxShadow: "inset 0 1px 0 rgba(255,255,255,.65), 0 1px 2px rgba(0,0,0,.05)",
           }}>
 
-            {/* Canteen segments â€” only shown when college has multiple canteens */}
+            {/* Canteen segments — only shown when college has multiple canteens */}
             {siblings.length > 0 && (
               <>
                 <div>
@@ -522,7 +522,7 @@ export function MenuBoard({
                     transition: "border-color .2s, background .2s, color .2s",
                   }}
                 >
-                  ðŸŒ¿ Veg only
+                  🌿 Veg only
                 </button>
               </div>
 
@@ -549,13 +549,13 @@ export function MenuBoard({
                       }}
                     >
                       <span style={{ fontSize: "1.45rem", display: "block", marginBottom: 6 }}>
-                        {type === "takeaway" ? "ðŸ¥¡" : "ðŸ½"}
+                        {type === "takeaway" ? "🛍️" : "🍽️"}
                       </span>
                       <span style={{ display: "block", fontWeight: 600, fontSize: 15 }}>
                         {type === "takeaway" ? "Takeaway" : "Dine in"}
                       </span>
                       <span style={{ display: "block", marginTop: 4, fontSize: 13, fontWeight: 500, color: S.muted, lineHeight: 1.4 }}>
-                        {type === "takeaway" ? "Counter pickup Â. OTP handover" : "Mess seating Â. optional table"}
+                        {type === "takeaway" ? "Counter pickup · OTP handover" : "Mess seating · optional table"}
                       </span>
                     </button>
                   );
@@ -597,7 +597,7 @@ export function MenuBoard({
             </div>
           </div>
 
-          {/* â”€â”€ Mobile category pills â”€â”€ */}
+          {/* ——— Mobile category pills ——— */}
           <div
             className="lg:hidden"
             style={{
@@ -649,7 +649,7 @@ export function MenuBoard({
             </div>
           )}
 
-          {/* â”€â”€ Specials horizontal carousel (demo .specials-carousel) â”€â”€ */}
+          {/* ——— Specials horizontal carousel (demo .specials-carousel) ——— */}
           {showSpecials && filteredSpecials.length > 0 && (
             <div style={{ marginBottom: 32 }}>
               <div style={{
@@ -699,7 +699,7 @@ export function MenuBoard({
             </div>
           )}
 
-          {/* â”€â”€ Other menu grid (demo .menu-grid) â”€â”€ */}
+          {/* ——— Other menu grid (demo .menu-grid) ——— */}
           {showOther && filteredOther.length > 0 && (
             <div>
               <div style={{
@@ -797,7 +797,7 @@ export function MenuBoard({
         </div>
       </main>
 
-      {/* â”€â”€ RIGHT: Persistent Desktop Cart Sidebar (demo .cart-sidebar) â”€â”€ */}
+      {/* ——— RIGHT: Persistent Desktop Cart Sidebar (demo .cart-sidebar) ——— */}
       <aside
         className="hidden lg:flex"
         style={{
@@ -836,7 +836,7 @@ export function MenuBoard({
         <div style={{ flex: 1, overflowY: "auto", padding: "12px 16px" }}>
           {cartCount === 0 ? (
             <div style={{ padding: "32px 12px", textAlign: "center", color: S.muted, fontSize: 15, lineHeight: 1.5 }}>
-              <div style={{ fontSize: 34, opacity: 0.5, marginBottom: 8 }}>ðŸ›’</div>
+              <div style={{ fontSize: 34, opacity: 0.5, marginBottom: 8 }}>🛒</div>
               <p style={{ margin: 0 }}>Your tray is empty.</p>
               <p style={{ margin: "4px 0 0", fontSize: 13 }}>Add items from the menu.</p>
             </div>
@@ -935,7 +935,7 @@ export function MenuBoard({
                 transition: "filter .2s, transform .15s",
               }}
             >
-              Place order â†’
+              Place order →
             </button>
             <button
               onClick={() => clear()}
@@ -958,7 +958,7 @@ export function MenuBoard({
         )}
       </aside>
 
-      {/* â”€â”€ Mobile Floating Browse Button â”€â”€ */}
+      {/* ——— Mobile Floating Browse Button ——— */}
       <Drawer.Root open={isBrowseOpen} onOpenChange={setIsBrowseOpen}>
         <Drawer.Trigger asChild>
           <button
@@ -968,7 +968,7 @@ export function MenuBoard({
               cartCount > 0 ? "bottom-20" : "bottom-6"
             )}
           >
-            <span>ðŸ´</span>
+            <span>🍴</span>
             <span>Browse Menu</span>
           </button>
         </Drawer.Trigger>
@@ -1153,7 +1153,7 @@ function SpecialCard({
   );
 }
 
-/* â”€â”€ RegularCard: horizontal card with 72Ã—72 icon (demo .menu-card) â”€â”€ */
+/* ——— RegularCard: horizontal card with 72×72 icon (demo .menu-card) ——— */
 function RegularCard({
   item,
   onAdd,
