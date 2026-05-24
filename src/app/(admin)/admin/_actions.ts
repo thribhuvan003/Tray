@@ -24,9 +24,10 @@ async function ctx(tenantSlugOverride?: string) {
 
 export async function setMenuItemStatus(
   id: string,
-  status: "draft" | "live" | "archived"
+  status: "draft" | "live" | "archived",
+  tenantSlug?: string
 ): Promise<{ ok: boolean; error?: string }> {
-  const c = await ctx();
+  const c = await ctx(tenantSlug);
   if (!c.ok) return { ok: false, error: c.error };
   const admin = getAdminClient(c.tenant.id);
   const { error } = await admin
@@ -40,8 +41,8 @@ export async function setMenuItemStatus(
   return { ok: true };
 }
 
-export async function setMenuItemStock(id: string, inStock: boolean): Promise<{ ok: boolean; error?: string }> {
-  const c = await ctx();
+export async function setMenuItemStock(id: string, inStock: boolean, tenantSlug?: string): Promise<{ ok: boolean; error?: string }> {
+  const c = await ctx(tenantSlug);
   if (!c.ok) return { ok: false, error: c.error };
   const admin = getAdminClient(c.tenant.id);
   const { error } = await admin
@@ -57,9 +58,10 @@ export async function setMenuItemStock(id: string, inStock: boolean): Promise<{ 
 
 export async function inviteStaff(
   email: string,
-  role: "kitchen_staff" | "canteen_admin"
+  role: "kitchen_staff" | "canteen_admin",
+  tenantSlug?: string
 ): Promise<{ ok: boolean; error?: string; url?: string }> {
-  const c = await ctx();
+  const c = await ctx(tenantSlug);
   if (!c.ok) return { ok: false, error: c.error };
   const admin = getAdminClient(c.tenant.id);
   const token = crypto.randomBytes(24).toString("hex");
@@ -90,8 +92,8 @@ export async function inviteStaff(
   return { ok: true, url };
 }
 
-export async function revokeStaff(membershipId: string): Promise<{ ok: boolean; error?: string }> {
-  const c = await ctx();
+export async function revokeStaff(membershipId: string, tenantSlug?: string): Promise<{ ok: boolean; error?: string }> {
+  const c = await ctx(tenantSlug);
   if (!c.ok) return { ok: false, error: c.error };
   const admin = getAdminClient(c.tenant.id);
   const { error } = await admin
@@ -117,8 +119,9 @@ export async function updateCanteenHours(opts: {
   isOpen: boolean;
   opensAt: string | null; // "HH:MM" or null
   closesAt: string | null; // "HH:MM" or null
+  tenantSlug?: string;
 }): Promise<{ ok: boolean; error?: string }> {
-  const c = await ctx();
+  const c = await ctx(opts.tenantSlug);
   if (!c.ok) return { ok: false, error: c.error };
   const admin = getAdminClient(c.tenant.id);
   const { error } = await admin
@@ -136,8 +139,8 @@ export async function updateCanteenHours(opts: {
   return { ok: true };
 }
 
-export async function pauseCanteen(minutes: number): Promise<{ ok: boolean; error?: string }> {
-  const c = await ctx();
+export async function pauseCanteen(minutes: number, tenantSlug?: string): Promise<{ ok: boolean; error?: string }> {
+  const c = await ctx(tenantSlug);
   if (!c.ok) return { ok: false, error: c.error };
   const admin = getAdminClient(c.tenant.id);
   const pausedUntil =
@@ -156,8 +159,9 @@ export async function pauseCanteen(minutes: number): Promise<{ ok: boolean; erro
 export async function updateCanteenSettings(opts: {
   guestOrdersEnabled: boolean;
   upiVpa: string | null;
+  tenantSlug?: string;
 }): Promise<{ ok: boolean; error?: string }> {
-  const c = await ctx();
+  const c = await ctx(opts.tenantSlug);
   if (!c.ok) return { ok: false, error: c.error };
   const admin = getAdminClient(c.tenant.id);
   const { error } = await admin

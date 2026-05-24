@@ -51,7 +51,7 @@ export default async function StaffPage() {
           Members &amp; pending invites
         </div>
       </div>
-      <StaffPanel members={members ?? []} invites={invites ?? []} />
+      <StaffPanel members={members ?? []} invites={invites ?? []} tenantSlug={tenant.slug} />
     </div>
   );
 }

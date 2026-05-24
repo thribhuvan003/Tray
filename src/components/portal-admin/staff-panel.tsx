@@ -17,7 +17,7 @@ const ROLE_LABEL: Record<Role, string> = {
   super_admin: "Super admin",
 };
 
-export function StaffPanel({ members, invites }: { members: Member[]; invites: Invite[] }) {
+export function StaffPanel({ members, invites, tenantSlug }: { members: Member[]; invites: Invite[]; tenantSlug: string }) {
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<"kitchen_staff" | "canteen_admin">("kitchen_staff");
   const [pending, start] = useTransition();
@@ -27,7 +27,7 @@ export function StaffPanel({ members, invites }: { members: Member[]; invites: I
     e.preventDefault();
     if (!email.trim()) return;
     start(async () => {
-      const r = await inviteStaff(email.trim(), role);
+      const r = await inviteStaff(email.trim(), role, tenantSlug);
       if (!r.ok) toast.error(r.error ?? "Failed");
       else {
         toast.success("Invite sent");
@@ -39,7 +39,7 @@ export function StaffPanel({ members, invites }: { members: Member[]; invites: I
 
   const onRevoke = (id: string) => {
     start(async () => {
-      const r = await revokeStaff(id);
+      const r = await revokeStaff(id, tenantSlug);
       if (!r.ok) toast.error(r.error ?? "Failed");
       else toast.success("Access revoked");
     });

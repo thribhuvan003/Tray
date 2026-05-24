@@ -27,6 +27,8 @@ export default async function SettingsPage() {
   const tenant = await resolveTenant(slug);
   if (!tenant) return null;
 
+  const tenantSlug = tenant.slug;
+
   // Fetch full tenant row (resolveTenant only returns a subset)
   const admin = getAdminClient(tenant.id);
   const { data: tenantRow } = await admin
@@ -59,38 +61,38 @@ export default async function SettingsPage() {
     const isOpen = fd.get("is_open") === "on";
     const opensAt = (fd.get("opens_at") as string | null) || null;
     const closesAt = (fd.get("closes_at") as string | null) || null;
-    await updateCanteenHours({ isOpen, opensAt, closesAt });
+    await updateCanteenHours({ isOpen, opensAt, closesAt, tenantSlug });
   }
 
   async function handlePause15(fd: FormData) {
     "use server";
     void fd;
-    await pauseCanteen(15);
+    await pauseCanteen(15, tenantSlug);
   }
 
   async function handlePause30(fd: FormData) {
     "use server";
     void fd;
-    await pauseCanteen(30);
+    await pauseCanteen(30, tenantSlug);
   }
 
   async function handlePause60(fd: FormData) {
     "use server";
     void fd;
-    await pauseCanteen(60);
+    await pauseCanteen(60, tenantSlug);
   }
 
   async function handleClearPause(fd: FormData) {
     "use server";
     void fd;
-    await pauseCanteen(0);
+    await pauseCanteen(0, tenantSlug);
   }
 
   async function handleSettings(fd: FormData) {
     "use server";
     const guestOrdersEnabled = fd.get("guest_orders_enabled") === "on";
     const upiVpa = (fd.get("upi_vpa") as string | null)?.trim() || null;
-    await updateCanteenSettings({ guestOrdersEnabled, upiVpa });
+    await updateCanteenSettings({ guestOrdersEnabled, upiVpa, tenantSlug });
   }
 
   return (

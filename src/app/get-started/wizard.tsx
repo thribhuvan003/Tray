@@ -723,15 +723,20 @@ export function GetStartedWizard() {
           process.env.NEXT_PUBLIC_SUPABASE_URL!,
           process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
         );
-        await supabase.auth.signInWithPassword({
+        const { error: authErr } = await supabase.auth.signInWithPassword({
           email: formData.adminEmail,
           password: formData.adminPassword,
         });
-      } catch {
-        // Non-fatal — user can sign in manually if auto-login fails
+        if (!authErr) {
+          // Wait 500ms for browser cookies to commit successfully
+          await new Promise((resolve) => setTimeout(resolve, 500));
+        }
+      } catch (err) {
+        console.error("Auto sign in failed:", err);
       }
 
-      router.push(`/c/${result.canteenSlug}/admin/dashboard?welcome=1`);
+      // Hard redirect to avoid Next.js client-side router caching / header race conditions
+      window.location.href = `/c/${result.canteenSlug}/admin/dashboard?welcome=1`;
     });
   }
 

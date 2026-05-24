@@ -27,14 +27,14 @@ export function MenuTable({ items, categories, tenantSlug }: { items: Row[]; cat
 
   const onStatus = (id: string, status: Row["status"]) => {
     start(async () => {
-      const r = await setMenuItemStatus(id, status);
+      const r = await setMenuItemStatus(id, status, tenantSlug);
       if (!r.ok) toast.error(r.error ?? "Failed");
       else toast.success(`Moved to ${status}`);
     });
   };
   const onStock = (id: string, inStock: boolean) => {
     start(async () => {
-      const r = await setMenuItemStock(id, inStock);
+      const r = await setMenuItemStock(id, inStock, tenantSlug);
       if (!r.ok) toast.error(r.error ?? "Failed");
       else toast.success(inStock ? "Back in stock" : "Marked out of stock");
     });

@@ -1,5 +1,15 @@
 # Parallel work log (Tray)
 
+## Session log — 2026-05-24 (E2E signup wizard reload, referer settings/staff sync & IST timezone open check)
+
+### What was done
+- **Wizard Redirect Loop Settle Delay (`wizard.tsx`)**: Resolved session race conditions immediately after new canteen creations by replacing client-side Next.js `router.push` with a browser hard reload (`window.location.href`), accompanied by an explicit 500ms sleep delay. This ensures auth cookies are committed to the browser storage and cleanly sent to Server Components on navigation.
+- **Referer-Stripping Action Fixes (`_actions.ts`, `settings/page.tsx`, `staff/page.tsx`, components)**: Decoupled Settings (hours, pause, options), Staff (invites, revocation), and Menu inline controls (stock, status toggles) from headers-based resolution by feeding `tenantSlug` explicitly from forms and client scopes. Prevents Vercel production referer-stripping security policies from triggering false `Not authorised` redirect loops.
+- **IST Timezone Operating Hour Guard (`0013_timezone_safe_guard.sql`)**: Overrode the timezone-clashing `localtime` query in PostgreSQL trigger `guard_canteen_open()` with a precise Indian Standard Time (IST) check using `(now() at time zone 'Asia/Kolkata')::time`, preventing AWS/Supabase servers running in UTC from erroneously marking open Indian campus canteens as closed.
+- **Verification and Compilation**: Successfully ran `pnpm typecheck` (0 errors), `npm run demo:verify` (0 failures), and compiled Next.js production build (`pnpm build`).
+
+---
+
 ## Session log — 2026-05-24 (Google & Apple Repository Standardizations)
 
 ### What was done
