@@ -51,7 +51,7 @@ function getGoogleRedirectUrl(nextUrl: string): string {
   return nextUrl;
 }
 
-export function LoginForm({ next, slug = "" }: { next: string; slug?: string }) {
+export function LoginForm({ next, slug = "", loginRole = "" }: { next: string; slug?: string; loginRole?: string }) {
   const [mode, setMode] = useState<"magic" | "password">("magic");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -66,7 +66,7 @@ export function LoginForm({ next, slug = "" }: { next: string; slug?: string }) 
         provider: "google",
         options: {
           redirectTo: new URL(
-            `/auth/callback?next=${encodeURIComponent(targetNext)}&tenant=${encodeURIComponent(slug)}`,
+            `/auth/callback?next=${encodeURIComponent(targetNext)}&tenant=${encodeURIComponent(slug)}${loginRole ? `&login_role=${encodeURIComponent(loginRole)}` : ""}`,
             window.location.origin
           ).toString(),
         },
@@ -126,6 +126,10 @@ export function LoginForm({ next, slug = "" }: { next: string; slug?: string }) 
 
       if (adminMember && adminMember.tenant) {
         finalNext = `/c/${adminMember.tenant.slug}/admin/dashboard`;
+      } else if (loginRole === "owner" && !adminMember) {
+        await sb.auth.signOut();
+        window.location.href = "/login?error=no-admin-account&role=owner";
+        return;
       } else if (kitchenMember && kitchenMember.tenant) {
         finalNext = `/c/${kitchenMember.tenant.slug}/kitchen`;
       } else if (studentMember && studentMember.tenant) {
@@ -151,7 +155,7 @@ export function LoginForm({ next, slug = "" }: { next: string; slug?: string }) 
       const sb = getBrowserClient();
       const targetNext = getRedirectUrl(email, next);
       const redirectTo = new URL(
-          `/auth/callback?next=${encodeURIComponent(targetNext)}&tenant=${encodeURIComponent(slug)}`,
+          `/auth/callback?next=${encodeURIComponent(targetNext)}&tenant=${encodeURIComponent(slug)}${loginRole ? `&login_role=${encodeURIComponent(loginRole)}` : ""}`,
           window.location.origin
         ).toString();
       if (mode === "magic") {
@@ -191,6 +195,11 @@ export function LoginForm({ next, slug = "" }: { next: string; slug?: string }) 
 
             if (adminMember && adminMember.tenant) {
               finalNext = `/c/${adminMember.tenant.slug}/admin/dashboard`;
+            } else if (loginRole === "owner" && !adminMember) {
+              // User tried to sign in as canteen owner but has no admin membership
+              await sb.auth.signOut();
+              window.location.href = "/login?error=no-admin-account&role=owner";
+              return;
             } else if (kitchenMember && kitchenMember.tenant) {
               finalNext = `/c/${kitchenMember.tenant.slug}/kitchen`;
             } else if (studentMember && studentMember.tenant) {

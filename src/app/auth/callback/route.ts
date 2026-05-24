@@ -54,6 +54,7 @@ export async function GET(req: NextRequest) {
   const token_hash = searchParams.get("token_hash");
   const type = searchParams.get("type");
   const next = searchParams.get("next") ?? "/";
+  const loginRole = searchParams.get("login_role");
   const tenantSlug = searchParams.get("tenant") ?? req.headers.get("x-tenant-slug") ?? "aditya";
 
   const supabase = await getServerClient();
@@ -161,6 +162,16 @@ export async function GET(req: NextRequest) {
     const adminMember = typedMemberships.find((m) => m.role === "canteen_admin" || m.role === "super_admin");
     const kitchenMember = typedMemberships.find((m) => m.role === "kitchen_staff");
     const studentMember = typedMemberships.find((m) => m.role === "student");
+
+    // Admin-intent guard: if user explicitly chose "I own a canteen" but
+    // has no canteen_admin / super_admin membership anywhere, sign them out
+    // and return them to the login page with a clear error.
+    if (loginRole === "owner" && !adminMember) {
+      await supabase.auth.signOut();
+      return NextResponse.redirect(
+        new URL("/login?error=no-admin-account&role=owner", origin)
+      );
+    }
 
     if (adminMember && adminMember.tenant) {
       const slug = adminMember.tenant.slug;

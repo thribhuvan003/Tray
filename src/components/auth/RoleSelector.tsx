@@ -277,11 +277,20 @@ export function RoleSelector({
 
             {error && (
               <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-[0.82rem] text-red-600">
-                {error}
+                {error === "no-admin-account" ? (
+                  <span>
+                    No canteen found for this account. If you haven&apos;t set one up yet,{" "}
+                    <a href="/get-started" className="font-semibold underline hover:opacity-75">
+                      create your canteen here →
+                    </a>
+                  </span>
+                ) : (
+                  error
+                )}
               </div>
             )}
 
-            <LoginForm next={loginNext} slug={slug} />
+            <LoginForm next={loginNext} slug={slug} loginRole={selected === "owner" ? "owner" : ""} />
           </div>
         )}
       </div>
