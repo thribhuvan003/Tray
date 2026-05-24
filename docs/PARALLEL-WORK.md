@@ -1,5 +1,14 @@
 # Parallel work log (Tray)
 
+## Session log — 2026-05-24 (referrer-independent multi-tenant server action auth)
+
+### What was done
+- **Referrer-Independent Server Action Auth (`get-user.ts` & `_actions.ts`)**: Upgraded `getCurrentUser` and `requireRole` to accept an optional `tenantIdOverride`. Upgraded `ctx()` to accept `tenantSlugOverride` which gets passed to `requireRole` to bypass header-based resolution when the browser's referrer policy strips HTTP referer down to the origin `https://trayy.vercel.app/`.
+- **Explicit tenantSlug Binding (`new/page.tsx` & `[id]/edit/page.tsx`)**: Refactored the `createMenuItem`, `updateMenuItem`, and `deleteMenuItem` server actions to pass `tenantSlug` explicitly from the forms, ensuring 100% robust and reliable item creations and modifications in production without any login loops.
+- **Verification and Build**: Cleanly ran `pnpm typecheck` (passed with 0 errors) and `pnpm demo:verify` (passed successfully). Committed and pushed all changes directly to main.
+
+---
+
 ## Session log — 2026-05-24 (dynamic UPI payment gateway & real scannable QR codes)
 
 ### What was done
