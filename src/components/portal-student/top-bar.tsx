@@ -36,8 +36,7 @@ export function StudentTopBar({ tenant, siblings = [], user }: Props) {
 
   async function handleSignOut() {
     await fetch("/auth/signout", { method: "POST" });
-    router.push(`/c/${tenant.slug}/menu`);
-    router.refresh();
+    window.location.href = `/c/${tenant.slug}/menu`;
   }
 
   useEffect(() => {
