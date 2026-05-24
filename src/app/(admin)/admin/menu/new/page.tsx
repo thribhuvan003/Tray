@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
-import { resolveTenant } from "@/lib/tenant";
+import { resolveTenant, getTenantSlugFromHeaders } from "@/lib/tenant";
 import { createMenuItem } from "@/app/(admin)/admin/_actions";
 import { NewItemForm } from "./new-item-form";
 
@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 
 export default async function NewMenuItemPage() {
   const h = await headers();
-  const slug = h.get("x-tenant-slug") ?? "aditya";
+  const slug = getTenantSlugFromHeaders(h);
   const tenant = await resolveTenant(slug);
   if (!tenant) return null;
 

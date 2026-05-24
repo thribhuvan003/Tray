@@ -1,5 +1,5 @@
 import { headers } from "next/headers";
-import { resolveTenant } from "@/lib/tenant";
+import { resolveTenant, getTenantSlugFromHeaders } from "@/lib/tenant";
 import { getAdminClient } from "@/lib/supabase/admin";
 import { updateCanteenHours, pauseCanteen, updateCanteenSettings } from "../_actions";
 import type { Tenant } from "@/lib/db/types";
@@ -23,7 +23,7 @@ function formatPausedUntil(pausedUntil: string | null): string | null {
 
 export default async function SettingsPage() {
   const h = await headers();
-  const slug = h.get("x-tenant-slug") ?? "aditya";
+  const slug = getTenantSlugFromHeaders(h);
   const tenant = await resolveTenant(slug);
   if (!tenant) return null;
 

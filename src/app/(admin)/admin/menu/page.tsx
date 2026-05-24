@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { headers } from "next/headers";
 
-import { resolveTenant } from "@/lib/tenant";
+import { resolveTenant, getTenantSlugFromHeaders } from "@/lib/tenant";
 import { getServerClient } from "@/lib/supabase/server";
 import { MenuTable } from "@/components/portal-admin/menu-table";
 
@@ -21,7 +21,7 @@ export const dynamic = "force-dynamic";
 
 export default async function AdminMenuPage() {
   const h = await headers();
-  const slug = h.get("x-tenant-slug") ?? "aditya";
+  const slug = getTenantSlugFromHeaders(h);
   const tenant = await resolveTenant(slug);
   if (!tenant) return null;
   const supabase = await getServerClient(tenant.id);

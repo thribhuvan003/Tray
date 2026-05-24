@@ -1,7 +1,7 @@
 import { redirect, notFound } from "next/navigation";
 import { headers } from "next/headers";
 import Link from "next/link";
-import { resolveTenant } from "@/lib/tenant";
+import { resolveTenant, getTenantSlugFromHeaders } from "@/lib/tenant";
 import { getAdminClient } from "@/lib/supabase/admin";
 import { updateMenuItem, deleteMenuItem } from "@/app/(admin)/admin/_actions";
 import { DeleteItemButton } from "@/components/portal-admin/delete-item-button";
@@ -14,7 +14,7 @@ type Props = { params: Promise<{ id: string }> };
 export default async function EditMenuItemPage({ params }: Props) {
   const { id } = await params;
   const h = await headers();
-  const slug = h.get("x-tenant-slug") ?? "aditya";
+  const slug = getTenantSlugFromHeaders(h);
   const tenant = await resolveTenant(slug);
   if (!tenant) return null;
   const supabase = getAdminClient(tenant.id);

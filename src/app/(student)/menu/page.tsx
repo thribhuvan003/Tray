@@ -1,5 +1,5 @@
 import { headers } from "next/headers";
-import { resolveTenant, collegeCanteensUncached } from "@/lib/tenant";
+import { resolveTenant, collegeCanteensUncached, getTenantSlugFromHeaders } from "@/lib/tenant";
 import { getServerClient } from "@/lib/supabase/server";
 import { getAdminClient } from "@/lib/supabase/admin";
 import { getCurrentUser } from "@/lib/auth/get-user";
@@ -12,7 +12,7 @@ export const revalidate = 0;
 
 export default async function StudentMenuPage() {
   const h = await headers();
-  const slug = h.get("x-tenant-slug") ?? "aditya";
+  const slug = getTenantSlugFromHeaders(h);
   const tenant = await resolveTenant(slug);
   if (!tenant) notFound();
 

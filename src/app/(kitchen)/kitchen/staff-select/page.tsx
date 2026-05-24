@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
-import { resolveTenant } from "@/lib/tenant";
+import { resolveTenant, getTenantSlugFromHeaders } from "@/lib/tenant";
 import { getAdminClient } from "@/lib/supabase/admin";
 import { requireRole } from "@/lib/auth/get-user";
 import { PinKiosk } from "@/components/portal-kitchen/pin-kiosk";
@@ -16,7 +16,7 @@ type StaffProfile = {
 
 export default async function StaffSelectPage() {
   const h = await headers();
-  const slug = h.get("x-tenant-slug") ?? "aditya";
+  const slug = getTenantSlugFromHeaders(h);
   const tenant = await resolveTenant(slug);
   if (!tenant) return null;
 

@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import Link from "next/link";
 import { ArrowLeft, ChefHat } from "lucide-react";
-import { resolveTenant } from "@/lib/tenant";
+import { resolveTenant, getTenantSlugFromHeaders } from "@/lib/tenant";
 import { getAdminClient } from "@/lib/supabase/admin";
 import { requireRole } from "@/lib/auth/get-user";
 import { formatRupees, formatTimeIST } from "@/lib/utils";
@@ -51,7 +51,7 @@ function summariseItems(items: HistoryItem[]): string {
 
 export default async function KitchenHistoryPage() {
   const h = await headers();
-  const slug = h.get("x-tenant-slug") ?? "aditya";
+  const slug = getTenantSlugFromHeaders(h);
   const tenant = await resolveTenant(slug);
   if (!tenant) return null;
 

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-import { resolveTenant } from "@/lib/tenant";
+import { resolveTenant, getTenantSlugFromHeaders } from "@/lib/tenant";
 import { getServerClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth/get-user";
 import { formatRupees, formatDateIST, formatTimeIST } from "@/lib/utils";
@@ -21,7 +21,7 @@ const STATUS_LABEL: Record<string, { label: string; tone: string }> = {
 
 export default async function OrdersPage() {
   const h = await headers();
-  const slug = h.get("x-tenant-slug") ?? "aditya";
+  const slug = getTenantSlugFromHeaders(h);
   const tenant = await resolveTenant(slug);
   if (!tenant) return null;
   const user = await getCurrentUser();

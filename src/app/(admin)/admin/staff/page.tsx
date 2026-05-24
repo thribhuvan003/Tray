@@ -1,5 +1,5 @@
 import { headers } from "next/headers";
-import { resolveTenant } from "@/lib/tenant";
+import { resolveTenant, getTenantSlugFromHeaders } from "@/lib/tenant";
 import { getServerClient } from "@/lib/supabase/server";
 import { StaffPanel } from "@/components/portal-admin/staff-panel";
 
@@ -24,7 +24,7 @@ export const dynamic = "force-dynamic";
 
 export default async function StaffPage() {
   const h = await headers();
-  const slug = h.get("x-tenant-slug") ?? "aditya";
+  const slug = getTenantSlugFromHeaders(h);
   const tenant = await resolveTenant(slug);
   if (!tenant) return null;
   const supabase = await getServerClient(tenant.id);

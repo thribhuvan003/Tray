@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { headers } from "next/headers";
 import { RoleSelector } from "@/components/auth/RoleSelector";
+import { getTenantSlugFromHeaders } from "@/lib/tenant";
 
 export const metadata = { title: "Sign in — Tray" };
 
@@ -11,7 +12,7 @@ export default async function LoginPage({
 }) {
   const sp = await searchParams;
   const h = await headers();
-  const slug = sp.tenant ?? h.get("x-tenant-slug") ?? "";
+  const slug = sp.tenant ?? getTenantSlugFromHeaders(h);
   const next = sp.next ?? (slug ? `/c/${slug}/menu` : "/");
 
   return (

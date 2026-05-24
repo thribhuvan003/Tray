@@ -382,3 +382,255 @@ export async function rejectOrder(orderId: string, reason: string): Promise<Outc
   revalidatePath(`/c/${ctx.tenant.slug}/kitchen`);
   return { ok: true };
 }
+
+export async function createWalkInOrder(): Promise<{ ok: boolean; error?: string; orderId?: string }> {
+  const ctx = await staffContext();
+  if (!ctx.ok) return ctx;
+
+  const admin = getAdminClient(ctx.tenant.id);
+
+  // Fetch 1-3 random live, in-stock menu items from the tenant
+  const { data: items, error: itemsErr } = await admin
+    .from("menu_items")
+    .select("id, name, price_paise, diet, prep_target_seconds")
+    .eq("tenant_id", ctx.tenant.id)
+    .eq("status", "live")
+    .eq("in_stock", true)
+    .limit(10);
+
+  if (itemsErr || !items || items.length === 0) {
+    return { ok: false, error: "No menu items available to create a walk-in order" };
+  }
+
+  // Select 1-3 random items
+  const numItems = Math.min(items.length, 1 + Math.floor(Math.random() * 3));
+  const selected: typeof items = [];
+  const shuffled = [...items].sort(() => 0.5 - Math.random());
+  for (let i = 0; i < numItems; i++) {
+    selected.push(shuffled[i]);
+  }
+
+  // Calculate total
+  let total = 0;
+  const validated = selected.map(item => {
+    const qty = 1 + Math.floor(Math.random() * 2);
+    total += item.price_paise * qty;
+    return { item, qty };
+  });
+
+  // Get next short code
+  const { data: codeData, error: codeErr } = await admin.rpc("next_order_short_code", {
+    p_tenant: ctx.tenant.id,
+  });
+  const shortCode = (!codeErr && codeData != null)
+    ? String(codeData)
+    : `T-${1000 + Math.floor(Math.random() * 9000)}`;
+
+  // Insert order
+  const orderInsert = await admin
+    .from("orders")
+    .insert({
+      tenant_id: ctx.tenant.id,
+      user_id: null,
+      short_code: shortCode,
+      status: "placed", // walk-in orders are immediately paid and placed
+      total_paise: total,
+      order_type: "takeaway",
+      customer_name: "Walk-in · counter",
+      notes: "Walk-in order",
+      placed_at: new Date().toISOString(),
+    })
+    .select("id")
+    .single<{ id: string }>();
+
+  if (orderInsert.error || !orderInsert.data) {
+    return { ok: false, error: orderInsert.error?.message ?? "Could not create walk-in order" };
+  }
+  const orderId = orderInsert.data.id;
+
+  // Insert items
+  await admin.from("order_items").insert(
+    validated.map((v) => ({
+      tenant_id: ctx.tenant.id,
+      order_id: orderId,
+      menu_item_id: v.item.id,
+      name_snapshot: v.item.name,
+      price_paise_snapshot: v.item.price_paise,
+      diet_snapshot: v.item.diet,
+      qty: v.qty,
+    }))
+  );
+
+  // Insert status log
+  await admin.from("order_status_logs").insert({
+    tenant_id: ctx.tenant.id,
+    order_id: orderId,
+    from_status: null,
+    to_status: "placed",
+    actor_user_id: ctx.user.id,
+    note: "Walk-in order created at counter",
+  });
+
+  // Insert audit log
+  await admin.from("audit_logs").insert({
+    tenant_id: ctx.tenant.id,
+    actor_user_id: ctx.user.id,
+    action: "order.walk_in_created",
+    target_type: "order",
+    target_id: orderId,
+    meta: { total_paise: total, itemsCount: validated.length },
+  });
+
+  // Insert captured payment record
+  await admin.from("payments").insert({
+    tenant_id: ctx.tenant.id,
+    order_id: orderId,
+    razorpay_order_id: null,
+    razorpay_payment_id: `pay_walkin_${orderId.slice(0, 8)}`,
+    amount_paise: total,
+    status: "captured",
+  });
+
+  // Emit status change event for realtime queue updates
+  await emitOrderEvent(admin, {
+    order_id: orderId,
+    tenant_id: ctx.tenant.id,
+    event_type: "placed",
+    payload: { actor: "counter" },
+  });
+
+  revalidatePath(`/c/${ctx.tenant.slug}/kitchen`);
+  return { ok: true, orderId };
+}
+
+export async function pushSpecialToMenu(form: {
+  name: string;
+  description: string;
+  price: number;
+  prep: number;
+  diet: "veg" | "nonveg" | "egg";
+}): Promise<{ ok: boolean; error?: string; itemId?: string }> {
+  const ctx = await staffContext();
+  if (!ctx.ok) return ctx;
+
+  const admin = getAdminClient(ctx.tenant.id);
+
+  // Find or create the "Specials" category for this tenant
+  let { data: cat } = await admin
+    .from("menu_categories")
+    .select("id")
+    .eq("tenant_id", ctx.tenant.id)
+    .eq("name", "Specials")
+    .maybeSingle<{ id: string }>();
+
+  if (!cat) {
+    const catInsert = await admin
+      .from("menu_categories")
+      .insert({
+        tenant_id: ctx.tenant.id,
+        name: "Specials",
+        sort_order: 99,
+      })
+      .select("id")
+      .single<{ id: string }>();
+
+    if (catInsert.error || !catInsert.data) {
+      return { ok: false, error: catInsert.error?.message ?? "Could not create Specials category" };
+    }
+    cat = catInsert.data;
+  }
+
+  // Insert special menu item
+  const itemInsert = await admin
+    .from("menu_items")
+    .insert({
+      tenant_id: ctx.tenant.id,
+      category_id: cat.id,
+      name: form.name,
+      description: form.description,
+      price_paise: Math.round(form.price * 100),
+      diet: form.diet,
+      status: "live",
+      prep_target_seconds: form.prep * 60,
+      in_stock: true,
+      sort_order: 999,
+    })
+    .select("id")
+    .single<{ id: string }>();
+
+  if (itemInsert.error || !itemInsert.data) {
+    return { ok: false, error: itemInsert.error?.message ?? "Could not push special menu item" };
+  }
+  const itemId = itemInsert.data.id;
+
+  // Insert audit log
+  await admin.from("audit_logs").insert({
+    tenant_id: ctx.tenant.id,
+    actor_user_id: ctx.user.id,
+    action: "menu.push_special",
+    target_type: "menu_item",
+    target_id: itemId,
+    meta: { name: form.name, price: form.price },
+  });
+
+  // Emit menu_item_86 back-in-stock event for student menu sync
+  await emitOrderEvent(admin, {
+    order_id: "00000000-0000-0000-0000-000000000000",
+    tenant_id: ctx.tenant.id,
+    event_type: "menu_item_86",
+    payload: { name: form.name, in_stock: true },
+  });
+
+  revalidatePath(`/c/${ctx.tenant.slug}/menu`);
+  revalidatePath(`/c/${ctx.tenant.slug}/kitchen`);
+
+  return { ok: true, itemId };
+}
+
+export async function removeSpecialFromMenu(itemId: string): Promise<Outcome> {
+  const ctx = await staffContext();
+  if (!ctx.ok) return ctx;
+
+  const admin = getAdminClient(ctx.tenant.id);
+
+  // Update status to archived so it is removed from active specials list
+  const { data: item, error: loadErr } = await admin
+    .from("menu_items")
+    .select("name")
+    .eq("id", itemId)
+    .eq("tenant_id", ctx.tenant.id)
+    .maybeSingle<{ name: string }>();
+
+  if (loadErr || !item) return { ok: false, error: "Menu item not found" };
+
+  const { error: updateErr } = await admin
+    .from("menu_items")
+    .update({ status: "archived" })
+    .eq("id", itemId)
+    .eq("tenant_id", ctx.tenant.id);
+
+  if (updateErr) return { ok: false, error: updateErr.message };
+
+  // Insert audit log
+  await admin.from("audit_logs").insert({
+    tenant_id: ctx.tenant.id,
+    actor_user_id: ctx.user.id,
+    action: "menu.remove_special",
+    target_type: "menu_item",
+    target_id: itemId,
+    meta: { name: item.name },
+  });
+
+  // Emit menu_item_86 sold-out event so student menu sync picks it up
+  await emitOrderEvent(admin, {
+    order_id: "00000000-0000-0000-0000-000000000000",
+    tenant_id: ctx.tenant.id,
+    event_type: "menu_item_86",
+    payload: { name: item.name, in_stock: false },
+  });
+
+  revalidatePath(`/c/${ctx.tenant.slug}/menu`);
+  revalidatePath(`/c/${ctx.tenant.slug}/kitchen`);
+
+  return { ok: true };
+}

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { headers } from "next/headers";
 import { Download } from "lucide-react";
-import { resolveTenant } from "@/lib/tenant";
+import { resolveTenant, getTenantSlugFromHeaders } from "@/lib/tenant";
 import { getServerClient } from "@/lib/supabase/server";
 import { formatRupees, formatDateIST, formatTimeIST } from "@/lib/utils";
 
@@ -30,7 +30,7 @@ export const dynamic = "force-dynamic";
 
 export default async function OrdersPage() {
   const h = await headers();
-  const slug = h.get("x-tenant-slug") ?? "aditya";
+  const slug = getTenantSlugFromHeaders(h);
   const tenant = await resolveTenant(slug);
   if (!tenant) return null;
   const supabase = await getServerClient(tenant.id);

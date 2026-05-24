@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { SignupForm } from "@/components/portal-student/signup-form";
 import { headers } from "next/headers";
-import { resolveTenant } from "@/lib/tenant";
+import { resolveTenant, getTenantSlugFromHeaders } from "@/lib/tenant";
 
 export const metadata = { title: "Create account — Tray" };
 
@@ -12,7 +12,7 @@ export default async function SignupPage({
 }) {
   const sp = await searchParams;
   const h = await headers();
-  const tenant = await resolveTenant(h.get("x-tenant-slug") ?? "aditya");
+  const tenant = await resolveTenant(getTenantSlugFromHeaders(h));
   return (
     <div
       data-portal="student"

@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
-import { resolveTenant } from "@/lib/tenant";
+import { resolveTenant, getTenantSlugFromHeaders } from "@/lib/tenant";
 import { getServerClient } from "@/lib/supabase/server";
 import { requireRole } from "@/lib/auth/get-user";
 import { KitchenBoard } from "@/components/portal-kitchen/board";
@@ -30,7 +30,7 @@ type MarqueeRow = { id: string; name: string; price_paise: number; diet: "veg" |
 
 export default async function KitchenPage() {
   const h = await headers();
-  const slug = h.get("x-tenant-slug") ?? "aditya";
+  const slug = getTenantSlugFromHeaders(h);
   const tenant = await resolveTenant(slug);
   if (!tenant) return null;
 

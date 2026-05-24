@@ -1,5 +1,5 @@
 import { headers } from "next/headers";
-import { resolveTenant } from "@/lib/tenant";
+import { resolveTenant, getTenantSlugFromHeaders } from "@/lib/tenant";
 import { getServerClient } from "@/lib/supabase/server";
 import dayjs from "dayjs";
 import { formatRupees } from "@/lib/utils";
@@ -10,7 +10,7 @@ type O = { id: string; total_paise: number; placed_at: string; collected_at: str
 
 export default async function AnalyticsPage() {
   const h = await headers();
-  const slug = h.get("x-tenant-slug") ?? "aditya";
+  const slug = getTenantSlugFromHeaders(h);
   const tenant = await resolveTenant(slug);
   if (!tenant) return null;
   const supabase = await getServerClient(tenant.id);
