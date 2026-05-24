@@ -4,6 +4,7 @@ import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import QRCode from "react-qr-code";
 import Link from "next/link";
+import Script from "next/script";
 import { ArrowLeft, Loader2, Smartphone, Sparkles, X as XIcon } from "lucide-react";
 import { toast } from "sonner";
 import { formatRupees, cn } from "@/lib/utils";
@@ -33,12 +34,16 @@ export function PayPanel({
   tenantUpi,
   order,
   lines,
+  razorpayKeyId,
+  razorpayOrderId,
 }: {
   tenantSlug: string;
   tenantName: string;
   tenantUpi: string;
   order: Order;
   lines: Line[];
+  razorpayKeyId: string;
+  razorpayOrderId: string | null;
 }) {
   const router = useRouter();
   const [pending, start] = useTransition();
@@ -148,6 +153,66 @@ export function PayPanel({
     }, 1500);
   };
 
+  const handleRazorpayPay = () => {
+    if (typeof window === "undefined" || !(window as any).Razorpay) {
+      toast.error("Payment portal is initializing. Please try again in a moment.");
+      return;
+    }
+
+    if (!razorpayOrderId) {
+      toast.error("Razorpay order ID is missing. Please contact support.");
+      return;
+    }
+
+    const options = {
+      key: razorpayKeyId,
+      amount: order.total_paise,
+      currency: "INR",
+      name: tenantName,
+      description: `Order ${order.short_code}`,
+      order_id: razorpayOrderId,
+      handler: async function (response: any) {
+        toast.success("Payment authorized! Confirming order...");
+        onIvePaid();
+      },
+      prefill: {
+        name: order.customer_name ?? "Student",
+        email: "student@canteen.edu",
+        contact: "9999999999",
+      },
+      theme: {
+        color: "#0f172a",
+      },
+      config: {
+        display: {
+          blocks: {
+            upi: {
+              name: "UPI / Google Pay / PhonePe",
+              instruments: [
+                {
+                  method: "upi",
+                },
+              ],
+            },
+          },
+          sequence: ["block.upi"],
+          preferences: {
+            show_default_blocks: true,
+          },
+        },
+      },
+    };
+
+    const rzp = new (window as any).Razorpay(options);
+    
+    rzp.on("payment.failed", function (response: any) {
+      console.error("Payment failed", response.error);
+      toast.error("Payment failed: " + (response.error.description || "Please try again"));
+    });
+
+    rzp.open();
+  };
+
   return (
     <div className="mx-auto max-w-3xl px-4 sm:px-6 pt-6 pb-12 pb-[max(3rem,env(safe-area-inset-bottom))]">
       <Link
@@ -182,32 +247,61 @@ export function PayPanel({
       </div>
 
       <div className="grid md:grid-cols-[1.1fr_1fr] gap-5">
-        <div className="rounded-2xl bg-[color:var(--color-paper)] border border-[color:var(--color-line)] p-6 flex flex-col items-center text-center">
-          <div className="text-[11px] font-mono uppercase tracking-wider text-[color:var(--color-ink)]/55 mb-4">
-            Scan QR to pay
-          </div>
-          
-          {/* Beautifully Framed QR Code - Permanently Visible on all screen sizes */}
-          <div className="p-4 bg-white rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.04),inset_0_0_0_1px_rgba(26,26,25,0.06)] transition-all hover:scale-[1.02]">
-            <QRCode value={upiUri} size={190} bgColor="#ffffff" fgColor="#1A1A19" style={{ display: 'block' }} />
-          </div>
+        <div className="rounded-2xl bg-[color:var(--color-paper)] border border-[color:var(--color-line)] p-6 flex flex-col items-center text-center justify-center">
+          {isSimMode ? (
+            <>
+              <div className="text-[11px] font-mono uppercase tracking-wider text-[color:var(--color-ink)]/55 mb-4">
+                Scan QR to pay
+              </div>
+              
+              {/* Beautifully Framed QR Code - Permanently Visible on all screen sizes */}
+              <div className="p-4 bg-white rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.04),inset_0_0_0_1px_rgba(26,26,25,0.06)] transition-all hover:scale-[1.02]">
+                <QRCode value={upiUri} size={190} bgColor="#ffffff" fgColor="#1A1A19" style={{ display: 'block' }} />
+              </div>
 
-          {/* Mobile Only: Big "Pay Now" Button directly below the QR code */}
-          <button
-            onClick={handleMobilePay}
-            className="md:hidden mt-6 w-full h-12 text-[15px] inline-flex items-center justify-center gap-2 rounded-xl bg-ocean-500 text-black font-bold hover:bg-ocean-600 transition-colors shadow-lg shadow-ocean-500/10"
-          >
-            <Smartphone size={16} /> Pay Now
-          </button>
-          
-          <p className="md:hidden mt-2 text-[11px] text-center opacity-60">
-            Redirects directly to GPay, PhonePe, or any UPI app
-          </p>
+              {/* Mobile Only: Big "Pay Now" Button directly below the QR code */}
+              <button
+                onClick={handleMobilePay}
+                className="md:hidden mt-6 w-full h-12 text-[15px] inline-flex items-center justify-center gap-2 rounded-xl bg-ocean-500 text-black font-bold hover:bg-ocean-600 transition-colors shadow-lg shadow-ocean-500/10"
+              >
+                <Smartphone size={16} /> Pay Now
+              </button>
+              
+              <p className="md:hidden mt-2 text-[11px] text-center opacity-60">
+                Redirects directly to GPay, PhonePe, or any UPI app
+              </p>
 
-          <div className="mt-5 text-[12.5px] text-[color:var(--color-ink)]/55">
-            Paying <span className="font-semibold text-[color:var(--color-ink)]">{tenantName}</span>
-            <div className="font-mono text-[11px] mt-0.5 opacity-85">{tenantUpi}</div>
-          </div>
+              <div className="mt-5 text-[12.5px] text-[color:var(--color-ink)]/55">
+                Paying <span className="font-semibold text-[color:var(--color-ink)]">{tenantName}</span>
+                <div className="font-mono text-[11px] mt-0.5 opacity-85">{tenantUpi}</div>
+              </div>
+            </>
+          ) : (
+            <div className="w-full flex flex-col items-center py-6 px-2">
+              <div className="h-16 w-16 bg-ocean-500/10 text-ocean-500 rounded-full flex items-center justify-center mb-5 animate-pulse">
+                <Sparkles size={32} />
+              </div>
+              
+              <h3 className="font-display text-[22px] font-medium tracking-tight mb-2">
+                Secure Live <span className="it">Payment</span>
+              </h3>
+              
+              <p className="text-[12.5px] text-[color:var(--color-ink)]/60 max-w-[240px] mb-8 leading-normal">
+                Pay using UPI, Google Pay, PhonePe, Cards, or Netbanking securely processed by Razorpay.
+              </p>
+
+              <button
+                onClick={handleRazorpayPay}
+                className="w-full h-12 text-[14px] inline-flex items-center justify-center gap-2 rounded-xl bg-ocean-500 text-black font-bold hover:bg-ocean-600 transition-all shadow-lg active:scale-[0.98] shadow-ocean-500/10"
+              >
+                <Smartphone size={16} /> Pay Securely Now
+              </button>
+              
+              <p className="mt-3 text-[11px] text-center opacity-50">
+                Authorized signature webhook confirmation active.
+              </p>
+            </div>
+          )}
         </div>
 
         <div className="flex flex-col gap-4">
@@ -281,7 +375,7 @@ export function PayPanel({
             </div>
           </div>
 
-          {/* Desktop Only: "I've Paid" Button */}
+          {/* Desktop Only: "I've Paid" or "Verify Status" Button */}
           <button
             onClick={onIvePaid}
             disabled={verifying || Boolean(expired)}
@@ -291,8 +385,10 @@ export function PayPanel({
               <>
                 <Loader2 size={14} className="animate-spin" /> Confirming…
               </>
-            ) : (
+            ) : isSimMode ? (
               <>I&rsquo;ve paid &mdash; confirm my order</>
+            ) : (
+              <>Verify payment status</>
             )}
           </button>
           
@@ -302,7 +398,7 @@ export function PayPanel({
             </p>
           )}
 
-          {!process.env.NEXT_PUBLIC_RAZORPAY_LIVE && (
+          {isSimMode && (
             <>
               <button
                 onClick={onSimulate}
@@ -345,6 +441,11 @@ export function PayPanel({
             </button>
           </div>
         </div>
+      )}
+
+      {/* Razorpay Standard Checkout SDK */}
+      {!isSimMode && (
+        <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="lazyOnload" />
       )}
     </div>
   );

@@ -51,6 +51,13 @@ export default async function PayPage({ params }: { params: Promise<{ orderId: s
     redirect(`/c/${tenant.slug}/menu?msg=no-upi`);
   }
 
+  // Fetch the razorpay_order_id associated with the payment record
+  const { data: payment } = await supabase
+    .from("payments")
+    .select("razorpay_order_id")
+    .eq("order_id", orderId)
+    .maybeSingle<{ razorpay_order_id: string | null }>();
+
   return (
     <PayPanel
       tenantSlug={tenant.slug}
@@ -58,6 +65,8 @@ export default async function PayPage({ params }: { params: Promise<{ orderId: s
       tenantUpi={tenant.upi_vpa}
       order={order}
       lines={lines ?? []}
+      razorpayKeyId={process.env.RAZORPAY_KEY_ID ?? ""}
+      razorpayOrderId={payment?.razorpay_order_id ?? null}
     />
   );
 }

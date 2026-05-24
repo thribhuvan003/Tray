@@ -1,5 +1,16 @@
 # Parallel work log (Tray)
 
+## Session log — 2026-05-24 (Live Razorpay gateway checkout integration & webhook setup)
+
+### What was done
+- **Configure Live Razorpay Environment Keys (`.env.local`)**: Configured the live API credentials (`rzp_live_St909hIKWZjmL2` / `HVCFz6JyQJTrWpzvUGbKtsuy`), added `whsec_90hIKWZjmL2_live_secret_key` for webhook cryptographic signature validation, and flipped `NEXT_PUBLIC_RAZORPAY_LIVE=true` to enable production gateway behaviors.
+- **Pass Live Payment Parameters (`page.tsx`)**: Upgraded the student `PayPage` to query the database `payments` table, retrieve the associated server-created `razorpay_order_id`, and safely pass it down along with the server-side environment `RAZORPAY_KEY_ID` to the client-side panel.
+- **Razorpay Standard Checkout SDK (`pay-panel.tsx`)**: Mounted the Razorpay standard script (`v1/checkout.js`) and added `handleRazorpayPay` to launch the official Checkout gateway modal. Natively loads UPI apps (GPay, PhonePe, Paytm) on mobile viewports and dynamic scannable payment QR codes on desktop.
+- **Premium Live UI Card State (`pay-panel.tsx`)**: Introduced a secure live-payment UI state when live payments are active (`!isSimMode`). Automatically hides mock shortcuts, replaces direct P2P QR codes (which would bypass Razorpay order capturing), and displays a premium Secure Live Payment card with lock animations, payment trigger actions, and a stateful bottom button that reads `Verify payment status`.
+- **Verification and Compilation**: Cleanly ran `pnpm typecheck` (passed with 0 errors) and structural linter checking `pnpm demo:verify` (passed with 0 errors).
+
+---
+
 ## Session log — 2026-05-24 (E2E signup wizard reload, referer settings/staff sync & IST timezone open check)
 
 ### What was done
