@@ -1,5 +1,17 @@
 # Parallel work log (Tray)
 
+## Session log — 2026-05-25 (Fixed Student Canteen Switcher Navigation & Menu Loading)
+
+### Keyword: STUDENT-SWITCHER-RESPONSIVENESS-FIX
+
+### What was done
+- **Canteen Switcher Navigation Resolved**: Replaced buggy client-side `router.push` route changes with browser hard reloads using standard `window.location.href` for all student canteen transitions. This completely resolves the "stuck" navigation issue caused by client-side router mapping discrepancies on edge-rewritten sub-paths.
+- **Dynamic Menu Switching Restored**: Clicking sibling canteen cards (such as Hostel 1 Mess, Hostel 2 Mess, Main Canteen, and Night Canteen) or using the topbar Zomato-style switcher now triggers a real network request, correctly executing the multi-tenant edge-rewriting middleware to fetch the exact categories and dishes, and reloading the viewport with the fresh menu contents.
+- **High-Res Viewport Mockups & Screenshots**: Captured and saved high-fidelity full laptop-sized browser screenshots (`student_portal_laptop_menu.png`) at `1440x900` viewports to verify perfect responsive grid alignment.
+- **Verification Tests Cleared**: Confirmed typecheck compiling (`pnpm typecheck`) and the static demo verifier suite (`pnpm demo:verify`) both passing with 100% success.
+- **Git Push Committed**: Successfully committed the navigation fixes and pushed the codebase updates to remote `main` branch.
+
+
 ## Session log — 2026-05-25 (Disabled Student Demo Auto-Simulation)
 
 ### Keyword: STUDENT-DEMO-AUTO-SIMULATION-DISABLED
