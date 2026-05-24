@@ -144,6 +144,21 @@
     .cart-bar__text{flex:1;min-width:0}.cart-bar__text strong{display:block;font-size:16px;font-weight:600}.cart-bar__text span{font-size:14px;color:var(--on-dark);opacity:0.6}
     .cart-bar .btn-primary{width:auto;padding:12px 18px;flex-shrink:0}
 
+    .loading-spinner {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(255,255,255,.3);
+      border-radius: 50%;
+      border-top-color: #ffffff;
+      animation: spin 0.8s linear infinite;
+      margin-right: 8px;
+      vertical-align: middle;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
     .view{display:none}.view.is-active{display:block}
     .view-panel{max-width:520px;margin:0 auto;padding:8px 0 40px}
     .back-link{display:inline-flex;align-items:center;gap:6px;font-size:15px;color:var(--muted);margin-bottom:24px;padding:6px 0;transition:color .2s}
@@ -782,6 +797,23 @@
     </div>
 
     <div class="views-flow">
+      <section class="view" id="viewCart" data-view-id="cart">
+        <div class="view-panel">
+          <button type="button" class="back-link" data-go="menu">← Back to menu</button>
+          <h1 class="view-title">Your <span class="it">tray.</span></h1>
+          <p class="view-sub" id="cartPayToMobileSub">Review your items before checking out</p>
+          <div class="cart-lines" id="cartLinesMobile" style="margin-bottom: 24px;"></div>
+          <div class="cart-sidebar__foot" style="padding: 0; border-top: none;">
+            <div class="total-row" style="margin-bottom: 18px;">
+              <span>Total</span>
+              <span id="totalMobile">₹0</span>
+            </div>
+            <button type="button" class="btn-primary" id="btnCheckoutMobileCart">Checkout →</button>
+            <button type="button" class="btn-ghost" id="btnClearCartMobile" style="margin-top: 10px;">Clear cart</button>
+          </div>
+        </div>
+      </section>
+
       <section class="view" id="viewPayment" data-view-id="payment">
         <div class="view-panel">
           <button type="button" class="back-link" data-go="menu">← Back to menu</button>
@@ -1124,6 +1156,15 @@ function renderCart(){
   document.getElementById("cartBarItems").textContent=count+(count===1?" item":" items");
   document.getElementById("cartBarCount").textContent=count;
   document.getElementById("btnCheckoutDesktop").disabled=count===0;
+  
+  // Render to mobile Cart View elements if present
+  var mLines = document.getElementById("cartLinesMobile");
+  if(mLines) mLines.innerHTML = linesHtml;
+  var mTotal = document.getElementById("totalMobile");
+  if(mTotal) mTotal.textContent = fmt(total);
+  var mBtnCheckout = document.getElementById("btnCheckoutMobileCart");
+  if(mBtnCheckout) mBtnCheckout.disabled = count === 0;
+
   var bar=document.getElementById("cartBar");
   if(count>0&&currentView==="menu"){bar.classList.add("is-visible");bar.hidden=false;}
   else{bar.classList.remove("is-visible");bar.hidden=true;}
@@ -1166,10 +1207,10 @@ function pushOrderToKitchen(){
 function setView(view){
   currentView=view;document.body.setAttribute("data-view",view);
   $$(".view").forEach(function(v){v.classList.toggle("is-active",v.getAttribute("data-view-id")===view);});
-  var ctxMap={menu:serviceModeLabel()+" · Order",payment:"Payment · "+serviceModeLabel(),tracking:"Live status",otp:serviceMode==="dine"?"Dine in":"Pickup"};
+  var ctxMap={menu:serviceModeLabel()+" · Order",cart:"Your tray",payment:"Payment · "+serviceModeLabel(),tracking:"Live status",otp:serviceMode==="dine"?"Dine in":"Pickup"};
   var ctx=document.getElementById("topbarContext");if(ctx)ctx.textContent=ctxMap[view]||"Tray";
   if(view==="tracking"){var r=document.getElementById("pickupRibbon");if(r)r.hidden=false;var eta=serviceMode==="dine"?"~6 min":"~4 min";var msg=serviceMode==="dine"?(tableLabel?"We'll bring to "+tableLabel+" when ready.":"Find a seat — we'll call your table."):"Walk to the pickup counter when status hits ready.";document.getElementById("pickupEta").textContent=eta;document.getElementById("pickupEtaText").textContent=msg;}
-  if(view==="menu")renderCart();
+  if(view==="menu" || view==="cart")renderCart();
 }
 
 function startPayment(){
@@ -1178,6 +1219,12 @@ function startPayment(){
   var c=TD.getCanteen(currentCanteenId);
   var upiHref="upi://pay?pa="+encodeURIComponent(c.upi)+"&pn="+encodeURIComponent(c.name)+"&am="+getCartTotal()+"&tn="+encodeURIComponent(orderId);
   var dl=document.getElementById("upiDeepLink");if(dl)dl.href=upiHref;
+
+  var btn = document.getElementById("btnPaid");
+  if(btn) {
+    btn.textContent = window.innerWidth < 600 ? "Pay Now — " + fmt(getCartTotal()) : "I've paid — confirm my order";
+  }
+
   setView("payment");
   var remaining=15*60;
   var timerEl=document.getElementById("payTimer");
@@ -1186,20 +1233,69 @@ function startPayment(){
   payInterval=setInterval(function(){remaining--;tickTimer();if(remaining<=0){clearInterval(payInterval);payInterval=null;}},1000);
 }
 
-function confirmPaid(){
-  var btn=document.getElementById("btnPaid");if(!btn||btn.classList.contains("is-confirming"))return;
-  btn.classList.add("is-confirming");btn.textContent="Confirming…";
-  setTimeout(function(){
-    btn.classList.remove("is-confirming");btn.textContent="I've paid — confirm my order";
-    if(payInterval){clearInterval(payInterval);payInterval=null;}
-    pickupOtp=genOtp();pushOrderToKitchen();
-    try {
-      window.parent.postMessage({ type: 'student_order_placed', orderId: orderId, total: getCartTotal() }, '*');
-    } catch(e) {}
-    var now=new Date();var el=document.getElementById("placedTime");if(el)el.textContent=now.toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"});
-    var rsc=document.getElementById("readyStepCopy");if(rsc)rsc.textContent=serviceMode==="dine"?"Serving to your table":"Collect at the pickup counter";
-    setView("tracking");runTrackingSimulation();
-  },700);
+function triggerUpiAndPay(){
+  var btn = document.getElementById("btnPaid");
+  if(!btn || btn.classList.contains("is-paying") || btn.classList.contains("is-confirming")) return;
+
+  if (window.innerWidth < 600) {
+    var dl = document.getElementById("upiDeepLink");
+    if (dl && dl.href && dl.href !== "#") {
+      try {
+        window.open(dl.href, "_blank");
+      } catch(e) {
+        window.location.href = dl.href;
+      }
+    }
+    
+    btn.classList.add("is-paying");
+    btn.disabled = true;
+    btn.innerHTML = `<span class="loading-spinner"></span>Paying via UPI...`;
+    
+    setTimeout(function(){
+      btn.innerHTML = `<span class="loading-spinner"></span>Verifying payment...`;
+      
+      setTimeout(function(){
+        btn.innerHTML = `✓ Payment Verified!`;
+        btn.style.background = "#10B981";
+        
+        setTimeout(function(){
+          btn.classList.remove("is-paying");
+          btn.disabled = false;
+          btn.innerHTML = "Pay Now";
+          btn.style.background = "";
+          
+          if(payInterval){clearInterval(payInterval);payInterval=null;}
+          pickupOtp=genOtp();pushOrderToKitchen();
+          try {
+            window.parent.postMessage({ type: 'student_order_placed', orderId: orderId, total: getCartTotal() }, '*');
+          } catch(e) {}
+          var now=new Date();
+          var el=document.getElementById("placedTime");
+          if(el) el.textContent=now.toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"});
+          var rsc=document.getElementById("readyStepCopy");
+          if(rsc) rsc.textContent=serviceMode==="dine"?"Serving to your table":"Collect at the pickup counter";
+          
+          setView("tracking");
+          runTrackingSimulation();
+        }, 1000);
+      }, 1200);
+    }, 1200);
+  } else {
+    btn.classList.add("is-confirming");
+    btn.textContent = "Confirming…";
+    setTimeout(function(){
+      btn.classList.remove("is-confirming");
+      btn.textContent = "I've paid — confirm my order";
+      if(payInterval){clearInterval(payInterval);payInterval=null;}
+      pickupOtp=genOtp();pushOrderToKitchen();
+      try {
+        window.parent.postMessage({ type: 'student_order_placed', orderId: orderId, total: getCartTotal() }, '*');
+      } catch(e) {}
+      var now=new Date();var el=document.getElementById("placedTime");if(el)el.textContent=now.toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"});
+      var rsc=document.getElementById("readyStepCopy");if(rsc)rsc.textContent=serviceMode==="dine"?"Serving to your table":"Collect at the pickup counter";
+      setView("tracking");runTrackingSimulation();
+    },700);
+  }
 }
 
 function runTrackingSimulation(){
@@ -1269,9 +1365,11 @@ function bindEvents(){
   });
   document.getElementById("searchInput").addEventListener("input",function(e){searchQuery=e.target.value;renderMenu();});
   document.getElementById("btnCheckoutDesktop").addEventListener("click",startPayment);
-  document.getElementById("btnCheckoutMobile").addEventListener("click",startPayment);
+  document.getElementById("btnCheckoutMobile").addEventListener("click",function(){setView("cart");});
+  document.getElementById("btnCheckoutMobileCart").addEventListener("click",startPayment);
+  document.getElementById("btnClearCartMobile").addEventListener("click",clearCart);
   document.getElementById("btnClearCart").addEventListener("click",clearCart);
-  document.getElementById("btnPaid").addEventListener("click",confirmPaid);
+  document.getElementById("btnPaid").addEventListener("click",triggerUpiAndPay);
   document.getElementById("btnNewOrder").addEventListener("click",resetAll);
   document.getElementById("btnReset").addEventListener("click",function(){if(currentView==="menu"&&getCartCount()===0)return;if(window.confirm("Start over?"))resetAll();});
 }
