@@ -1269,6 +1269,7 @@ function bindEvents(){
   });
   document.getElementById("searchInput").addEventListener("input",function(e){searchQuery=e.target.value;renderMenu();});
   document.getElementById("btnCheckoutDesktop").addEventListener("click",startPayment);
+  document.getElementById("btnCheckoutMobile").addEventListener("click",startPayment);
   document.getElementById("btnClearCart").addEventListener("click",clearCart);
   document.getElementById("btnPaid").addEventListener("click",confirmPaid);
   document.getElementById("btnNewOrder").addEventListener("click",resetAll);
