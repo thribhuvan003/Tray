@@ -1,5 +1,25 @@
 # Parallel work log (Tray)
 
+## Session log — 2026-05-24 (admin login guard)
+
+**Commit:** `e25cc0e` — `feat(auth): guard admin login — sign out + redirect if no canteen found`
+
+### What was done
+- **auth/callback/route.ts**: Added `login_role` searchParam. When `login_role=owner` and user has no `canteen_admin`/`super_admin` membership after enrollment → sign out + redirect to `/login?error=no-admin-account&role=owner`
+- **login-form.tsx**: Added `loginRole` prop. Passes `login_role` in OAuth + OTP `redirectTo` URLs. Password + OTP verify paths also guard: if `loginRole=owner` and no admin membership → sign out + redirect with error
+- **RoleSelector.tsx**: Passes `loginRole="owner"` to `<LoginForm>` when admin card selected. Friendly error banner for `error=no-admin-account`: "No canteen found for this account. Create your canteen here →"
+- **login/page.tsx**: No change needed — already threads `error` + `role` searchParams to RoleSelector
+
+### Also confirmed (DB snapshot)
+- `jee1babu.k@gmail.com` = canteen_admin for `so-so-`, also student in many tenants
+- `myrealadmin2026@gmail.com` = canteen_admin for `aditya`
+- Sticky sidebar: already fixed in commit `32553ee` (self-start h-screen)
+
+### Active concerns
+- None blocking — all three auth paths (Google OAuth, magic link, password) now guard the admin intent correctly
+
+---
+
 **Contract:** Bar **C** — premium landing **and** student demo = real laptop web app. Kitchen static demo: **click paths + student sync** (2026-05-20).
 
 **F1 mode (user):** Research → team discuss → one council pick → implement → Amazon/Microsoft QA bar. Spec: **`docs/DEMO-SPEC.md`**.
