@@ -18,19 +18,23 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
   const h = await headers();
   const slug = getTenantSlugFromHeaders(h);
   const tenant = await resolveTenant(slug);
+  console.log("[getCurrentUser] RESOLVED SLUG:", slug, "TENANT FOUND:", !!tenant);
   if (!tenant) return null;
 
   const supabase = await getServerClient(tenant.id);
-  const { data } = await supabase.auth.getUser();
+  const { data, error: userError } = await supabase.auth.getUser();
+  console.log("[getCurrentUser] USER RESOLVED:", data?.user?.email, "ERROR:", userError?.message);
   if (!data.user) return null;
 
-  const { data: m } = await supabase
+  const { data: m, error: memError } = await supabase
     .from("tenant_memberships")
     .select("role, display_name")
     .eq("user_id", data.user.id)
     .eq("tenant_id", tenant.id)
     .eq("is_active", true)
     .maybeSingle<{ role: MemberRole; display_name: string | null }>();
+
+  console.log("[getCurrentUser] MEMBERSHIP FOUND:", m, "ERROR:", memError?.message);
 
   return {
     id: data.user.id,

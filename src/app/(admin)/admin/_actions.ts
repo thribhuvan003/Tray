@@ -14,8 +14,10 @@ async function ctx() {
   const h = await headers();
   const slug = getTenantSlugFromHeaders(h);
   const tenant = await resolveTenant(slug);
+  console.log("[ctx action] RESOLVED SLUG:", slug, "TENANT FOUND:", !!tenant);
   if (!tenant) return { ok: false as const, error: "Tenant missing" };
   const user = await requireRole(["canteen_admin", "super_admin"]);
+  console.log("[ctx action] USER AUThed:", user?.email, "ROLE:", user?.role);
   if (!user) return { ok: false as const, error: "Not authorised" };
   return { ok: true as const, tenant, user };
 }
