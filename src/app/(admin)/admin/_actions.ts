@@ -10,13 +10,13 @@ import { requireRole } from "@/lib/auth/get-user";
 import { sendEmail } from "@/lib/email/resend";
 import { env } from "@/lib/env";
 
-async function ctx() {
+async function ctx(tenantSlugOverride?: string) {
   const h = await headers();
-  const slug = getTenantSlugFromHeaders(h);
+  const slug = tenantSlugOverride ?? getTenantSlugFromHeaders(h);
   const tenant = await resolveTenant(slug);
   console.log("[ctx action] RESOLVED SLUG:", slug, "TENANT FOUND:", !!tenant);
   if (!tenant) return { ok: false as const, error: "Tenant missing" };
-  const user = await requireRole(["canteen_admin", "super_admin"]);
+  const user = await requireRole(["canteen_admin", "super_admin"], tenant.id);
   console.log("[ctx action] USER AUThed:", user?.email, "ROLE:", user?.role);
   if (!user) return { ok: false as const, error: "Not authorised" };
   return { ok: true as const, tenant, user };
@@ -184,8 +184,9 @@ export async function createMenuItem(form: {
   category_id: string | null;
   image_url: string | null;
   sort_order: number;
+  tenantSlug?: string;
 }): Promise<{ ok: boolean; error?: string; id?: string }> {
-  const c = await ctx();
+  const c = await ctx(form.tenantSlug);
   if (!c.ok) return { ok: false, error: c.error };
   const admin = getAdminClient(c.tenant.id);
 
@@ -236,9 +237,10 @@ export async function updateMenuItem(
     sort_order: number;
     status: "draft" | "live" | "archived";
     in_stock: boolean;
+    tenantSlug?: string;
   }
 ): Promise<{ ok: boolean; error?: string }> {
-  const c = await ctx();
+  const c = await ctx(form.tenantSlug);
   if (!c.ok) return { ok: false, error: c.error };
   const admin = getAdminClient(c.tenant.id);
 
@@ -277,8 +279,8 @@ export async function updateMenuItem(
   return { ok: true };
 }
 
-export async function deleteMenuItem(id: string): Promise<{ ok: boolean; error?: string }> {
-  const c = await ctx();
+export async function deleteMenuItem(id: string, tenantSlug?: string): Promise<{ ok: boolean; error?: string }> {
+  const c = await ctx(tenantSlug);
   if (!c.ok) return { ok: false, error: c.error };
   const admin = getAdminClient(c.tenant.id);
   const { error } = await admin

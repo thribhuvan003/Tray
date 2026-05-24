@@ -5,6 +5,8 @@ import { resolveTenant, getTenantSlugFromHeaders } from "@/lib/tenant";
 import { headers } from "next/headers";
 import type { MemberRole } from "@/lib/db/types";
 
+import { getAdminClient } from "@/lib/supabase/admin";
+
 export type CurrentUser = {
   id: string;
   email: string | null;
@@ -14,11 +16,20 @@ export type CurrentUser = {
   displayName: string | null;
 };
 
-export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
+export const getCurrentUser = cache(async (tenantIdOverride?: string): Promise<CurrentUser | null> => {
   const h = await headers();
-  const slug = getTenantSlugFromHeaders(h);
-  const tenant = await resolveTenant(slug);
-  console.log("[getCurrentUser] RESOLVED SLUG:", slug, "TENANT FOUND:", !!tenant);
+  let tenant;
+  if (tenantIdOverride) {
+    const admin = getAdminClient(tenantIdOverride);
+    const { data: t } = await admin.from("tenants").select("slug, name").eq("id", tenantIdOverride).single();
+    if (!t) return null;
+    tenant = { id: tenantIdOverride, slug: t.slug, name: t.name };
+  } else {
+    const slug = getTenantSlugFromHeaders(h);
+    tenant = await resolveTenant(slug);
+  }
+  
+  console.log("[getCurrentUser] RESOLVED SLUG:", tenant?.slug, "TENANT FOUND:", !!tenant);
   if (!tenant) return null;
 
   const supabase = await getServerClient(tenant.id);
@@ -46,8 +57,8 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
   };
 });
 
-export async function requireRole(roles: MemberRole[]) {
-  const u = await getCurrentUser();
+export async function requireRole(roles: MemberRole[], tenantIdOverride?: string) {
+  const u = await getCurrentUser(tenantIdOverride);
   if (!u || !u.role || !roles.includes(u.role)) {
     return null;
   }

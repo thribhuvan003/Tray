@@ -38,6 +38,7 @@ export default async function NewMenuItemPage() {
       category_id,
       image_url,
       sort_order,
+      tenantSlug: tenant!.slug,
     });
 
     if (result.ok) {

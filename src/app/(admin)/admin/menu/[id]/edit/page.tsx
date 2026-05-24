@@ -66,6 +66,7 @@ export default async function EditMenuItemPage({ params }: Props) {
       sort_order,
       status,
       in_stock,
+      tenantSlug: tenant!.slug,
     });
 
     if (result.ok) {
@@ -75,7 +76,7 @@ export default async function EditMenuItemPage({ params }: Props) {
 
   async function handleDelete() {
     "use server";
-    const result = await deleteMenuItem(id);
+    const result = await deleteMenuItem(id, tenant!.slug);
     if (result.ok) {
       redirect(`/c/${tenant!.slug}/admin/menu`);
     }
