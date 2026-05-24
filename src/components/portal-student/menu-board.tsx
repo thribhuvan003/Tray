@@ -273,7 +273,7 @@ export function MenuBoard({
 
   return (
     /* shell: 3-column flex row matching demo layout */
-    <div style={{ display: "flex", flex: 1, minHeight: 0, position: "relative" }}>
+    <div className="w-full max-w-[1440px] mx-auto" style={{ display: "flex", flex: 1, minHeight: 0, position: "relative" }}>
 
       {/* ——— LEFT: Desktop Category Nav (200px, demo .cat-nav) ——— */}
       <nav
