@@ -8,5 +8,7 @@ export async function POST(req: NextRequest) {
 }
 
 export async function GET(req: NextRequest) {
-  return POST(req);
+  // GET requests are used for Next.js pre-fetching. 
+  // We do NOT sign out the user on GET to prevent background pre-fetching from logging them out.
+  return NextResponse.redirect(new URL("/", req.url));
 }

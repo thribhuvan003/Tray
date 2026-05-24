@@ -1,5 +1,16 @@
 # Parallel work log (Tray)
 
+## Session log — 2026-05-24 (Next.js Link Prefetch Signout Loop Bug Fix)
+
+### What was done
+- **Next.js Link Prefetch Signout Fixed (`route.ts`, `shell.tsx`)**: Discovered and resolved a catastrophic Next.js pre-fetch signout bug. Next.js `<Link>` components pre-fetch URLs in the background using `GET` requests. Because `/auth/signout` previously handled `GET` by executing a full `signOut` operation, rendering the sidebar "Sign out" link on dashboard page loads instantly triggered a background signout and cookie eviction, leaving the user unauthenticated for subsequent operations (like creating menu items).
+- **Strict POST-only Signout (`route.ts` & `shell.tsx`)**:
+  - Gated the `/auth/signout` Route Handler to only perform signouts on `POST` requests. `GET` requests now safely return a standard redirect to `/` without clearing the auth session.
+  - Refactored `src/components/portal-admin/shell.tsx` to replace the `Link` element with a standard `button` triggering a `POST` fetch call to `/auth/signout` and hard reloading the browser to `/login`.
+- **Verification and Compilation**: Ran `pnpm typecheck` successfully with 0 errors and compiled the production build.
+
+---
+
 ## Session log — 2026-05-24 (Live Razorpay gateway checkout integration & webhook setup)
 
 ### What was done

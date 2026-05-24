@@ -247,14 +247,17 @@ export function AdminShell({
                 canteen_admin
               </div>
             </div>
-            <Link
-              href="/auth/signout"
+            <button
+              onClick={async () => {
+                await fetch("/auth/signout", { method: "POST" });
+                window.location.href = "/login";
+              }}
               aria-label="Sign out"
-              className="inline-flex items-center justify-center rounded-md transition-colors"
+              className="inline-flex items-center justify-center rounded-md transition-colors animate-press"
               style={{ height: 28, width: 28, color: "var(--admin-ink-3)" }}
             >
               <LogOut size={13} />
-            </Link>
+            </button>
           </div>
         </div>
       </aside>
