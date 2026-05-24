@@ -4,7 +4,7 @@ import { revalidatePath, revalidateTag } from "next/cache";
 import { headers } from "next/headers";
 import crypto from "node:crypto";
 import dayjs from "dayjs";
-import { resolveTenant } from "@/lib/tenant";
+import { resolveTenant, getTenantSlugFromHeaders } from "@/lib/tenant";
 import { getAdminClient } from "@/lib/supabase/admin";
 import { requireRole } from "@/lib/auth/get-user";
 import { sendEmail } from "@/lib/email/resend";
@@ -12,7 +12,7 @@ import { env } from "@/lib/env";
 
 async function ctx() {
   const h = await headers();
-  const slug = h.get("x-tenant-slug") ?? "aditya";
+  const slug = getTenantSlugFromHeaders(h);
   const tenant = await resolveTenant(slug);
   if (!tenant) return { ok: false as const, error: "Tenant missing" };
   const user = await requireRole(["canteen_admin", "super_admin"]);

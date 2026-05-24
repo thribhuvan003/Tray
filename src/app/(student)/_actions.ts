@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import dayjs from "dayjs";
-import { resolveTenant } from "@/lib/tenant";
+import { resolveTenant, getTenantSlugFromHeaders } from "@/lib/tenant";
 import { getServerClient } from "@/lib/supabase/server";
 import { getAdminClient } from "@/lib/supabase/admin";
 import { getCurrentUser } from "@/lib/auth/get-user";
@@ -21,7 +21,7 @@ type CancelResult = { ok: true } | { ok: false; error: string };
 
 export async function cancelOrderByStudent(orderId: string): Promise<CancelResult> {
   const h = await headers();
-  const slug = h.get("x-tenant-slug") ?? "aditya";
+  const slug = getTenantSlugFromHeaders(h);
   const tenant = await resolveTenant(slug);
   if (!tenant) return { ok: false, error: "Tenant not found" };
 
@@ -144,7 +144,7 @@ export async function placeOrder(
     if (!lines || lines.length === 0) return { ok: false, error: "Cart is empty", code: "EMPTY" };
 
   const h = await headers();
-  const slug = h.get("x-tenant-slug") ?? "aditya";
+  const slug = getTenantSlugFromHeaders(h);
   const tenant = await resolveTenant(slug);
   if (!tenant) return { ok: false, error: "Tenant not found" };
 
@@ -291,7 +291,7 @@ export async function simulatePaymentCapture(orderId: string): Promise<{ ok: boo
     return { ok: false, error: "Simulator disabled in live mode" };
   }
   const h = await headers();
-  const slug = h.get("x-tenant-slug") ?? "aditya";
+  const slug = getTenantSlugFromHeaders(h);
   const tenant = await resolveTenant(slug);
   if (!tenant) return { ok: false, error: "Tenant missing" };
 
@@ -329,7 +329,7 @@ export async function simulatePaymentCapture(orderId: string): Promise<{ ok: boo
 
 export async function getMyOrderOtp(orderId: string): Promise<{ otp: string | null }> {
   const h = await headers();
-  const slug = h.get("x-tenant-slug") ?? "aditya";
+  const slug = getTenantSlugFromHeaders(h);
   const tenant = await resolveTenant(slug);
   if (!tenant) return { otp: null };
   const user = await getCurrentUser();
@@ -364,7 +364,7 @@ export async function verifyPaymentNow(orderId: string): Promise<VerifyResult> {
   const { featureFlags } = await import("@/lib/env");
 
   const h = await headers();
-  const slug = h.get("x-tenant-slug") ?? "aditya";
+  const slug = getTenantSlugFromHeaders(h);
   const tenant = await resolveTenant(slug);
   if (!tenant) return { status: "pending" };
 

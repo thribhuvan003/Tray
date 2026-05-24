@@ -7,7 +7,7 @@ import {
 } from "next/font/google";
 import { headers } from "next/headers";
 import { Toaster } from "sonner";
-import { resolveTenant } from "@/lib/tenant";
+import { resolveTenant, getTenantSlugFromHeaders } from "@/lib/tenant";
 import { Providers } from "@/components/providers";
 import "./globals.css";
 
@@ -146,7 +146,7 @@ export const dynamic = "force-dynamic";
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const h = await headers();
-  const slug = h.get("x-tenant-slug") ?? "aditya";
+  const slug = getTenantSlugFromHeaders(h);
   const tenant = await resolveTenant(slug);
 
   // Blocking inline script: resolve theme synchronously before first paint so

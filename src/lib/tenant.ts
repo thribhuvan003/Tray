@@ -59,6 +59,28 @@ export function tenantSlugFromHost(host: string | null | undefined): string | nu
   return null;
 }
 
+export function getTenantSlugFromHeaders(h: { get: (name: string) => string | null }): string {
+  let slug = h.get("x-tenant-slug");
+  if (slug) return slug;
+
+  // Fallback for Next.js Server Actions
+  const referer = h.get("referer");
+  if (referer) {
+    try {
+      const url = new URL(referer);
+      const match = url.pathname.match(/^\/c\/([^/]+)/);
+      if (match) return match[1].toLowerCase();
+    } catch {}
+  }
+
+  const host = h.get("host");
+  const hostSlug = tenantSlugFromHost(host);
+  if (hostSlug) return hostSlug;
+
+  return "aditya";
+}
+
+
 const _resolverClient = () =>
   createClient<Database>(env.NEXT_PUBLIC_SUPABASE_URL, env.NEXT_PUBLIC_SUPABASE_ANON_KEY, {
     auth: { persistSession: false, autoRefreshToken: false },

@@ -86,6 +86,14 @@ Read AGENTS.md, docs/DEMO-SPEC.md, docs/PARALLEL-WORK.md. One file owner per lan
 
 ## Session log
 
+### 2026-05-24 — Next.js 15 Server Action Header Resolution & Redirection Fix
+
+**Work done:**
+- **Robust Tenant-Slug Resolution (`src/lib/tenant.ts`):** Implemented `getTenantSlugFromHeaders` fallback helper that resolves the active tenant slug. If the custom header `x-tenant-slug` is missing (as occurs inside Next.js 15 Server Action POST requests), it parses the `referer` header path, falling back to host subdomains, and defaulting to `"aditya"`.
+- **Authentication & Actions Integration:** Integrated the new resolver in `getCurrentUser` (`src/lib/auth/get-user.ts`), admin actions (`src/app/(admin)/admin/_actions.ts`), kitchen actions (`src/app/(kitchen)/_actions.ts`), and student actions (`src/app/(student)/_actions.ts`).
+- **Layout Compatibility:** Standardized layout files across admin, kitchen, and student portals to use `getTenantSlugFromHeaders` to prevent redirect-to-login loops during post-action state re-rendering.
+- **Verification:** Ran `pnpm typecheck` and `npm run demo:verify` to confirm successful compilation and passing test cases.
+
 ### 2026-05-24 — Authentication Redirect Loops & Role Demotions Resolved
 
 **Work done:**

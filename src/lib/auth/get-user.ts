@@ -1,7 +1,7 @@
 import "server-only";
 import { cache } from "react";
 import { getServerClient } from "@/lib/supabase/server";
-import { resolveTenant } from "@/lib/tenant";
+import { resolveTenant, getTenantSlugFromHeaders } from "@/lib/tenant";
 import { headers } from "next/headers";
 import type { MemberRole } from "@/lib/db/types";
 
@@ -16,7 +16,7 @@ export type CurrentUser = {
 
 export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
   const h = await headers();
-  const slug = h.get("x-tenant-slug") ?? "aditya";
+  const slug = getTenantSlugFromHeaders(h);
   const tenant = await resolveTenant(slug);
   if (!tenant) return null;
 

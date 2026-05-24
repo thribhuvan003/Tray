@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { cookies, headers } from "next/headers";
 import bcrypt from "bcryptjs";
-import { resolveTenant } from "@/lib/tenant";
+import { resolveTenant, getTenantSlugFromHeaders } from "@/lib/tenant";
 import { getAdminClient } from "@/lib/supabase/admin";
 import { requireRole } from "@/lib/auth/get-user";
 import { randomOtp } from "@/lib/utils";
@@ -20,7 +20,7 @@ type Ctx =
 
 async function staffContext(): Promise<Ctx> {
   const h = await headers();
-  const slug = h.get("x-tenant-slug") ?? "aditya";
+  const slug = getTenantSlugFromHeaders(h);
   const tenant = await resolveTenant(slug);
   if (!tenant) return { ok: false, error: "Tenant not found" };
   const user = await requireRole(["kitchen_staff", "canteen_admin", "super_admin"]);
@@ -267,7 +267,7 @@ export async function verifyStaffPinAction(
   p_pin: string
 ): Promise<{ ok: boolean; error?: string; locked?: boolean; lockedUntil?: string }> {
   const h = await headers();
-  const slug = h.get("x-tenant-slug") ?? "aditya";
+  const slug = getTenantSlugFromHeaders(h);
   const tenant = await resolveTenant(slug);
   if (!tenant) return { ok: false, error: "Tenant not found" };
 

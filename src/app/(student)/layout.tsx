@@ -1,6 +1,6 @@
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
-import { resolveTenant, collegeCanteensUncached } from "@/lib/tenant";
+import { resolveTenant, collegeCanteensUncached, getTenantSlugFromHeaders } from "@/lib/tenant";
 import { getCurrentUser } from "@/lib/auth/get-user";
 import { getAdminClient } from "@/lib/supabase/admin";
 import { StudentTopBar } from "@/components/portal-student/top-bar";
@@ -10,7 +10,7 @@ import { OrderReadyListener } from "@/components/portal-student/order-ready-list
 
 export default async function StudentLayout({ children }: { children: React.ReactNode }) {
   const h = await headers();
-  const slug = h.get("x-tenant-slug") ?? "aditya";
+  const slug = getTenantSlugFromHeaders(h);
   const tenant = await resolveTenant(slug);
   if (!tenant) notFound();
 
