@@ -376,88 +376,130 @@ export async function rejectOrder(orderId: string, reason: string): Promise<Outc
   return { ok: true };
 }
 
-export async function createWalkInOrder(): Promise<{ ok: boolean; error?: string; orderId?: string }> {
+export async function createWalkInOrder(
+  itemsInput?: { idOrName: string; qty: number }[]
+): Promise<{ ok: boolean; error?: string; orderId?: string }> {
   const ctx = await staffContext();
   if (!ctx.ok) return ctx;
 
   const admin = getAdminClient(ctx.tenant.id);
+  let validated: { item: { id: string; name: string; price_paise: number; diet: "veg" | "nonveg" | "egg"; prep_target_seconds: number }; qty: number }[] = [];
 
-  // Fetch 1-3 random live, in-stock menu items from the tenant
-  const { data: fetchedItems, error: itemsErr } = await admin
-    .from("menu_items")
-    .select("id, name, price_paise, diet, prep_target_seconds")
-    .eq("tenant_id", ctx.tenant.id)
-    .eq("status", "live")
-    .eq("in_stock", true)
-    .limit(10);
-
-  let items = fetchedItems || [];
-
-  if (items.length === 0) {
-    // Find or create the "Specials" category for this tenant
-    let { data: cat } = await admin
-      .from("menu_categories")
-      .select("id")
-      .eq("tenant_id", ctx.tenant.id)
-      .eq("name", "Specials")
-      .maybeSingle<{ id: string }>();
-
-    if (!cat) {
-      const catInsert = await admin
-        .from("menu_categories")
-        .insert({
-          tenant_id: ctx.tenant.id,
-          name: "Specials",
-          sort_order: 99,
-        })
-        .select("id")
-        .single<{ id: string }>();
-      cat = catInsert.data;
-    }
-
-    if (cat) {
-      const { data: newItem } = await admin
+  if (itemsInput && itemsInput.length > 0) {
+    for (const input of itemsInput) {
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(input.idOrName);
+      let query = admin
         .from("menu_items")
-        .insert({
-          tenant_id: ctx.tenant.id,
-          category_id: cat.id,
-          name: "Samosa",
-          description: "Fresh crispy samosa",
-          price_paise: 2000,
-          diet: "veg",
-          status: "live",
-          prep_target_seconds: 300,
-          in_stock: true,
-          sort_order: 999,
-        })
         .select("id, name, price_paise, diet, prep_target_seconds")
-        .single<{ id: string; name: string; price_paise: number; diet: "veg" | "nonveg" | "egg"; prep_target_seconds: number }>();
+        .eq("tenant_id", ctx.tenant.id)
+        .eq("status", "live")
+        .eq("in_stock", true);
 
-      if (newItem) {
-        items = [newItem];
+      if (isUuid) {
+        query = query.eq("id", input.idOrName);
+      } else {
+        query = query.eq("name", input.idOrName);
+      }
+
+      let { data: matchItem } = await query.maybeSingle<{ id: string; name: string; price_paise: number; diet: "veg" | "nonveg" | "egg"; prep_target_seconds: number }>();
+
+      if (!matchItem && !isUuid) {
+        const { data: partialMatch } = await admin
+          .from("menu_items")
+          .select("id, name, price_paise, diet, prep_target_seconds")
+          .eq("tenant_id", ctx.tenant.id)
+          .eq("status", "live")
+          .eq("in_stock", true)
+          .ilike("name", `%${input.idOrName}%`)
+          .limit(1);
+        if (partialMatch && partialMatch[0]) {
+          matchItem = partialMatch[0] as any;
+        }
+      }
+
+      if (!matchItem) {
+        return { ok: false, error: `Item "${input.idOrName}" not found or out of stock.` };
+      }
+
+      validated.push({ item: matchItem, qty: Math.max(1, input.qty) });
+    }
+  } else {
+    const { data: fetchedItems, error: itemsErr } = await admin
+      .from("menu_items")
+      .select("id, name, price_paise, diet, prep_target_seconds")
+      .eq("tenant_id", ctx.tenant.id)
+      .eq("status", "live")
+      .eq("in_stock", true)
+      .limit(10);
+
+    let items = fetchedItems || [];
+
+    if (items.length === 0) {
+      let { data: cat } = await admin
+        .from("menu_categories")
+        .select("id")
+        .eq("tenant_id", ctx.tenant.id)
+        .eq("name", "Specials")
+        .maybeSingle<{ id: string }>();
+
+      if (!cat) {
+        const catInsert = await admin
+          .from("menu_categories")
+          .insert({
+            tenant_id: ctx.tenant.id,
+            name: "Specials",
+            sort_order: 99,
+          })
+          .select("id")
+          .single<{ id: string }>();
+        cat = catInsert.data;
+      }
+
+      if (cat) {
+        const { data: newItem } = await admin
+          .from("menu_items")
+          .insert({
+            tenant_id: ctx.tenant.id,
+            category_id: cat.id,
+            name: "Samosa",
+            description: "Fresh crispy samosa",
+            price_paise: 2000,
+            diet: "veg",
+            status: "live",
+            prep_target_seconds: 300,
+            in_stock: true,
+            sort_order: 999,
+          })
+          .select("id, name, price_paise, diet, prep_target_seconds")
+          .single<{ id: string; name: string; price_paise: number; diet: "veg" | "nonveg" | "egg"; prep_target_seconds: number }>();
+
+        if (newItem) {
+          items = [newItem];
+        }
       }
     }
+
+    if (items.length === 0) {
+      return { ok: false, error: "No menu items available to create a walk-in order" };
+    }
+
+    const numItems = Math.min(items.length, 1 + Math.floor(Math.random() * 3));
+    const selected: typeof items = [];
+    const shuffled = [...items].sort(() => 0.5 - Math.random());
+    for (let i = 0; i < numItems; i++) {
+      selected.push(shuffled[i]);
+    }
+
+    validated = selected.map(item => {
+      const qty = 1 + Math.floor(Math.random() * 2);
+      return { item: item as any, qty };
+    });
   }
 
-  if (items.length === 0) {
-    return { ok: false, error: "No menu items available to create a walk-in order" };
-  }
-
-  // Select 1-3 random items
-  const numItems = Math.min(items.length, 1 + Math.floor(Math.random() * 3));
-  const selected: typeof items = [];
-  const shuffled = [...items].sort(() => 0.5 - Math.random());
-  for (let i = 0; i < numItems; i++) {
-    selected.push(shuffled[i]);
-  }
-
-  // Calculate total
   let total = 0;
-  const validated = selected.map(item => {
-    const qty = 1 + Math.floor(Math.random() * 2);
-    total += item.price_paise * qty;
-    return { item, qty };
-  });
+  for (const v of validated) {
+    total += v.item.price_paise * v.qty;
+  }
 
   // Get next short code
   const { data: codeData, error: codeErr } = await admin.rpc("next_order_short_code", {

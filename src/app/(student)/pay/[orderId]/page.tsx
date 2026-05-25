@@ -63,7 +63,13 @@ export default async function PayPage({ params }: { params: Promise<{ orderId: s
     .eq("order_id", orderId)
     .maybeSingle<{ razorpay_order_id: string | null }>();
 
-  const isSimMode = !process.env.NEXT_PUBLIC_RAZORPAY_LIVE || process.env.NEXT_PUBLIC_RAZORPAY_LIVE === "false" || process.env.NEXT_PUBLIC_RAZORPAY_LIVE === "0";
+  const isSimMode =
+    !process.env.NEXT_PUBLIC_RAZORPAY_LIVE ||
+    process.env.NEXT_PUBLIC_RAZORPAY_LIVE === "false" ||
+    process.env.NEXT_PUBLIC_RAZORPAY_LIVE === "0";
+
+  // Pass real user email for Razorpay prefill (improves checkout UX)
+  const userEmail = user?.email ?? null;
 
   return (
     <PayPanel
@@ -75,6 +81,7 @@ export default async function PayPage({ params }: { params: Promise<{ orderId: s
       razorpayKeyId={process.env.RAZORPAY_KEY_ID ?? ""}
       razorpayOrderId={payment?.razorpay_order_id ?? null}
       isSimMode={isSimMode}
+      userEmail={userEmail}
     />
   );
 }

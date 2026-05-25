@@ -37,6 +37,7 @@ export function PayPanel({
   razorpayKeyId,
   razorpayOrderId,
   isSimMode = false,
+  userEmail = null,
 }: {
   tenantSlug: string;
   tenantName: string;
@@ -46,6 +47,7 @@ export function PayPanel({
   razorpayKeyId: string;
   razorpayOrderId: string | null;
   isSimMode?: boolean;
+  userEmail?: string | null;
 }) {
   const router = useRouter();
   const [pending, start] = useTransition();
@@ -230,9 +232,9 @@ export function PayPanel({
         onIvePaid();
       },
       prefill: {
-        name: order.customer_name ?? "Student",
-        email: "student@canteen.edu",
-        contact: "9999999999",
+        name: order.customer_name ?? "",
+        email: userEmail ?? "",
+        contact: "",
       },
       theme: {
         color: "#0f172a",

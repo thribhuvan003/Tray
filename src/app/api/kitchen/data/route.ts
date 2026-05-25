@@ -123,6 +123,15 @@ export async function GET(req: NextRequest) {
     }));
   }
 
+  // Fetch live, in-stock menu items for walk-in autocompletion/searches
+  const { data: liveMenuItems } = await admin
+    .from("menu_items")
+    .select("id, name, price_paise, diet")
+    .eq("tenant_id", tenant.id)
+    .eq("status", "live")
+    .eq("in_stock", true)
+    .order("name");
+
   // Calculate KPIs
   const kpis = {
     incoming: mappedOrders.filter(o => o.status === 'incoming').length,
@@ -139,6 +148,7 @@ export async function GET(req: NextRequest) {
     },
     orders: mappedOrders,
     specials: specialsList,
+    menuItems: liveMenuItems || [],
     kpis,
   });
 }

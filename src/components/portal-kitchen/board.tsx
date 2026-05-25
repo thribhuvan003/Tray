@@ -53,6 +53,10 @@ export function KitchenBoard({
 
   const [walkInPending, setWalkInPending] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [walkInOpen, setWalkInOpen] = useState(false);
+  const [walkInCart, setWalkInCart] = useState<{ item: { id: string; name: string; price_paise: number; diet: "veg" | "nonveg" | "egg" }; qty: number }[]>([]);
+  const [walkInSearch, setWalkInSearch] = useState("");
+  const [walkInQty, setWalkInQty] = useState(1);
 
   const refresh = useCallback(async (onNewPlaced?: () => void) => {
     const sb = getBrowserClient();
@@ -99,23 +103,11 @@ export function KitchenBoard({
     if (freshMarquee) setMarqueeItems(freshMarquee);
   }, [tenantId]);
 
-  const handleWalkIn = async () => {
-    if (walkInPending) return;
-    setWalkInPending(true);
-    try {
-      const { createWalkInOrder } = await import("@/app/(kitchen)/_actions");
-      const res = await createWalkInOrder();
-      if (res.ok) {
-        toast.success("Walk-in order created successfully!");
-        void refresh();
-      } else {
-        handleActionError(res.error ?? "Failed to create walk-in order");
-      }
-    } catch (err: any) {
-      toast.error(err.message ?? "Failed to create walk-in order");
-    } finally {
-      setWalkInPending(false);
-    }
+  const handleWalkIn = () => {
+    setWalkInCart([]);
+    setWalkInSearch("");
+    setWalkInQty(1);
+    setWalkInOpen(true);
   };
 
   const handleManualRefresh = async () => {
@@ -939,6 +931,194 @@ export function KitchenBoard({
             }
           }}
         />
+
+        {walkInOpen && (
+          <div
+            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[1050] flex items-center justify-center p-4 animate-fade-in"
+            onClick={() => setWalkInOpen(false)}
+          >
+            <div
+              className="bg-[var(--kt-paper)] border-2 border-[var(--kt-ink)] rounded-xl p-6 shadow-[5px_5px_0_var(--kt-ink)] w-full max-w-md relative"
+              style={{ fontFamily: "var(--font-space), var(--font-sans), sans-serif" }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <span className="block text-xs font-mono font-bold tracking-wider text-[var(--kt-ink-3)] uppercase mb-1">
+                New Order
+              </span>
+              <h2 className="text-2xl font-bold font-display text-[var(--kt-ink)] mb-1" style={{ fontFamily: "var(--display)" }}>
+                Walk-in <span className="italic font-medium" style={{ fontFamily: "var(--font-newsreader), serif" }}>Order.</span>
+              </h2>
+              <p className="text-xs text-[var(--kt-ink-2)] mb-4">
+                Select or type items to add them to this walk-in ticket.
+              </p>
+
+              {/* Item search + Autocomplete */}
+              <div className="flex gap-2 mb-3 relative align-center">
+                <div className="flex-1 relative">
+                  <input
+                    type="text"
+                    placeholder="Type item name..."
+                    value={walkInSearch}
+                    onChange={(e) => setWalkInSearch(e.target.value)}
+                    className="w-full px-3 py-2 border-2 border-[var(--kt-ink)] rounded-lg bg-[var(--kt-paper)] text-[var(--kt-ink)] font-sans text-xs focus:outline-none"
+                    style={{ height: "38px" }}
+                  />
+                  {walkInSearch.trim() && (
+                    <div className="absolute top-full left-0 right-0 bg-[var(--kt-paper)] border-2 border-[var(--kt-ink)] rounded-lg shadow-lg mt-1 max-h-48 overflow-y-auto z-[1060] text-left">
+                      {marqueeItems
+                        .filter((item) =>
+                          item.name.toLowerCase().includes(walkInSearch.toLowerCase())
+                        )
+                        .slice(0, 6)
+                        .map((item) => (
+                          <button
+                            key={item.id}
+                            type="button"
+                            onClick={() => {
+                              setWalkInSearch(item.name);
+                            }}
+                            className="w-full text-left px-3 py-2 border-b last:border-0 border-[var(--kt-line)] hover:bg-[var(--kt-cream-soft)] text-xs flex justify-between items-center"
+                          >
+                            <span className="flex items-center gap-2">
+                              <span className={cn("veg-dot vd", item.diet === "nonveg" && "nv")} />
+                              {item.name}
+                            </span>
+                            <span className="font-mono text-[var(--kt-ink-2)]">
+                              {formatRupees(item.price_paise)}
+                            </span>
+                          </button>
+                        ))}
+                      {marqueeItems.filter((item) =>
+                        item.name.toLowerCase().includes(walkInSearch.toLowerCase())
+                      ).length === 0 && (
+                        <div className="p-3 text-xs text-[var(--kt-ink-3)] text-center">
+                          No matching items
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+                <input
+                  type="number"
+                  min="1"
+                  value={walkInQty}
+                  onChange={(e) => setWalkInQty(Math.max(1, parseInt(e.target.value) || 1))}
+                  className="w-16 px-2 border-2 border-[var(--kt-ink)] rounded-lg bg-[var(--kt-paper)] text-[var(--kt-ink)] text-center font-mono text-xs focus:outline-none"
+                  style={{ height: "38px" }}
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    const val = walkInSearch.trim();
+                    if (!val) return;
+                    const item = marqueeItems.find(
+                      (it) => it.name.toLowerCase() === val.toLowerCase()
+                    ) || marqueeItems.find(
+                      (it) => it.name.toLowerCase().includes(val.toLowerCase())
+                    );
+                    if (!item) {
+                      toast.error("Item not found");
+                      return;
+                    }
+                    setWalkInCart((prev) => {
+                      const existing = prev.find((c) => c.item.id === item.id);
+                      if (existing) {
+                        return prev.map((c) =>
+                          c.item.id === item.id ? { ...c, qty: c.qty + walkInQty } : c
+                        );
+                      }
+                      return [...prev, { item, qty: walkInQty }];
+                    });
+                    setWalkInSearch("");
+                    setWalkInQty(1);
+                  }}
+                  className="btn btn-pri text-xs px-4"
+                  style={{ height: "38px" }}
+                >
+                  Add
+                </button>
+              </div>
+
+              {/* Cart display */}
+              <div className="border-2 border-[var(--kt-ink)] rounded-lg min-h-[80px] max-h-40 overflow-y-auto p-2 mb-4 bg-[var(--kt-cream-soft)] flex flex-col gap-1.5 text-left">
+                {walkInCart.length === 0 ? (
+                  <div className="text-center text-xs text-[var(--kt-ink-3)] py-6">
+                    No items added yet.
+                  </div>
+                ) : (
+                  walkInCart.map((c) => (
+                    <div
+                      key={c.item.id}
+                      className="flex justify-between items-center text-xs border-b border-dashed border-[var(--kt-line)] pb-1.5 last:border-0 last:pb-0"
+                    >
+                      <span>
+                        <b className="text-[var(--kt-tomato)] mr-1">{c.qty}x</b> {c.item.name}
+                      </span>
+                      <div className="flex items-center gap-3">
+                        <span className="font-mono">{formatRupees(c.item.price_paise * c.qty)}</span>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setWalkInCart((prev) => prev.filter((x) => x.item.id !== c.item.id))
+                          }
+                          className="text-[var(--kt-tomato)] hover:font-bold"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+
+              {/* Total */}
+              <div className="flex justify-between items-center mb-5 border-t border-[var(--kt-line)] pt-3">
+                <span className="text-xs font-semibold text-[var(--kt-ink-2)]">Total Amount:</span>
+                <span className="font-mono font-bold text-lg text-[var(--kt-tomato)]">
+                  {formatRupees(walkInCart.reduce((acc, c) => acc + c.item.price_paise * c.qty, 0))}
+                </span>
+              </div>
+
+              {/* Actions */}
+              <div className="flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setWalkInOpen(false)}
+                  className="btn btn-ghost text-xs py-1.5 px-3"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  disabled={walkInCart.length === 0 || walkInPending}
+                  onClick={async () => {
+                    setWalkInPending(true);
+                    try {
+                      const { createWalkInOrder } = await import("@/app/(kitchen)/_actions");
+                      const res = await createWalkInOrder(
+                        walkInCart.map((c) => ({ idOrName: c.item.id, qty: c.qty }))
+                      );
+                      if (res.ok) {
+                        toast.success("Walk-in order created successfully!");
+                        setWalkInOpen(false);
+                        void refresh();
+                      } else {
+                        handleActionError(res.error ?? "Failed to create walk-in order");
+                      }
+                    } catch (err: any) {
+                      toast.error(err.message ?? "Failed to create walk-in order");
+                    } finally {
+                      setWalkInPending(false);
+                    }
+                  }}
+                  className="btn btn-tomato text-xs py-1.5 px-4"
+                >
+                  {walkInPending ? "Creating..." : "Create Order"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

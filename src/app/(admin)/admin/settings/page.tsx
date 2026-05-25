@@ -3,6 +3,7 @@ import { resolveTenant, getTenantSlugFromHeaders } from "@/lib/tenant";
 import { getAdminClient } from "@/lib/supabase/admin";
 import { updateCanteenHours, pauseCanteen, updateCanteenSettings } from "../_actions";
 import type { Tenant } from "@/lib/db/types";
+import { PauseCountdown } from "@/components/portal-admin/pause-countdown";
 
 export const dynamic = "force-dynamic";
 
@@ -142,10 +143,8 @@ export default async function SettingsPage() {
           <div className="border-t border-[var(--admin-line)] pt-4">
             <div className="text-[13px] text-[var(--admin-ink-2)] font-semibold mb-3">
               Pause orders
-              {isPaused && (
-                <span className="ml-2 px-2 py-0.5 rounded-full bg-[var(--admin-amber-soft)] text-[var(--admin-amber)] text-[10px] font-mono">
-                  Paused — resumes in {pauseCountdown}
-                </span>
+              {row.paused_until && (
+                <PauseCountdown pausedUntil={row.paused_until} />
               )}
             </div>
             <div className="flex flex-wrap gap-2">

@@ -456,30 +456,34 @@ export async function verifyPaymentNow(orderId: string): Promise<VerifyResult> {
       return { status: "failed" };
     }
 
-    await admin.from("payments").upsert(
-      {
-        tenant_id: orderRow.tenant_id,
-        order_id: orderId,
-        razorpay_order_id: payRow?.razorpay_order_id ?? null,
-        amount_paise: payRow?.amount_paise ?? 0,
-        status: "captured",
-        razorpay_payment_id: `pay_upi_${orderId.slice(0, 8)}`,
-        raw_event_id: `upi_trust_${orderId}`,
-      },
-      { onConflict: "raw_event_id", ignoreDuplicates: true }
-    );
+    const { data: rpcResult, error: rpcError } = await (admin as any).rpc("execute_idempotent_payment_capture", {
+      p_order_id: orderId,
+      p_tenant_id: orderRow.tenant_id,
+      p_payment_id: `pay_upi_${orderId.slice(0, 8)}`,
+      p_razorpay_order_id: payRow?.razorpay_order_id ?? null,
+      p_amount_paise: payRow?.amount_paise ?? 0,
+      p_raw_event_id: `upi_trust_${orderId}`
+    });
 
-    const { data: updated } = await admin
-      .from("orders")
-      .update({ status: "placed" })
-      .eq("id", orderId)
-      .eq("tenant_id", orderRow.tenant_id)
-      .in("status", ["pending_payment", "expired"])
-      .select("id, short_code, status, total_paise, placed_at, ready_at, collected_at, customer_name, order_type, table_label");
-    
-    const { data: orderLines } = await admin.from("order_items").select("id, order_id, name_snapshot, qty, diet_snapshot").eq("order_id", orderId);
+    if (rpcError) {
+      console.error("[verifyPaymentNow] UPI RPC call failed:", rpcError);
+      return { status: "pending" };
+    }
 
-    if (updated && updated.length > 0) {
+    const resObj = rpcResult as { success?: boolean; updated?: boolean; error?: string };
+    if (!resObj.success) {
+      console.error("[verifyPaymentNow] UPI RPC execution unsuccessful:", resObj.error);
+      return { status: "pending" };
+    }
+
+    if (resObj.updated) {
+      const { data: updated } = await admin
+        .from("orders")
+        .select("id, short_code, status, total_paise, placed_at, ready_at, collected_at, customer_name, order_type, table_label")
+        .eq("id", orderId)
+        .single();
+      const { data: orderLines } = await admin.from("order_items").select("id, order_id, name_snapshot, qty, diet_snapshot").eq("order_id", orderId);
+
       type OrderEventInsert = {
         tenant_id: string;
         order_id: string;
@@ -494,7 +498,7 @@ export async function verifyPaymentNow(orderId: string): Promise<VerifyResult> {
         tenant_id: orderRow.tenant_id,
         order_id: orderId,
         event_type: "status_changed",
-        payload: { from: "pending_payment", to: "placed", source: "upi_trust", order: updated[0], lines: orderLines },
+        payload: { from: "pending_payment", to: "placed", source: "upi_trust", order: updated, lines: orderLines },
       });
       await admin.from("order_status_logs").insert({
         tenant_id: orderRow.tenant_id,
@@ -531,33 +535,34 @@ export async function verifyPaymentNow(orderId: string): Promise<VerifyResult> {
     return { status: "pending" };
   }
 
-  // Idempotent payments insert — unique constraint on raw_event_id silently
-  // dedupes if a duplicate webhook or another verifyPaymentNow call beat us.
-  await admin.from("payments").upsert(
-    {
-      tenant_id: orderRow.tenant_id,
-      order_id: orderId,
-      razorpay_order_id: paymentRow.razorpay_order_id,
-      amount_paise: paymentRow.amount_paise,
-      status: "captured",
-      raw_event_id: `manual_verify_${paymentRow.razorpay_order_id}`,
-    },
-    { onConflict: "raw_event_id", ignoreDuplicates: true }
-  );
+  const { data: rpcResult, error: rpcError } = await (admin as any).rpc("execute_idempotent_payment_capture", {
+    p_order_id: orderId,
+    p_tenant_id: orderRow.tenant_id,
+    p_payment_id: `pay_poll_${paymentRow.razorpay_order_id.slice(6, 14)}`,
+    p_razorpay_order_id: paymentRow.razorpay_order_id,
+    p_amount_paise: paymentRow.amount_paise,
+    p_raw_event_id: `manual_verify_${paymentRow.razorpay_order_id}`,
+  });
 
-  // Gated update — if another path already flipped this to placed (webhook
-  // raced us), this no-ops and we never re-trigger order_events.
-  const { data: updated } = await admin
-    .from("orders")
-    .update({ status: "placed" })
-    .eq("id", orderId)
-    .eq("tenant_id", orderRow.tenant_id)
-    .in("status", ["pending_payment", "expired"])
-    .select("id, short_code, status, total_paise, placed_at, ready_at, collected_at, customer_name, order_type, table_label");
+  if (rpcError) {
+    console.error("[verifyPaymentNow] Razorpay RPC call failed:", rpcError);
+    return { status: "pending" };
+  }
 
-  const { data: orderLines } = await admin.from("order_items").select("id, order_id, name_snapshot, qty, diet_snapshot").eq("order_id", orderId);
+  const resObj = rpcResult as { success?: boolean; updated?: boolean; error?: string };
+  if (!resObj.success) {
+    console.error("[verifyPaymentNow] Razorpay RPC execution unsuccessful:", resObj.error);
+    return { status: "pending" };
+  }
 
-  if (updated && updated.length > 0) {
+  if (resObj.updated) {
+    const { data: updated } = await admin
+      .from("orders")
+      .select("id, short_code, status, total_paise, placed_at, ready_at, collected_at, customer_name, order_type, table_label")
+      .eq("id", orderId)
+      .single();
+    const { data: orderLines } = await admin.from("order_items").select("id, order_id, name_snapshot, qty, diet_snapshot").eq("order_id", orderId);
+
     type OrderEventInsert = {
       tenant_id: string;
       order_id: string;
@@ -572,7 +577,7 @@ export async function verifyPaymentNow(orderId: string): Promise<VerifyResult> {
       tenant_id: orderRow.tenant_id,
       order_id: orderId,
       event_type: "status_changed",
-      payload: { from: "pending_payment", to: "placed", source: "manual_verify", order: updated[0], lines: orderLines },
+      payload: { from: "pending_payment", to: "placed", source: "manual_verify", order: updated, lines: orderLines },
     });
     await admin.from("order_status_logs").insert({
       tenant_id: orderRow.tenant_id,
@@ -580,7 +585,7 @@ export async function verifyPaymentNow(orderId: string): Promise<VerifyResult> {
       from_status: "pending_payment",
       to_status: "placed",
       actor_user_id: user?.id ?? null,
-      note: "Manual verify (Razorpay fetch)",
+      note: "UPI payment verified via fallback polling",
     });
   }
 
