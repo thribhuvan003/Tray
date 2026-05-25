@@ -110,8 +110,10 @@ export async function middleware(req: NextRequest) {
     tenantSlug = tenantSlugFromHost(req.headers.get("host"));
   }
 
-  const queryOverride = url.searchParams.get("tenant");
-  if (queryOverride) tenantSlug = queryOverride.toLowerCase();
+  // NOTE: The ?tenant= query override has been REMOVED — it was a security hole
+  // that allowed unauthenticated users to route requests under a different
+  // tenant's context. Use the /c/[slug] path routing instead.
+
 
   const resolvedTenantSlug = (tenantSlug || DEFAULT_TENANT_SLUG).toLowerCase();
   requestHeaders.set("x-tenant-slug", resolvedTenantSlug);

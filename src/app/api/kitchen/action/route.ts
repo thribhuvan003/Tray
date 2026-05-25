@@ -266,26 +266,47 @@ export async function POST(req: NextRequest) {
       const hash = await bcrypt.hash(otp, 4);
       const expiresAt = new Date(Date.now() + 30 * 60 * 1000).toISOString();
 
-      await dbClient
+      // Optimistic concurrency: only advance if still in expected status.
+      // Prevents double-tap / concurrent requests from skipping statuses.
+      const { data: advancedReady, error: advErr } = await dbClient
         .from("orders")
         .update({ status: nextStatus as any, otp_hash: hash, ready_at: new Date().toISOString() })
-        .eq("id", o.id);
+        .eq("id", o.id)
+        .eq("status", o.status as any)  // guard: must still be in the status we read
+        .select("id")
+        .maybeSingle();
+
+      if (advErr) return NextResponse.json({ error: advErr.message }, { status: 500 });
+      if (!advancedReady) {
+        // Another request already advanced this order — return success (idempotent)
+        return NextResponse.json({ ok: true, skipped: true });
+      }
 
       await dbClient.from("pickup_secrets").upsert(
         { order_id: o.id, tenant_id: tenant.id, otp_plain: otp, expires_at: expiresAt },
         { onConflict: "order_id" }
       );
     } else if (nextStatus === "collected") {
-      await dbClient
+      const { data: advancedCollected } = await dbClient
         .from("orders")
         .update({ status: nextStatus as any, collected_at: new Date().toISOString() })
-        .eq("id", o.id);
+        .eq("id", o.id)
+        .eq("status", o.status as any)  // guard
+        .select("id")
+        .maybeSingle();
+
+      if (!advancedCollected) return NextResponse.json({ ok: true, skipped: true });
       await dbClient.from("pickup_secrets").delete().eq("order_id", o.id);
     } else {
-      await dbClient
+      const { data: advanced } = await dbClient
         .from("orders")
         .update({ status: nextStatus as any })
-        .eq("id", o.id);
+        .eq("id", o.id)
+        .eq("status", o.status as any)  // guard
+        .select("id")
+        .maybeSingle();
+
+      if (!advanced) return NextResponse.json({ ok: true, skipped: true });
     }
 
     // Insert status log

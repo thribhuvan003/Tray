@@ -53,6 +53,7 @@ export function PayPanel({
   const [pending, start] = useTransition();
   const [verifying, startVerify] = useTransition();
   const [stillWaiting, setStillWaiting] = useState(false);
+  const [razorpayOpen, setRazorpayOpen] = useState(false);
   const [remaining, setRemaining] = useState(() => {
     if (!order.payment_expires_at) return 900;
     return Math.max(0, Math.floor((new Date(order.payment_expires_at).getTime() - Date.now()) / 1000));
@@ -60,6 +61,8 @@ export function PayPanel({
   const [demoDismissed, setDemoDismissed] = useState(false);
   const [isPayingMobile, setIsPayingMobile] = useState(false);
   const [mobileVerifyingText, setMobileVerifyingText] = useState("Paying via UPI...");
+  // Debounce guard: prevents focus + visibilitychange from both firing onIvePaid simultaneously
+  const verifyInFlight = useCallback(() => verifying, [verifying]);
 
   useEffect(() => {
     if (!order.payment_expires_at) return;
@@ -167,29 +170,49 @@ export function PayPanel({
     }), [order.id, router, tenantSlug]);
 
   const handleMobilePay = () => {
+    if (isPayingMobile) return; // prevent double-tap
     setIsPayingMobile(true);
-    setMobileVerifyingText("Paying via UPI...");
+    setMobileVerifyingText("Opening UPI app...");
     
-    // Deep-link to UPI app
+    // Deep-link to UPI app. On Android this opens the system UPI app picker.
+    // On iOS it opens the UPI app if installed.
     window.location.href = upiUri;
     
-    // Start automated loading transition
+    // After 3s show a more informative message to the student
     setTimeout(() => {
-      setMobileVerifyingText("Verifying payment...");
-      onIvePaid();
-    }, 1500);
+      setMobileVerifyingText("Complete payment in UPI app, then return here");
+    }, 3000);
+    // NOTE: We do NOT auto-call onIvePaid() here — that was a false positive
+    // source. Instead we rely on visibilitychange (reliable on both iOS + Android)
+    // to detect when the student returns from the UPI app after paying.
   };
 
-  // Automatically trigger verification when the student returns to this browser tab
+  // Trigger verification when the student returns to this browser tab after paying.
+  // visibilitychange is more reliable than "focus" on iOS Safari/Chrome.
   useEffect(() => {
+    const handleReturn = () => {
+      if (document.visibilityState === "visible" && (isPayingMobile || stillWaiting)) {
+        // Debounce: don't fire if already verifying
+        if (!verifying) {
+          setMobileVerifyingText("Verifying payment...");
+          onIvePaid();
+        }
+      }
+    };
+    document.addEventListener("visibilitychange", handleReturn);
+    // Also listen to window focus as a fallback for desktop browsers
     const handleFocus = () => {
-      if (isPayingMobile || stillWaiting) {
+      if ((isPayingMobile || stillWaiting) && !verifying) {
+        setMobileVerifyingText("Verifying payment...");
         onIvePaid();
       }
     };
     window.addEventListener("focus", handleFocus);
-    return () => window.removeEventListener("focus", handleFocus);
-  }, [isPayingMobile, stillWaiting, onIvePaid]);
+    return () => {
+      document.removeEventListener("visibilitychange", handleReturn);
+      window.removeEventListener("focus", handleFocus);
+    };
+  }, [isPayingMobile, stillWaiting, verifying, onIvePaid]);
 
   const loadRazorpay = () => {
     return new Promise((resolve) => {
@@ -264,8 +287,15 @@ export function PayPanel({
     rzp.on("payment.failed", function (response: any) {
       console.error("Payment failed", response.error);
       toast.error("Payment failed: " + (response.error.description || "Please try again"));
+      setRazorpayOpen(false);
     });
 
+    // Track sheet open/close to prevent double-launch
+    rzp.on("dismissal", function() {
+      setRazorpayOpen(false);
+    });
+
+    setRazorpayOpen(true);
     rzp.open();
   };
 
@@ -385,9 +415,14 @@ export function PayPanel({
 
             <button
               onClick={handleRazorpayPay}
-              className="w-full h-12 text-[14.5px] inline-flex items-center justify-center gap-2 rounded-xl bg-ocean-500 text-black font-bold hover:bg-ocean-600 transition-all shadow-lg active:scale-[0.98] shadow-ocean-500/10 mb-2"
+              disabled={razorpayOpen}
+              className={cn(
+                "w-full h-12 text-[14.5px] inline-flex items-center justify-center gap-2 rounded-xl bg-ocean-500 text-black font-bold hover:bg-ocean-600 transition-all shadow-lg active:scale-[0.98] shadow-ocean-500/10 mb-2",
+                razorpayOpen && "opacity-60 cursor-not-allowed"
+              )}
             >
-              <Smartphone size={16} /> Pay Securely Now
+              {razorpayOpen ? <Loader2 size={16} className="animate-spin" /> : <Smartphone size={16} />}
+              {razorpayOpen ? "Payment sheet open..." : "Pay Securely Now"}
             </button>
             
             <p className="mt-3 text-[11px] opacity-50">
@@ -400,7 +435,7 @@ export function PayPanel({
         <div className="mt-4 text-center">
           <div className="flex items-center justify-between text-xs text-[color:var(--color-ink)]/55 bg-[color:var(--color-paper-dim)] rounded-xl p-3 border border-[color:var(--color-line)]">
             <span>Payment window expires in:</span>
-            <span className={cn("font-mono font-semibold text-sm tabular", expired ? "text-rose-500" : remaining < 60 ? "text-amber-600" : "text-[color:var(--color-ink)]")}>
+            <span className={cn("font-mono font-semibold text-sm tabular-nums", expired ? "text-rose-500" : remaining < 60 ? "text-amber-600" : "text-[color:var(--color-ink)]")}>
               {String(mins).padStart(2, "0")}:{String(secs).padStart(2, "0")}
             </span>
           </div>
@@ -458,7 +493,10 @@ export function PayPanel({
             </div>
 
             <button
-              onClick={() => setIsPayingMobile(false)}
+              onClick={() => {
+                setIsPayingMobile(false);
+                // Don't auto-verify on cancel — student explicitly said they're not done
+              }}
               className="mt-2 text-xs font-semibold text-ocean-500 hover:text-ocean-600 underline transition-colors"
             >
               Cancel and try again

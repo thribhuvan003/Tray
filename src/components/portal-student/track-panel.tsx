@@ -18,6 +18,7 @@ type Status =
   | "rejected"
   | "expired"
   | "cancelled_by_kitchen"
+  | "cancelled_by_student"
   | "partially_ready"
   | "refunded";
 type Order = {
@@ -67,26 +68,31 @@ export function TrackPanel({ tenantSlug, tenantName, order: initial, lines }: { 
     if (order.status === "collected" || order.status === "rejected" || order.status === "expired") return;
 
     const sb = getBrowserClient();
-    // Fast polling (2s) for pending payments to handle write lag gracefully,
-    // and standard 15s polling for normal order preparation states to save DB CPU.
-    const pollIntervalMs = order.status === "pending_payment" ? 2000 : 15000;
+    // Fast polling (2s) for pending payments to handle webhook lag,
+    // 8s for active orders — realtime events are primary, polling is a safety net.
+    const pollIntervalMs = order.status === "pending_payment" ? 2000 : 8000;
 
     const interval = setInterval(async () => {
-      const { data, error } = await sb
-        .from("orders")
-        .select("status, ready_at, collected_at")
-        .eq("id", order.id)
-        .maybeSingle();
+      try {
+        const { data, error } = await sb
+          .from("orders")
+          .select("status, ready_at, collected_at")
+          .eq("id", order.id)
+          .maybeSingle();
 
-      const orderRef = data as { status: string; ready_at: string | null; collected_at: string | null } | null;
+        if (error) return; // Network error — silently skip, will retry
+        const orderRef = data as { status: string; ready_at: string | null; collected_at: string | null } | null;
 
-      if (orderRef && orderRef.status !== order.status) {
-        setOrder((prev) => ({
-          ...prev,
-          status: orderRef.status as Status,
-          ready_at: orderRef.ready_at,
-          collected_at: orderRef.collected_at,
-        }));
+        if (orderRef && orderRef.status !== order.status) {
+          setOrder((prev) => ({
+            ...prev,
+            status: orderRef.status as Status,
+            ready_at: orderRef.ready_at,
+            collected_at: orderRef.collected_at,
+          }));
+        }
+      } catch {
+        // Network outage — will retry on next tick
       }
     }, pollIntervalMs);
 
@@ -234,7 +240,7 @@ export function TrackPanel({ tenantSlug, tenantName, order: initial, lines }: { 
     );
   }
 
-  const isCancelled = order.status === "cancelled_by_kitchen" || order.status === "refunded";
+  const isCancelled = order.status === "cancelled_by_kitchen" || order.status === "cancelled_by_student" || order.status === "refunded";
   const isPartiallyReady = order.status === "partially_ready";
   // Map partially_ready onto the "preparing" step so the progress stepper
   // renders correctly; it will also show a dedicated banner below.
@@ -370,7 +376,7 @@ export function TrackPanel({ tenantSlug, tenantName, order: initial, lines }: { 
           {!isCancelled && (
             <div className="progress-bar my-6">
               <div
-                className="progress-bar__fill"
+                className="progress-bar__fill transition-[width] duration-700 ease-in-out"
                 style={{
                   width:
                     effectiveStatus === "placed"

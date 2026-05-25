@@ -38,8 +38,7 @@ export async function POST(req: NextRequest) {
   const admin = getAdminClient();
   const eventId = `${body.event}:${payment.id ?? "x"}:${body.created_at ?? Date.now()}`;
   
-  const tenantSlug = payment.notes?.tenant;
-  let tenantOrderId = payment.notes?.order;
+  let tenantOrderId = payment.notes?.order_id ?? payment.notes?.order;
   let tenantId = payment.notes?.tenant_id;
 
   // Resolve order_id if notes were stripped
@@ -74,7 +73,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Missing Context Metadata Parameters" }, { status: 400 });
   }
 
-  if (body.event === "payment.captured" || payment.status === "captured") {
+  // Only process genuine capture events — not just any event that happens to
+  // carry a captured payment entity (e.g. payment.authorized, payment.updated).
+  if (body.event === "payment.captured") {
     console.log(`[Razorpay Webhook] Processing capture for order ${tenantOrderId} (tenant: ${tenantId})`);
     
     // Call PostgreSQL idempotent capture RPC
@@ -101,11 +102,17 @@ export async function POST(req: NextRequest) {
     if (resObj.updated) {
       console.log(`[Razorpay Webhook] Order ${tenantOrderId} successfully updated to PLACED. Emitting events.`);
       
-      const { data: updated } = await admin
+      const { data: updated, error: orderFetchErr } = await admin
         .from("orders")
         .select("id, short_code, status, total_paise, placed_at, ready_at, collected_at, customer_name, order_type, table_label")
         .eq("id", tenantOrderId)
         .single();
+
+      if (orderFetchErr || !updated) {
+        console.error("[Razorpay Webhook] Could not fetch updated order for event payload:", orderFetchErr?.message);
+        // Still return success — order is placed in DB; realtime will reconcile via 15s poll
+        return NextResponse.json({ status: "success" });
+      }
 
       const { data: orderLines } = await admin
         .from("order_items")

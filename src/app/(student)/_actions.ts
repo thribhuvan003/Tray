@@ -309,10 +309,10 @@ export async function simulatePaymentCapture(orderId: string): Promise<{ ok: boo
   const admin = getAdminClient(tenant.id);
   const { data: order } = await admin
     .from("orders")
-    .select("id, user_id, status")
+    .select("id, user_id, status, total_paise")
     .eq("id", orderId)
     .eq("tenant_id", tenant.id)
-    .maybeSingle<{ id: string; user_id: string | null; status: string }>();
+    .maybeSingle<{ id: string; user_id: string | null; status: string; total_paise: number }>();
   if (!order) return { ok: false, error: "Order not found" };
 
   if (order.user_id) {
@@ -322,39 +322,57 @@ export async function simulatePaymentCapture(orderId: string): Promise<{ ok: boo
   }
   if (order.status !== "pending_payment") return { ok: true };
 
-  await admin
-    .from("payments")
-    .update({ status: "captured", razorpay_payment_id: `pay_sim_${orderId.slice(0, 8)}` })
-    .eq("order_id", orderId);
-
-  const { data: updatedOrder } = await admin.from("orders").update({ status: "placed" }).eq("id", orderId).select("id, short_code, status, total_paise, placed_at, ready_at, collected_at, customer_name, order_type, table_label").single();
-  const { data: orderLines } = await admin.from("order_items").select("id, order_id, name_snapshot, qty, diet_snapshot").eq("order_id", orderId);
-
-  type OrderEventInsert = {
-    tenant_id: string;
-    order_id: string;
-    event_type: string;
-    payload: Record<string, unknown>;
-  };
-  await (
-    admin.from("order_events") as unknown as {
-      insert: (row: OrderEventInsert) => Promise<unknown>;
-    }
-  ).insert({
-    tenant_id: tenant.id,
-    order_id: orderId,
-    event_type: "status_changed",
-    payload: { from: "pending_payment", to: "placed", source: "simulator", order: updatedOrder, lines: orderLines },
+  // Use the same idempotent RPC as the real webhook — prevents double-placement on concurrent calls
+  const { data: rpcResult, error: rpcError } = await (admin as any).rpc("execute_idempotent_payment_capture", {
+    p_order_id: orderId,
+    p_tenant_id: tenant.id,
+    p_payment_id: `pay_sim_${orderId.slice(0, 8)}`,
+    p_razorpay_order_id: null,
+    p_amount_paise: order.total_paise ?? 0,
+    p_raw_event_id: `sim_capture_${orderId}`,
   });
 
-  await admin.from("order_status_logs").insert({
-    tenant_id: tenant.id,
-    order_id: orderId,
-    from_status: "pending_payment",
-    to_status: "placed",
-    actor_user_id: user?.id ?? null,
-    note: "Simulated payment capture",
-  });
+  if (rpcError) {
+    console.error("[simulatePaymentCapture] RPC failed:", rpcError);
+    return { ok: false, error: "Simulation RPC failed" };
+  }
+
+  const resObj = rpcResult as { success?: boolean; updated?: boolean; error?: string };
+  if (!resObj.success) {
+    // Already settled — idempotent
+    return { ok: true };
+  }
+
+  if (resObj.updated) {
+    const { data: updatedOrder } = await admin.from("orders").select("id, short_code, status, total_paise, placed_at, ready_at, collected_at, customer_name, order_type, table_label").eq("id", orderId).single();
+    const { data: orderLines } = await admin.from("order_items").select("id, order_id, name_snapshot, qty, diet_snapshot").eq("order_id", orderId);
+
+    type OrderEventInsert = {
+      tenant_id: string;
+      order_id: string;
+      event_type: string;
+      payload: Record<string, unknown>;
+    };
+    await (
+      admin.from("order_events") as unknown as {
+        insert: (row: OrderEventInsert) => Promise<unknown>;
+      }
+    ).insert({
+      tenant_id: tenant.id,
+      order_id: orderId,
+      event_type: "status_changed",
+      payload: { from: "pending_payment", to: "placed", source: "simulator", order: updatedOrder, lines: orderLines },
+    });
+
+    await admin.from("order_status_logs").insert({
+      tenant_id: tenant.id,
+      order_id: orderId,
+      from_status: "pending_payment",
+      to_status: "placed",
+      actor_user_id: user?.id ?? null,
+      note: "Simulated payment capture",
+    });
+  }
 
   return { ok: true };
 }
@@ -430,8 +448,16 @@ export async function verifyPaymentNow(orderId: string): Promise<VerifyResult> {
     }
   }
 
-  // Already past pending_payment/expired — webhook (or a previous call) already moved it.
-  if (orderRow.status !== "pending_payment" && orderRow.status !== "expired") return { status: "paid" };
+  // Terminal states: order is already done (not pending payment)
+  if (![
+    "pending_payment",
+    "expired",
+  ].includes(orderRow.status)) {
+    // Map terminal failure/cancellation states to "failed" so the student isn't
+    // shown a success message for a cancelled or rejected order.
+    const paidStates = ["placed", "preparing", "ready", "collected"];
+    return { status: paidStates.includes(orderRow.status) ? "paid" : "failed" };
+  }
 
   const admin = getAdminClient(orderRow.tenant_id);
   const { data: payRow } = await admin

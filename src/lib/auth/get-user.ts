@@ -29,7 +29,9 @@ const fetchUserRoleCached = (userId: string, tenantId: string) => unstable_cache
       .eq("is_active", true)
       .maybeSingle<{ role: MemberRole; display_name: string | null }>();
 
-    console.log("[fetchUserRoleCached] MEMBERSHIP FOUND:", m, "ERROR:", memError?.message);
+    if (process.env.NODE_ENV === "development") {
+      console.log("[fetchUserRoleCached] MEMBERSHIP FOUND:", m?.role ?? null, "ERROR:", memError?.message);
+    }
 
     let role: MemberRole | null = m?.role ?? null;
     let displayName: string | null = m?.display_name ?? null;
@@ -77,12 +79,16 @@ export const getCurrentUser = cache(async (tenantIdOverride?: string): Promise<C
     tenant = await resolveTenant(slug);
   }
   
-  console.log("[getCurrentUser] RESOLVED SLUG:", tenant?.slug, "TENANT FOUND:", !!tenant);
+  if (process.env.NODE_ENV === "development") {
+    console.log("[getCurrentUser] RESOLVED SLUG:", tenant?.slug, "TENANT FOUND:", !!tenant);
+  }
   if (!tenant) return null;
 
   const supabase = await getServerClient(tenant.id);
   const { data, error: userError } = await supabase.auth.getUser();
-  console.log("[getCurrentUser] USER RESOLVED:", data?.user?.email, "ERROR:", userError?.message);
+  if (process.env.NODE_ENV === "development") {
+    console.log("[getCurrentUser] USER RESOLVED:", data?.user?.email ? "[redacted]" : null, "ERROR:", userError?.message);
+  }
   if (!data.user) return null;
 
   const { role, displayName } = await fetchUserRoleCached(data.user.id, tenant.id);
