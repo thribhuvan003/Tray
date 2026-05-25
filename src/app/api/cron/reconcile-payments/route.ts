@@ -128,7 +128,12 @@ export async function POST(req: NextRequest) {
         .eq("id", c.id)
         .eq("tenant_id", c.tenant_id)
         .in("status", ["pending_payment", "expired"])
-        .select("id");
+        .select("id, short_code, status, total_paise, placed_at, ready_at, collected_at, customer_name, order_type, table_label");
+
+      const { data: orderLines } = await admin
+        .from("order_items")
+        .select("id, order_id, name_snapshot, qty, diet_snapshot")
+        .eq("order_id", c.id);
 
       if (updated && updated.length > 0) {
         await (
@@ -139,7 +144,13 @@ export async function POST(req: NextRequest) {
           tenant_id: c.tenant_id,
           order_id: c.id,
           event_type: "status_changed",
-          payload: { from: c.status, to: "placed", source: "reconcile_cron" },
+          payload: {
+            from: c.status,
+            to: "placed",
+            source: "reconcile_cron",
+            order: updated[0],
+            lines: orderLines
+          },
         });
         await admin.from("order_status_logs").insert({
           tenant_id: c.tenant_id,

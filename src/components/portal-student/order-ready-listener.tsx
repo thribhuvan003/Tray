@@ -25,6 +25,12 @@ export function OrderReadyListener({
     const shownRef = useRef<Set<string>>(new Set());
     const [activeOrders, setActiveOrders] = useState<Record<string, string>>({}); // orderId -> shortCode
 
+    // Stable ref to keep track of activeOrders to avoid subscription churn
+    const activeOrdersRef = useRef<Record<string, string>>({});
+    useEffect(() => {
+        activeOrdersRef.current = activeOrders;
+    }, [activeOrders]);
+
     // 1. Fetch the student's active orders on mount
     useEffect(() => {
         if (!userId) return;
@@ -66,123 +72,123 @@ export function OrderReadyListener({
             const orderCh = sb
                 .channel(`student-tenant-events:${tenantId}`)
                 .on(
-                    "postgres_changes",
-                    {
-                        event: "INSERT",
-                        schema: "public",
-                        table: "order_events",
-                        filter: `tenant_id=eq.${tenantId}`,
-                    },
-                    (payload) => {
-                        const row = payload.new as {
-                            order_id: string;
-                            event_type: string;
-                            payload?: Record<string, unknown>;
-                        } | null;
-                        if (!row) return;
-
-                        const orderId = row.order_id;
-                        
-                        // Check if this event belongs to one of our active orders
-                        const shortCode = activeOrders[orderId];
-                        if (!shortCode) return; // Not our order
-
-                        const eventType = row.event_type;
-                        const status = eventType === "status_changed" ? (row.payload?.to as string) : eventType;
-                        const key = `${orderId}:${status}`;
-                        if (shownRef.current.has(key)) return;
-
-                        if (status === "placed") {
-                            shownRef.current.add(key);
-                            toast.success(
-                                `Order ${shortCode ?? ""} has been placed!`,
-                                {
-                                    duration: 8000,
-                                    action: {
-                                        label: "Track",
-                                        onClick: () =>
-                                            router.push(`/c/${tenantSlug}/track/${orderId}`),
-                                    },
-                                }
-                            );
-                            router.refresh();
-                        } else if (status === "ready") {
-                            shownRef.current.add(key);
-                            toast.success(
-                                `Order ${shortCode ?? ""} is ready! Head to the counter.`,
-                                {
-                                    duration: 12000,
-                                    action: {
-                                        label: "View",
-                                        onClick: () =>
-                                            router.push(`/c/${tenantSlug}/track/${orderId}`),
-                                    },
-                                }
-                            );
-                            setActiveOrders((prev) => {
-                                const next = { ...prev };
-                                delete next[orderId];
-                                return next;
-                            });
-                            router.refresh();
-                        } else if (status === "preparing") {
-                            shownRef.current.add(key);
-                            toast(`Order ${shortCode ?? ""} is being prepared.`, {
-                                duration: 5000,
-                            });
-                            router.refresh();
-                        } else if (
-                            [
-                                "collected",
-                                "rejected",
-                                "expired",
-                                "cancelled_by_student",
-                                "refunded"
-                            ].includes(status)
-                        ) {
-                            shownRef.current.add(key);
-                            setActiveOrders((prev) => {
-                                const next = { ...prev };
-                                delete next[orderId];
-                                return next;
-                            });
-                            router.refresh();
-                        }
-                    }
-                )
-                .subscribe();
-            activeChannels.push(orderCh);
-        }
-
-        // 3. Global tenants subscription (new canteens created, switcher status updates)
-        const tenantsCh = sb
-            .channel("global-tenants")
-            .on(
-                "postgres_changes",
-                {
-                    event: "*",
-                    schema: "public",
-                    table: "tenants",
-                },
-                () => {
-                    router.refresh();
-                }
-            )
-            .subscribe();
-        activeChannels.push(tenantsCh);
-
-        // 4. Fallback client-side polling: refreshes page data (bypassing route caching) every 15 seconds
-        const pollInterval = setInterval(() => {
-            router.refresh();
-        }, 15000); // 15 seconds instead of 2 seconds to save database CPU resources
-
-        return () => {
-            clearInterval(pollInterval);
-            activeChannels.forEach((ch) => {
-                sb.removeChannel(ch);
-            });
-        };
-    }, [userId, tenantSlug, tenantId, activeOrders, router]);
+                     "postgres_changes",
+                     {
+                         event: "INSERT",
+                         schema: "public",
+                         table: "order_events",
+                         filter: `tenant_id=eq.${tenantId}`,
+                     },
+                     (payload) => {
+                         const row = payload.new as {
+                             order_id: string;
+                             event_type: string;
+                             payload?: Record<string, unknown>;
+                         } | null;
+                         if (!row) return;
+ 
+                         const orderId = row.order_id;
+                         
+                         // Check if this event belongs to one of our active orders
+                         const shortCode = activeOrdersRef.current[orderId];
+                         if (!shortCode) return; // Not our order
+ 
+                         const eventType = row.event_type;
+                         const status = eventType === "status_changed" ? (row.payload?.to as string) : eventType;
+                         const key = `${orderId}:${status}`;
+                         if (shownRef.current.has(key)) return;
+ 
+                         if (status === "placed") {
+                             shownRef.current.add(key);
+                             toast.success(
+                                 `Order ${shortCode ?? ""} has been placed!`,
+                                 {
+                                     duration: 8000,
+                                     action: {
+                                         label: "Track",
+                                         onClick: () =>
+                                             router.push(`/c/${tenantSlug}/track/${orderId}`),
+                                     },
+                                 }
+                             );
+                             router.refresh();
+                         } else if (status === "ready") {
+                             shownRef.current.add(key);
+                             toast.success(
+                                 `Order ${shortCode ?? ""} is ready! Head to the counter.`,
+                                 {
+                                     duration: 12000,
+                                     action: {
+                                         label: "View",
+                                         onClick: () =>
+                                             router.push(`/c/${tenantSlug}/track/${orderId}`),
+                                     },
+                                 }
+                             );
+                             setActiveOrders((prev) => {
+                                 const next = { ...prev };
+                                 delete next[orderId];
+                                 return next;
+                             });
+                             router.refresh();
+                         } else if (status === "preparing") {
+                             shownRef.current.add(key);
+                             toast(`Order ${shortCode ?? ""} is being prepared.`, {
+                                 duration: 5000,
+                             });
+                             router.refresh();
+                         } else if (
+                             [
+                                 "collected",
+                                 "rejected",
+                                 "expired",
+                                 "cancelled_by_student",
+                                 "refunded"
+                             ].includes(status)
+                         ) {
+                             shownRef.current.add(key);
+                             setActiveOrders((prev) => {
+                                 const next = { ...prev };
+                                 delete next[orderId];
+                                 return next;
+                             });
+                             router.refresh();
+                         }
+                     }
+                 )
+                 .subscribe();
+             activeChannels.push(orderCh);
+         }
+ 
+         // 3. Global tenants subscription (new canteens created, switcher status updates)
+         const tenantsCh = sb
+             .channel("global-tenants")
+             .on(
+                 "postgres_changes",
+                 {
+                     event: "*",
+                     schema: "public",
+                     table: "tenants",
+                 },
+                 () => {
+                     router.refresh();
+                 }
+             )
+             .subscribe();
+         activeChannels.push(tenantsCh);
+ 
+         // 4. Fallback client-side polling: refreshes page data (bypassing route caching) every 15 seconds
+         const pollInterval = setInterval(() => {
+             router.refresh();
+         }, 15000); // 15 seconds instead of 2 seconds to save database CPU resources
+ 
+         return () => {
+             clearInterval(pollInterval);
+             activeChannels.forEach((ch) => {
+                 sb.removeChannel(ch);
+             });
+         };
+     }, [userId, tenantSlug, tenantId, router]);
 
     return null;
 }

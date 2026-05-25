@@ -1,4 +1,4 @@
-// Cache reload trigger
+// Cache reload trigger - force reload 1
 import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { tenantSlugFromHost } from "@/lib/tenant";
@@ -39,7 +39,7 @@ async function getMiddlewareTenant(slug: string) {
   }
 }
 
-async function getMiddlewareUserRole(userId: string, tenantId: string, collegeId: string | null) {
+async function getMiddlewareUserRole(supabase: any, userId: string, tenantId: string, collegeId: string | null) {
   const cacheKey = `${userId}:${tenantId}`;
   const now = Date.now();
   const cached = roleCache.get(cacheKey);
@@ -48,32 +48,27 @@ async function getMiddlewareUserRole(userId: string, tenantId: string, collegeId
   }
 
   try {
-    // 1. Fetch from tenant_memberships
-    const memUrl = `${supabaseUrl}/rest/v1/tenant_memberships?user_id=eq.${userId}&tenant_id=eq.${tenantId}&is_active=eq.true&select=role`;
-    const memRes = await fetch(memUrl, {
-      headers: {
-        "apikey": supabaseAnonKey,
-        "Content-Type": "application/json",
-      },
-    });
-    if (!memRes.ok) return null;
-    const memData = await memRes.json();
-    let role: string | null = memData && memData.length > 0 ? memData[0].role : null;
+    // 1. Fetch from tenant_memberships using the authenticated supabase client
+    const { data: memData } = await supabase
+      .from("tenant_memberships")
+      .select("role")
+      .eq("user_id", userId)
+      .eq("tenant_id", tenantId)
+      .eq("is_active", true)
+      .maybeSingle();
+    let role: string | null = memData ? memData.role : null;
 
     // 2. If no role, check college admin
     if (!role && collegeId) {
-      const colUrl = `${supabaseUrl}/rest/v1/college_memberships?user_id=eq.${userId}&college_id=eq.${collegeId}&is_active=eq.true&select=is_active`;
-      const colRes = await fetch(colUrl, {
-        headers: {
-          "apikey": supabaseAnonKey,
-          "Content-Type": "application/json",
-        },
-      });
-      if (colRes.ok) {
-        const colData = await colRes.json();
-        if (colData && colData.length > 0) {
-          role = "canteen_admin";
-        }
+      const { data: colData } = await supabase
+        .from("college_memberships")
+        .select("is_active")
+        .eq("user_id", userId)
+        .eq("college_id", collegeId)
+        .eq("is_active", true)
+        .maybeSingle();
+      if (colData) {
+        role = "canteen_admin";
       }
     }
 
@@ -169,7 +164,7 @@ export async function middleware(req: NextRequest) {
     if (!tenant) {
       return new NextResponse("Tenant Not Found", { status: 404 });
     }
-    const role = await getMiddlewareUserRole(user.id, tenant.id, tenant.college_id);
+    const role = await getMiddlewareUserRole(supabase, user.id, tenant.id, tenant.college_id);
 
     if (isKitchenPath) {
       if (role !== "kitchen_staff" && role !== "canteen_admin" && role !== "super_admin") {
