@@ -267,14 +267,15 @@ export function MenuBoard({
 
   // ——— Shared inline style constants (matching demo CSS vars) ———
   const S = {
-    text: "#1A1A19",
-    muted: "rgba(26,26,25,.58)",
-    muted2: "rgba(26,26,25,.38)",
-    accent: "#334155",
-    accentDim: "rgba(51,65,85,.08)",
-    border: "rgba(26,26,25,.12)",
-    surface: "rgba(26,26,25,.04)",
-    surface2: "rgba(26,26,25,.07)",
+    text: "var(--color-ink)",
+    muted: "var(--student-muted)",
+    muted2: "var(--student-muted2)",
+    accent: "var(--color-ocean-500)",
+    accentDim: "var(--student-accent-dim)",
+    border: "var(--color-line)",
+    surface: "var(--student-surface)",
+    surface2: "var(--student-surface2)",
+    cardBg: "var(--student-card-bg)",
     fontDisplay: "var(--font-bricolage, 'Bricolage Grotesque', system-ui, sans-serif)",
     fontMono: "var(--font-jetbrains, 'JetBrains Mono', monospace)",
     radius: 14,
@@ -422,7 +423,7 @@ export function MenuBoard({
             padding: 16,
             borderRadius: S.radius,
             border: `1px solid ${S.border}`,
-            background: "#ffffff",
+            background: S.cardBg,
             boxShadow: "inset 0 1px 0 rgba(255,255,255,.65), 0 1px 2px rgba(0,0,0,.05)",
           }}>
 
@@ -457,8 +458,8 @@ export function MenuBoard({
                             minWidth: 0,
                             padding: "10px 12px",
                             borderRadius: S.radiusSm,
-                            border: isCurrent ? "1px solid rgba(51,65,85,.65)" : `1px solid ${S.border}`,
-                            background: "#ffffff",
+                            border: isCurrent ? `1px solid ${S.accent}` : `1px solid ${S.border}`,
+                            background: S.cardBg,
                             boxShadow: isCurrent ? "0 0 0 1px rgba(51,65,85,.15), 0 10px 26px rgba(26,26,25,.10)" : "none",
                             transform: isCurrent ? "translateY(-1px)" : "none",
                             color: S.text,
@@ -488,7 +489,7 @@ export function MenuBoard({
                   <p style={{
                     marginTop: 8,
                     paddingTop: 8,
-                    borderTop: "1px solid rgba(0,0,0,.08)",
+                    borderTop: `1px solid ${S.border}`,
                     fontFamily: S.fontDisplay,
                     fontSize: 13,
                     fontWeight: 500,
@@ -500,7 +501,7 @@ export function MenuBoard({
                   </p>
                 </div>
                 {/* Divider */}
-                <div style={{ height: 1, background: "rgba(0,0,0,.08)", margin: "14px 0 12px" }} />
+                <div style={{ height: 1, background: S.border, margin: "14px 0 12px" }} />
               </>
             )}
 
@@ -552,8 +553,8 @@ export function MenuBoard({
                         textAlign: "left",
                         padding: "14px 14px 12px",
                         borderRadius: S.radiusSm,
-                        border: isActive ? "1px solid rgba(51,65,85,.65)" : `1px solid ${S.border}`,
-                        background: "#ffffff",
+                        border: isActive ? `1px solid ${S.accent}` : `1px solid ${S.border}`,
+                        background: S.cardBg,
                         boxShadow: isActive ? "0 0 0 1px rgba(51,65,85,.15), 0 10px 26px rgba(26,26,25,.10)" : "none",
                         transform: isActive ? "translateY(-1px)" : "none",
                         cursor: "pointer",
@@ -598,7 +599,7 @@ export function MenuBoard({
                       padding: "10px 12px",
                       borderRadius: S.radiusSm,
                       border: `1px solid ${S.border}`,
-                      background: "rgba(228,228,228,.72)",
+                      background: S.surface,
                       fontFamily: S.fontDisplay,
                       fontSize: 14,
                       fontWeight: 500,
@@ -819,7 +820,7 @@ export function MenuBoard({
           flexDirection: "column",
           border: `1px solid ${S.border}`,
           borderRadius: S.radius,
-          background: "#ffffff",
+          background: S.cardBg,
           position: "sticky",
           top: "calc(56px + 16px)",
           height: "calc(100dvh - 56px - 32px)",
@@ -1053,15 +1054,15 @@ function SpecialCard({
 }) {
   const line = useCart((s) => s.lines.find((l) => l.menuItemId === item.id));
   const oos = !item.in_stock || item.status !== "live";
-  const accent = "#334155";
-  const border = "rgba(26,26,25,.12)";
+  const accent = "var(--color-ocean-500)";
+  const border = "var(--color-line)";
 
   return (
     <article
       style={{
         flexShrink: 0,
         width: 220,
-        background: "linear-gradient(145deg, rgba(255,255,255,.65) 0%, rgba(51,65,85,.06) 100%)",
+        background: "var(--student-special-card-bg)",
         border: `1px solid ${border}`,
         borderRadius: 14,
         padding: 18,
@@ -1091,7 +1092,7 @@ function SpecialCard({
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8 }}>
         <div style={{
           width: 56, height: 56, borderRadius: 12,
-          background: item.image_url ? "transparent" : "#fff",
+          background: item.image_url ? "transparent" : "var(--student-card-bg)",
           border: `1px solid ${border}`,
           display: "flex", alignItems: "center", justifyContent: "center",
           fontSize: 26,
@@ -1114,12 +1115,12 @@ function SpecialCard({
           fontFamily: "var(--font-bricolage, system-ui)",
           fontSize: 18, fontWeight: 500,
           letterSpacing: "-0.02em", lineHeight: 1.25,
-          color: "#1A1A19",
+          color: "var(--color-ink)",
         }}>
           {item.name}
         </h3>
         {item.description && (
-          <p style={{ margin: 0, fontSize: 13, color: "rgba(26,26,25,.58)", lineHeight: 1.45 }}>
+          <p style={{ margin: 0, fontSize: 13, color: "var(--student-muted)", lineHeight: 1.45 }}>
             {item.description}
           </p>
         )}
@@ -1180,8 +1181,8 @@ function RegularCard({
 }) {
   const line = useCart((s) => s.lines.find((l) => l.menuItemId === item.id));
   const oos = !item.in_stock || item.status !== "live";
-  const accent = "#334155";
-  const border = "rgba(26,26,25,.12)";
+  const accent = "var(--color-ocean-500)";
+  const border = "var(--color-line)";
 
   return (
     <article
@@ -1189,7 +1190,7 @@ function RegularCard({
         display: "flex", gap: 14,
         padding: 16, borderRadius: 14,
         border: `1px solid ${border}`,
-        background: "linear-gradient(145deg, rgba(255,255,255,.35) 0%, rgba(255,255,255,.1) 100%)",
+        background: "var(--student-regular-card-bg)",
         transition: "border-color .2s, transform .2s, box-shadow .2s",
         opacity: oos ? 0.6 : 1,
       }}
@@ -1197,10 +1198,10 @@ function RegularCard({
     >
       {/* 72Ã—72 icon */}
       <div style={{
-        width: 72, height: 72, borderRadius: 12, flexShrink: 0,
-        background: "rgba(26,26,25,.07)",
-        display: "grid", placeItems: "center",
-        fontSize: 30, border: `1px solid rgba(26,26,25,.08)`,
+          width: 72, height: 72, borderRadius: 12, flexShrink: 0,
+          background: "var(--student-surface2)",
+          display: "grid", placeItems: "center",
+          fontSize: 30, border: `1px solid var(--color-line)`,
         overflow: "hidden",
       }}>
         {item.image_url
@@ -1218,14 +1219,14 @@ function RegularCard({
             fontFamily: "var(--font-bricolage, system-ui)",
             fontSize: 17, fontWeight: 500,
             letterSpacing: "-0.015em", lineHeight: 1.25,
-            color: "#1A1A19",
+            color: "var(--color-ink)",
           }}>
             {item.name}
           </h3>
           <DietDot diet={item.diet} />
         </div>
         {item.description && (
-          <p style={{ margin: "4px 0 0", fontSize: 14, color: "rgba(26,26,25,.58)", lineHeight: 1.45 }}>
+          <p style={{ margin: "4px 0 0", fontSize: 14, color: "var(--student-muted)", lineHeight: 1.45 }}>
             {item.description}
           </p>
         )}
@@ -1282,8 +1283,8 @@ function QtyControl({
   return (
     <div style={{
       display: "flex", alignItems: "center",
-      borderRadius: S_RADIUS_SM, border: "1px solid rgba(26,26,25,.12)",
-      overflow: "hidden", background: "rgba(228,228,228,.72)",
+      borderRadius: S_RADIUS_SM, border: "1px solid var(--color-line)",
+      overflow: "hidden", background: "var(--student-surface2)",
     }}>
       <button
         aria-label="Decrease"
@@ -1295,7 +1296,7 @@ function QtyControl({
           fontSize: 19, fontWeight: 500,
           cursor: disabled ? "not-allowed" : "pointer",
           background: "transparent", border: "none",
-          color: "#1A1A19",
+          color: "var(--color-ink)",
           transition: "background .15s",
         }}
       >
@@ -1319,7 +1320,7 @@ function QtyControl({
           fontSize: 19, fontWeight: 500,
           cursor: disabled ? "not-allowed" : "pointer",
           background: "transparent", border: "none",
-          color: "#334155",
+          color: "var(--color-ocean-500)",
           transition: "background .15s",
         }}
       >

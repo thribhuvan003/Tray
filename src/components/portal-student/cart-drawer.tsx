@@ -267,17 +267,7 @@ export function CartDrawer({ tenantSlug, tenantName }: { tenantSlug: string; ten
 
   return (
     <>
-      {/* Desktop Floating Cart Button in bottom-right corner when cart has items */}
-      {count > 0 && !open && (
-        <button
-          onClick={() => setOpen(true)}
-          className="fixed bottom-6 right-6 z-40 hidden lg:flex items-center gap-3 px-6 h-14 rounded-full bg-rose-500 hover:bg-rose-600 text-white font-bold shadow-lg hover:shadow-xl transition-all hover:scale-105 active:scale-[0.98] cursor-pointer"
-        >
-          <ShoppingCart size={18} />
-          <span>{count} item{count === 1 ? "" : "s"} · {formatRupees(total)}</span>
-          <span className="text-[12px] opacity-80 border-l border-white/20 pl-2">View Cart →</span>
-        </button>
-      )}
+
 
       <Drawer.Root open={open} onOpenChange={setOpen} direction={isDesktop ? "right" : "bottom"}>
         {/* Mobile Sticky Bottom Cart Bar */}

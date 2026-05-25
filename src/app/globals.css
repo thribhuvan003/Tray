@@ -242,6 +242,16 @@ html.dark [data-portal="student"] {
   --color-ocean-600: #e2e8f0;
   --color-ocean-700: #f1f5f9;
   --color-ocean-900: #f8fafc;
+
+  /* Theme-specific custom student styles */
+  --student-muted: rgba(244, 239, 230, 0.58);
+  --student-muted2: rgba(244, 239, 230, 0.38);
+  --student-accent-dim: rgba(203, 213, 225, 0.08);
+  --student-surface: rgba(244, 239, 230, 0.04);
+  --student-surface2: rgba(244, 239, 230, 0.07);
+  --student-card-bg: #222221;
+  --student-special-card-bg: linear-gradient(145deg, rgba(34, 34, 33, 0.65) 0%, rgba(203, 213, 225, 0.06) 100%);
+  --student-regular-card-bg: linear-gradient(145deg, rgba(34, 34, 33, 0.35) 0%, rgba(34, 34, 33, 0.1) 100%);
 }
 /* Kitchen dark: paper inversion */
 html.dark [data-portal="kitchen"] {
@@ -375,6 +385,16 @@ html.dark [data-portal="kitchen"] {
   --color-ocean-600: #1e293b;
   --color-ocean-700: #0f172a;
   --color-ocean-900: #020617;
+
+  /* Theme-specific custom student styles */
+  --student-muted: rgba(26, 26, 25, 0.58);
+  --student-muted2: rgba(26, 26, 25, 0.38);
+  --student-accent-dim: rgba(51, 65, 85, 0.08);
+  --student-surface: rgba(26, 26, 25, 0.04);
+  --student-surface2: rgba(26, 26, 25, 0.07);
+  --student-card-bg: #ffffff;
+  --student-special-card-bg: linear-gradient(145deg, rgba(255, 255, 255, 0.65) 0%, rgba(51, 65, 85, 0.06) 100%);
+  --student-regular-card-bg: linear-gradient(145deg, rgba(255, 255, 255, 0.35) 0%, rgba(255, 255, 255, 0.1) 100%);
 }
 
 /* ── Landing page ambient background ─────────────────────────────── */
