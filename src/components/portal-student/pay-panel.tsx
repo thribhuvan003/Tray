@@ -154,14 +154,32 @@ export function PayPanel({
     }, 1500);
   };
 
-  const handleRazorpayPay = () => {
-    if (typeof window === "undefined" || !(window as any).Razorpay) {
-      toast.error("Payment portal is initializing. Please try again in a moment.");
+  const loadRazorpay = () => {
+    return new Promise((resolve) => {
+      if (typeof window !== "undefined" && (window as any).Razorpay) {
+        resolve(true);
+        return;
+      }
+      const script = document.createElement("script");
+      script.src = "https://checkout.razorpay.com/v1/checkout.js";
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
+  };
+
+  const handleRazorpayPay = async () => {
+    toast.loading("Starting secure payment...", { id: "rzp-init" });
+    const loaded = await loadRazorpay();
+    toast.dismiss("rzp-init");
+
+    if (!loaded || typeof window === "undefined" || !(window as any).Razorpay) {
+      toast.error("Failed to load payment gateway. Please check your connection.");
       return;
     }
 
     if (!razorpayOrderId) {
-      toast.error("Razorpay order ID is missing. Please contact support.");
+      toast.error("Payment ID missing. Please refresh and try again.");
       return;
     }
 
@@ -412,10 +430,7 @@ export function PayPanel({
         </div>
       )}
 
-      {/* Razorpay Standard Checkout SDK */}
-      {!isSimMode && (
-        <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="afterInteractive" />
-      )}
+      {/* Razorpay script is injected dynamically on click */}
     </div>
   );
 }
