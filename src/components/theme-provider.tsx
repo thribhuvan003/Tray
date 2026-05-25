@@ -9,9 +9,9 @@ const ThemeContext = React.createContext<Ctx | null>(null);
 const STORAGE_KEY = "tray:theme";
 
 function readStored(): Theme {
-  if (typeof window === "undefined") return "system";
+  if (typeof window === "undefined") return "light";
   const v = window.localStorage.getItem(STORAGE_KEY);
-  return v === "light" || v === "dark" || v === "system" ? v : "system";
+  return v === "light" || v === "dark" || v === "system" ? v : "light";
 }
 
 function systemDark() {
@@ -19,7 +19,7 @@ function systemDark() {
 }
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setThemeState] = React.useState<Theme>("system");
+  const [theme, setThemeState] = React.useState<Theme>("light");
   const [resolved, setResolved] = React.useState<"light" | "dark">("light");
 
   React.useEffect(() => {

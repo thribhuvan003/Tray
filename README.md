@@ -16,14 +16,6 @@ You can access the live, deployed instance of the system on Vercel at **[trayy.v
 * **📱 Student Ordering Portal:** [trayy.vercel.app/c/aditya/menu](https://trayy.vercel.app/c/aditya/menu) — Mobile-first menu selection, custom dietary filters, state-persisted cart, and checkout simulations.
 * **🍳 Kitchen Display System (KDS):** [trayy.vercel.app/c/aditya/kitchen](https://trayy.vercel.app/c/aditya/kitchen) — Operational queue tracking (Placed → Preparing → Ready → Collected) with real-time sync.
 * **📊 Canteen Admin Dashboard:** [trayy.vercel.app/c/aditya/admin/dashboard](https://trayy.vercel.app/c/aditya/admin/dashboard) — Dense sales charts, peak-hour heatmaps, live activity feeds, and catalog CRUD panel.
-
-### 📁 Offline HTML Mockups & Prototypes
-For offline demonstrations and pitch mockups, static HTML files are stored in `public/demo/` and can be accessed locally via your browser when running the development server:
-* **🏠 Offline Mockup Hub:** [http://localhost:3000/demo/index.html](http://localhost:3000/demo/index.html)
-* **📱 Offline Student Mockup:** [http://localhost:3000/demo/student.html](http://localhost:3000/demo/student.html)
-* **🍳 Offline Kitchen Mockup:** [http://localhost:3000/demo/kitchen.html](http://localhost:3000/demo/kitchen.html)
-* **📊 Offline Admin Mockup:** [http://localhost:3000/demo/admin.html](http://localhost:3000/demo/admin.html)
-
 ---
 
 ## 🗺️ System Architecture

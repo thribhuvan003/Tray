@@ -152,7 +152,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   // Blocking inline script: resolve theme synchronously before first paint so
   // dark-mode users never see a white flash (FOUC). Mirrors the logic in
   // ThemeProvider; that effect later re-applies idempotently.
-  const fouc = `(()=>{try{var t=localStorage.getItem('tray:theme')||'system';var d=t==='dark'||(t==='system'&&matchMedia('(prefers-color-scheme: dark)').matches);var r=document.documentElement;r.classList.toggle('dark',d);r.setAttribute('data-theme',d?'dark':'light');if(sessionStorage.getItem('tray_landing_intro_seen')==='1'){r.classList.add('tl-intro-seen');}}catch(e){}})();`;
+  const fouc = `(()=>{try{var t=localStorage.getItem('tray:theme')||'light';var d=t==='dark'||(t==='system'&&matchMedia('(prefers-color-scheme: dark)').matches);var r=document.documentElement;r.classList.toggle('dark',d);r.setAttribute('data-theme',d?'dark':'light');if(sessionStorage.getItem('tray_landing_intro_seen')==='1'){r.classList.add('tl-intro-seen');}}catch(e){}})();`;
 
   return (
     <html
