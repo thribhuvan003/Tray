@@ -47,7 +47,7 @@ export async function GET(req: NextRequest) {
     const [itemsRes, secretsRes] = await Promise.all([
       admin
         .from("order_items")
-        .select("id, order_id, name_snapshot, qty, diet_snapshot, menu_items(category_id, menu_categories(name))")
+        .select("id, order_id, name_snapshot, qty, diet_snapshot, menu_items(category_id, prep_target_seconds, menu_categories(name))")
         .in("order_id", orderIds),
       admin
         .from("pickup_secrets")
@@ -70,7 +70,7 @@ export async function GET(req: NextRequest) {
       diet: it.diet_snapshot,
       q: it.qty,
       special: isSpecial,
-      tgt: 6, // default target min
+      tgt: Math.max(1, Math.round((it.menu_items?.prep_target_seconds ?? 360) / 60)), // real prep time from DB
     });
   }
 
