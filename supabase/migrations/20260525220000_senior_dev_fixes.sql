@@ -233,31 +233,31 @@ CREATE INDEX IF NOT EXISTS idx_order_events_upi_refund
   WHERE event_type = 'upi_refund_required';
 
 -- ─── PAYMENT: Ensure idempotent capture is safe from NULL ─────────────────────
--- The existing execute_idempotent_payment_capture RPC is good — just ensure
--- the payment_id uniqueness constraint exists (prevents double-capture)
+-- Unique constraint on razorpay_payment_id prevents double-capture at DB level.
+-- EXCEPTION must be in its own nested block (PL/pgSQL rule — not inside IF).
 DO $$
 BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_constraint
-    WHERE conname = 'payments_razorpay_payment_id_unique'
-  ) THEN
+  -- Nested block so EXCEPTION handler is valid PL/pgSQL
+  BEGIN
     ALTER TABLE public.payments
       ADD CONSTRAINT payments_razorpay_payment_id_unique
       UNIQUE (razorpay_payment_id)
       DEFERRABLE INITIALLY DEFERRED;
-    EXCEPTION WHEN duplicate_table THEN NULL;
-  END IF;
+  EXCEPTION
+    WHEN duplicate_table THEN NULL;  -- constraint already exists, skip
+    WHEN others THEN NULL;           -- column may not exist yet in older schemas
+  END;
 END $$;
 
 -- ─── Ensure stock_qty check constraint ───────────────────────────────────────
 DO $$
 BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_constraint
-    WHERE conname = 'menu_items_stock_qty_non_negative'
-  ) THEN
+  BEGIN
     ALTER TABLE public.menu_items
       ADD CONSTRAINT menu_items_stock_qty_non_negative
       CHECK (stock_qty IS NULL OR stock_qty >= 0);
-  END IF;
+  EXCEPTION
+    WHEN duplicate_table THEN NULL;  -- already exists
+    WHEN others THEN NULL;
+  END;
 END $$;
