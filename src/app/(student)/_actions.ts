@@ -414,20 +414,14 @@ type VerifyResult = { status: "paid" | "pending" | "failed" };
 export async function verifyPaymentNow(orderId: string): Promise<VerifyResult> {
   const { featureFlags } = await import("@/lib/env");
 
-  const h = await headers();
-  const slug = getTenantSlugFromHeaders(h);
-  const tenant = await resolveTenant(slug);
-  if (!tenant) return { status: "pending" };
-
   const user = await getCurrentUser().catch(() => null);
 
-  const admin = getAdminClient(tenant.id);
-  const { data: orderRow } = await admin
+  const globalAdmin = getAdminClient();
+  const { data: orderRow } = await globalAdmin
     .from("orders")
-    .select("id, user_id, status, payment_expires_at")
+    .select("id, tenant_id, user_id, status, payment_expires_at")
     .eq("id", orderId)
-    .eq("tenant_id", tenant.id)
-    .maybeSingle<{ id: string; user_id: string | null; status: string; payment_expires_at: string | null }>();
+    .maybeSingle<{ id: string; tenant_id: string; user_id: string | null; status: string; payment_expires_at: string | null }>();
   if (!orderRow) return { status: "pending" };
 
   if (orderRow.user_id) {
@@ -439,11 +433,12 @@ export async function verifyPaymentNow(orderId: string): Promise<VerifyResult> {
   // Already past pending_payment/expired — webhook (or a previous call) already moved it.
   if (orderRow.status !== "pending_payment" && orderRow.status !== "expired") return { status: "paid" };
 
+  const admin = getAdminClient(orderRow.tenant_id);
   const { data: payRow } = await admin
     .from("payments")
     .select("razorpay_order_id, amount_paise")
     .eq("order_id", orderId)
-    .eq("tenant_id", tenant.id)
+    .eq("tenant_id", orderRow.tenant_id)
     .order("created_at", { ascending: false })
     .limit(1)
     .maybeSingle<{ razorpay_order_id: string | null; amount_paise: number }>();
@@ -463,7 +458,7 @@ export async function verifyPaymentNow(orderId: string): Promise<VerifyResult> {
 
     await admin.from("payments").upsert(
       {
-        tenant_id: tenant.id,
+        tenant_id: orderRow.tenant_id,
         order_id: orderId,
         razorpay_order_id: payRow?.razorpay_order_id ?? null,
         amount_paise: payRow?.amount_paise ?? 0,
@@ -478,7 +473,7 @@ export async function verifyPaymentNow(orderId: string): Promise<VerifyResult> {
       .from("orders")
       .update({ status: "placed" })
       .eq("id", orderId)
-      .eq("tenant_id", tenant.id)
+      .eq("tenant_id", orderRow.tenant_id)
       .in("status", ["pending_payment", "expired"])
       .select("id, short_code, status, total_paise, placed_at, ready_at, collected_at, customer_name, order_type, table_label");
     
@@ -496,13 +491,13 @@ export async function verifyPaymentNow(orderId: string): Promise<VerifyResult> {
           insert: (row: OrderEventInsert) => Promise<unknown>;
         }
       ).insert({
-        tenant_id: tenant.id,
+        tenant_id: orderRow.tenant_id,
         order_id: orderId,
         event_type: "status_changed",
         payload: { from: "pending_payment", to: "placed", source: "upi_trust", order: updated[0], lines: orderLines },
       });
       await admin.from("order_status_logs").insert({
-        tenant_id: tenant.id,
+        tenant_id: orderRow.tenant_id,
         order_id: orderId,
         from_status: "pending_payment",
         to_status: "placed",
@@ -519,7 +514,7 @@ export async function verifyPaymentNow(orderId: string): Promise<VerifyResult> {
     .from("payments")
     .select("razorpay_order_id, amount_paise")
     .eq("order_id", orderId)
-    .eq("tenant_id", tenant.id)
+    .eq("tenant_id", orderRow.tenant_id)
     .order("created_at", { ascending: false })
     .limit(1)
     .maybeSingle<{ razorpay_order_id: string | null; amount_paise: number }>();
@@ -540,7 +535,7 @@ export async function verifyPaymentNow(orderId: string): Promise<VerifyResult> {
   // dedupes if a duplicate webhook or another verifyPaymentNow call beat us.
   await admin.from("payments").upsert(
     {
-      tenant_id: tenant.id,
+      tenant_id: orderRow.tenant_id,
       order_id: orderId,
       razorpay_order_id: paymentRow.razorpay_order_id,
       amount_paise: paymentRow.amount_paise,
@@ -556,7 +551,7 @@ export async function verifyPaymentNow(orderId: string): Promise<VerifyResult> {
     .from("orders")
     .update({ status: "placed" })
     .eq("id", orderId)
-    .eq("tenant_id", tenant.id)
+    .eq("tenant_id", orderRow.tenant_id)
     .in("status", ["pending_payment", "expired"])
     .select("id, short_code, status, total_paise, placed_at, ready_at, collected_at, customer_name, order_type, table_label");
 
@@ -574,13 +569,13 @@ export async function verifyPaymentNow(orderId: string): Promise<VerifyResult> {
         insert: (row: OrderEventInsert) => Promise<unknown>;
       }
     ).insert({
-      tenant_id: tenant.id,
+      tenant_id: orderRow.tenant_id,
       order_id: orderId,
       event_type: "status_changed",
       payload: { from: "pending_payment", to: "placed", source: "manual_verify", order: updated[0], lines: orderLines },
     });
     await admin.from("order_status_logs").insert({
-      tenant_id: tenant.id,
+      tenant_id: orderRow.tenant_id,
       order_id: orderId,
       from_status: "pending_payment",
       to_status: "placed",

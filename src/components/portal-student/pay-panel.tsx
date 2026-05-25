@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useCallback, useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import QRCode from "react-qr-code";
 import Link from "next/link";
@@ -130,7 +130,7 @@ export function PayPanel({
       }
     });
 
-  const onIvePaid = () =>
+  const onIvePaid = useCallback(() =>
     startVerify(async () => {
       setStillWaiting(false);
       // Show a brief "Confirming…" state before the server round-trip resolves
@@ -162,7 +162,7 @@ export function PayPanel({
         toast.error("Payment sync pending — please wait a brief moment.");
         setStillWaiting(true);
       }
-    });
+    }), [order.id, router, tenantSlug]);
 
   const handleMobilePay = () => {
     setIsPayingMobile(true);
@@ -177,6 +177,17 @@ export function PayPanel({
       onIvePaid();
     }, 1500);
   };
+
+  // Automatically trigger verification when the student returns to this browser tab
+  useEffect(() => {
+    const handleFocus = () => {
+      if (isPayingMobile || stillWaiting) {
+        onIvePaid();
+      }
+    };
+    window.addEventListener("focus", handleFocus);
+    return () => window.removeEventListener("focus", handleFocus);
+  }, [isPayingMobile, stillWaiting, onIvePaid]);
 
   const loadRazorpay = () => {
     return new Promise((resolve) => {
@@ -324,11 +335,11 @@ export function PayPanel({
               <Smartphone size={16} /> Pay Now
             </button>
 
-            {/* Desktop/Tablet Only: "I've Paid" confirm button */}
+            {/* "I've Paid" confirm button — visible on all devices */}
             <button
               onClick={onIvePaid}
               disabled={verifying || Boolean(expired)}
-              className="hidden md:inline-flex w-full h-12 text-[15px] items-center justify-center gap-2 rounded-xl bg-ocean-500 text-black font-bold hover:bg-ocean-600 disabled:opacity-50 transition-all active:scale-[0.98] mb-2"
+              className="inline-flex w-full h-12 text-[15px] items-center justify-center gap-2 rounded-xl bg-ocean-500 text-black font-bold hover:bg-ocean-600 disabled:opacity-50 transition-all active:scale-[0.98] mb-2"
             >
               {verifying ? (
                 <>
