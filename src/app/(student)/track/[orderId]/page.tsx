@@ -1,7 +1,7 @@
 import { headers } from "next/headers";
 import { notFound, redirect } from "next/navigation";
 import { resolveTenant, getTenantSlugFromHeaders } from "@/lib/tenant";
-import { getServerClient } from "@/lib/supabase/server";
+import { getAdminClient } from "@/lib/supabase/admin";
 import { getCurrentUser } from "@/lib/auth/get-user";
 import { TrackPanel } from "@/components/portal-student/track-panel";
 import { OrderRow } from "@/types/portal";
@@ -16,7 +16,7 @@ export default async function TrackPage({ params }: { params: Promise<{ orderId:
   const tenant = await resolveTenant(slug);
   if (!tenant) notFound();
   const user = await getCurrentUser();
-  const supabase = await getServerClient(tenant.id);
+  const admin = getAdminClient(tenant.id);
   type OrderRow = {
     id: string;
     short_code: string;
@@ -30,7 +30,7 @@ export default async function TrackPage({ params }: { params: Promise<{ orderId:
     table_label: string | null;
     user_id: string | null;
   };
-  const { data: order } = await supabase
+  const { data: order } = await admin
     .from("orders")
     .select("id, short_code, status, total_paise, placed_at, ready_at, collected_at, customer_name, order_type, table_label, user_id")
     .eq("id", orderId)
@@ -43,7 +43,7 @@ export default async function TrackPage({ params }: { params: Promise<{ orderId:
   if (order.user_id && (!user || user.id !== order.user_id)) {
     redirect(`/c/${tenant.slug}/login?next=/c/${tenant.slug}/track/${orderId}`);
   }
-  const { data: lines } = await supabase
+  const { data: lines } = await admin
     .from("order_items")
     .select("id, name_snapshot, qty, diet_snapshot, price_paise_snapshot")
     .eq("order_id", orderId)

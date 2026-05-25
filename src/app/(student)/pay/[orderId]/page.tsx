@@ -1,7 +1,7 @@
 import { headers } from "next/headers";
 import { notFound, redirect } from "next/navigation";
 import { resolveTenant, getTenantSlugFromHeaders } from "@/lib/tenant";
-import { getServerClient } from "@/lib/supabase/server";
+import { getAdminClient } from "@/lib/supabase/admin";
 import { getCurrentUser } from "@/lib/auth/get-user";
 import { PayPanel } from "@/components/portal-student/pay-panel";
 
@@ -13,8 +13,8 @@ export default async function PayPage({ params }: { params: Promise<{ orderId: s
   if (!tenant) notFound();
 
   const user = await getCurrentUser();
-  const supabase = await getServerClient(tenant.id);
-  const { data: order } = await supabase
+  const admin = getAdminClient(tenant.id);
+  const { data: order } = await admin
     .from("orders")
     .select("id, short_code, total_paise, status, payment_expires_at, customer_name, user_id")
     .eq("id", orderId)
@@ -39,7 +39,7 @@ export default async function PayPage({ params }: { params: Promise<{ orderId: s
     redirect(`/c/${tenant.slug}/track/${orderId}`);
   }
 
-  const { data: lines } = await supabase
+  const { data: lines } = await admin
     .from("order_items")
     .select("id, name_snapshot, qty, price_paise_snapshot, diet_snapshot")
     .eq("order_id", orderId)
@@ -57,7 +57,7 @@ export default async function PayPage({ params }: { params: Promise<{ orderId: s
   }
 
   // Fetch the razorpay_order_id associated with the payment record
-  const { data: payment } = await supabase
+  const { data: payment } = await admin
     .from("payments")
     .select("razorpay_order_id")
     .eq("order_id", orderId)
