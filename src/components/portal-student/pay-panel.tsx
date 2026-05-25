@@ -290,7 +290,7 @@ export function PayPanel({
       </div>
 
       <div className="mx-auto max-w-md rounded-[24px] bg-[color:var(--color-paper)] border border-[color:var(--color-line)] p-6 shadow-[0_4px_24px_rgba(0,0,0,0.02)]">
-        {isSimMode ? (
+        {!razorpayOrderId ? (
           <div className="flex flex-col items-center">
             {/* Beautifully Framed QR Code - Permanently Visible on all screen sizes */}
             <div className="p-4 bg-white rounded-2xl border border-[color:var(--color-line)] shadow-[0_2px_12px_rgba(0,0,0,0.03)] transition-all hover:scale-[1.01] mb-6">
