@@ -47,6 +47,7 @@ export async function createRazorpayOrder(input: CreateOrderInput): Promise<Crea
       amount: input.amountPaise,
       currency: "INR",
       receipt: input.receipt,
+      payment_capture: 1, // Auto-capture payments instantly on successful PIN completion
       notes: input.notes,
     }),
   });

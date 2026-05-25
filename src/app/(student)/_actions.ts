@@ -321,6 +321,23 @@ export async function simulatePaymentCapture(orderId: string): Promise<{ ok: boo
 
   await admin.from("orders").update({ status: "placed" }).eq("id", orderId);
 
+  type OrderEventInsert = {
+    tenant_id: string;
+    order_id: string;
+    event_type: string;
+    payload: Record<string, unknown>;
+  };
+  await (
+    admin.from("order_events") as unknown as {
+      insert: (row: OrderEventInsert) => Promise<unknown>;
+    }
+  ).insert({
+    tenant_id: tenant.id,
+    order_id: orderId,
+    event_type: "status_changed",
+    payload: { from: "pending_payment", to: "placed", source: "simulator" },
+  });
+
   await admin.from("order_status_logs").insert({
     tenant_id: tenant.id,
     order_id: orderId,
@@ -338,21 +355,40 @@ export async function getMyOrderOtp(orderId: string): Promise<{ otp: string | nu
   const slug = getTenantSlugFromHeaders(h);
   const tenant = await resolveTenant(slug);
   if (!tenant) return { otp: null };
-  const user = await getCurrentUser();
-  if (!user) return { otp: null };
 
-  // SECURITY DEFINER function re-checks ownership + status + expiry; we cannot
-  // bypass it. This is the ONLY surface that returns plaintext OTP.
-  const supabase = await getServerClient(tenant.id);
-  // Cast the args param: the generated Database type doesn't always surface
-  // SECURITY DEFINER fn arg types correctly when regenerated incrementally.
-  const { data } = await (
-    supabase.rpc as unknown as (
-      fn: string,
-      args: Record<string, unknown>
-    ) => Promise<{ data: unknown }>
-  )("read_my_pickup_otp", { p_order: orderId });
-  return { otp: typeof data === "string" ? data : null };
+  const admin = getAdminClient(tenant.id);
+
+  // 1. Fetch order details to enforce status & ownership controls server-side
+  const { data: order } = await admin
+    .from("orders")
+    .select("user_id, status")
+    .eq("id", orderId)
+    .maybeSingle<{ user_id: string | null; status: string }>();
+
+  if (!order || order.status !== "ready") {
+    return { otp: null };
+  }
+
+  const user = await getCurrentUser().catch(() => null);
+
+  // 2. If registered order, visitor must be the owning user
+  if (order.user_id) {
+    if (!user || user.id !== order.user_id) {
+      return { otp: null };
+    }
+  }
+
+  // 3. Since authorization checks passed, fetch plaintext OTP directly from pickup_secrets
+  const { data: secret } = await admin
+    .from("pickup_secrets")
+    .select("otp_plain, expires_at")
+    .eq("order_id", orderId)
+    .maybeSingle<{ otp_plain: string; expires_at: string }>();
+
+  if (!secret) return { otp: null };
+  if (new Date(secret.expires_at) <= new Date()) return { otp: null };
+
+  return { otp: secret.otp_plain };
 }
 
 type VerifyResult = { status: "paid" | "pending" | "failed" };
@@ -391,13 +427,8 @@ export async function verifyPaymentNow(orderId: string): Promise<VerifyResult> {
     }
   }
 
-  // Already past pending_payment — webhook (or a previous call) already moved it.
-  if (orderRow.status !== "pending_payment") return { status: "paid" };
-
-  // Server-side expiry check — client timer can be bypassed
-  if (orderRow.payment_expires_at && new Date(orderRow.payment_expires_at) < new Date()) {
-    return { status: "failed" };
-  }
+  // Already past pending_payment/expired — webhook (or a previous call) already moved it.
+  if (orderRow.status !== "pending_payment" && orderRow.status !== "expired") return { status: "paid" };
 
   // ── UPI-direct mode: trust the student's tap immediately ─────────────────────
   // Money already went directly to the canteen's bank account via UPI. We have no
@@ -405,6 +436,11 @@ export async function verifyPaymentNow(orderId: string): Promise<VerifyResult> {
   // emit the order event, and let the kitchen board pick it up.
   const isLive = featureFlags.razorpayLive && process.env.NEXT_PUBLIC_RAZORPAY_LIVE !== "false";
   if (!isLive) {
+    // Server-side expiry check for UPI-direct mode
+    if (orderRow.payment_expires_at && new Date(orderRow.payment_expires_at) < new Date()) {
+      return { status: "failed" };
+    }
+
     const { data: payRow } = await admin
       .from("payments")
       .select("razorpay_order_id, amount_paise")
@@ -432,7 +468,7 @@ export async function verifyPaymentNow(orderId: string): Promise<VerifyResult> {
       .update({ status: "placed" })
       .eq("id", orderId)
       .eq("tenant_id", tenant.id)
-      .eq("status", "pending_payment")
+      .in("status", ["pending_payment", "expired"])
       .select("id");
 
     if (updated && updated.length > 0) {
@@ -479,7 +515,13 @@ export async function verifyPaymentNow(orderId: string): Promise<VerifyResult> {
   const { fetchRazorpayOrderStatus } = await import("@/lib/payments/razorpay");
   const remote = await fetchRazorpayOrderStatus(paymentRow.razorpay_order_id);
   if (remote === "failed") return { status: "failed" };
-  if (remote !== "paid") return { status: "pending" };
+  if (remote !== "paid") {
+    // If not paid yet, check if order has expired
+    if (orderRow.payment_expires_at && new Date(orderRow.payment_expires_at) < new Date()) {
+      return { status: "failed" };
+    }
+    return { status: "pending" };
+  }
 
   // Idempotent payments insert — unique constraint on raw_event_id silently
   // dedupes if a duplicate webhook or another verifyPaymentNow call beat us.
@@ -502,7 +544,7 @@ export async function verifyPaymentNow(orderId: string): Promise<VerifyResult> {
     .update({ status: "placed" })
     .eq("id", orderId)
     .eq("tenant_id", tenant.id)
-    .eq("status", "pending_payment")
+    .in("status", ["pending_payment", "expired"])
     .select("id");
 
   if (updated && updated.length > 0) {

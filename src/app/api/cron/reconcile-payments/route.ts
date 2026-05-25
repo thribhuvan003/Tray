@@ -29,7 +29,7 @@ async function verifyQstash(req: NextRequest, raw: string): Promise<boolean> {
 type Candidate = {
   id: string;
   tenant_id: string;
-  status: string;
+  status: "pending_payment" | "expired";
 };
 
 type PaymentLookup = {
@@ -65,9 +65,8 @@ export async function POST(req: NextRequest) {
   const { data: candidates } = await admin
     .from("orders")
     .select("id, tenant_id, status, placed_at, payment_expires_at")
-    .eq("status", "pending_payment")
+    .in("status", ["pending_payment", "expired"])
     .gt("placed_at", thirtyMinAgo)
-    .gt("payment_expires_at", nowIso)
     .limit(200)
     .returns<(Candidate & { placed_at: string; payment_expires_at: string })[]>();
 
@@ -122,7 +121,7 @@ export async function POST(req: NextRequest) {
       .update({ status: "placed" })
       .eq("id", c.id)
       .eq("tenant_id", c.tenant_id)
-      .eq("status", "pending_payment")
+      .in("status", ["pending_payment", "expired"])
       .select("id");
 
     if (updated && updated.length > 0) {
@@ -134,12 +133,12 @@ export async function POST(req: NextRequest) {
         tenant_id: c.tenant_id,
         order_id: c.id,
         event_type: "status_changed",
-        payload: { from: "pending_payment", to: "placed", source: "reconcile_cron" },
+        payload: { from: c.status, to: "placed", source: "reconcile_cron" },
       });
       await admin.from("order_status_logs").insert({
         tenant_id: c.tenant_id,
         order_id: c.id,
-        from_status: "pending_payment",
+        from_status: c.status,
         to_status: "placed",
         note: "Reconciled (QStash Razorpay poll)",
       });

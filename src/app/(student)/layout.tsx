@@ -57,7 +57,7 @@ export default async function StudentLayout({ children }: { children: React.Reac
       className="min-h-screen font-sans bg-[color:var(--color-paper)] text-[color:var(--color-ink)] antialiased"
     >
       <CartTenantSync slug={tenant.slug} />
-      <OrderReadyListener userId={user?.id ?? null} tenantSlug={tenant.slug} />
+      <OrderReadyListener userId={user?.id ?? null} tenantSlug={tenant.slug} tenantId={tenant.id} />
       <StudentTopBar tenant={tenant} siblings={siblings} user={user} />
       {/* Desktop reserves a 20rem right column for the sticky cart sidebar.
           Mobile stays single-column; the CartDrawer self-promotes to a

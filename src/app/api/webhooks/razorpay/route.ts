@@ -80,7 +80,7 @@ export async function POST(req: NextRequest) {
       .update({ status: "placed" })
       .eq("id", orderRow.id)
       .eq("tenant_id", orderRow.tenant_id)
-      .eq("status", "pending_payment")
+      .in("status", ["pending_payment", "expired"])
       .select("id");
 
     if (updated && updated.length > 0) {

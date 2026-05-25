@@ -84,7 +84,7 @@ export function TrackPanel({ tenantSlug, tenantName, order: initial, lines }: { 
           collected_at: orderRef.collected_at,
         }));
       }
-    }, 2000);
+    }, 15000); // Relaxed fallback to conserve database CPU resources
 
     return () => clearInterval(interval);
   }, [order.id, order.status]);
@@ -96,9 +96,39 @@ export function TrackPanel({ tenantSlug, tenantName, order: initial, lines }: { 
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "order_events", filter: `order_id=eq.${order.id}` },
-        () => {
+        (payload) => {
+          console.log("Instant order event sync received:", payload);
+          const newRow = payload.new as { event_type: string; payload?: Record<string, unknown> } | null;
+          if (newRow) {
+            let nextStatus: Status | null = null;
+            if (newRow.event_type === "status_changed") {
+              nextStatus = newRow.payload?.to as Status;
+            } else if (
+              [
+                "placed",
+                "preparing",
+                "ready",
+                "collected",
+                "rejected",
+                "expired",
+                "cancelled_by_student",
+                "refunded"
+              ].includes(newRow.event_type)
+            ) {
+              nextStatus = newRow.event_type as Status;
+            }
+
+            if (nextStatus) {
+              setOrder((prev) => ({
+                ...prev,
+                status: nextStatus!,
+                ready_at: nextStatus === "ready" ? new Date().toISOString() : prev.ready_at,
+                collected_at: nextStatus === "collected" ? new Date().toISOString() : prev.collected_at,
+              }));
+            }
+          }
           // order_events is the source of truth signal; refetch the order
-          // server-side via the existing page loader.
+          // server-side via the existing page loader in the background.
           router.refresh();
         }
       )

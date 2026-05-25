@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { getBrowserClient } from "@/lib/supabase/browser";
@@ -8,69 +8,131 @@ import { getBrowserClient } from "@/lib/supabase/browser";
 /**
  * Global Realtime listener that surfaces order status changes to the student
  * via toast notifications, no matter which page they're on (menu / orders /
- * track). Subscribes to UPDATE events on the `orders` table filtered by
- * `user_id`, so the student sees a toast the moment the kitchen flips their
+ * track). Subscribes to INSERT events on the `order_events` table filtered by
+ * `tenant_id`, so the student sees a toast the moment the kitchen flips their
  * order to "preparing" or "ready" — even if they're browsing the menu.
- *
- * The component renders nothing; it's mounted once in the student layout.
- *
- * Dedupes on (orderId, status) so the same status change doesn't fire
- * multiple toasts if the underlying row gets updated twice (e.g. status +
- * ready_at fields written separately).
  */
 export function OrderReadyListener({
     userId,
     tenantSlug,
+    tenantId,
 }: {
     userId: string | null;
     tenantSlug: string;
+    tenantId: string;
 }) {
     const router = useRouter();
     const shownRef = useRef<Set<string>>(new Set());
+    const [activeOrders, setActiveOrders] = useState<Record<string, string>>({}); // orderId -> shortCode
+
+    // 1. Fetch the student's active orders on mount
+    useEffect(() => {
+        if (!userId) return;
+        const uid = userId;
+        const sb = getBrowserClient();
+        let isMounted = true;
+        
+        async function loadActiveOrders() {
+            try {
+                const { data, error } = await sb
+                    .from("orders")
+                    .select("id, short_code")
+                    .eq("user_id", uid)
+                    .in("status", ["placed", "preparing", "ready"]);
+                if (!error && data && isMounted) {
+                    const mapping: Record<string, string> = {};
+                    (data as { id: string; short_code: string }[]).forEach((o) => {
+                        mapping[o.id] = o.short_code;
+                    });
+                    setActiveOrders(mapping);
+                }
+            } catch (err) {
+                console.error("Failed to load active orders:", err);
+            }
+        }
+        
+        void loadActiveOrders();
+        return () => {
+            isMounted = false;
+        };
+    }, [userId]);
 
     useEffect(() => {
         const sb = getBrowserClient();
         const activeChannels: any[] = [];
 
-        // 1. Subscribe to order updates if logged in
+        // 2. Subscribe to order_events updates if logged in
         if (userId) {
             const orderCh = sb
-                .channel(`student-orders:${userId}`)
+                .channel(`student-tenant-events:${tenantId}`)
                 .on(
                     "postgres_changes",
                     {
-                        event: "UPDATE",
+                        event: "INSERT",
                         schema: "public",
-                        table: "orders",
-                        filter: `user_id=eq.${userId}`,
+                        table: "order_events",
+                        filter: `tenant_id=eq.${tenantId}`,
                     },
                     (payload) => {
-                        const row = payload.new as
-                            | { id: string; status: string; short_code?: string }
-                            | null;
+                        const row = payload.new as {
+                            order_id: string;
+                            event_type: string;
+                            payload?: Record<string, unknown>;
+                        } | null;
                         if (!row) return;
 
-                        const key = `${row.id}:${row.status}`;
+                        const orderId = row.order_id;
+                        
+                        // Check if this event belongs to one of our active orders
+                        const shortCode = activeOrders[orderId];
+                        if (!shortCode) return; // Not our order
+
+                        const eventType = row.event_type;
+                        const status = eventType === "status_changed" ? (row.payload?.to as string) : eventType;
+                        const key = `${orderId}:${status}`;
                         if (shownRef.current.has(key)) return;
 
-                        if (row.status === "ready") {
+                        if (status === "ready") {
                             shownRef.current.add(key);
                             toast.success(
-                                `Order ${row.short_code ?? ""} is ready! Head to the counter.`,
+                                `Order ${shortCode ?? ""} is ready! Head to the counter.`,
                                 {
                                     duration: 12000,
                                     action: {
                                         label: "View",
                                         onClick: () =>
-                                            router.push(`/c/${tenantSlug}/track/${row.id}`),
+                                            router.push(`/c/${tenantSlug}/track/${orderId}`),
                                     },
                                 }
                             );
-                        } else if (row.status === "preparing") {
+                            setActiveOrders((prev) => {
+                                const next = { ...prev };
+                                delete next[orderId];
+                                return next;
+                            });
+                            router.refresh();
+                        } else if (status === "preparing") {
                             shownRef.current.add(key);
-                            toast(`Order ${row.short_code ?? ""} is being prepared.`, {
+                            toast(`Order ${shortCode ?? ""} is being prepared.`, {
                                 duration: 5000,
                             });
+                            router.refresh();
+                        } else if (
+                            [
+                                "collected",
+                                "rejected",
+                                "expired",
+                                "cancelled_by_student",
+                                "refunded"
+                            ].includes(status)
+                        ) {
+                            shownRef.current.add(key);
+                            setActiveOrders((prev) => {
+                                const next = { ...prev };
+                                delete next[orderId];
+                                return next;
+                            });
+                            router.refresh();
                         }
                     }
                 )
@@ -78,7 +140,7 @@ export function OrderReadyListener({
             activeChannels.push(orderCh);
         }
 
-        // 2. Global tenants subscription (new canteens created, switcher status updates)
+        // 3. Global tenants subscription (new canteens created, switcher status updates)
         const tenantsCh = sb
             .channel("global-tenants")
             .on(
@@ -95,10 +157,10 @@ export function OrderReadyListener({
             .subscribe();
         activeChannels.push(tenantsCh);
 
-        // 3. Fallback client-side polling: refreshes page data (bypassing route caching) every 2 seconds
+        // 4. Fallback client-side polling: refreshes page data (bypassing route caching) every 15 seconds
         const pollInterval = setInterval(() => {
             router.refresh();
-        }, 2000);
+        }, 15000); // 15 seconds instead of 2 seconds to save database CPU resources
 
         return () => {
             clearInterval(pollInterval);
@@ -106,7 +168,7 @@ export function OrderReadyListener({
                 sb.removeChannel(ch);
             });
         };
-    }, [userId, tenantSlug, router]);
+    }, [userId, tenantSlug, tenantId, activeOrders, router]);
 
     return null;
 }

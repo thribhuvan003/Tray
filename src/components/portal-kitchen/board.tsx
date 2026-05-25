@@ -169,6 +169,9 @@ export function KitchenBoard({
 
     void refresh();
 
+    let debounceTimeout: NodeJS.Timeout | null = null;
+    let shouldFlash = false;
+
     const channel = sb
       .channel(`kitchen:${tenantId}`)
       .on(
@@ -180,14 +183,26 @@ export function KitchenBoard({
           filter: `tenant_id=eq.${tenantId}`,
         },
         (payload) => {
-          const eventType = (payload.new as { event_type?: string } | null)?.event_type;
-          void refresh(() => {
-            if (eventType === "placed") {
-              playBell();
-              setNewOrderFlash(true);
-              setTimeout(() => setNewOrderFlash(false), 10000);
-            }
-          });
+          const newRow = payload.new as { event_type?: string; payload?: Record<string, unknown> } | null;
+          const eventType = newRow?.event_type;
+          const isPlaced = eventType === "placed" || (eventType === "status_changed" && newRow?.payload?.to === "placed");
+          
+          if (isPlaced) {
+            shouldFlash = true;
+          }
+
+          if (debounceTimeout) clearTimeout(debounceTimeout);
+          debounceTimeout = setTimeout(() => {
+            const flashAction = shouldFlash;
+            shouldFlash = false;
+            void refresh(() => {
+              if (flashAction) {
+                playBell();
+                setNewOrderFlash(true);
+                setTimeout(() => setNewOrderFlash(false), 10000);
+              }
+            });
+          }, 50);
         }
       )
       .subscribe((status) => {
@@ -207,6 +222,7 @@ export function KitchenBoard({
       sb.removeChannel(channel);
       document.removeEventListener("visibilitychange", onVis);
       clearInterval(pollId);
+      if (debounceTimeout) clearTimeout(debounceTimeout);
     };
   }, [tenantId, refresh]);
 

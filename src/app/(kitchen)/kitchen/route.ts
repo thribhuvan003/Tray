@@ -4,6 +4,7 @@ import { resolveTenant, getTenantSlugFromHeaders } from "@/lib/tenant";
 import { requireRole } from "@/lib/auth/get-user";
 import fs from "fs";
 import path from "path";
+import { env } from "@/lib/env";
 
 export const dynamic = "force-dynamic";
 
@@ -35,10 +36,58 @@ export async function GET(req: NextRequest) {
   html = html.replace(/\r\n/g, "\n");
 
   // 1. Force isLiveMode to true so the JS bypasses mock data and hits our live API
-  // We inject isLiveMode = true at the start of the head tag
+  // We inject isLiveMode = true at the start of the head tag, along with Supabase SDK & neo-pulse styles
   html = html.replace(
     "<head>",
-    `<head>\n<script>let isLiveMode = true;</script>`
+    `<head>
+<script>let isLiveMode = true;</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+@keyframes neoPulse {
+  0% {
+    box-shadow: 5px 5px 0 var(--ink);
+    border-color: var(--ink);
+  }
+  50% {
+    box-shadow: 0 0 15px var(--tomato);
+    border-color: var(--tomato);
+    background-color: var(--tomato-soft);
+  }
+  100% {
+    box-shadow: 5px 5px 0 var(--ink);
+    border-color: var(--ink);
+  }
+}
+.new-order-flash {
+  animation: neoPulse 1.5s infinite ease-in-out !important;
+  position: relative !important;
+}
+.new-order-flash::after {
+  content: "NEW ORDER" !important;
+  position: absolute !important;
+  top: -8px !important;
+  right: 12px !important;
+  background: var(--tomato) !important;
+  color: white !important;
+  font-family: var(--mono), monospace !important;
+  font-size: 9px !important;
+  font-weight: 700 !important;
+  padding: 2px 6px !important;
+  border-radius: 4px !important;
+  border: 1px solid var(--ink) !important;
+  box-shadow: 2px 2px 0 var(--ink) !important;
+  letter-spacing: 0.06em !important;
+  z-index: 10 !important;
+}
+@keyframes headerPulse {
+  0% { background: var(--paper); }
+  50% { background: var(--tomato-soft); color: var(--tomato); }
+  100% { background: var(--paper); }
+}
+.column-flash {
+  animation: headerPulse 1.5s infinite ease-in-out !important;
+}
+</style>`
   );
 
   // 2. Inject the true Canteen ID
@@ -385,6 +434,8 @@ export async function GET(req: NextRequest) {
   isSimulationActive = false;
   
   const seenOrderIds = new Set();
+  const flashingOrderIds = {}; // idKey -> timestamp
+  let columnFlashUntil = 0;
   
   function playChime() {
     if (!soundsOn) return;
@@ -418,19 +469,22 @@ export async function GET(req: NextRequest) {
       
       const isInitialLoad = seenOrderIds.size === 0;
       let hasNewIncoming = false;
+      const now = Date.now();
       
       data.orders.forEach(o => {
         const idKey = o.dbId || o.id;
         if (!seenOrderIds.has(idKey)) {
           seenOrderIds.add(idKey);
-          if (o.status === 'incoming' || o.status === 'preparing') {
+          if (o.status === 'incoming') {
             hasNewIncoming = true;
+            flashingOrderIds[idKey] = now;
           }
         }
       });
       
       if (hasNewIncoming && !isInitialLoad) {
         playChime();
+        columnFlashUntil = now + 10000;
       }
       
       // Update global lexical state
@@ -471,6 +525,11 @@ export async function GET(req: NextRequest) {
         if (nextStatus === 'preparing') o.placedAt = Date.now();
         document.getElementById('qStat').innerHTML = \`Last update: <span class="serif-it stat">\${o.id} → \${nextStatus}</span>\`;
         if (nextStatus === 'collected') toast(\`✓ Handed over · \${o.id}\`);
+        
+        // Remove from flashing order IDs immediately if advanced from incoming
+        if (nextStatus === 'preparing') {
+          delete flashingOrderIds[targetId];
+        }
       }
       renderQueue();
       await pollLiveData();
@@ -569,6 +628,49 @@ export async function GET(req: NextRequest) {
     }));
   };
 
+  // Monkey-patch renderQueue to dynamically inject neo-pulse pulsing CSS classes 
+  // on Incoming header and cards. Keeps DOM logic extremely fast and optimized.
+  const originalRenderQueue = window.renderQueue;
+  window.renderQueue = function() {
+    originalRenderQueue();
+    const now = Date.now();
+
+    // 1. Column Header Highlight
+    const colHead = document.querySelector('[data-status="incoming"] .col-head');
+    if (colHead) {
+      if (now < columnFlashUntil) {
+        colHead.classList.add('column-flash');
+      } else {
+        colHead.classList.remove('column-flash');
+      }
+    }
+
+    // 2. Ticket Card Highlight
+    document.querySelectorAll('[data-col="incoming"] .ticket').forEach(tk => {
+      const actBtn = tk.querySelector('.tkt-action');
+      if (!actBtn) return;
+      const orderId = actBtn.dataset.id;
+      const o = orders.find(x => x.id === orderId);
+      if (!o) return;
+      const idKey = o.dbId || o.id;
+
+      const flashTime = flashingOrderIds[idKey];
+      if (flashTime && (now - flashTime < 10000) && o.status === 'incoming') {
+        tk.classList.add('new-order-flash');
+      } else {
+        tk.classList.remove('new-order-flash');
+        delete flashingOrderIds[idKey];
+      }
+    });
+  };
+
+  // Continuously refresh ticket flashing classes every second so they fade out cleanly
+  setInterval(() => {
+    if (window.renderQueue) {
+      window.renderQueue();
+    }
+  }, 1000);
+
   const originalApplyCanteen = window.applyCanteen;
   window.applyCanteen = function(id) {
     originalApplyCanteen(id);
@@ -582,9 +684,48 @@ export async function GET(req: NextRequest) {
     if (window.livePollInterval) {
       clearInterval(window.livePollInterval);
     }
+    if (window.realtimeChannel) {
+      window.supabaseClient.removeChannel(window.realtimeChannel);
+    }
     
     pollLiveData();
-    window.livePollInterval = setInterval(pollLiveData, 2000);
+    
+    // Setup Supabase Realtime for instant sync (WebSocket)
+    const supabaseUrl = "${env.NEXT_PUBLIC_SUPABASE_URL}";
+    const supabaseAnonKey = "${env.NEXT_PUBLIC_SUPABASE_ANON_KEY}";
+    
+    if (!window.supabaseClient) {
+      window.supabaseClient = supabase.createClient(supabaseUrl, supabaseAnonKey, {
+        global: {
+          headers: {
+            "x-tenant-id": "${tenant.id}"
+          }
+        }
+      });
+    }
+    
+    let pollTimeout = null;
+    function debouncedPollLiveData() {
+      if (pollTimeout) clearTimeout(pollTimeout);
+      pollTimeout = setTimeout(() => {
+        pollLiveData();
+      }, 50);
+    }
+    
+    window.realtimeChannel = window.supabaseClient
+      .channel('kitchen-realtime')
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'order_events', filter: 'tenant_id=eq.${tenant.id}' },
+        (payload) => {
+          console.log('Realtime event received:', payload);
+          debouncedPollLiveData(); // 50ms coalesced fetch!
+        }
+      )
+      .subscribe();
+      
+    // Optimized fallback polling: 15s instead of 2s to conserve DB resources
+    window.livePollInterval = setInterval(pollLiveData, 15000);
   };
 
   const pushBtn = document.getElementById('spPush');

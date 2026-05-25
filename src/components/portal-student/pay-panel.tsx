@@ -71,13 +71,19 @@ export function PayPanel({
   useEffect(() => {
     const sb = getBrowserClient();
     const channel = sb
-      .channel(`order:${order.id}`)
+      .channel(`order_events:${order.id}`)
       .on(
         "postgres_changes",
-        { event: "UPDATE", schema: "public", table: "orders", filter: `id=eq.${order.id}` },
+        { event: "INSERT", schema: "public", table: "order_events", filter: `order_id=eq.${order.id}` },
         (payload) => {
-          const next = (payload.new as { status: string }).status;
-          if (next === "placed" || next === "preparing" || next === "ready") {
+          const eventType = (payload.new as { event_type: string }).event_type;
+          const payloadData = (payload.new as { payload?: Record<string, unknown> }).payload;
+          if (
+            eventType === "placed" || 
+            eventType === "preparing" || 
+            eventType === "ready" || 
+            (eventType === "status_changed" && payloadData?.to === "placed")
+          ) {
             router.push(`/c/${tenantSlug}/track/${order.id}`);
           }
         }
