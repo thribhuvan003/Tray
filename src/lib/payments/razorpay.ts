@@ -90,8 +90,10 @@ export function verifyWebhookSignature(rawBody: string, signature: string): bool
     .createHmac("sha256", env.RAZORPAY_WEBHOOK_SECRET)
     .update(rawBody)
     .digest("hex");
-  if (signature.length !== expected.length) return false;
-  return crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected));
+  const sigBuf = Buffer.from(signature);
+  const expectedBuf = Buffer.from(expected);
+  if (sigBuf.byteLength !== expectedBuf.byteLength) return false;
+  return crypto.timingSafeEqual(sigBuf, expectedBuf);
 }
 
 /**

@@ -139,7 +139,7 @@ async function handleReconciliation() {
             return;
           }
 
-          const resObj = rpcResult as { success?: boolean; updated?: boolean; error?: string };
+          const resObj = (rpcResult ?? {}) as { success?: boolean; updated?: boolean; error?: string };
           if (resObj.success && resObj.updated) {
             const { data: updated } = await admin
               .from("orders")

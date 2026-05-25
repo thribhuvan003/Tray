@@ -22,7 +22,9 @@ function csvEscape(v: string | number | null) {
 
 export async function GET(req: NextRequest) {
   const h = await headers();
-  const slug = getTenantSlugFromHeaders(h);
+  // H6: Accept ?tenant= query param as fallback — needed when opened in a new tab
+  // where the x-tenant-slug cookie/header may not be present.
+  const slug = req.nextUrl.searchParams.get("tenant") ?? getTenantSlugFromHeaders(h);
   const tenant = await resolveTenant(slug);
   if (!tenant) return new NextResponse("Tenant not found", { status: 404 });
   const user = await requireRole(["canteen_admin", "super_admin"]);

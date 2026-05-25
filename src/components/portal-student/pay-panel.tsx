@@ -99,16 +99,19 @@ export function PayPanel({
     };
   }, [order.id, router, tenantSlug]);
 
+  // C4: Poll via server-side API route — works for BOTH authenticated and guest orders.
+  // Direct Supabase client polling fails for guests because RLS rejects null=null user_id.
   useEffect(() => {
     const id = setInterval(async () => {
-      const sb = getBrowserClient();
-      const { data } = await sb
-        .from("orders")
-        .select("status")
-        .eq("id", order.id)
-        .maybeSingle<{ status: string }>();
-      if (data && data.status !== "pending_payment") {
-        router.push(`/c/${tenantSlug}/track/${order.id}`);
+      try {
+        const res = await fetch(`/api/orders/verify-status?id=${order.id}`);
+        if (!res.ok) return; // network blip — retry next tick
+        const data = await res.json();
+        if (data.status && data.status !== "pending_payment") {
+          router.push(`/c/${tenantSlug}/track/${order.id}`);
+        }
+      } catch {
+        // Ignore network errors — will retry in 4s
       }
     }, 4000);
     return () => clearInterval(id);

@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { verifyPaymentNow } from "@/app/(student)/_actions";
 import { getAdminClient } from "@/lib/supabase/admin";
 import { getCurrentUser } from "@/lib/auth/get-user";
+import { getTenantSlugFromHeaders, resolveTenant } from "@/lib/tenant";
 
 export const dynamic = "force-dynamic";
 
@@ -13,14 +14,8 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Order ID missing" }, { status: 400 });
   }
 
-  // ── SECURITY: Must be an authenticated user ──────────────────────────────
-  const user = await getCurrentUser();
-  if (!user) {
-    return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
-  }
-
   try {
-    // Verify the order belongs to this user BEFORE calling verifyPaymentNow
+    // Use admin client to fetch the order — bypasses RLS so guest orders work
     const globalAdmin = getAdminClient();
     const { data: ord } = await globalAdmin
       .from("orders")
@@ -32,11 +27,27 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "Order not found" }, { status: 404 });
     }
 
-    // Ownership check — student can only poll their own order
-    // Walk-in orders have null user_id — only kitchen staff should poll those,
-    // but we still gate them here since this is a student-facing endpoint.
-    if (ord.user_id !== user.id) {
+    // ── SECURITY: Validate tenant matches the request context ────────────────
+    // Prevents cross-tenant order snooping via this endpoint.
+    const tenant = await resolveTenant(getTenantSlugFromHeaders(req.headers));
+    if (tenant && ord.tenant_id !== tenant.id) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
+    if (ord.user_id === null) {
+      // ── Guest order: no auth required — order has no owner ────────────────
+      // Guest orders are identified by user_id IS NULL. Anyone with the order
+      // ID (stored in the guest's browser) can poll status. The order ID itself
+      // acts as the bearer token for guest flows.
+    } else {
+      // ── Authenticated order: enforce ownership ────────────────────────────
+      const user = await getCurrentUser();
+      if (!user) {
+        return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+      }
+      if (ord.user_id !== user.id) {
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      }
     }
 
     // 1. Reconcile and verify payment via the server action

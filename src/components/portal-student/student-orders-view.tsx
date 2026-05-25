@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { getBrowserClient } from "@/lib/supabase/browser";
@@ -52,8 +52,16 @@ export function StudentOrdersView({
   const [refreshing, setRefreshing] = useState(false);
 
   // Keep local state in sync if the server passes new data
+  // H8: Maintain a ref so the realtime handler always reads the latest orders
+  // without creating a stale closure over the initial value.
+  const ordersRef = useRef<Order[]>(initialOrders);
+  useEffect(() => {
+    ordersRef.current = orders;
+  }, [orders]);
+
   useEffect(() => {
     setOrders(initialOrders);
+    ordersRef.current = initialOrders;
   }, [initialOrders]);
 
   const refresh = useCallback(async () => {
@@ -86,8 +94,8 @@ export function StudentOrdersView({
             event_type: string;
             payload?: Record<string, unknown>;
           };
-          // Check if this event is for one of our orders
-          const myOrder = orders.find((o) => o.id === ev.order_id);
+          // H8: Use ref instead of stale closure over orders state
+          const myOrder = ordersRef.current.find((o) => o.id === ev.order_id);
           if (!myOrder) return;
 
           // Map event_type → new status

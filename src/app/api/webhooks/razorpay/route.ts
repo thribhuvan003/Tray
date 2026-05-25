@@ -93,7 +93,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Lock Conflict / Processing Failure" }, { status: 409 });
     }
 
-    const resObj = rpcResult as { success?: boolean; updated?: boolean; error?: string };
+    const resObj = (rpcResult ?? {}) as { success?: boolean; updated?: boolean; error?: string };
     if (!resObj.success) {
       console.error("[Razorpay Webhook] RPC capture execution unsuccessful:", resObj.error);
       return NextResponse.json({ error: resObj.error || "Execution failed" }, { status: 409 });

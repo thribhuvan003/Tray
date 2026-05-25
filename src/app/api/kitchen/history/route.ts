@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { getAdminClient } from "@/lib/supabase/admin";
+import { requireRole } from "@/lib/auth/get-user";
 
 export const dynamic = "force-dynamic";
 
@@ -22,6 +23,10 @@ export async function GET(req: NextRequest) {
   if (!tenant) {
     return NextResponse.json({ error: "Tenant not found" }, { status: 404 });
   }
+
+  // Auth gate — must be kitchen staff or admin of this specific tenant
+  const authResult = await requireRole(["kitchen_staff", "canteen_admin", "super_admin"], tenant.id);
+  if (!authResult) return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
 
   // Parse date and build IST-aware range
   // dateStr is YYYY-MM-DD in local timezone

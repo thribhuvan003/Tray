@@ -60,35 +60,34 @@ export function DashboardView({
 
   useEffect(() => {
     const sb = getBrowserClient();
+    // H5: Subscribe to order_events — the ONLY table in supabase_realtime publication.
+    // order_status_logs is NOT replicated, so subscribing there gives zero events.
     const ch = sb
-      .channel("admin-feed")
+      .channel(`admin-dashboard-${tenantId}`)
       .on(
         "postgres_changes",
-        { event: "INSERT", schema: "public", table: "order_status_logs", filter: `tenant_id=eq.${tenantId}` },
+        { event: "INSERT", schema: "public", table: "order_events", filter: `tenant_id=eq.${tenantId}` },
         (payload) => {
-          setLogs((prev) => [(payload.new as StatusLog), ...prev].slice(0, 40));
+          // Status change events also update the activity feed
+          const ev = payload.new as { event_type?: string; payload?: any; created_at?: string; order_id?: string };
+          if (ev.event_type === "status_changed" && ev.payload) {
+            const fromStatus = ev.payload.from;
+            const toStatus = ev.payload.to;
+            if (fromStatus && toStatus) {
+              setLogs((prev) => [
+                { id: ev.order_id ?? "", order_id: ev.order_id ?? "", from_status: fromStatus, to_status: toStatus, created_at: ev.created_at ?? new Date().toISOString(), note: null } as StatusLog,
+                ...prev,
+              ].slice(0, 40));
+            }
+          }
+          // Refresh KPI numbers on every new event
+          router.refresh();
         }
       )
       .subscribe();
     return () => {
       sb.removeChannel(ch);
     };
-  }, [tenantId]);
-
-  // Subscribe to order updates for live KPI refresh
-  useEffect(() => {
-    const unsubscribe = subscribeToTenant(tenantId, "order_updates", () => {
-      router.refresh();
-    });
-    return unsubscribe;
-  }, [tenantId, router]);
-
-  // Subscribe to menu/item updates (e.g., specials) for live KPI refresh
-  useEffect(() => {
-    const unsubscribe = subscribeToTenant(tenantId, "menu_updates", () => {
-      router.refresh();
-    });
-    return unsubscribe;
   }, [tenantId, router]);
 
   const kpis = useMemo(() => {

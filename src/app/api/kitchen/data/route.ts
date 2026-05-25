@@ -49,8 +49,7 @@ export async function GET(req: NextRequest) {
     .from("orders")
     .select("id, short_code, status, total_paise, placed_at, customer_name, order_type, table_label, ready_at, collected_at")
     .eq("tenant_id", tenant.id)
-    .in("status", ["placed", "preparing", "ready", "collected"])
-    .gte("placed_at", todayStart.toISOString())
+    .or(`status.in.(placed,preparing,ready),and(status.eq.collected,placed_at.gte.${todayStart.toISOString()})`)
     .order("placed_at", { ascending: false });
 
   const statusMap: Record<string, string> = {

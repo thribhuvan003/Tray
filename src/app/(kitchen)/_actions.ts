@@ -387,6 +387,11 @@ export async function rejectOrder(orderId: string, reason: string): Promise<Outc
 export async function createWalkInOrder(
   itemsInput?: { idOrName: string; qty: number }[]
 ): Promise<{ ok: boolean; error?: string; orderId?: string }> {
+  // C5: Reject immediately if no items provided — prevents random mock orders
+  if (!itemsInput || itemsInput.length === 0) {
+    return { ok: false, error: "No items selected for walk-in order" };
+  }
+
   const ctx = await staffContext();
   if (!ctx.ok) return ctx;
 
@@ -431,77 +436,6 @@ export async function createWalkInOrder(
 
       validated.push({ item: matchItem, qty: Math.max(1, input.qty) });
     }
-  } else {
-    const { data: fetchedItems, error: itemsErr } = await admin
-      .from("menu_items")
-      .select("id, name, price_paise, diet, prep_target_seconds")
-      .eq("tenant_id", ctx.tenant.id)
-      .eq("status", "live")
-      .eq("in_stock", true)
-      .limit(10);
-
-    let items = fetchedItems || [];
-
-    if (items.length === 0) {
-      let { data: cat } = await admin
-        .from("menu_categories")
-        .select("id")
-        .eq("tenant_id", ctx.tenant.id)
-        .eq("name", "Specials")
-        .maybeSingle<{ id: string }>();
-
-      if (!cat) {
-        const catInsert = await admin
-          .from("menu_categories")
-          .insert({
-            tenant_id: ctx.tenant.id,
-            name: "Specials",
-            sort_order: 99,
-          })
-          .select("id")
-          .single<{ id: string }>();
-        cat = catInsert.data;
-      }
-
-      if (cat) {
-        const { data: newItem } = await admin
-          .from("menu_items")
-          .insert({
-            tenant_id: ctx.tenant.id,
-            category_id: cat.id,
-            name: "Samosa",
-            description: "Fresh crispy samosa",
-            price_paise: 2000,
-            diet: "veg",
-            status: "live",
-            prep_target_seconds: 300,
-            in_stock: true,
-            sort_order: 999,
-          })
-          .select("id, name, price_paise, diet, prep_target_seconds")
-          .single<{ id: string; name: string; price_paise: number; diet: "veg" | "nonveg" | "egg"; prep_target_seconds: number }>();
-
-        if (newItem) {
-          items = [newItem];
-        }
-      }
-    }
-
-    if (items.length === 0) {
-      return { ok: false, error: "No menu items available to create a walk-in order" };
-    }
-
-    const numItems = Math.min(items.length, 1 + Math.floor(Math.random() * 3));
-    const selected: typeof items = [];
-    const shuffled = [...items].sort(() => 0.5 - Math.random());
-    for (let i = 0; i < numItems; i++) {
-      selected.push(shuffled[i]);
-    }
-
-    validated = selected.map(item => {
-      const qty = 1 + Math.floor(Math.random() * 2);
-      return { item: item as any, qty };
-    });
   }
 
   let total = 0;

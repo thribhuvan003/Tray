@@ -88,8 +88,10 @@ const _resolverClient = () =>
 
 const fetchTenantUncached = async (slug: string): Promise<ResolvedTenant | null> => {
   try {
+    // H12: Normalize slug to lowercase — prevents 404 when URL has mixed case
+    const normalizedSlug = slug.toLowerCase();
     const client = _resolverClient();
-    const { data, error } = await client.rpc("resolve_tenant", { p_slug: slug });
+    const { data, error } = await client.rpc("resolve_tenant", { p_slug: normalizedSlug });
     if (error || !data || data.length === 0) return null;
     const row = data[0] as unknown as {
       id: string;
@@ -144,7 +146,7 @@ export const resolveTenant = cache(async (slug: string): Promise<ResolvedTenant 
 export const collegeCanteensUncached = async (collegeSlug: string): Promise<CollegeCanteen[]> => {
   try {
     const client = _resolverClient();
-    const { data, error } = await client.rpc("college_canteens", { p_college_slug: collegeSlug });
+    const { data, error } = await client.rpc("college_canteens", { p_college_slug: collegeSlug.toLowerCase() });
     if (error || !data) return [];
     return data as unknown as CollegeCanteen[];
   } catch (err) {

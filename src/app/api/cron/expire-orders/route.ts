@@ -65,7 +65,15 @@ export async function POST(req: NextRequest) {
   // Handle stale pending payments
   if (hasStale) {
     const ids = stale.map((s) => s.id);
-    await admin.from("orders").update({ status: "expired" }).in("id", ids);
+    // C14: Check update success before writing logs — prevents false audit records
+    const { error: staleUpdErr } = await admin
+      .from("orders")
+      .update({ status: "expired" })
+      .in("id", ids);
+    if (staleUpdErr) {
+      console.error("[expire-orders] Failed to expire stale orders:", staleUpdErr.message);
+      return NextResponse.json({ error: "DB update failed", details: staleUpdErr.message }, { status: 500 });
+    }
     await admin.from("order_status_logs").insert(
       stale.map((s) => ({
         tenant_id: s.tenant_id,
@@ -97,7 +105,15 @@ export async function POST(req: NextRequest) {
   // Handle uncollected ready orders
   if (hasUncollected) {
     const ids = uncollected.map((u) => u.id);
-    await admin.from("orders").update({ status: "expired" }).in("id", ids);
+    // C14: Check update success before writing logs
+    const { error: uncollUpdErr } = await admin
+      .from("orders")
+      .update({ status: "expired" })
+      .in("id", ids);
+    if (uncollUpdErr) {
+      console.error("[expire-orders] Failed to expire uncollected orders:", uncollUpdErr.message);
+      return NextResponse.json({ error: "DB update failed", details: uncollUpdErr.message }, { status: 500 });
+    }
     await admin.from("order_status_logs").insert(
       uncollected.map((u) => ({
         tenant_id: u.tenant_id,

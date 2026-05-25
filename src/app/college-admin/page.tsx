@@ -82,7 +82,9 @@ export default async function CollegeAdminDashboard() {
 
   if (adminUserIds.length > 0) {
     try {
-      const { data: { users: authUsers } } = await admin.auth.admin.listUsers();
+      // H13: data?.users can be null if Supabase admin API is degraded — guard it
+      const listResp = await admin.auth.admin.listUsers();
+      const authUsers = listResp.data?.users ?? [];
       collegeAdminsInfo = authUsers
         .filter((u) => adminUserIds.includes(u.id))
         .map((u) => ({

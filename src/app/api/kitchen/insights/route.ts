@@ -121,10 +121,11 @@ export async function GET(req: NextRequest) {
     ? `${avgPrepMin}:${String(avgPrepSecRem).padStart(2, "0")}`
     : "—";
 
-  // Peak hour analysis from today's orders
+  // Peak hour analysis — H1: use IST-aware hour (UTC+5:30)
   const hourCounts: Record<number, number> = {};
   for (const o of orders) {
-    const h = new Date(o.placed_at).getHours();
+    // Server (Vercel) runs UTC — must apply IST offset before extracting hour
+    const h = new Date(new Date(o.placed_at).getTime() + IST_OFFSET_MS).getUTCHours();
     hourCounts[h] = (hourCounts[h] ?? 0) + 1;
   }
   const peakHour = Object.entries(hourCounts).sort((a, b) => Number(b[1]) - Number(a[1]))[0];

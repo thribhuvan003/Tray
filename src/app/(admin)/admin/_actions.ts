@@ -99,12 +99,29 @@ export async function revokeStaff(membershipId: string, tenantSlug?: string): Pr
   const c = await ctx(tenantSlug);
   if (!c.ok) return { ok: false, error: c.error };
   const admin = getAdminClient(c.tenant.id);
+
+  // C10 — Self-lockout guard: prevent admin from revoking their own membership
+  const { data: callerMem } = await admin
+    .from("tenant_memberships")
+    .select("id")
+    .eq("user_id", c.user.id)
+    .eq("tenant_id", c.tenant.id)
+    .single();
+
+  if (callerMem?.id === membershipId) {
+    return { ok: false, error: "You cannot revoke your own access" };
+  }
+
   const { error } = await admin
     .from("tenant_memberships")
     .update({ is_active: false })
     .eq("id", membershipId)
     .eq("tenant_id", c.tenant.id);
   if (error) return { ok: false, error: error.message };
+
+  // C9 — Bust Next.js role cache so revoked staff immediately lose access
+  revalidateTag("user-role");
+
   await admin.from("audit_logs").insert({
     tenant_id: c.tenant.id,
     actor_user_id: c.user.id,
@@ -170,11 +187,20 @@ export async function updateCanteenSettings(opts: {
   const c = await ctx(opts.tenantSlug);
   if (!c.ok) return { ok: false, error: c.error };
   const admin = getAdminClient(c.tenant.id);
+
+  // H7: Validate UPI VPA format before saving — malformed VPAs break student QR generation
+  if (opts.upiVpa && opts.upiVpa.trim() !== "") {
+    const vpaRegex = /^[^\s@]+@[^\s@]+$/;
+    if (!vpaRegex.test(opts.upiVpa.trim())) {
+      return { ok: false, error: "Invalid UPI VPA format. Use format: name@bank (e.g. myshop@ybl)" };
+    }
+  }
+
   const { error } = await admin
     .from("tenants")
     .update({
       guest_orders_enabled: opts.guestOrdersEnabled,
-      upi_vpa: opts.upiVpa,
+      upi_vpa: opts.upiVpa ? opts.upiVpa.trim() : opts.upiVpa,
     })
     .eq("id", c.tenant.id);
   if (error) return { ok: false, error: error.message };

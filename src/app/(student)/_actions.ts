@@ -153,7 +153,8 @@ export async function placeOrder(
 
   const rl = user
     ? await rateLimit(`placeOrder:${user.id}`, { limit: 5, windowMs: 60_000 })
-    : { success: true };
+    // H2: Guests rate-limited by IP to prevent abuse (anon orders have no user to key on)
+    : await rateLimit(`placeOrder:ip:${(await h).get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown"}`, { limit: 3, windowMs: 60_000 });
   if (!rl.success) return { ok: false, error: "Too many orders — slow down a moment", code: "RATE_LIMITED" };
 
   const supabase = await getServerClient(tenant.id);
@@ -181,6 +182,8 @@ export async function placeOrder(
   const { data: itemsRaw, error: itemsErr } = await supabase
     .from("menu_items")
     .select("id, name, price_paise, diet, status, in_stock, stock_qty")
+    // H3: Explicit tenant filter as defense-in-depth alongside RLS
+    .eq("tenant_id", tenant.id)
     .in("id", ids)
     .returns<MenuRow[]>();
   if (itemsErr || !itemsRaw) return { ok: false, error: "Could not load menu" };
@@ -232,7 +235,7 @@ export async function placeOrder(
   }
   const order = orderInsert.data;
 
-  await admin.from("order_items").insert(
+  const itemsInsert = await admin.from("order_items").insert(
     validated.map((v) => ({
       tenant_id: tenant.id,
       order_id: order.id,
@@ -243,6 +246,29 @@ export async function placeOrder(
       qty: v.qty,
     }))
   );
+  if (itemsInsert.error) {
+    // Rollback: delete the order row since items failed
+    await admin.from("orders").delete().eq("id", order.id);
+    return { ok: false, error: "Could not save order items. Please try again." };
+  }
+
+  // C2: Atomically decrement stock for limited-quantity items using DB RPC
+  // The RPC uses FOR UPDATE row lock — prevents concurrent overselling
+  for (const v of validated) {
+    if (v.item.stock_qty !== null) {
+      const { data: stockResult } = await (admin as any).rpc("decrement_menu_item_stock", {
+        p_item_id: v.item.id,
+        p_qty: v.qty,
+        p_tenant_id: tenant.id,
+      });
+      if (stockResult && stockResult.ok === false && stockResult.error === "insufficient_stock") {
+        // Stock ran out between validation and insert (race condition caught) — rollback
+        await admin.from("order_items").delete().eq("order_id", order.id);
+        await admin.from("orders").delete().eq("id", order.id);
+        return { ok: false, error: `${v.item.name} just sold out. Please update your cart.`, code: "OUT_OF_STOCK" };
+      }
+    }
+  }
 
   await admin.from("order_status_logs").insert({
     tenant_id: tenant.id,
@@ -261,16 +287,26 @@ export async function placeOrder(
     meta: { total_paise: total, items: validated.length, order_type: orderType },
   });
 
-  const rzp = await createDynamicMarketplaceOrder({
-    amountPaise: total,
-    tenantVpa: tenant.upi_vpa,
-    tenantMerchantId: tenantStatus?.razorpay_account_id,
-    notes: {
-      tenant: tenant.slug,
-      order_id: order.id,
-      tenant_name: tenant.name,
-    },
-  });
+  // C6: Create Razorpay/UPI order AFTER DB rows exist — if this fails, clean up
+  let rzp: Awaited<ReturnType<typeof createDynamicMarketplaceOrder>>;
+  try {
+    rzp = await createDynamicMarketplaceOrder({
+      amountPaise: total,
+      tenantVpa: tenant.upi_vpa,
+      tenantMerchantId: tenantStatus?.razorpay_account_id,
+      notes: {
+        tenant: tenant.slug,
+        order_id: order.id,
+        tenant_name: tenant.name,
+      },
+    });
+  } catch (rzpErr: any) {
+    // C6: Payment gateway failed — clean up orphan order rows
+    await admin.from("order_items").delete().eq("order_id", order.id);
+    await admin.from("orders").delete().eq("id", order.id);
+    console.error("[placeOrder] Payment gateway failed — order rolled back:", rzpErr?.message);
+    return { ok: false, error: "Payment gateway unavailable. Please try again in a moment." };
+  }
 
   const isSim = rzp.type === "SIMULATED" || (rzp as any).simulated;
   const payOrderId = (rzp.type === "RAZORPAY" || rzp.type === "SIMULATED") ? (rzp as any).id : null;
@@ -337,7 +373,7 @@ export async function simulatePaymentCapture(orderId: string): Promise<{ ok: boo
     return { ok: false, error: "Simulation RPC failed" };
   }
 
-  const resObj = rpcResult as { success?: boolean; updated?: boolean; error?: string };
+  const resObj = (rpcResult ?? {}) as { success?: boolean; updated?: boolean; error?: string };
   if (!resObj.success) {
     // Already settled — idempotent
     return { ok: true };
@@ -514,7 +550,7 @@ export async function verifyPaymentNow(orderId: string): Promise<VerifyResult> {
       return { status: "pending" };
     }
 
-    const resObj = rpcResult as { success?: boolean; updated?: boolean; error?: string };
+    const resObj = (rpcResult ?? {}) as { success?: boolean; updated?: boolean; error?: string };
     if (!resObj.success) {
       console.error("[verifyPaymentNow] UPI RPC execution unsuccessful:", resObj.error);
       return { status: "pending" };
