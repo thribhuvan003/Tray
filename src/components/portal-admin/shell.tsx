@@ -69,11 +69,13 @@ export function AdminShell({
   tenantName,
   tenantSlug,
   userEmail,
+  userRole,
   children,
 }: {
   tenantName: string;
   tenantSlug: string;
   userEmail: string | null;
+  userRole?: string | null;
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
@@ -263,7 +265,7 @@ export function AdminShell({
                 className="font-mono"
                 style={{ fontSize: 10, color: "var(--admin-ink-3)", letterSpacing: "0.04em" }}
               >
-                canteen_admin
+                {userRole ?? "canteen_admin"}
               </div>
             </div>
             <button

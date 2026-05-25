@@ -1,6 +1,6 @@
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
-import { resolveTenant, collegeCanteensUncached, getTenantSlugFromHeaders } from "@/lib/tenant";
+import { resolveTenant, collegeCanteens, getTenantSlugFromHeaders } from "@/lib/tenant";
 import { getCurrentUser } from "@/lib/auth/get-user";
 import { getAdminClient } from "@/lib/supabase/admin";
 import { StudentTopBar } from "@/components/portal-student/top-bar";
@@ -14,19 +14,20 @@ export default async function StudentLayout({ children }: { children: React.Reac
   const tenant = await resolveTenant(slug);
   if (!tenant) notFound();
 
-  // Fetch sibling canteens from the same college so the CanteenSwitcher can
-  // list them. Falls back to empty array if college_slug is unavailable or the
-  // query fails — the switcher hides itself when there's only one canteen.
+  // Fetch sibling canteens — use cached version (30s TTL)
   const siblings = tenant.college_slug
-    ? await collegeCanteensUncached(tenant.college_slug).catch(() => [])
+    ? await collegeCanteens(tenant.college_slug).catch(() => [])
     : [];
 
   if (siblings.length > 0) {
     try {
       const admin = getAdminClient();
+      // Scope to only the sibling slugs — avoids full-table scan across all tenants
+      const siblingSlugSet = siblings.map((s) => s.slug);
       const { data: counts } = await admin
         .from("menu_items")
         .select("id, tenants!inner(slug)")
+        .in("tenants.slug", siblingSlugSet)
         .eq("status", "live");
 
       if (counts) {

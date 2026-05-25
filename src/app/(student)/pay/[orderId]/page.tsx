@@ -5,6 +5,9 @@ import { getAdminClient } from "@/lib/supabase/admin";
 import { getCurrentUser } from "@/lib/auth/get-user";
 import { PayPanel } from "@/components/portal-student/pay-panel";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export default async function PayPage({ params }: { params: Promise<{ orderId: string }> }) {
   const { orderId } = await params;
   const h = await headers();

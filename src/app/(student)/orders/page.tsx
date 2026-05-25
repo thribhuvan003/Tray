@@ -1,5 +1,5 @@
 import { headers } from "next/headers";
-import { redirect } from "next/navigation";
+import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
 import { resolveTenant, getTenantSlugFromHeaders } from "@/lib/tenant";
 import { getServerClient } from "@/lib/supabase/server";
@@ -13,7 +13,8 @@ export default async function OrdersPage() {
   const h = await headers();
   const slug = getTenantSlugFromHeaders(h);
   const tenant = await resolveTenant(slug);
-  if (!tenant) return null;
+  if (!tenant) notFound();
+
   const user = await getCurrentUser();
   if (!user) redirect(`/c/${tenant.slug}/login?next=/c/${tenant.slug}/orders`);
 

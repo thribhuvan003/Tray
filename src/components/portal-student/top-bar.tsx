@@ -55,13 +55,8 @@ export function StudentTopBar({ tenant, siblings = [], user }: Props) {
     const sb = getBrowserClient();
     
     async function fetchFreshSiblings() {
-      console.log("🔍 FETCH_FRESH_SIBLINGS RUNNING for college_slug:", tenant.college_slug);
-      if (!tenant.college_slug) {
-        console.log("⚠️ FETCH_FRESH_SIBLINGS aborted: college_slug is empty!");
-        return;
-      }
+      if (!tenant.college_slug) return;
       const { data, error } = await (sb as any).rpc("college_canteens", { p_college_slug: tenant.college_slug });
-      console.log("🔍 FETCH_FRESH_SIBLINGS RPC RESULT:", { count: data?.length, error });
       if (!error && data) {
         // Fetch sibling dish counts dynamically on client-side
         const { data: counts } = await (sb as any)
@@ -89,9 +84,8 @@ export function StudentTopBar({ tenant, siblings = [], user }: Props) {
     // Fetch immediately on mount
     fetchFreshSiblings();
 
-    // Poll every 1.5 seconds to guarantee updates on remote databases
-    // where the realtime publication has not yet been applied to the tenants table
-    const intervalId = setInterval(fetchFreshSiblings, 1500);
+    // Poll every 60s as a safety fallback (Realtime subscription is primary)
+    const intervalId = setInterval(fetchFreshSiblings, 60_000);
 
     // Subscribe to all insertions, updates, or deletes on tenants table
     // to dynamically refresh sibling canteens switcher list.

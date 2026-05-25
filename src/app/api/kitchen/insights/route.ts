@@ -1,13 +1,26 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { getAdminClient } from "@/lib/supabase/admin";
+import { requireRole } from "@/lib/auth/get-user";
 
 export const dynamic = "force-dynamic";
 
-// Kitchen history + insights endpoint — called by kitchen.html
-// Returns today's collected orders + KPIs from real DB data
+// IST midnight helper
+const IST_OFFSET_MS = 5.5 * 60 * 60 * 1000;
+function todayISTStart(): Date {
+  const nowIST = new Date(Date.now() + IST_OFFSET_MS);
+  const d = new Date(nowIST);
+  d.setUTCHours(0, 0, 0, 0);
+  return new Date(d.getTime() - IST_OFFSET_MS);
+}
+
+// Kitchen history + insights endpoint — requires auth
 export async function GET(req: NextRequest) {
   const { searchParams } = req.nextUrl;
-  const tenantSlug = searchParams.get("tenant") ?? "aditya";
+  const tenantSlug = searchParams.get("tenant");
+
+  if (!tenantSlug) {
+    return NextResponse.json({ error: "Tenant slug required" }, { status: 400 });
+  }
 
   const admin = getAdminClient();
   const { data: tenant } = await admin
@@ -20,10 +33,15 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Tenant not found" }, { status: 404 });
   }
 
+  // Auth gate — kitchen staff or admin only
+  const authUser = await requireRole(["kitchen_staff", "canteen_admin", "super_admin"], tenant.id);
+  if (!authUser) {
+    return NextResponse.json({ error: "Not authorised" }, { status: 401 });
+  }
+
   // Today's window (midnight IST → now)
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const todayIso = today.toISOString();
+  const todayStart = todayISTStart();
+  const todayIso = todayStart.toISOString();
 
   // Fetch ALL of today's non-pending orders for history + insights
   const { data: todayOrders } = await admin

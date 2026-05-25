@@ -56,9 +56,12 @@ export default async function StudentMenuPage() {
   if (siblings.length > 0) {
     try {
       const admin = getAdminClient();
+      // Scope to only sibling slugs — avoids full-table scan
+      const siblingSlugSet = siblings.map((s) => s.slug);
       const { data: counts } = await admin
         .from("menu_items")
         .select("id, tenants!inner(slug)")
+        .in("tenants.slug", siblingSlugSet)
         .eq("status", "live");
 
       if (counts) {

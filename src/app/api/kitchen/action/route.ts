@@ -5,7 +5,13 @@ import { randomOtp } from "@/lib/utils";
 import { requireRole } from "@/lib/auth/get-user";
 
 export async function POST(req: NextRequest) {
-  const body = await req.json();
+  // Guard against malformed JSON — prevents 500 with stack trace
+  let body: any;
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+  }
   const { action, tenant: tenantSlug } = body;
 
   const admin = getAdminClient();
@@ -50,13 +56,18 @@ export async function POST(req: NextRequest) {
         let { data: matchItem } = await query.maybeSingle<{ id: string; name: string; price_paise: number; diet: "veg" | "nonveg" | "egg"; prep_target_seconds: number }>();
 
         if (!matchItem && !isUuid) {
+          // Escape SQL LIKE wildcards to prevent fuzzy bypass via % or _ input
+          const safeName = input.idOrName
+            .replace(/\\/g, "\\\\") // backslash first
+            .replace(/%/g, "\\%")
+            .replace(/_/g, "\\_");
           const { data: partialMatch } = await dbClient
             .from("menu_items")
             .select("id, name, price_paise, diet, prep_target_seconds")
             .eq("tenant_id", tenant.id)
             .eq("status", "live")
             .eq("in_stock", true)
-            .ilike("name", `%${input.idOrName}%`)
+            .ilike("name", `%${safeName}%`)
             .limit(1);
           if (partialMatch && partialMatch[0]) {
             matchItem = partialMatch[0] as any;
@@ -410,6 +421,25 @@ export async function POST(req: NextRequest) {
   if (action === "special-push") {
     const { name, description, price, prep, diet } = body;
 
+    // ── Input validation ─────────────────────────────────────────────────
+    const trimmedName = typeof name === "string" ? name.trim() : "";
+    if (!trimmedName || trimmedName.length > 120) {
+      return NextResponse.json({ error: "Invalid name (1–120 chars required)" }, { status: 400 });
+    }
+    const priceNum = Number(price);
+    if (!Number.isFinite(priceNum) || priceNum <= 0 || priceNum > 10000) {
+      return NextResponse.json({ error: "Invalid price (must be between ₹1 and ₹10,000)" }, { status: 400 });
+    }
+    const prepNum = Number(prep);
+    if (!Number.isFinite(prepNum) || prepNum <= 0 || prepNum > 120) {
+      return NextResponse.json({ error: "Invalid prep time (1–120 minutes)" }, { status: 400 });
+    }
+    const VALID_DIETS = ["veg", "nonveg", "egg"] as const;
+    if (!VALID_DIETS.includes(diet)) {
+      return NextResponse.json({ error: "Invalid diet value. Use veg, nonveg, or egg." }, { status: 400 });
+    }
+    const trimmedDesc = typeof description === "string" ? description.slice(0, 300) : "";
+
     // Find or create Specials category
     let { data: cat } = await dbClient
       .from("menu_categories")
@@ -434,12 +464,12 @@ export async function POST(req: NextRequest) {
       .insert({
         tenant_id: tenant.id,
         category_id: cat.id,
-        name,
-        description,
-        price_paise: Math.round(price * 100),
+        name: trimmedName,
+        description: trimmedDesc,
+        price_paise: Math.round(priceNum * 100),
         diet,
         status: "live",
-        prep_target_seconds: prep * 60,
+        prep_target_seconds: Math.round(prepNum * 60),
         in_stock: true,
         sort_order: 999,
       })
@@ -447,7 +477,7 @@ export async function POST(req: NextRequest) {
       .single<{ id: string }>();
 
     if (itemErr || !item) {
-      return NextResponse.json({ error: itemErr?.message ?? "Failed to push item" }, { status: 500 });
+      return NextResponse.json({ error: "Failed to push item" }, { status: 500 });
     }
 
     return NextResponse.json({ ok: true, itemId: item.id });
@@ -455,11 +485,24 @@ export async function POST(req: NextRequest) {
 
   if (action === "special-remove") {
     const { itemId } = body;
+    // Scope to Specials category to prevent accidental archiving of regular menu items
+    const { data: specialsCat } = await dbClient
+      .from("menu_categories")
+      .select("id")
+      .eq("tenant_id", tenant.id)
+      .eq("name", "Specials")
+      .maybeSingle<{ id: string }>();
+
+    if (!specialsCat) {
+      return NextResponse.json({ error: "Specials category not found" }, { status: 404 });
+    }
+
     await dbClient
       .from("menu_items")
       .update({ status: "archived" })
       .eq("id", itemId)
-      .eq("tenant_id", tenant.id);
+      .eq("tenant_id", tenant.id)
+      .eq("category_id", specialsCat.id); // Prevent archiving non-Specials items
 
     return NextResponse.json({ ok: true });
   }

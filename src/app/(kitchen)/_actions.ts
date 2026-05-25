@@ -160,6 +160,14 @@ export async function verifyAndCollect(
 
   // Plaintext OTP cleared. ON DELETE CASCADE from orders also covers it.
   await admin.from("pickup_secrets").delete().eq("order_id", orderId);
+
+  // Set collected_at timestamp — critical for analytics (avg pickup time calculation)
+  await admin
+    .from("orders")
+    .update({ status: "collected", collected_at: new Date().toISOString() })
+    .eq("id", orderId)
+    .eq("tenant_id", ctx.tenant.id);
+
   await admin.from("order_status_logs").insert({
     tenant_id: ctx.tenant.id,
     order_id: orderId,

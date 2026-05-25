@@ -113,7 +113,7 @@ export function MenuBoard({
     });
   }, [initialIsOpen, initialPausedUntil, initialPendingCount]);
 
-  // Poll live status every 1.5s
+  // Poll live canteen status — Realtime subscription is primary, this is a 30s fallback
   useEffect(() => {
     const sb = getBrowserClient();
     let isMounted = true;
@@ -136,7 +136,8 @@ export function MenuBoard({
       }
     }
     updateStatus();
-    const intervalId = setInterval(updateStatus, 1500);
+    // 30s fallback poll — Realtime subscription on tenants table handles instant updates
+    const intervalId = setInterval(updateStatus, 30_000);
     return () => { isMounted = false; clearInterval(intervalId); };
   }, [collegeSlug, tenantSlug]);
 
