@@ -1,26 +1,25 @@
-# 🍽️ Tray — Enterprise-Grade Multi-Tenant Food Ordering Engine
+# 🍽️ Tray — Multi-Tenant Campus Canteen Ordering Prototype
 
 [![Live App](https://img.shields.io/badge/live-trayy.vercel.app-22c55e?style=for-the-badge&logo=vercel)](https://trayy.vercel.app)
 [![License: MIT](https://img.shields.io/badge/License-MIT-3178c6?style=for-the-badge)](./LICENSE)
 
-Tray is a high-performance, real-time multi-tenant ordering and kitchen management platform designed to operate at Swiggy/Zomato scale. Built using **Next.js 15, PostgreSQL (Supabase RLS), Redis, and QStash**, it synchronizes student tracking panels, live kitchen queues, and administrative payouts with sub-second latency and zero database read locks.
+Tray is a multi-tenant ordering and kitchen display management platform designed specifically for university campus vendor coordination. Built with **Next.js 15, PostgreSQL (Supabase RLS), and Razorpay**, it enables students to order from various campus stalls and allows kitchen operators to track preparation queues in real-time.
 
 ---
 
-## 🗺️ System Architecture (Production Scale)
+## 🗺️ System Architecture
 
-This repository represents the **Campus Edition**—the battle-tested, single-instance blueprint engineered for university ecosystems. However, the core engineering is designed for **infinite horizontal portability**.
+Tray utilizes a single-instance Postgres database scoped dynamically per tenant using PostgreSQL Row-Level Security (RLS) policies.
 
 ```mermaid
 sequenceDiagram
     autonumber
     actor Client as Student Phone / Browser
     participant Middleware as Next.js Middleware (Tenant Router)
-    participant Database as PostgreSQL Shard (Citus Distributed)
+    participant Database as PostgreSQL (Supabase RLS)
 
-    Client->>Middleware: Request to aditya.trayy.app/menu (Or sub-merchant headers)
-    Note over Middleware: Parse subdomain/headers to identify Tenant ID
-    Note over Middleware: Resolve connection string from dynamic Redis routing map
+    Client->>Middleware: Request to aditya.localhost:3000/menu (or custom subdomains)
+    Note over Middleware: Parse subdomain/headers to identify Tenant Slug
     Middleware->>Database: Queries data (passes x-tenant-id)
     Note over Database: pre_request hook sets app.current_tenant
     Note over Database: Row-Level Security checks app.current_tenant matches tenant_id
@@ -30,39 +29,18 @@ sequenceDiagram
 
 ---
 
-## 🚀 Key Hook Points & SaaS Scale Paradigms
+## 🚀 Key Architectural Pillars
 
-### 🏫 1. Canteen Scale-Independence (Campus Edition Focus)
-Inside a single university campus tenant (e.g., `aditya.trayy.app`), the number of individual counters, juice stalls, snack bars, or main canteen halls is **completely irrelevant**. 
-* **Dynamic Node Isolation:** Each sub-canteen instantly gets its own isolated live KDS (Kitchen Display System) queue, custom menu editor, specials push-panel, and financial payout routing.
-* **Unified Tenant Umbrella:** Multiple merchants coexist seamlessly under a single campus RLS boundary, sharing the core university domain authentication without data cross-leakage.
+### 🏫 1. Campus Isolation via Row-Level Security (RLS)
+* **Unified Domain, Scoped Access:** Multiple independent campus vendors (canteen stalls, juice bars, stationary counters) operate under a single database using tenant partitioning.
+* **Deterministic Middleware Routing:** The platform parses custom headers or subdomains dynamically at the edge, binding each request context to the correct vendor namespace via PostgreSQL session settings.
 
-### 🏟️ 2. Infinite Domain Portability (Future Scope)
-Tray's structural database schema and decoupled Pub/Sub architecture allow the platform to adapt seamlessly to any high-volume, multi-merchant environment with **zero code changes**:
-* **✈️ Airport Terminal Food Courts:** Terminal-wide pre-ordering. Scans terminal boarding gates and routes checkouts to local terminal duty-free cafes and express kitchens.
-* **🏟️ Sports Stadiums:** Seat-delivery routing or express-stall express pickups, mapping order tickets dynamically across dozens of independent vendor booths.
-* **🏥 Large-Scale Hospitals:** Patient ward-service ordering, dynamically checking patient dietary rules and routing kitchen tickets directly to specific ward pantries.
-* **🏢 Tech Parks & Corporate Hubs:** Multi-tenant office park food court pre-ordering, completely eliminating high-density lunch-hour queues.
+### 💳 2. Automated Financial Routing
+* **Razorpay Split Settlements:** Direct onboarding for canteen operators. Transactions are routed dynamically to the vendor's dynamic account identifier (via Razorpay Route) or settle P2P directly to their UPI VPA.
+* **Idempotent Webhooks:** Custom webhook handlers feature database transaction locks (`FOR UPDATE`) to completely eliminate double-charging or duplicate order states.
 
----
-
-## ⚡ The 3 Pillars of Google L6+ Engineering Rigor
-
-To support thousands of canteens processing millions of daily transactions across India, the platform is engineered with a **zero-overhead, database-safe pipeline**:
-
-### 💳 Pillar 1: Automated Payouts via "Razorpay Route"
-* **Partner Accounts Split:** Canteen owners complete a 1-minute digital onboarding. When a student places a ₹100 order, Razorpay automatically splits the transaction: **98%** is routed **instantly** to the canteen owner's UPI/bank account via IMPS/UPI payouts, and **2%** (our platform commission) settles directly in our platform wallet.
-* **Idempotent Webhooks:** All checkouts are initiated with `payment_capture: 1` and protected by server-side idempotency keys (`raw_event_id`), making double-charging or duplicate tickets mathematically impossible.
-
-### ⚡ Pillar 2: Decoupled Realtime Sync (Redis Pub/Sub + SSE)
-* **Zero DB Read Locks:** Subscribing thousands of dashboard screens directly to PostgreSQL via standard WebSockets will freeze the server under heavy lunch traffic.
-* **SSE Event Broadcast:** Payments or KDS status shifts publish a lightweight JSON payload to an in-memory **Redis Pub/Sub** broker. Connected clients stream updates in **<5ms** via Server-Sent Events (SSE), reducing database read workloads to near 0%.
-
-### 📊 Pillar 3: Tiered Data Retention & Legal Compliance
-Under Indian financial guidelines, transactional data must be preserved for **7 years**. We prevent PostgreSQL index bloat by implementing a **Three-Tier Storage Policy**:
-1. **Hot Tier (PostgreSQL):** Keeps active queues and orders for the **last 30 days only**. Fast, lightweight, and low-latency storage.
-2. **Warm Tier (ClickHouse):** Daily cron jobs sync older orders into a columnar database (**ClickHouse**) for millisecond dashboard reporting and 12-month metrics tracking.
-3. **Cold Tier (Amazon S3):** Reports older than 3 years are archived into compressed **Parquet files** on S3 for low-cost legal audit compliance.
+### ⚡ 3. Realtime Kitchen Synchronization
+* **Resilient Display Panel:** An append-only realtime queue updates order tickets in the kitchen dashboard in-memory, handling reconnect transitions gracefully on unstable campus networks without causing layout re-renders.
 
 ---
 
@@ -89,8 +67,8 @@ Tray/
 │   ├── components/          # Reusable React components grouped by portal area
 │   ├── lib/                 # Core utilities (Supabase hooks, state management, middleware)
 │   └── middleware.ts        # Subdomain / path parser mapping requests to PostgreSQL tenants
-└── supabase/                # Database migrations & configuration
-    └── migrations/          # Chronological schema files (tables, security policies, triggers)
+│   └── supabase/            # Database migrations & configuration
+│       └── migrations/      # Chronological schema files (tables, security policies, triggers)
 ```
 
 ---

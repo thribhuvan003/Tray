@@ -101,7 +101,8 @@ export function verifyWebhookSignature(rawBody: string, signature: string): bool
  * 'paid' so the manual-verify path mirrors the simulate-capture button.
  */
 export async function fetchRazorpayOrderStatus(
-  razorpayOrderId: string
+  razorpayOrderId: string,
+  signal?: AbortSignal
 ): Promise<"created" | "attempted" | "paid" | "failed" | "unknown"> {
   if (!featureFlags.razorpayLive) {
     return razorpayOrderId.startsWith("order_sim_") ? "paid" : "unknown";
@@ -113,6 +114,7 @@ export async function fetchRazorpayOrderStatus(
     method: "GET",
     headers: { Authorization: `Basic ${auth}` },
     cache: "no-store",
+    signal,
   });
   if (res.status === 404) return "unknown";
   if (!res.ok) {

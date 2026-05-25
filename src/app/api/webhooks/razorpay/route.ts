@@ -3,140 +3,157 @@ import { verifyWebhookSignature } from "@/lib/payments/razorpay";
 import { getAdminClient } from "@/lib/supabase/admin";
 import { env } from "@/lib/env";
 
-type RazorpayEvent = {
-  event: string;
-  payload?: {
-    payment?: {
-      entity?: {
-        id?: string;
-        order_id?: string;
-        status?: string;
-        amount?: number;
-        notes?: Record<string, string>;
-      };
-    };
-  };
-  created_at?: number;
-};
-
 export async function POST(req: NextRequest) {
   if (!env.RAZORPAY_WEBHOOK_SECRET || !env.SUPABASE_SERVICE_ROLE_KEY) {
+    console.error("[Razorpay Webhook] Missing configuration environment variables.");
     return NextResponse.json({ ok: false, error: "Not configured" }, { status: 503 });
   }
+
   const sig = req.headers.get("x-razorpay-signature");
-  if (!sig) return NextResponse.json({ ok: false }, { status: 400 });
-  const raw = await req.text();
-  if (!verifyWebhookSignature(raw, sig)) {
+  if (!sig) {
+    console.warn("[Razorpay Webhook] Missing x-razorpay-signature header.");
+    return NextResponse.json({ ok: false }, { status: 400 });
+  }
+
+  const rawBody = await req.text();
+  if (!verifyWebhookSignature(rawBody, sig)) {
+    console.error("[Razorpay Webhook] Cryptographic verification failed for signature:", sig);
     return NextResponse.json({ ok: false, error: "Invalid signature" }, { status: 400 });
   }
-  let body: RazorpayEvent;
+
+  let body: any;
   try {
-    body = JSON.parse(raw) as RazorpayEvent;
-  } catch {
+    body = JSON.parse(rawBody);
+  } catch (error) {
+    console.error("[Razorpay Webhook] Failed to parse request body as JSON.");
     return NextResponse.json({ ok: false, error: "Bad JSON" }, { status: 400 });
   }
+
   const payment = body.payload?.payment?.entity;
-  if (!payment?.order_id) return NextResponse.json({ ok: true, skipped: true });
+  if (!payment?.order_id) {
+    console.log("[Razorpay Webhook] Skipped: event payload does not contain razorpay order_id.");
+    return NextResponse.json({ ok: true, skipped: true });
+  }
 
   const admin = getAdminClient();
+  const eventId = `${body.event}:${payment.id ?? "x"}:${body.created_at ?? Date.now()}`;
+  
   const tenantSlug = payment.notes?.tenant;
   let tenantOrderId = payment.notes?.order;
-  
+  let tenantId = payment.notes?.tenant_id;
+
+  // Resolve order_id if notes were stripped
   if (!tenantOrderId) {
-    // Fallback: look up the payment by razorpay_order_id if notes were stripped
     const { data: paymentRow } = await admin
       .from("payments")
-      .select("order_id")
+      .select("order_id, tenant_id")
       .eq("razorpay_order_id", payment.order_id)
       .maybeSingle();
 
     if (paymentRow) {
       tenantOrderId = paymentRow.order_id;
+      tenantId = paymentRow.tenant_id;
     } else {
-      console.warn("[razorpay] webhook payment missing notes and no payment record found", { event: body.event, payment_id: payment.id });
+      console.warn("[Razorpay Webhook] Failed to resolve tenant order ID for razorpay_order_id:", payment.order_id);
       return NextResponse.json({ ok: true, skipped: true });
     }
   }
-  const eventId = `${body.event}:${payment.id ?? "x"}:${body.created_at ?? Date.now()}`;
 
-  // Look up the order; idempotent on raw_event_id.
-  const { data: orderRow } = await admin
-    .from("orders")
-    .select("id, tenant_id, status")
-    .eq("id", tenantOrderId)
-    .maybeSingle<{ id: string; tenant_id: string; status: string }>();
-  if (!orderRow) return NextResponse.json({ ok: true, skipped: true });
+  // Fallback lookup for tenantId if not in notes
+  if (!tenantId && tenantOrderId) {
+    const { data: orderRow } = await admin
+      .from("orders")
+      .select("tenant_id")
+      .eq("id", tenantOrderId)
+      .maybeSingle();
+    tenantId = orderRow?.tenant_id;
+  }
+
+  if (!tenantId || !tenantOrderId) {
+    console.error("[Razorpay Webhook] Missing context parameters.", { tenantId, tenantOrderId });
+    return NextResponse.json({ error: "Missing Context Metadata Parameters" }, { status: 400 });
+  }
 
   if (body.event === "payment.captured" || payment.status === "captured") {
-    // Idempotent — duplicate webhooks share the same eventId and get
-    // silently dropped by the raw_event_id unique constraint.
-    const { error: dupe } = await admin.from("payments").upsert(
-      {
-        tenant_id: orderRow.tenant_id,
-        order_id: orderRow.id,
-        razorpay_order_id: payment.order_id,
-        razorpay_payment_id: payment.id ?? null,
-        amount_paise: payment.amount ?? 0,
-        status: "captured",
-        raw_event_id: eventId,
-      },
-      { onConflict: "raw_event_id", ignoreDuplicates: true }
-    );
-    if (dupe) return NextResponse.json({ ok: false, error: dupe.message }, { status: 500 });
+    console.log(`[Razorpay Webhook] Processing capture for order ${tenantOrderId} (tenant: ${tenantId})`);
+    
+    // Call PostgreSQL idempotent capture RPC
+    const { data: rpcResult, error: rpcError } = await (admin as any).rpc("execute_idempotent_payment_capture", {
+      p_order_id: tenantOrderId,
+      p_tenant_id: tenantId,
+      p_payment_id: payment.id || "UNKNOWN",
+      p_razorpay_order_id: payment.order_id,
+      p_amount_paise: payment.amount ?? 0,
+      p_raw_event_id: eventId
+    });
 
-    // Gated update — duplicate webhooks (or manual verify racing the webhook)
-    // can't re-transition a row past pending_payment.
-    const { data: updated } = await admin
-      .from("orders")
-      .update({ status: "placed" })
-      .eq("id", orderRow.id)
-      .eq("tenant_id", orderRow.tenant_id)
-      .in("status", ["pending_payment", "expired"])
-      .select("id, short_code, status, total_paise, placed_at, ready_at, collected_at, customer_name, order_type, table_label");
+    if (rpcError) {
+      console.error("[Razorpay Webhook] RPC execute_idempotent_payment_capture failed:", rpcError);
+      return NextResponse.json({ error: "Lock Conflict / Processing Failure" }, { status: 409 });
+    }
 
-    const { data: orderLines } = await admin
-      .from("order_items")
-      .select("id, order_id, name_snapshot, qty, diet_snapshot")
-      .eq("order_id", orderRow.id);
+    const resObj = rpcResult as { success?: boolean; updated?: boolean; error?: string };
+    if (!resObj.success) {
+      console.error("[Razorpay Webhook] RPC capture execution unsuccessful:", resObj.error);
+      return NextResponse.json({ error: resObj.error || "Execution failed" }, { status: 409 });
+    }
 
-    if (updated && updated.length > 0) {
+    if (resObj.updated) {
+      console.log(`[Razorpay Webhook] Order ${tenantOrderId} successfully updated to PLACED. Emitting events.`);
+      
+      const { data: updated } = await admin
+        .from("orders")
+        .select("id, short_code, status, total_paise, placed_at, ready_at, collected_at, customer_name, order_type, table_label")
+        .eq("id", tenantOrderId)
+        .single();
+
+      const { data: orderLines } = await admin
+        .from("order_items")
+        .select("id, order_id, name_snapshot, qty, diet_snapshot")
+        .eq("order_id", tenantOrderId);
+
       type OrderEventInsert = {
         tenant_id: string;
         order_id: string;
         event_type: string;
         payload: Record<string, unknown>;
       };
+
       await (
         admin.from("order_events") as unknown as {
           insert: (row: OrderEventInsert) => Promise<unknown>;
         }
       ).insert({
-        tenant_id: orderRow.tenant_id,
-        order_id: orderRow.id,
+        tenant_id: tenantId,
+        order_id: tenantOrderId,
         event_type: "status_changed",
         payload: {
           from: "pending_payment",
           to: "placed",
           source: "razorpay_webhook",
-          order: updated[0],
-          lines: orderLines
+          order: updated,
+          lines: orderLines || []
         },
       });
+
       await admin.from("order_status_logs").insert({
-        tenant_id: orderRow.tenant_id,
-        order_id: orderRow.id,
+        tenant_id: tenantId,
+        order_id: tenantOrderId,
         from_status: "pending_payment",
         to_status: "placed",
         note: "Razorpay captured",
       });
+    } else {
+      console.log(`[Razorpay Webhook] Order ${tenantOrderId} was already settled. Skipping event emission.`);
     }
   } else if (body.event === "payment.failed") {
+    console.warn(`[Razorpay Webhook] Payment failed for order ${tenantOrderId}`);
     await admin
       .from("payments")
       .update({ status: "failed" })
       .eq("razorpay_order_id", payment.order_id)
-      .eq("tenant_id", orderRow.tenant_id);
+      .eq("tenant_id", tenantId);
   }
 
-  return NextResponse.json({ ok: true });
+  return NextResponse.json({ status: "success" });
 }

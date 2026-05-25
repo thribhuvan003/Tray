@@ -362,7 +362,6 @@ export async function rejectOrder(orderId: string, reason: string): Promise<Outc
   }
 
   await admin.from("orders").update({ status: "rejected" }).eq("id", orderId);
-  await admin.from("payments").update({ status: "refunded" }).eq("order_id", orderId).eq("status", "captured");
   void initiateRefundForOrder(orderId, ctx.tenant.id).catch(() => {});
   await admin.from("order_status_logs").insert({
     tenant_id: ctx.tenant.id,
@@ -546,12 +545,28 @@ export async function createWalkInOrder(): Promise<{ ok: boolean; error?: string
     status: "captured",
   });
 
+  // Fetch full details to embed in the realtime payload
+  const { data: updatedOrder } = await admin
+    .from("orders")
+    .select("id, short_code, status, total_paise, placed_at, ready_at, collected_at, customer_name, order_type, table_label")
+    .eq("id", orderId)
+    .single();
+
+  const { data: orderLines } = await admin
+    .from("order_items")
+    .select("id, order_id, name_snapshot, qty, diet_snapshot")
+    .eq("order_id", orderId);
+
   // Emit status change event for realtime queue updates
   await emitOrderEvent(admin, {
     order_id: orderId,
     tenant_id: ctx.tenant.id,
     event_type: "placed",
-    payload: { actor: "counter" },
+    payload: {
+      actor: "counter",
+      order: updatedOrder,
+      lines: orderLines || []
+    },
   });
 
   revalidatePath(`/c/${ctx.tenant.slug}/kitchen`);

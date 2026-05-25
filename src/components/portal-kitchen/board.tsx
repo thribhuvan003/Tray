@@ -39,6 +39,7 @@ export function KitchenBoard({
   const [newOrderFlash, setNewOrderFlash] = useState(false);
   const bellOnRef = useRef(true);
   const seenOrderIdsRef = useRef<Set<string>>(new Set(initialOrders.map((o) => o.id)));
+  const processedEventIdsRef = useRef<Set<string>>(new Set());
 
   // Detect session expiry from server action errors and show a blocking overlay
   // so kitchen staff know they must re-login rather than silently losing orders.
@@ -206,7 +207,16 @@ export function KitchenBoard({
           filter: `tenant_id=eq.${tenantId}`,
         },
         (payload) => {
-          const newRow = payload.new as { order_id?: string; event_type?: string; payload?: any } | null;
+          const newRow = payload.new as { id?: string; order_id?: string; event_type?: string; payload?: any } | null;
+          const eventId = newRow?.id;
+          if (eventId) {
+            if (processedEventIdsRef.current.has(eventId)) return;
+            processedEventIdsRef.current.add(eventId);
+            if (processedEventIdsRef.current.size > 1000) {
+              const arr = Array.from(processedEventIdsRef.current);
+              processedEventIdsRef.current = new Set(arr.slice(500));
+            }
+          }
           const eventType = newRow?.event_type;
           const evPayload = newRow?.payload;
           const nextStatus = eventType === "status_changed" ? (evPayload?.to as string) : eventType;
@@ -284,7 +294,11 @@ export function KitchenBoard({
         }
       )
       .subscribe((status) => {
-        setWsConnected(status === "SUBSCRIBED");
+        const isSubscribed = status === "SUBSCRIBED";
+        setWsConnected(isSubscribed);
+        if (isSubscribed) {
+          void refresh();
+        }
       });
 
     const onVis = () => {
