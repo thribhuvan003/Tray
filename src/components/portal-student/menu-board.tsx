@@ -1343,7 +1343,7 @@ function DietDot({ diet }: { diet: string }) {
       justifyContent: "center",
       flexShrink: 0,
       marginTop: 4,
-      background: "#ffffff",
+      background: "transparent",
     }}>
       {diet === "nonveg" ? (
         <span style={{
