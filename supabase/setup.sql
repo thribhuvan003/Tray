@@ -69,6 +69,7 @@ create table if not exists public.tenants (
   upi_vpa text,
   razorpay_key_id_enc text,
   razorpay_key_secret_enc text,
+  razorpay_account_id text,
   is_active boolean not null default true,
   created_at timestamptz not null default now()
 );

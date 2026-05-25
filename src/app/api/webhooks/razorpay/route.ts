@@ -38,14 +38,25 @@ export async function POST(req: NextRequest) {
   const payment = body.payload?.payment?.entity;
   if (!payment?.order_id) return NextResponse.json({ ok: true, skipped: true });
 
-  const tenantSlug = payment.notes?.tenant;
-  const tenantOrderId = payment.notes?.order;
-  if (!tenantSlug || !tenantOrderId) {
-    console.warn("[razorpay] webhook payment missing notes", { event: body.event, payment_id: payment.id });
-    return NextResponse.json({ ok: true, skipped: true });
-  }
-
   const admin = getAdminClient();
+  const tenantSlug = payment.notes?.tenant;
+  let tenantOrderId = payment.notes?.order;
+  
+  if (!tenantOrderId) {
+    // Fallback: look up the payment by razorpay_order_id if notes were stripped
+    const { data: paymentRow } = await admin
+      .from("payments")
+      .select("order_id")
+      .eq("razorpay_order_id", payment.order_id)
+      .maybeSingle();
+
+    if (paymentRow) {
+      tenantOrderId = paymentRow.order_id;
+    } else {
+      console.warn("[razorpay] webhook payment missing notes and no payment record found", { event: body.event, payment_id: payment.id });
+      return NextResponse.json({ ok: true, skipped: true });
+    }
+  }
   const eventId = `${body.event}:${payment.id ?? "x"}:${body.created_at ?? Date.now()}`;
 
   // Look up the order; idempotent on raw_event_id.
@@ -81,7 +92,12 @@ export async function POST(req: NextRequest) {
       .eq("id", orderRow.id)
       .eq("tenant_id", orderRow.tenant_id)
       .in("status", ["pending_payment", "expired"])
-      .select("id");
+      .select("id, short_code, status, total_paise, placed_at, ready_at, collected_at, customer_name, order_type, table_label");
+
+    const { data: orderLines } = await admin
+      .from("order_items")
+      .select("id, order_id, name_snapshot, qty, diet_snapshot")
+      .eq("order_id", orderRow.id);
 
     if (updated && updated.length > 0) {
       type OrderEventInsert = {
@@ -98,7 +114,13 @@ export async function POST(req: NextRequest) {
         tenant_id: orderRow.tenant_id,
         order_id: orderRow.id,
         event_type: "status_changed",
-        payload: { from: "pending_payment", to: "placed", source: "razorpay_webhook" },
+        payload: {
+          from: "pending_payment",
+          to: "placed",
+          source: "razorpay_webhook",
+          order: updated[0],
+          lines: orderLines
+        },
       });
       await admin.from("order_status_logs").insert({
         tenant_id: orderRow.tenant_id,

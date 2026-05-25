@@ -6,6 +6,7 @@ export type CreateOrderInput = {
   amountPaise: number;
   receipt: string;
   notes?: Record<string, string>;
+  tenantAccountId?: string | null;
 };
 
 export type CreatedOrder = {
@@ -37,19 +38,32 @@ export async function createRazorpayOrder(input: CreateOrderInput): Promise<Crea
   const auth = Buffer.from(`${env.RAZORPAY_KEY_ID}:${env.RAZORPAY_KEY_SECRET}`).toString(
     "base64"
   );
+  const bodyPayload: any = {
+    amount: input.amountPaise,
+    currency: "INR",
+    receipt: input.receipt,
+    payment_capture: 1, // Auto-capture payments instantly on successful PIN completion
+    notes: input.notes,
+  };
+
+  if (input.tenantAccountId) {
+    bodyPayload.transfers = [
+      {
+        account: input.tenantAccountId,
+        amount: Math.floor(input.amountPaise * 0.98),
+        currency: "INR",
+        on_hold: false,
+      },
+    ];
+  }
+
   const res = await fetch("https://api.razorpay.com/v1/orders", {
     method: "POST",
     headers: {
       Authorization: `Basic ${auth}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({
-      amount: input.amountPaise,
-      currency: "INR",
-      receipt: input.receipt,
-      payment_capture: 1, // Auto-capture payments instantly on successful PIN completion
-      notes: input.notes,
-    }),
+    body: JSON.stringify(bodyPayload),
   });
   if (!res.ok) {
     const body = await res.text();
@@ -159,4 +173,78 @@ export async function initiateRazorpayRefund(opts: {
 
   const data = (await res.json()) as { id: string };
   return { refundId: data.id, simulated: false };
+}
+
+interface OrderPayload {
+  amountPaise: number;
+  tenantVpa: string | null | undefined;
+  tenantMerchantId: string | null | undefined;
+  notes: Record<string, string>;
+}
+
+export async function createDynamicMarketplaceOrder(input: OrderPayload) {
+  // If the transaction can be completed using direct peer-to-peer UPI
+  if (input.tenantVpa) {
+    return {
+      type: "UPI_INTENT" as const,
+      qr_payload: `upi://pay?pa=${input.tenantVpa}&pn=${encodeURIComponent(input.notes.tenant_name || "Canteen")}&am=${(input.amountPaise / 100).toFixed(2)}&cu=INR${input.notes.order_id ? `&tr=${input.notes.order_id}` : ""}`,
+      id: null,
+      simulated: false,
+    };
+  }
+
+  // Otherwise, route the transaction through your integrated marketplace split logic
+  if (!featureFlags.razorpayLive) {
+    return {
+      type: "SIMULATED" as const,
+      id: `order_sim_${crypto.randomBytes(8).toString("hex")}`,
+      amount: input.amountPaise,
+      currency: "INR",
+      receipt: `rcpt_${input.notes.order_id || crypto.randomBytes(4).toString("hex")}`,
+      status: "created",
+      simulated: true,
+    };
+  }
+
+  const auth = Buffer.from(`${env.RAZORPAY_KEY_ID}:${env.RAZORPAY_KEY_SECRET}`).toString("base64");
+  
+  const orderBody: any = {
+    amount: input.amountPaise,
+    currency: "INR",
+    receipt: `rcpt_${input.notes.order_id}`,
+    payment_capture: 1, // Auto-capture payments instantly on successful PIN completion
+    notes: input.notes
+  };
+
+  if (input.tenantMerchantId) {
+    orderBody.transfers = [
+      {
+        account: input.tenantMerchantId, // Routes cash straight to the specific vendor account
+        amount: Math.floor(input.amountPaise * 0.98), // Allocates vendor balance after transaction fees
+        currency: "INR",
+        on_hold: false
+      }
+    ];
+  }
+
+  const res = await fetch("https://api.razorpay.com/v1/orders", {
+    method: "POST",
+    headers: {
+      Authorization: `Basic ${auth}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(orderBody),
+  });
+
+  if (!res.ok) {
+    const body = await res.text();
+    throw new Error(`Razorpay order create failed: ${res.status} ${body}`);
+  }
+
+  const data = await res.json();
+  return {
+    type: "RAZORPAY" as const,
+    ...data,
+    simulated: false,
+  };
 }

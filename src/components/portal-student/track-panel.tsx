@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Check, ChefHat, BellRing, HandPlatter, XCircle, AlertTriangle } from "lucide-react";
+import { ArrowLeft, Check, ChefHat, BellRing, HandPlatter, XCircle, AlertTriangle, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { formatRupees, formatTimeIST, cn } from "@/lib/utils";
 import { getBrowserClient } from "@/lib/supabase/browser";
@@ -67,6 +67,10 @@ export function TrackPanel({ tenantSlug, tenantName, order: initial, lines }: { 
     if (order.status === "collected" || order.status === "rejected" || order.status === "expired") return;
 
     const sb = getBrowserClient();
+    // Fast polling (2s) for pending payments to handle write lag gracefully,
+    // and standard 15s polling for normal order preparation states to save DB CPU.
+    const pollIntervalMs = order.status === "pending_payment" ? 2000 : 15000;
+
     const interval = setInterval(async () => {
       const { data, error } = await sb
         .from("orders")
@@ -84,7 +88,7 @@ export function TrackPanel({ tenantSlug, tenantName, order: initial, lines }: { 
           collected_at: orderRef.collected_at,
         }));
       }
-    }, 15000); // Relaxed fallback to conserve database CPU resources
+    }, pollIntervalMs);
 
     return () => clearInterval(interval);
   }, [order.id, order.status]);
@@ -168,6 +172,38 @@ export function TrackPanel({ tenantSlug, tenantName, order: initial, lines }: { 
     return () => window.clearInterval(t);
   }, [order.status]);
   const cancelWindowOpen = order.status === "placed" && now - placedAtMs < FIVE_MIN_MS;
+
+  if (order.status === "pending_payment") {
+    return (
+      <div className="mx-auto max-w-2xl px-4 sm:px-6 pt-12 pb-20 text-center animate-in fade-in duration-300">
+        <div className="relative inline-flex items-center justify-center mb-6">
+          <span className="absolute inline-flex h-16 w-16 animate-ping rounded-full bg-ocean-400/20 opacity-75" />
+          <div className="relative h-16 w-16 bg-ocean-500/10 text-ocean-500 rounded-full flex items-center justify-center">
+            <Loader2 size={32} className="animate-spin text-ocean-500" />
+          </div>
+        </div>
+        <h1 className="font-display text-[clamp(32px,5vw,42px)] font-medium tracking-tight leading-tight mb-2">
+          Confirming your <span className="italic text-ocean-500">payment.</span>
+        </h1>
+        <p className="text-[14.5px] text-[color:var(--color-ink)]/65 mt-2 max-w-md mx-auto">
+          We are confirming your transaction status. Your order will be sent to the kitchen as soon as this resolves. This should take just a moment.
+        </p>
+        <div className="border border-dashed border-[color:var(--color-line)] rounded-2xl p-5 max-w-md mx-auto mt-8 space-y-4">
+          <div className="flex justify-between items-center text-sm font-mono">
+            <span className="text-[color:var(--color-ink)]/60">Order ID</span>
+            <span className="font-semibold text-[color:var(--color-ink)]">Order {order.short_code}</span>
+          </div>
+          <div className="flex justify-between items-center text-sm font-mono">
+            <span className="text-[color:var(--color-ink)]/60">Amount</span>
+            <span className="font-bold text-[color:var(--color-ink)]">{formatRupees(order.total_paise)}</span>
+          </div>
+        </div>
+        <p className="text-[11px] text-[color:var(--color-ink)]/45 mt-4">
+          Please keep this page open. It will auto-update.
+        </p>
+      </div>
+    );
+  }
 
   if (order.status === "rejected" || order.status === "expired") {
     const isUncollected = order.status === "expired" && order.ready_at !== null;

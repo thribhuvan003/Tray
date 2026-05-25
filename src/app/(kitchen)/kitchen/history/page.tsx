@@ -173,15 +173,15 @@ export default async function KitchenHistoryPage() {
           </div>
         ) : (
           <div className="overflow-x-auto border-2 border-tomato-900 dark:border-cream-200/30">
-            <table className="w-full min-w-[640px] text-sm">
+            <table className="w-full min-w-[640px] text-base">
               <thead className="bg-tomato-900 text-cream-50">
                 <tr>
-                  <th className="px-4 py-3 text-left font-mono text-[11px] uppercase tracking-wider font-semibold">Code</th>
-                  <th className="px-4 py-3 text-left font-mono text-[11px] uppercase tracking-wider font-semibold">Customer</th>
-                  <th className="px-4 py-3 text-left font-mono text-[11px] uppercase tracking-wider font-semibold">Items</th>
-                  <th className="px-4 py-3 text-right font-mono text-[11px] uppercase tracking-wider font-semibold">Total</th>
-                  <th className="px-4 py-3 text-left font-mono text-[11px] uppercase tracking-wider font-semibold">Time</th>
-                  <th className="px-4 py-3 text-left font-mono text-[11px] uppercase tracking-wider font-semibold">Status</th>
+                  <th className="px-4 py-3 text-left font-mono text-[13px] uppercase tracking-wider font-semibold">Code</th>
+                  <th className="px-4 py-3 text-left font-mono text-[13px] uppercase tracking-wider font-semibold">Customer</th>
+                  <th className="px-4 py-3 text-left font-mono text-[13px] uppercase tracking-wider font-semibold">Items</th>
+                  <th className="px-4 py-3 text-right font-mono text-[13px] uppercase tracking-wider font-semibold">Total</th>
+                  <th className="px-4 py-3 text-left font-mono text-[13px] uppercase tracking-wider font-semibold">Time</th>
+                  <th className="px-4 py-3 text-left font-mono text-[13px] uppercase tracking-wider font-semibold">Status</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-tomato-900/15 dark:divide-cream-200/10">
@@ -190,13 +190,13 @@ export default async function KitchenHistoryPage() {
                     key={order.id}
                     className={idx % 2 === 0 ? "bg-cream-50 dark:bg-graphite-900" : "bg-cream-100 dark:bg-graphite-800"}
                   >
-                    <td className="px-4 py-3 font-mono font-bold text-tomato-500">
+                    <td className="px-4 py-3 font-mono font-bold text-[15px] text-tomato-500">
                       #{order.short_code}
                     </td>
                     <td className="px-4 py-3 text-tomato-900 dark:text-cream-200">
                       {order.customer_name ?? "Guest"}
                       {order.order_type === "dine_in" && (
-                        <span className="ml-1.5 text-[10px] font-mono text-tomato-900/50 dark:text-cream-200/50 uppercase">dine-in</span>
+                        <span className="ml-1.5 text-[11.5px] font-mono text-tomato-900/50 dark:text-cream-200/50 uppercase">dine-in</span>
                       )}
                     </td>
                     <td className="px-4 py-3 text-tomato-900/80 dark:text-cream-200/80 max-w-xs truncate">
@@ -205,7 +205,7 @@ export default async function KitchenHistoryPage() {
                     <td className="px-4 py-3 text-right font-mono font-semibold tabular-nums text-tomato-900 dark:text-cream-200">
                       {formatRupees(order.total_paise)}
                     </td>
-                    <td className="px-4 py-3 font-mono text-[11px] text-tomato-900/60 dark:text-cream-200/60 whitespace-nowrap">
+                    <td className="px-4 py-3 font-mono text-[13.5px] text-tomato-900/60 dark:text-cream-200/60 whitespace-nowrap">
                       {order.collected_at
                         ? formatTimeIST(new Date(order.collected_at))
                         : formatTimeIST(new Date(order.placed_at))}
@@ -213,7 +213,7 @@ export default async function KitchenHistoryPage() {
                     <td className="px-4 py-3">
                       <span
                         className={[
-                          "inline-flex items-center px-2 py-0.5 rounded text-[10px] font-mono font-semibold uppercase tracking-wider",
+                          "inline-flex items-center px-2 py-0.5 rounded text-xs font-mono font-semibold uppercase tracking-wider",
                           STATUS_STYLES[order.status],
                         ].join(" ")}
                       >

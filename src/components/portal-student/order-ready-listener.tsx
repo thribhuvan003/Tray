@@ -38,7 +38,7 @@ export function OrderReadyListener({
                     .from("orders")
                     .select("id, short_code")
                     .eq("user_id", uid)
-                    .in("status", ["placed", "preparing", "ready"]);
+                    .in("status", ["pending_payment", "placed", "preparing", "ready"]);
                 if (!error && data && isMounted) {
                     const mapping: Record<string, string> = {};
                     (data as { id: string; short_code: string }[]).forEach((o) => {
@@ -92,7 +92,21 @@ export function OrderReadyListener({
                         const key = `${orderId}:${status}`;
                         if (shownRef.current.has(key)) return;
 
-                        if (status === "ready") {
+                        if (status === "placed") {
+                            shownRef.current.add(key);
+                            toast.success(
+                                `Order ${shortCode ?? ""} has been placed!`,
+                                {
+                                    duration: 8000,
+                                    action: {
+                                        label: "Track",
+                                        onClick: () =>
+                                            router.push(`/c/${tenantSlug}/track/${orderId}`),
+                                    },
+                                }
+                            );
+                            router.refresh();
+                        } else if (status === "ready") {
                             shownRef.current.add(key);
                             toast.success(
                                 `Order ${shortCode ?? ""} is ready! Head to the counter.`,

@@ -144,25 +144,25 @@ export function HistoryView({
         <table className="hist-table w-full border-collapse">
           <thead>
             <tr className="bg-[var(--kt-cream-3)] border-b border-[var(--kt-line)]">
-              <th className="text-left font-mono text-[10.5px] uppercase tracking-wider font-semibold text-[var(--kt-ink-3)] p-3 pl-4">
+              <th className="text-left font-mono text-[13px] uppercase tracking-wider font-semibold text-[var(--kt-ink-3)] p-3 pl-4">
                 Ticket
               </th>
-              <th className="text-left font-mono text-[10.5px] uppercase tracking-wider font-semibold text-[var(--kt-ink-3)] p-3">
+              <th className="text-left font-mono text-[13px] uppercase tracking-wider font-semibold text-[var(--kt-ink-3)] p-3">
                 Time
               </th>
-              <th className="text-left font-mono text-[10.5px] uppercase tracking-wider font-semibold text-[var(--kt-ink-3)] p-3">
+              <th className="text-left font-mono text-[13px] uppercase tracking-wider font-semibold text-[var(--kt-ink-3)] p-3">
                 Student
               </th>
-              <th className="text-left font-mono text-[10.5px] uppercase tracking-wider font-semibold text-[var(--kt-ink-3)] p-3">
+              <th className="text-left font-mono text-[13px] uppercase tracking-wider font-semibold text-[var(--kt-ink-3)] p-3">
                 Item
               </th>
-              <th className="text-left font-mono text-[10.5px] uppercase tracking-wider font-semibold text-[var(--kt-ink-3)] p-3">
+              <th className="text-left font-mono text-[13px] uppercase tracking-wider font-semibold text-[var(--kt-ink-3)] p-3">
                 Qty
               </th>
-              <th className="text-right font-mono text-[10.5px] uppercase tracking-wider font-semibold text-[var(--kt-ink-3)] p-3 pr-4">
+              <th className="text-right font-mono text-[13px] uppercase tracking-wider font-semibold text-[var(--kt-ink-3)] p-3 pr-4">
                 Total
               </th>
-              <th className="text-right font-mono text-[10.5px] uppercase tracking-wider font-semibold text-[var(--kt-ink-3)] p-3 pr-4">
+              <th className="text-right font-mono text-[13px] uppercase tracking-wider font-semibold text-[var(--kt-ink-3)] p-3 pr-4">
                 Status
               </th>
             </tr>
@@ -194,24 +194,24 @@ export function HistoryView({
                 return (
                   <tr key={r.id} className="border-b border-[var(--kt-line)] hover:bg-[var(--kt-cream-3)] transition-colors">
                     <td className="p-3 pl-4">
-                      <span className="hist-id font-mono text-[11.5px] font-semibold bg-[var(--kt-ink)] text-[var(--kt-cream)] px-2 py-0.5 rounded-[5px] tracking-wide">
+                      <span className="hist-id font-mono text-[14px] font-semibold bg-[var(--kt-ink)] text-[var(--kt-cream)] px-2 py-0.5 rounded-[5px] tracking-wide">
                         {r.short_code}
                       </span>
                     </td>
-                    <td className="p-3 font-mono text-xs text-[var(--kt-ink-2)]">{timeStr}</td>
-                    <td className="p-3 text-[var(--kt-ink)] font-medium">{r.customer_name || "Guest"}</td>
-                    <td className="p-3 text-[var(--kt-ink)]">
+                    <td className="p-3 font-mono text-sm text-[var(--kt-ink-2)]">{timeStr}</td>
+                    <td className="p-3 text-[var(--kt-ink)] text-base font-medium">{r.customer_name || "Guest"}</td>
+                    <td className="p-3 text-[var(--kt-ink)] text-base">
                       {itemName}
                       {extraCount > 0 && (
                         <span className="text-[var(--kt-ink-3)] font-mono text-xs ml-1.5">+{extraCount}</span>
                       )}
                     </td>
-                    <td className="p-3 font-mono text-xs text-[var(--kt-ink-2)]">{item?.qty || 1}×</td>
-                    <td className="p-3 text-right font-mono text-xs text-[var(--kt-ink-2)] font-semibold pr-4">
+                    <td className="p-3 font-mono text-sm text-[var(--kt-ink-2)]">{item?.qty || 1}×</td>
+                    <td className="p-3 text-right font-mono text-sm text-[var(--kt-ink-2)] font-semibold pr-4">
                       {formatRupees(r.total_paise)}
                     </td>
                     <td className="p-3 text-right pr-4">
-                      <span className="stat-pill inline-flex items-center gap-1 font-mono text-[10px] font-semibold px-2 py-0.5 bg-[rgba(94,122,56,0.1)] text-[var(--kt-olive)] rounded-[4px] uppercase tracking-wider">
+                      <span className="stat-pill inline-flex items-center gap-1 font-mono text-xs font-semibold px-2 py-0.5 bg-[rgba(94,122,56,0.1)] text-[var(--kt-olive)] rounded-[4px] uppercase tracking-wider">
                         ✓ Done
                       </span>
                     </td>

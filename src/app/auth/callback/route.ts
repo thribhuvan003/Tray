@@ -55,7 +55,7 @@ export async function GET(req: NextRequest) {
   const type = searchParams.get("type");
   const next = searchParams.get("next") ?? "/";
   const loginRole = searchParams.get("login_role");
-  const tenantSlug = searchParams.get("tenant") ?? req.headers.get("x-tenant-slug") ?? "aditya";
+  const tenantSlug = searchParams.get("tenant") ?? req.headers.get("x-tenant-slug") ?? "";
 
   const supabase = await getServerClient();
   let authError: { message: string } | null = null;

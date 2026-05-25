@@ -164,6 +164,29 @@ export function KitchenBoard({
     }
   };
 
+  const playAlert = () => {
+    if (!bellOnRef.current) return;
+    try {
+      const AC = window.AudioContext ?? (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+      if (!AC) return;
+      const ctx = new AC();
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.type = "sawtooth";
+      o.frequency.setValueAtTime(330, ctx.currentTime);
+      o.frequency.exponentialRampToValueAtTime(220, ctx.currentTime + 0.25);
+      g.gain.setValueAtTime(0.0001, ctx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.25, ctx.currentTime + 0.05);
+      g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.5);
+      o.connect(g).connect(ctx.destination);
+      o.start();
+      o.stop(ctx.currentTime + 0.6);
+      setTimeout(() => ctx.close().catch(() => { }), 800);
+    } catch {
+      // audio unavailable — silent fail
+    }
+  };
+
   useEffect(() => {
     const sb = getBrowserClient();
 
@@ -183,26 +206,81 @@ export function KitchenBoard({
           filter: `tenant_id=eq.${tenantId}`,
         },
         (payload) => {
-          const newRow = payload.new as { event_type?: string; payload?: Record<string, unknown> } | null;
+          const newRow = payload.new as { order_id?: string; event_type?: string; payload?: any } | null;
           const eventType = newRow?.event_type;
-          const isPlaced = eventType === "placed" || (eventType === "status_changed" && newRow?.payload?.to === "placed");
-          
-          if (isPlaced) {
-            shouldFlash = true;
-          }
+          const evPayload = newRow?.payload;
+          const nextStatus = eventType === "status_changed" ? (evPayload?.to as string) : eventType;
+          const isPlaced = nextStatus === "placed";
 
-          if (debounceTimeout) clearTimeout(debounceTimeout);
-          debounceTimeout = setTimeout(() => {
-            const flashAction = shouldFlash;
-            shouldFlash = false;
-            void refresh(() => {
-              if (flashAction) {
-                playBell();
-                setNewOrderFlash(true);
-                setTimeout(() => setNewOrderFlash(false), 10000);
-              }
+          if (isPlaced && evPayload?.order && evPayload?.lines) {
+            setOrders(prev => {
+              if (prev.some(o => o.id === evPayload.order.id)) return prev;
+              const next = [...prev, evPayload.order];
+              seenOrderIdsRef.current.add(evPayload.order.id);
+              return next.sort((a, b) => new Date(a.placed_at).getTime() - new Date(b.placed_at).getTime());
             });
-          }, 50);
+            setLines(prev => {
+              const existingLineIds = new Set(prev.map(l => l.id));
+              const newLines = evPayload.lines.filter((l: any) => !existingLineIds.has(l.id));
+              return [...prev, ...newLines];
+            });
+            playBell();
+            setNewOrderFlash(true);
+            setTimeout(() => setNewOrderFlash(false), 10000);
+          } else if (
+            nextStatus &&
+            [
+              "preparing",
+              "ready",
+              "collected",
+              "rejected",
+              "expired",
+              "cancelled_by_student",
+              "refunded"
+            ].includes(nextStatus) &&
+            newRow?.order_id
+          ) {
+            setOrders(prev => prev.map(o => {
+              if (o.id !== newRow.order_id) return o;
+              return {
+                ...o,
+                status: nextStatus as Status,
+                ready_at: nextStatus === "ready" ? new Date().toISOString() : o.ready_at,
+                collected_at: nextStatus === "collected" ? new Date().toISOString() : o.collected_at,
+              };
+            }));
+
+            if (nextStatus === "cancelled_by_student") {
+              playAlert();
+              toast.warning(`Order #${newRow.order_id.slice(0, 4)} cancelled by student`);
+            } else if (nextStatus === "placed") {
+              playBell();
+              setNewOrderFlash(true);
+              setTimeout(() => setNewOrderFlash(false), 10000);
+            }
+          } else if (eventType === "menu_item_86" && evPayload?.name) {
+            if (evPayload.in_stock === false) {
+              setMarqueeItems(prev => prev.filter(item => item.name !== evPayload.name));
+            }
+            void refresh();
+          } else {
+            if (isPlaced) {
+              shouldFlash = true;
+            }
+
+            if (debounceTimeout) clearTimeout(debounceTimeout);
+            debounceTimeout = setTimeout(() => {
+              const flashAction = shouldFlash;
+              shouldFlash = false;
+              void refresh(() => {
+                if (flashAction) {
+                  playBell();
+                  setNewOrderFlash(true);
+                  setTimeout(() => setNewOrderFlash(false), 10000);
+                }
+              });
+            }, 50);
+          }
         }
       )
       .subscribe((status) => {
@@ -746,20 +824,26 @@ export function KitchenBoard({
                     linesByOrder={linesByOrder}
                     onAction={async (id, action) => {
                       const { markPreparing } = await import("@/app/(kitchen)/_actions");
+                      // Optimistic state transition
+                      setOrders(prev => prev.map(o => o.id === id ? { ...o, status: "preparing" } : o));
                       const r = await markPreparing(id);
-                      if (!r.ok) handleActionError(r.error);
-                      else {
+                      if (!r.ok) {
+                        handleActionError(r.error);
+                        void refresh(); // revert on failure
+                      } else {
                         if (action === "start") toast.success(`Started ${id.slice(0, 6)}`);
-                        void refresh();
                       }
                     }}
                     onReject={async (id, reason) => {
                       const { rejectOrder } = await import("@/app/(kitchen)/_actions");
+                      // Optimistic state transition
+                      setOrders(prev => prev.map(o => o.id === id ? { ...o, status: "rejected" } : o));
                       const r = await rejectOrder(id, reason);
-                      if (!r.ok) handleActionError(r.error ?? "Failed to reject order");
-                      else {
+                      if (!r.ok) {
+                        handleActionError(r.error ?? "Failed to reject order");
+                        void refresh(); // revert on failure
+                      } else {
                         toast.success("Order rejected — refund queued");
-                        void refresh();
                       }
                     }}
                   />
@@ -771,11 +855,14 @@ export function KitchenBoard({
                     linesByOrder={linesByOrder}
                     onAction={async (id) => {
                       const { markReady } = await import("@/app/(kitchen)/_actions");
+                      // Optimistic state transition
+                      setOrders(prev => prev.map(o => o.id === id ? { ...o, status: "ready", ready_at: new Date().toISOString() } : o));
                       const r = await markReady(id);
-                      if (!r.ok) handleActionError(r.error);
-                      else {
+                      if (!r.ok) {
+                        handleActionError(r.error);
+                        void refresh(); // revert on failure
+                      } else {
                         toast.success("Ready — pickup code issued");
-                        void refresh();
                       }
                     }}
                   />
@@ -828,7 +915,12 @@ export function KitchenBoard({
           onClose={() => setVerifyId(null)}
           onResult={(ok) => {
             if (ok) {
+              const targetId = verifyId;
               setVerifyId(null);
+              if (targetId) {
+                setOrders(prev => prev.map(o => o.id === targetId ? { ...o, status: "collected", collected_at: new Date().toISOString() } : o));
+              }
+            } else {
               void refresh();
             }
           }}

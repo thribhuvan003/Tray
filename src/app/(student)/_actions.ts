@@ -8,7 +8,7 @@ import { getServerClient } from "@/lib/supabase/server";
 import { getAdminClient } from "@/lib/supabase/admin";
 import { getCurrentUser } from "@/lib/auth/get-user";
 import { rateLimit } from "@/lib/rate-limit";
-import { createRazorpayOrder, initiateRazorpayRefund } from "@/lib/payments/razorpay";
+import { createRazorpayOrder, initiateRazorpayRefund, createDynamicMarketplaceOrder } from "@/lib/payments/razorpay";
 import type { Diet, OrderType } from "@/lib/db/types";
 
 // ── Student-initiated cancel (Phase 8) ─────────────────────────────────
@@ -161,9 +161,9 @@ export async function placeOrder(
   // Verify canteen is accepting orders + check guest_orders_enabled
   const { data: tenantStatus } = await supabase
     .from("tenants")
-    .select("is_open, paused_until, guest_orders_enabled")
+    .select("is_open, paused_until, guest_orders_enabled, razorpay_account_id")
     .eq("id", tenant.id)
-    .maybeSingle<{ is_open: boolean; paused_until: string | null; guest_orders_enabled: boolean }>();
+    .maybeSingle<{ is_open: boolean; paused_until: string | null; guest_orders_enabled: boolean; razorpay_account_id: string | null }>();
 
   if (tenantStatus) {
     const isPaused = tenantStatus.paused_until && new Date(tenantStatus.paused_until) > new Date();
@@ -261,22 +261,30 @@ export async function placeOrder(
     meta: { total_paise: total, items: validated.length, order_type: orderType },
   });
 
-  const rzp = await createRazorpayOrder({
+  const rzp = await createDynamicMarketplaceOrder({
     amountPaise: total,
-    receipt: order.short_code,
-    notes: { tenant: tenant.slug, order: order.id },
+    tenantVpa: tenant.upi_vpa,
+    tenantMerchantId: tenantStatus?.razorpay_account_id,
+    notes: {
+      tenant: tenant.slug,
+      order_id: order.id,
+      tenant_name: tenant.name,
+    },
   });
+
+  const isSim = rzp.type === "SIMULATED" || (rzp as any).simulated;
+  const payOrderId = (rzp.type === "RAZORPAY" || rzp.type === "SIMULATED") ? (rzp as any).id : null;
 
   await admin.from("payments").insert({
     tenant_id: tenant.id,
     order_id: order.id,
-    razorpay_order_id: rzp.id,
+    razorpay_order_id: payOrderId,
     amount_paise: total,
     status: "initiated",
   });
 
   revalidatePath(`/c/${tenant.slug}/menu`);
-  return { ok: true, orderId: order.id, razorpayOrderId: rzp.id, simulated: rzp.simulated };
+  return { ok: true, orderId: order.id, razorpayOrderId: payOrderId, simulated: !!isSim };
   } catch (error: any) {
     console.error("SERVER ACTION PLACE_ORDER ERROR:", error);
     return { ok: false, error: error?.message ?? "An unexpected error occurred" };
@@ -319,7 +327,8 @@ export async function simulatePaymentCapture(orderId: string): Promise<{ ok: boo
     .update({ status: "captured", razorpay_payment_id: `pay_sim_${orderId.slice(0, 8)}` })
     .eq("order_id", orderId);
 
-  await admin.from("orders").update({ status: "placed" }).eq("id", orderId);
+  const { data: updatedOrder } = await admin.from("orders").update({ status: "placed" }).eq("id", orderId).select("id, short_code, status, total_paise, placed_at, ready_at, collected_at, customer_name, order_type, table_label").single();
+  const { data: orderLines } = await admin.from("order_items").select("id, order_id, name_snapshot, qty, diet_snapshot").eq("order_id", orderId);
 
   type OrderEventInsert = {
     tenant_id: string;
@@ -335,7 +344,7 @@ export async function simulatePaymentCapture(orderId: string): Promise<{ ok: boo
     tenant_id: tenant.id,
     order_id: orderId,
     event_type: "status_changed",
-    payload: { from: "pending_payment", to: "placed", source: "simulator" },
+    payload: { from: "pending_payment", to: "placed", source: "simulator", order: updatedOrder, lines: orderLines },
   });
 
   await admin.from("order_status_logs").insert({
@@ -430,25 +439,27 @@ export async function verifyPaymentNow(orderId: string): Promise<VerifyResult> {
   // Already past pending_payment/expired — webhook (or a previous call) already moved it.
   if (orderRow.status !== "pending_payment" && orderRow.status !== "expired") return { status: "paid" };
 
+  const { data: payRow } = await admin
+    .from("payments")
+    .select("razorpay_order_id, amount_paise")
+    .eq("order_id", orderId)
+    .eq("tenant_id", tenant.id)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle<{ razorpay_order_id: string | null; amount_paise: number }>();
+
   // ── UPI-direct mode: trust the student's tap immediately ─────────────────────
   // Money already went directly to the canteen's bank account via UPI. We have no
   // Razorpay payment to verify. Mark placed, insert a captured payment record,
   // emit the order event, and let the kitchen board pick it up.
   const isLive = featureFlags.razorpayLive && process.env.NEXT_PUBLIC_RAZORPAY_LIVE !== "false";
-  if (!isLive) {
+  const isUpiIntent = !payRow?.razorpay_order_id;
+
+  if (!isLive || isUpiIntent) {
     // Server-side expiry check for UPI-direct mode
     if (orderRow.payment_expires_at && new Date(orderRow.payment_expires_at) < new Date()) {
       return { status: "failed" };
     }
-
-    const { data: payRow } = await admin
-      .from("payments")
-      .select("razorpay_order_id, amount_paise")
-      .eq("order_id", orderId)
-      .eq("tenant_id", tenant.id)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle<{ razorpay_order_id: string | null; amount_paise: number }>();
 
     await admin.from("payments").upsert(
       {
@@ -469,7 +480,9 @@ export async function verifyPaymentNow(orderId: string): Promise<VerifyResult> {
       .eq("id", orderId)
       .eq("tenant_id", tenant.id)
       .in("status", ["pending_payment", "expired"])
-      .select("id");
+      .select("id, short_code, status, total_paise, placed_at, ready_at, collected_at, customer_name, order_type, table_label");
+    
+    const { data: orderLines } = await admin.from("order_items").select("id, order_id, name_snapshot, qty, diet_snapshot").eq("order_id", orderId);
 
     if (updated && updated.length > 0) {
       type OrderEventInsert = {
@@ -486,7 +499,7 @@ export async function verifyPaymentNow(orderId: string): Promise<VerifyResult> {
         tenant_id: tenant.id,
         order_id: orderId,
         event_type: "status_changed",
-        payload: { from: "pending_payment", to: "placed", source: "upi_trust" },
+        payload: { from: "pending_payment", to: "placed", source: "upi_trust", order: updated[0], lines: orderLines },
       });
       await admin.from("order_status_logs").insert({
         tenant_id: tenant.id,
@@ -545,7 +558,9 @@ export async function verifyPaymentNow(orderId: string): Promise<VerifyResult> {
     .eq("id", orderId)
     .eq("tenant_id", tenant.id)
     .in("status", ["pending_payment", "expired"])
-    .select("id");
+    .select("id, short_code, status, total_paise, placed_at, ready_at, collected_at, customer_name, order_type, table_label");
+
+  const { data: orderLines } = await admin.from("order_items").select("id, order_id, name_snapshot, qty, diet_snapshot").eq("order_id", orderId);
 
   if (updated && updated.length > 0) {
     type OrderEventInsert = {
@@ -562,7 +577,7 @@ export async function verifyPaymentNow(orderId: string): Promise<VerifyResult> {
       tenant_id: tenant.id,
       order_id: orderId,
       event_type: "status_changed",
-      payload: { from: "pending_payment", to: "placed", source: "manual_verify" },
+      payload: { from: "pending_payment", to: "placed", source: "manual_verify", order: updated[0], lines: orderLines },
     });
     await admin.from("order_status_logs").insert({
       tenant_id: tenant.id,

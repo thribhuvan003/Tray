@@ -7,6 +7,8 @@ import type { MemberRole } from "@/lib/db/types";
 
 import { getAdminClient } from "@/lib/supabase/admin";
 
+import { unstable_cache } from "next/cache";
+
 export type CurrentUser = {
   id: string;
   email: string | null;
@@ -15,6 +17,52 @@ export type CurrentUser = {
   role: MemberRole | null;
   displayName: string | null;
 };
+
+const fetchUserRoleCached = (userId: string, tenantId: string) => unstable_cache(
+  async () => {
+    const admin = getAdminClient(tenantId);
+    const { data: m, error: memError } = await admin
+      .from("tenant_memberships")
+      .select("role, display_name")
+      .eq("user_id", userId)
+      .eq("tenant_id", tenantId)
+      .eq("is_active", true)
+      .maybeSingle<{ role: MemberRole; display_name: string | null }>();
+
+    console.log("[fetchUserRoleCached] MEMBERSHIP FOUND:", m, "ERROR:", memError?.message);
+
+    let role: MemberRole | null = m?.role ?? null;
+    let displayName: string | null = m?.display_name ?? null;
+
+    if (!role) {
+      const { data: tenantData } = await admin
+        .from("tenants")
+        .select("college_id")
+        .eq("id", tenantId)
+        .maybeSingle<{ college_id: string | null }>();
+
+      if (tenantData?.college_id) {
+        const { data: cm } = await admin
+          .from("college_memberships")
+          .select("is_active")
+          .eq("user_id", userId)
+          .eq("college_id", tenantData.college_id)
+          .eq("is_active", true)
+          .limit(1)
+          .maybeSingle();
+
+        if (cm) {
+          role = "canteen_admin";
+          displayName = "College Admin";
+        }
+      }
+    }
+
+    return { role, displayName };
+  },
+  ["user-tenant-role", userId, tenantId],
+  { revalidate: 300, tags: ["user-role"] }
+)();
 
 export const getCurrentUser = cache(async (tenantIdOverride?: string): Promise<CurrentUser | null> => {
   const h = await headers();
@@ -37,42 +85,10 @@ export const getCurrentUser = cache(async (tenantIdOverride?: string): Promise<C
   console.log("[getCurrentUser] USER RESOLVED:", data?.user?.email, "ERROR:", userError?.message);
   if (!data.user) return null;
 
-  const { data: m, error: memError } = await supabase
-    .from("tenant_memberships")
-    .select("role, display_name")
-    .eq("user_id", data.user.id)
-    .eq("tenant_id", tenant.id)
-    .eq("is_active", true)
-    .maybeSingle<{ role: MemberRole; display_name: string | null }>();
+  const { role, displayName } = await fetchUserRoleCached(data.user.id, tenant.id);
 
-  console.log("[getCurrentUser] MEMBERSHIP FOUND:", m, "ERROR:", memError?.message);
-
-  let role: MemberRole | null = m?.role ?? null;
-  let displayName: string | null = m?.display_name ?? null;
-
-  if (!role) {
-    const { data: tenantData } = await supabase
-      .from("tenants")
-      .select("college_id")
-      .eq("id", tenant.id)
-      .maybeSingle<{ college_id: string | null }>();
-
-    if (tenantData?.college_id) {
-      const { data: cm } = await supabase
-        .from("college_memberships")
-        .select("is_active")
-        .eq("user_id", data.user.id)
-        .eq("college_id", tenantData.college_id)
-        .eq("is_active", true)
-        .limit(1)
-        .maybeSingle();
-
-      if (cm) {
-        role = "canteen_admin";
-        displayName = data.user.user_metadata?.full_name || data.user.email?.split("@")[0] || "College Admin";
-      }
-    }
-  }
+  // Fallback for displayName if not set in membership
+  const finalDisplayName = displayName || data.user.user_metadata?.full_name || data.user.email?.split("@")[0] || "Staff";
 
   return {
     id: data.user.id,
@@ -80,9 +96,10 @@ export const getCurrentUser = cache(async (tenantIdOverride?: string): Promise<C
     tenantId: tenant.id,
     tenantSlug: tenant.slug,
     role,
-    displayName,
+    displayName: finalDisplayName,
   };
 });
+
 
 export async function requireRole(roles: MemberRole[], tenantIdOverride?: string) {
   const u = await getCurrentUser(tenantIdOverride);

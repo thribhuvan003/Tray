@@ -77,7 +77,7 @@ export function getTenantSlugFromHeaders(h: { get: (name: string) => string | nu
   const hostSlug = tenantSlugFromHost(host);
   if (hostSlug) return hostSlug;
 
-  return "aditya";
+  return "";
 }
 
 
@@ -131,7 +131,7 @@ const fetchTenantUncached = async (slug: string): Promise<ResolvedTenant | null>
 const fetchTenantEdgeCached = unstable_cache(
   fetchTenantUncached,
   ["resolve-tenant"],
-  { revalidate: 60, tags: ["tenant"] }
+  { revalidate: 300, tags: ["tenant"] }
 );
 
 export const resolveTenant = cache(async (slug: string): Promise<ResolvedTenant | null> => {

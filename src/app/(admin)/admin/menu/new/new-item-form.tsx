@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { createMenuItem } from "@/app/(admin)/admin/_actions";
+import { UploadCloud, Link as LinkIcon, X } from "lucide-react";
 
 const inputCls =
   "w-full font-sans rounded-xl border border-[var(--admin-line-2)] bg-[var(--admin-bg-3)]/60 px-4 py-3 text-[16px] text-[var(--admin-ink)] placeholder:text-[var(--admin-ink-3)]/40 focus:outline-none focus:ring-2 focus:ring-[var(--admin-lime)]/30 focus:border-[var(--admin-lime)] transition-all duration-200 shadow-inner";
@@ -50,11 +51,13 @@ function StudentCardPreview({
   description,
   pricePaise,
   diet,
+  imageUrl,
 }: {
   name: string;
   description: string;
   pricePaise: number;
   diet: "veg" | "nonveg" | "egg";
+  imageUrl: string | null;
 }) {
   function dietEmoji(d: string) {
     if (d === "veg") return "🥬";
@@ -87,8 +90,14 @@ function StudentCardPreview({
         background: "rgba(26,26,25,.07)",
         display: "grid", placeItems: "center",
         fontSize: 30, border: "1px solid rgba(26,26,25,.08)",
+        overflow: "hidden",
       }}>
-        {dietEmoji(diet)}
+        {imageUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={imageUrl} alt={name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+        ) : (
+          dietEmoji(diet)
+        )}
       </div>
       {/* Body */}
       <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
@@ -146,7 +155,53 @@ export function NewItemForm({
     description: "",
     price: "",
     diet: "veg" as "veg" | "nonveg" | "egg",
+    image_url: "",
   });
+
+  const [photoMode, setPhotoMode] = useState<"file" | "url">("file");
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        const maxDim = 400;
+        let w = img.width;
+        let h = img.height;
+        if (w > maxDim || h > maxDim) {
+          if (w > h) {
+            h = Math.round((h * maxDim) / w);
+            w = maxDim;
+          } else {
+            w = Math.round((w * maxDim) / h);
+            h = maxDim;
+          }
+        }
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext("2d");
+        if (ctx) {
+          ctx.drawImage(img, 0, 0, w, h);
+          const dataUrl = canvas.toDataURL("image/jpeg", 0.85);
+          setPreview((p) => ({ ...p, image_url: dataUrl }));
+        }
+      };
+      img.src = event.target?.result as string;
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const clearPhoto = () => {
+    setPreview((p) => ({ ...p, image_url: "" }));
+    const fileInput = document.getElementById("file-upload-input") as HTMLInputElement;
+    if (fileInput) fileInput.value = "";
+    const urlInput = document.getElementById("image_url") as HTMLInputElement;
+    if (urlInput) urlInput.value = "";
+  };
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -315,17 +370,89 @@ export function NewItemForm({
           )}
 
           <div>
-            <label className="block text-[15px] font-semibold text-[var(--admin-ink-2)] mb-2 tracking-tight" htmlFor="image_url">
-              Image URL
-            </label>
-            <input
-              id="image_url"
-              name="image_url"
-              type="url"
-              className={inputCls}
-              placeholder="https://..."
-            />
-            <p className="mt-2 text-[13px] text-[var(--admin-ink-3)] leading-normal">Optional — paste a URL or leave blank</p>
+            <span className="block text-[15px] font-semibold text-[var(--admin-ink-2)] mb-2 tracking-tight">Photo</span>
+            <div className="mb-3 flex rounded-lg bg-[var(--admin-bg-2)] p-1" style={{ border: "1px solid var(--admin-line)" }}>
+              <button
+                type="button"
+                onClick={() => { setPhotoMode("file"); clearPhoto(); }}
+                className={`flex-1 py-1.5 text-xs font-semibold rounded-md transition-all ${
+                  photoMode === "file"
+                    ? "bg-[var(--admin-bg-4)] text-[var(--admin-ink)] shadow-sm"
+                    : "text-[var(--admin-ink-3)] hover:text-[var(--admin-ink-2)]"
+                }`}
+              >
+                Upload File
+              </button>
+              <button
+                type="button"
+                onClick={() => { setPhotoMode("url"); clearPhoto(); }}
+                className={`flex-1 py-1.5 text-xs font-semibold rounded-md transition-all ${
+                  photoMode === "url"
+                    ? "bg-[var(--admin-bg-4)] text-[var(--admin-ink)] shadow-sm"
+                    : "text-[var(--admin-ink-3)] hover:text-[var(--admin-ink-2)]"
+                }`}
+              >
+                Image URL
+              </button>
+            </div>
+
+            {photoMode === "file" ? (
+              <div className="relative">
+                {preview.image_url ? (
+                  <div
+                    className="relative rounded-xl overflow-hidden group flex items-center justify-center bg-[var(--admin-bg-3)]/60"
+                    style={{ height: 160, border: "1px solid var(--admin-line-2)" }}
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={preview.image_url}
+                      alt="Uploaded preview"
+                      style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                    />
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                      <button
+                        type="button"
+                        onClick={clearPhoto}
+                        className="rounded-lg bg-red-600 hover:bg-red-700 px-3 py-1.5 text-xs font-semibold text-white transition-colors"
+                      >
+                        Remove photo
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <label
+                    className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-[var(--admin-line-2)] hover:border-[var(--admin-lime)] bg-[var(--admin-bg-3)]/40 hover:bg-[var(--admin-bg-3)]/60 py-8 px-4 text-center cursor-pointer transition-all duration-200"
+                    style={{ minHeight: 160 }}
+                  >
+                    <UploadCloud size={28} className="text-[var(--admin-ink-3)] mb-2" />
+                    <span className="text-[14px] font-semibold text-[var(--admin-ink-2)]">Upload a photo</span>
+                    <span className="text-[12px] text-[var(--admin-ink-3)] mt-1">Drag and drop or click to select</span>
+                    <input
+                      id="file-upload-input"
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleFileChange}
+                    />
+                  </label>
+                )}
+                {/* Hidden input to submit the base64 URL to the action */}
+                <input type="hidden" name="image_url" value={preview.image_url || ""} />
+              </div>
+            ) : (
+              <div>
+                <input
+                  id="image_url"
+                  name="image_url"
+                  type="url"
+                  value={preview.image_url || ""}
+                  className={inputCls}
+                  placeholder="https://images.unsplash.com/..."
+                  onChange={(e) => setPreview((p) => ({ ...p, image_url: e.target.value }))}
+                />
+                <p className="mt-2 text-[13px] text-[var(--admin-ink-3)] leading-normal">Paste an external web link to any image.</p>
+              </div>
+            )}
           </div>
 
           <div className="rounded-xl border border-[var(--admin-lime)]/20 bg-[var(--admin-lime)]/5 px-4 py-3">
@@ -405,6 +532,7 @@ export function NewItemForm({
                 description={preview.description}
                 pricePaise={pricePaise}
                 diet={preview.diet}
+                imageUrl={preview.image_url}
               />
             </div>
           </div>

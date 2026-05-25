@@ -90,60 +90,67 @@ export async function POST(req: NextRequest) {
   }
 
   let reconciled = 0;
-  for (const c of candidates) {
-    const pay = latestByOrder.get(c.id);
-    if (!pay?.razorpay_order_id) continue;
-    let remote: Awaited<ReturnType<typeof fetchRazorpayOrderStatus>>;
-    try {
-      remote = await fetchRazorpayOrderStatus(pay.razorpay_order_id);
-    } catch {
-      // Razorpay flaked — leave for next minute's run.
-      continue;
-    }
-    if (remote !== "paid") continue;
 
-    // Idempotent payments row — same shape and key as verifyPaymentNow so a
-    // reconcile + manual-verify race resolves to a single row.
-    await admin.from("payments").upsert(
-      {
-        tenant_id: c.tenant_id,
-        order_id: c.id,
-        razorpay_order_id: pay.razorpay_order_id,
-        amount_paise: pay.amount_paise,
-        status: "captured",
-        raw_event_id: `manual_verify_${pay.razorpay_order_id}`,
-      },
-      { onConflict: "raw_event_id", ignoreDuplicates: true }
-    );
+  // Batch processing to avoid Vercel timeouts (N+1 HTTP calls)
+  const chunkSize = 10;
+  for (let i = 0; i < candidates.length; i += chunkSize) {
+    const chunk = candidates.slice(i, i + chunkSize);
+    
+    await Promise.all(chunk.map(async (c) => {
+      const pay = latestByOrder.get(c.id);
+      if (!pay?.razorpay_order_id) return;
+      let remote: Awaited<ReturnType<typeof fetchRazorpayOrderStatus>>;
+      try {
+        remote = await fetchRazorpayOrderStatus(pay.razorpay_order_id);
+      } catch {
+        // Razorpay flaked — leave for next minute's run.
+        return;
+      }
+      if (remote !== "paid") return;
 
-    const { data: updated } = await admin
-      .from("orders")
-      .update({ status: "placed" })
-      .eq("id", c.id)
-      .eq("tenant_id", c.tenant_id)
-      .in("status", ["pending_payment", "expired"])
-      .select("id");
+      // Idempotent payments row — same shape and key as verifyPaymentNow so a
+      // reconcile + manual-verify race resolves to a single row.
+      await admin.from("payments").upsert(
+        {
+          tenant_id: c.tenant_id,
+          order_id: c.id,
+          razorpay_order_id: pay.razorpay_order_id,
+          amount_paise: pay.amount_paise,
+          status: "captured",
+          raw_event_id: `manual_verify_${pay.razorpay_order_id}`,
+        },
+        { onConflict: "raw_event_id", ignoreDuplicates: true }
+      );
 
-    if (updated && updated.length > 0) {
-      await (
-        admin.from("order_events") as unknown as {
-          insert: (row: OrderEventInsert) => Promise<unknown>;
-        }
-      ).insert({
-        tenant_id: c.tenant_id,
-        order_id: c.id,
-        event_type: "status_changed",
-        payload: { from: c.status, to: "placed", source: "reconcile_cron" },
-      });
-      await admin.from("order_status_logs").insert({
-        tenant_id: c.tenant_id,
-        order_id: c.id,
-        from_status: c.status,
-        to_status: "placed",
-        note: "Reconciled (QStash Razorpay poll)",
-      });
-      reconciled += 1;
-    }
+      const { data: updated } = await admin
+        .from("orders")
+        .update({ status: "placed" })
+        .eq("id", c.id)
+        .eq("tenant_id", c.tenant_id)
+        .in("status", ["pending_payment", "expired"])
+        .select("id");
+
+      if (updated && updated.length > 0) {
+        await (
+          admin.from("order_events") as unknown as {
+            insert: (row: OrderEventInsert) => Promise<unknown>;
+          }
+        ).insert({
+          tenant_id: c.tenant_id,
+          order_id: c.id,
+          event_type: "status_changed",
+          payload: { from: c.status, to: "placed", source: "reconcile_cron" },
+        });
+        await admin.from("order_status_logs").insert({
+          tenant_id: c.tenant_id,
+          order_id: c.id,
+          from_status: c.status,
+          to_status: "placed",
+          note: "Reconciled (QStash Razorpay poll)",
+        });
+        reconciled += 1;
+      }
+    }));
   }
 
   // ── Refund loop ────────────────────────────────────────────────────────────
@@ -157,7 +164,7 @@ export async function POST(req: NextRequest) {
   const { data: cancelledOrders } = await admin
     .from("orders")
     .select("id, tenant_id")
-    .eq("status", "cancelled_by_kitchen")
+    .in("status", ["cancelled_by_kitchen", "rejected"]) // Include "rejected" to prevent cron state mismatch
     .limit(20)
     .returns<CancelledOrder[]>();
 

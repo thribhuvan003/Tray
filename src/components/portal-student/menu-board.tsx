@@ -339,7 +339,9 @@ export function MenuBoard({
             </button>
           </li>
           {categories.map((cat) => {
-            const cnt = byCat.get(cat.id)?.length ?? 0;
+            const cnt = (specialsCategory && cat.id === specialsCategory.id)
+              ? filteredSpecials.length
+              : (byCat.get(cat.id)?.length ?? 0);
             const isActive = activeCat === cat.id;
             return (
               <li key={cat.id}>
@@ -934,24 +936,6 @@ export function MenuBoard({
               </span>
             </div>
             <button
-              onClick={() => setCartOpen(true)}
-              style={{
-                width: "100%",
-                padding: "14px 20px",
-                borderRadius: S.radiusSm,
-                fontSize: 16,
-                fontWeight: 600,
-                background: S.accent,
-                color: "#ffffff",
-                border: "none",
-                cursor: "pointer",
-                fontFamily: S.fontDisplay,
-                transition: "filter .2s, transform .15s",
-              }}
-            >
-              Place order →
-            </button>
-            <button
               onClick={() => clear()}
               style={{
                 width: "100%",
@@ -1010,7 +994,9 @@ export function MenuBoard({
                 </span>
               </button>
               {categories.map((cat) => {
-                const catCount = byCat.get(cat.id)?.length ?? 0;
+                const catCount = (specialsCategory && cat.id === specialsCategory.id)
+                  ? specialsItems.filter((it) => !vegOnly || it.diet === "veg").length
+                  : (byCat.get(cat.id)?.length ?? 0);
                 if (catCount === 0) return null;
                 const isActive = activeCat === cat.id;
                 return (

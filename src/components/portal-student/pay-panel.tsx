@@ -135,13 +135,31 @@ export function PayPanel({
       setStillWaiting(false);
       // Show a brief "Confirming…" state before the server round-trip resolves
       await new Promise((r) => setTimeout(r, 700));
-      const r = await verifyPaymentNow(order.id);
-      if (r.status === "paid") {
-        toast.success("Order placed — kitchen has it!");
-        router.push(`/c/${tenantSlug}/track/${order.id}`);
-      } else if (r.status === "failed") {
-        toast.error("Payment failed — try the QR again");
-      } else {
+      try {
+        const check = await fetch(`/api/orders/verify-status?id=${order.id}`);
+        if (!check.ok) throw new Error("Verification request failed");
+        const res = await check.json();
+
+        if (
+          res.status === "placed" ||
+          res.status === "preparing" ||
+          res.status === "ready" ||
+          res.status === "collected"
+        ) {
+          toast.success("Payment verified! Redirecting to tracker...");
+          router.push(`/c/${tenantSlug}/track/${order.id}`);
+        } else if (
+          res.status === "failed" ||
+          res.status === "cancelled_by_student" ||
+          res.status === "rejected" ||
+          res.status === "expired"
+        ) {
+          toast.error("Payment failed or order is no longer active");
+        } else {
+          setStillWaiting(true);
+        }
+      } catch (err) {
+        toast.error("Payment sync pending — please wait a brief moment.");
         setStillWaiting(true);
       }
     });

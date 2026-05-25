@@ -165,7 +165,7 @@ export async function POST(req: NextRequest) {
 
     if (nextStatus === "ready") {
       const otp = randomOtp();
-      const hash = await bcrypt.hash(otp, 10);
+      const hash = await bcrypt.hash(otp, 4);
       const expiresAt = new Date(Date.now() + 30 * 60 * 1000).toISOString();
 
       await dbClient
@@ -199,7 +199,7 @@ export async function POST(req: NextRequest) {
     
     let query = dbClient
       .from("orders")
-      .select("id, status, otp_hash")
+      .select("id")
       .eq("tenant_id", tenant.id);
 
     if (isUuid) {
@@ -209,16 +209,29 @@ export async function POST(req: NextRequest) {
     }
 
     const { data: o } = await query.maybeSingle<{ id: string; status: string; otp_hash: string | null }>();
+    if (!o) return NextResponse.json({ error: "Order not found" }, { status: 404 });
+    if (!o.otp_hash) return NextResponse.json({ error: "Order not ready for pickup" }, { status: 400 });
+    if (o.status !== "ready") return NextResponse.json({ error: `Order is "${o.status}"` }, { status: 400 });
 
-    if (!o || !o.otp_hash) return NextResponse.json({ error: "Order not ready or not found" }, { status: 404 });
+    // Call the new atomic verify_and_increment_otp_limit function
+    const { data: result, error: rpcErr } = await (dbClient as any).rpc("verify_and_increment_otp_limit", {
+      p_order_id: o.id,
+      p_tenant_id: tenant.id,
+      p_input_otp: otp,
+      p_expected_hash: o.otp_hash,
+    });
 
-    const matched = await bcrypt.compare(otp, o.otp_hash);
-    if (!matched) return NextResponse.json({ ok: false, error: "Wrong code" });
+    if (rpcErr || !result) {
+      return NextResponse.json({ ok: false, error: rpcErr?.message ?? "Error verifying OTP" }, { status: 400 });
+    }
 
-    await dbClient
-      .from("orders")
-      .update({ status: "collected", collected_at: new Date().toISOString() })
-      .eq("id", o.id);
+    const res = result as { ok: boolean; error?: string; attemptsLeft?: number };
+    if (!res.ok) {
+      const left = res.attemptsLeft ?? 0;
+      return NextResponse.json({ ok: false, error: res.error || "Wrong code", attemptsLeft: left });
+    }
+
+    // Clean up pickup secret; verify_and_increment_otp_limit already sets status to 'collected' and updates timestamp
     await dbClient.from("pickup_secrets").delete().eq("order_id", o.id);
 
     return NextResponse.json({ ok: true });

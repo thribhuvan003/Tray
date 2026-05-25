@@ -93,7 +93,7 @@ export async function markReady(orderId: string): Promise<Outcome> {
   if (cur.status !== "preparing") return { ok: false, error: `Cannot mark ready from "${cur.status}"` };
 
   const otp = randomOtp();
-  const hash = await bcrypt.hash(otp, 10);
+  const hash = await bcrypt.hash(otp, 4);
 
   // OTP plaintext lives in pickup_secrets (RLS denies all PostgREST access;
   // only readable through read_my_pickup_otp SECURITY DEFINER for the owner).
@@ -140,30 +140,37 @@ export async function verifyAndCollect(
   if (!ctx.ok) return ctx;
 
   const admin = getAdminClient(ctx.tenant.id);
-  const { data: cur } = await admin
+
+  // 1. Fetch the order status and hash first
+  const { data: orderData, error: loadErr } = await admin
     .from("orders")
-    .select("status, otp_hash, otp_attempts")
+    .select("status, otp_hash")
     .eq("id", orderId)
     .eq("tenant_id", ctx.tenant.id)
-    .maybeSingle<{ status: string; otp_hash: string | null; otp_attempts: number }>();
-  if (!cur || !cur.otp_hash) return { ok: false, error: "Order not ready for pickup" };
-  if (cur.status !== "ready") return { ok: false, error: `Order is "${cur.status}"` };
-  if (cur.otp_attempts >= 3) return { ok: false, error: "Locked — ask an admin to unlock", locked: true };
+    .maybeSingle<{ status: string; otp_hash: string | null }>();
 
-  const ok = await bcrypt.compare(otp, cur.otp_hash);
-  if (!ok) {
-    const left = 3 - (cur.otp_attempts + 1);
-    await admin
-      .from("orders")
-      .update({ otp_attempts: cur.otp_attempts + 1 })
-      .eq("id", orderId);
-    return { ok: false, error: "Wrong code", attemptsLeft: Math.max(0, left) };
+  if (loadErr || !orderData) return { ok: false, error: "Order not found" };
+  if (!orderData.otp_hash) return { ok: false, error: "Order not ready for pickup" };
+  if (orderData.status !== "ready") return { ok: false, error: `Order is "${orderData.status}"` };
+
+  // 2. Call the new atomic verify_and_increment_otp_limit function
+  const { data: result, error: rpcErr } = await (admin as any).rpc("verify_and_increment_otp_limit", {
+    p_order_id: orderId,
+    p_tenant_id: ctx.tenant.id,
+    p_input_otp: otp,
+    p_expected_hash: orderData.otp_hash,
+  });
+
+  if (rpcErr || !result) {
+    return { ok: false, error: rpcErr?.message ?? "Error verifying OTP" };
   }
 
-  await admin
-    .from("orders")
-    .update({ status: "collected", collected_at: new Date().toISOString() })
-    .eq("id", orderId);
+  const res = result as { ok: boolean; error?: string; attemptsLeft?: number };
+  if (!res.ok) {
+    const isLocked = res.error?.includes("lock") || res.error?.includes("exceeded");
+    return { ok: false, error: res.error, locked: isLocked, attemptsLeft: res.attemptsLeft };
+  }
+
   // Plaintext OTP cleared. ON DELETE CASCADE from orders also covers it.
   await admin.from("pickup_secrets").delete().eq("order_id", orderId);
   await admin.from("order_status_logs").insert({
