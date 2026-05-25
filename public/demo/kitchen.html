@@ -3,12 +3,16 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
+<meta name="x-supabase-url" content="https://mepowrsrbjddaqfvzvtc.supabase.co"/>
+<meta name="x-supabase-anon-key" content="sb_publishable_e0_d-CRp71kmQbDbQmO1BQ_dGxGgNKz"/>
 <title>Tray Kitchen — Aditya Engineering Canteen</title>
 <link rel="icon" href="/icon.svg" type="image/svg+xml"/>
 <link rel="apple-touch-icon" href="/apple-icon.svg"/>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400;1,6..72,500&family=Manrope:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<!-- Supabase JS for Realtime subscriptions (instant order push to kitchen) -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <style>
 /* =====================================================
    TRAY · KITCHEN APP
@@ -1612,6 +1616,443 @@ if (sb && toggle) {
     });
   });
 }
+/* =====================================================
+   REAL-DATA LAYER — wires kitchen.html to live Supabase DB
+   Works alongside the simulation; real orders take priority.
+   ===================================================== */
+
+// ── Config ───────────────────────────────────────────
+const REAL_TENANT_SLUG = new URLSearchParams(window.location.search).get('tenant') || currentCanteenId || 'aditya';
+const KITCHEN_API   = `/api/kitchen/data?tenant=${encodeURIComponent(REAL_TENANT_SLUG)}`;
+const INSIGHTS_API  = `/api/kitchen/insights?tenant=${encodeURIComponent(REAL_TENANT_SLUG)}`;
+const ACTION_API    = `/api/kitchen/action`;
+let   REAL_TENANT_ID = null;   // filled on first successful poll
+
+// ── Real advance via API ──────────────────────────────
+// Override the in-memory advance() so clicks call the real server
+const _simAdvance = advance;  // keep reference to simulation advance
+async function advanceReal(dbId, localId) {
+  if (!dbId) { _simAdvance(localId); return; }  // sim order fallback
+  try {
+    const res = await fetch(ACTION_API, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ orderId: dbId, action: 'advance', tenant: REAL_TENANT_SLUG }),
+    });
+    const json = await res.json();
+    if (json.ok || json.skipped) {
+      toast(json.skipped ? 'Already advanced (another staff member)' : '✓ Advanced');
+      // Immediately re-poll so UI reflects DB truth
+      schedulePoll(0);
+    } else {
+      toast('⚠ ' + (json.error || 'Server error'));
+    }
+  } catch (e) {
+    toast('⚠ Network error — retrying…');
+  }
+}
+
+// ── Real OTP verify via API ───────────────────────────
+async function verifyOtpReal(dbId, localId, otp) {
+  if (!dbId) { return null; }
+  try {
+    const res = await fetch(ACTION_API, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ orderId: dbId, action: 'verify_otp', otp, tenant: REAL_TENANT_SLUG }),
+    });
+    const json = await res.json();
+    return json;
+  } catch (e) {
+    return null;
+  }
+}
+
+// ── Map DB orders → local order format ───────────────
+function dbOrderToLocal(o) {
+  return {
+    id:       o.id,          // short_code like T-2421
+    dbId:     o.dbId,        // UUID for API calls
+    items:    o.items,
+    total:    o.total,
+    otp:      o.otp || '0000',
+    status:   o.status,      // 'incoming'|'preparing'|'ready'|'collected'
+    placedAt: o.placedAt,
+    readyAt:  o.readyAt,
+    target:   o.target,
+    student:  o.student,
+  };
+}
+
+// ── Merge DB orders with local simulation orders ──────
+// Real DB orders always override sim orders with the same ID.
+// New real orders are prepended. Sim-only orders kept for demo.
+function mergeOrders(dbOrders) {
+  const realIds = new Set(dbOrders.map(o => o.id));
+  // Keep sim orders that don't exist in DB (demo walk-ins etc.)
+  const simOnly = orders.filter(o => !realIds.has(o.id) && !o.dbId);
+  // Build merged list: real orders first, then sim-only
+  const mapped = dbOrders.map(dbOrderToLocal);
+  orders = [...mapped, ...simOnly];
+  renderQueue();
+}
+
+// ── Poll the real API ─────────────────────────────────
+let _pollTimer = null;
+let _pollInFlight = false;
+
+function schedulePoll(delayMs = 3000) {
+  clearTimeout(_pollTimer);
+  _pollTimer = setTimeout(doPoll, delayMs);
+}
+
+async function doPoll() {
+  if (_pollInFlight) return;
+  _pollInFlight = true;
+  try {
+    const res = await fetch(KITCHEN_API);
+    if (!res.ok) { _pollInFlight = false; schedulePoll(5000); return; }
+    const data = await res.json();
+    if (data.error) { _pollInFlight = false; schedulePoll(5000); return; }
+
+    // Store tenant ID for realtime subscription
+    if (data.canteen?.id && !REAL_TENANT_ID) {
+      REAL_TENANT_ID = data.canteen.id;
+      connectRealtime(REAL_TENANT_ID);
+    }
+
+    // Merge real orders into UI
+    if (Array.isArray(data.orders)) {
+      mergeOrders(data.orders);
+    }
+
+    // Update live specials if returned
+    if (Array.isArray(data.specials) && data.specials.length > 0) {
+      specials = data.specials.map(s => ({
+        id: s.id, name: s.name, desc: s.desc, price: s.price, prep: s.prep, diet: s.diet,
+      }));
+      renderLiveSpecials();
+    }
+
+    // Update walk-in menu items for autocomplete
+    if (Array.isArray(data.menuItems)) {
+      _liveMenuItems = data.menuItems;
+    }
+  } catch(e) {
+    // Network error — silent retry
+  }
+  _pollInFlight = false;
+  schedulePoll(3000); // always schedule next poll
+}
+
+// ── Walk-in menu autocomplete (real menu items) ───────
+let _liveMenuItems = [];
+function setupWalkinAutocomplete() {
+  const nameInput = document.getElementById('walkinName') || document.getElementById('wkName');
+  if (!nameInput) return;
+  const suggest = document.createElement('div');
+  suggest.id = 'wkSuggest';
+  suggest.style.cssText = 'position:absolute;left:0;right:0;top:100%;background:var(--paper);border:1px solid var(--line-2);border-radius:0 0 7px 7px;z-index:999;display:none;max-height:200px;overflow-y:auto';
+  nameInput.parentElement.style.position = 'relative';
+  nameInput.parentElement.appendChild(suggest);
+
+  nameInput.addEventListener('input', () => {
+    const q = nameInput.value.trim().toLowerCase();
+    if (q.length < 2 || !_liveMenuItems.length) { suggest.style.display = 'none'; return; }
+    const hits = _liveMenuItems.filter(m => m.name.toLowerCase().includes(q)).slice(0, 8);
+    if (!hits.length) { suggest.style.display = 'none'; return; }
+    suggest.innerHTML = hits.map(m =>
+      `<div data-id="${m.id}" data-price="${m.price_paise / 100}" data-name="${m.name}" data-diet="${m.diet}"
+        style="padding:8px 12px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between"
+        onmouseover="this.style.background='var(--cream-3)'" onmouseout="this.style.background=''"
+       ><span><span class="veg-dot ${m.diet==='nonveg'?'nv':''}" style="display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:6px"></span>${m.name}</span><span style="font-family:var(--mono);font-size:12px;color:var(--ink-3)">₹${m.price_paise/100}</span></div>`
+    ).join('');
+    suggest.style.display = 'block';
+    suggest.querySelectorAll('div[data-id]').forEach(el => {
+      el.addEventListener('click', () => {
+        nameInput.value = el.dataset.name;
+        const priceInput = document.getElementById('walkinPrice') || document.getElementById('wkPrice');
+        if (priceInput) priceInput.value = el.dataset.price;
+        suggest.style.display = 'none';
+      });
+    });
+  });
+  document.addEventListener('click', (e) => {
+    if (!nameInput.contains(e.target) && !suggest.contains(e.target)) suggest.style.display = 'none';
+  });
+}
+setupWalkinAutocomplete();
+
+// ── Supabase Realtime connection ──────────────────────
+// When a new order_event fires for this tenant, immediately re-poll
+// (debounced to 200ms to batch multiple near-simultaneous events)
+let _realtimeClient = null;
+let _realtimeChannel = null;
+let _realtimePollDebounce = null;
+
+function connectRealtime(tenantId) {
+  if (_realtimeChannel) return; // already connected
+
+  // Supabase JS CDN client (loaded lazily)
+  const SUPA_URL = document.head.querySelector('meta[name="x-supabase-url"]')?.content || '';
+  const SUPA_KEY = document.head.querySelector('meta[name="x-supabase-anon-key"]')?.content || '';
+  if (!SUPA_URL || !SUPA_KEY || typeof window.supabase === 'undefined') {
+    // If supabase JS not available, rely on 3s polling only
+    return;
+  }
+
+  try {
+    _realtimeClient = window.supabase.createClient(SUPA_URL, SUPA_KEY);
+    _realtimeChannel = _realtimeClient
+      .channel('kitchen-realtime-' + tenantId)
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'order_events',
+        filter: `tenant_id=eq.${tenantId}`,
+      }, (payload) => {
+        // New order event — poll immediately (debounced)
+        clearTimeout(_realtimePollDebounce);
+        _realtimePollDebounce = setTimeout(() => schedulePoll(0), 200);
+        // Show notification for new orders
+        const ev = payload.new;
+        if (ev.event_type === 'placed' || ev.event_type === 'order_placed') {
+          toast('🔔 New order incoming!');
+          // Switch to queue view if not already there
+          if (queueShell.hidden) {
+            $$('.sb-link[data-nav]').forEach(x => x.classList.remove('active'));
+            document.querySelector('.sb-link[data-nav="queue"]')?.classList.add('active');
+            showView('queue');
+          }
+        }
+      })
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          const liveEl = document.querySelector('.page-head .live');
+          if (liveEl) liveEl.innerHTML = '<span class="d"></span>Live · realtime connected';
+        }
+      });
+  } catch(e) {
+    // Realtime failed — polling will cover it
+  }
+}
+
+// ── Override advance() to call real API ───────────────
+// We replace the local `advance` function defined above
+// so ticket buttons call the real backend
+window._origAdvance = advance;
+window.advance = function(id) {
+  const o = orders.find(x => x.id === id);
+  if (!o) return;
+  if (o.dbId) {
+    // Real order — call API
+    advanceReal(o.dbId, id);
+  } else {
+    // Sim order — use original local advance
+    window._origAdvance(id);
+  }
+};
+
+// ── Override confirmOtp() to call real verify API ─────
+const _origConfirmOtp = window.confirmOtp;
+window.confirmOtp = async function() {
+  const entered = Array.from($$('.otp-in input')).map(i => i.value.replace(/\D/g, '')).join('');
+  if (!pendingOtp) return closeOtp();
+  if (entered.length < 4) { toast('Enter all 4 digits'); return; }
+
+  if (pendingOtp.dbId) {
+    // Real order: verify via API
+    const result = await verifyOtpReal(pendingOtp.dbId, pendingOtp.id, entered);
+    if (result && result.ok) {
+      advance(pendingOtp.id); // will call real API advance since dbId is set
+      closeOtp();
+      toast('✓ Verified · order handed over');
+    } else if (result && result.error === 'invalid_otp') {
+      toast('✕ Wrong code — try again');
+      $$('.otp-in input').forEach(i => i.value = '');
+      $$('.otp-in input')[0].focus();
+    } else {
+      // Fall back: compare against local otp string
+      if (entered === pendingOtp.otp) {
+        advance(pendingOtp.id);
+        closeOtp();
+        toast('✓ Verified · order handed over');
+      } else {
+        toast('✕ Code does not match. Try again.');
+        $$('.otp-in input').forEach(i => i.value = '');
+        $$('.otp-in input')[0].focus();
+      }
+    }
+  } else {
+    // Sim order
+    if (_origConfirmOtp) _origConfirmOtp();
+    else {
+      if (entered === pendingOtp.otp) {
+        window._origAdvance(pendingOtp.id);
+        closeOtp();
+        toast('✓ Verified · order handed over');
+      } else {
+        toast('✕ Code does not match. Try again.');
+        $$('.otp-in input').forEach(i => i.value = '');
+        $$('.otp-in input')[0].focus();
+      }
+    }
+  }
+};
+
+// ── Override renderHistory() to use real data ─────────
+const _origRenderHistory = window.renderHistory;
+window.renderHistory = async function() {
+  historyView.innerHTML = '<div style="padding:40px;text-align:center;font-family:var(--mono);font-size:12px;color:var(--ink-3)">Loading history…</div>';
+  try {
+    const res = await fetch(INSIGHTS_API);
+    if (!res.ok) throw new Error('API error');
+    const data = await res.json();
+    const rows = data.historyRows || [];
+    const kpis = data.kpis || {};
+    const totalRev = kpis.totalRevenue || rows.reduce((a,r) => a+r.total, 0);
+
+    historyView.innerHTML = `
+      <div class="page-head">
+        <div class="l">
+          <span class="eyebrow">Today · ${rows.length} completed</span>
+          <h1>Order <span class="it">history.</span></h1>
+          <div class="sub">
+            <span class="clk">₹${Math.round(totalRev).toLocaleString('en-IN')} total today</span>
+            <span class="live"><span class="d"></span>Live from database</span>
+          </div>
+        </div>
+        <div class="r">
+          <button class="btn btn-ghost btn-sm" onclick="window.renderHistory()">⟳ Refresh</button>
+          <a class="btn btn-ghost btn-sm" href="/api/admin/export/orders?tenant=${REAL_TENANT_SLUG}">⇣ Export CSV</a>
+        </div>
+      </div>
+      <div class="queue-board" style="padding:0;overflow:hidden">
+        <table class="hist-table">
+          <thead><tr><th>Ticket</th><th>Time</th><th>Student</th><th>Items</th><th class="r">Total</th><th class="r">Status</th></tr></thead>
+          <tbody>${rows.length === 0 ? '<tr><td colspan="6" style="text-align:center;padding:32px;color:var(--ink-3)">No completed orders yet today.</td></tr>' :
+            rows.map(r => {
+              const it = r.items[0] || {name:'—', qty:1};
+              const extra = r.items.length > 1 ? ` <span class="mono">+${r.items.length-1}</span>` : '';
+              const prepMin = r.collectedAt && r.placedAt
+                ? Math.round((r.collectedAt - r.placedAt) / 60000) + 'm'
+                : '—';
+              return `<tr>
+                <td><span class="hist-id">${r.id}</span></td>
+                <td class="mono">${fmtTime(r.placedAt)}</td>
+                <td>${r.student}</td>
+                <td>${it.name} ×${it.qty || 1}${extra}</td>
+                <td class="r mono">₹${Math.round(r.total)}</td>
+                <td class="r"><span class="stat-pill">✓ Done · ${prepMin}</span></td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>`;
+  } catch(e) {
+    // Fallback to simulation history
+    if (_origRenderHistory) _origRenderHistory();
+    else historyView.innerHTML = '<div style="padding:40px;text-align:center;color:var(--tomato)">Could not load history — check connection</div>';
+  }
+};
+
+// ── Override renderInsights() to use real data ────────
+const _origRenderInsights = window.renderInsights;
+window.renderInsights = async function() {
+  insightsView.innerHTML = '<div style="padding:40px;text-align:center;font-family:var(--mono);font-size:12px;color:var(--ink-3)">Loading insights…</div>';
+  try {
+    const res = await fetch(INSIGHTS_API);
+    if (!res.ok) throw new Error('API error');
+    const data = await res.json();
+    const kpis = data.kpis || {};
+    const topItems = data.topItems || [];
+    const maxCount = topItems.length > 0 ? topItems[0].count : 1;
+    const now = new Date();
+
+    insightsView.innerHTML = `
+      <div class="page-head">
+        <div class="l">
+          <span class="eyebrow">${now.toLocaleDateString('en-IN',{weekday:'long'})} · live service</span>
+          <h1>Kitchen <span class="it">insights.</span></h1>
+          <div class="sub">
+            <span class="clk">${now.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false})}</span>
+            <span class="live"><span class="d"></span>Live from database</span>
+          </div>
+        </div>
+      </div>
+      <div class="kpi-bar">
+        <div class="kpi">
+          <div class="lbl">Orders served</div>
+          <div class="val">${kpis.collected ?? 0}</div>
+          <div class="delta">${kpis.incoming ?? 0} incoming · ${kpis.preparing ?? 0} preparing</div>
+        </div>
+        <div class="kpi">
+          <div class="lbl">Revenue today</div>
+          <div class="val"><span class="acc serif-it">₹${Math.round(kpis.totalRevenue || 0).toLocaleString('en-IN')}</span></div>
+          <div class="delta">avg ₹${kpis.avgTicket ?? 0} / ticket</div>
+        </div>
+        <div class="kpi">
+          <div class="lbl">Avg prep time</div>
+          <div class="val">${kpis.avgPrepDisplay || '—'}</div>
+          <div class="delta">placed → ready</div>
+        </div>
+        <div class="kpi">
+          <div class="lbl">Peak window</div>
+          <div class="val" style="font-size:22px">${kpis.peakDisplay || '—'}</div>
+          <div class="delta">highest order volume</div>
+        </div>
+      </div>
+      <div class="queue-board" style="padding:0;overflow:hidden">
+        <div style="padding:18px 18px 8px;border-bottom:1px solid var(--line);display:flex;align-items:baseline;justify-content:space-between">
+          <h3 style="font-family:var(--display);font-size:22px;font-weight:500;color:var(--ink)">Top items <span class="it">today.</span></h3>
+          <span style="font-family:var(--mono);font-size:10.5px;letter-spacing:0.06em;text-transform:uppercase;color:var(--ink-3)">By units sold · live</span>
+        </div>
+        <div class="ins-list">
+          ${topItems.length === 0
+            ? '<div style="padding:32px;text-align:center;color:var(--ink-3);font-family:var(--mono);font-size:12px">No completed orders yet today.</div>'
+            : topItems.map((it, i) => `
+              <div class="ins-row">
+                <span class="ins-rk">${String(i+1).padStart(2,'0')}</span>
+                <div class="ins-info">
+                  <div class="ins-n"><span class="veg-dot ${it.diet==='nonveg'?'nv':''}" style="display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:7px;vertical-align:middle"></span>${it.name}</div>
+                  <div class="ins-bar"><i style="width:${Math.round((it.count/maxCount)*100)}%"></i></div>
+                </div>
+                <span class="ins-c">${it.count}<small>sold</small></span>
+              </div>`).join('')}
+        </div>
+      </div>`;
+  } catch(e) {
+    if (_origRenderInsights) _origRenderInsights();
+    else insightsView.innerHTML = '<div style="padding:40px;text-align:center;color:var(--tomato)">Could not load insights — check connection</div>';
+  }
+};
+
+// ── Override KPI counter to not use hardcoded 38 ─────
+// The original renderQueue sets $('#kColl').textContent = String(38 + collected)
+// We fix this by patching after each poll
+const _origRenderQueue = window.renderQueue;
+window.renderQueue = function() {
+  _origRenderQueue();
+  // Fix the hardcoded +38 in collected KPI
+  // If we have real tenant data, the real count is in the orders array
+  const realCollected = orders.filter(o => o.status === 'collected').length;
+  // Only override if dbId present in any order (real mode)
+  if (orders.some(o => o.dbId)) {
+    const kColl = document.getElementById('kColl');
+    if (kColl) kColl.textContent = String(realCollected);
+  }
+};
+
+// ── Start the real-data loop ──────────────────────────
+// Disable simulation when real orders are present to avoid interference
+schedulePoll(500); // first poll after 500ms
+
+// After 10s, if we received real orders, suppress simulation auto-advance
+setTimeout(() => {
+  if (orders.some(o => o.dbId)) {
+    isSimulationActive = false;
+  }
+}, 10000);
 </script>
 </body>
 </html>
