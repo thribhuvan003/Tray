@@ -5,26 +5,7 @@ import { CheckCircle2, ChefHat, Hand, KeyRound, ShoppingBag, UtensilsCrossed, X 
 import { toast } from "sonner";
 import { cn, formatRupees, formatTimeIST, elapsedSeconds, fmtElapsed } from "@/lib/utils";
 
-type Status = "placed" | "preparing" | "ready" | "collected";
-type Order = {
-  id: string;
-  short_code: string;
-  status: Status | "pending_payment" | "rejected" | "expired";
-  total_paise: number;
-  placed_at: string;
-  ready_at: string | null;
-  collected_at: string | null;
-  customer_name: string | null;
-  order_type: "takeaway" | "dine_in";
-  table_label: string | null;
-};
-type Line = {
-  id: string;
-  order_id: string;
-  name_snapshot: string;
-  qty: number;
-  diet_snapshot: "veg" | "nonveg" | "egg";
-};
+import { Status, OrderRow as Order, LineRow as Line } from "@/types/portal";
 
 /* Column colour prefix — matches kitchen.html data-status ::before content */
 const COL_DOT: Record<Status, { symbol: string; color: string }> = {
