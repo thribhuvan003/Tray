@@ -91,27 +91,46 @@ export async function createInstitution(
   }
   const userId = authData.user.id;
 
-  // ── 3. Create college ────────────────────────────────────────────────────────
+  // ── 3. Create or reuse college ───────────────────────────────────────────────
   const allowedDomains: string[] = form.emailDomain
     ? [form.emailDomain.replace(/^@/, "")]
     : [];
 
-  const { data: college, error: collegeError } = await admin
-    .from("colleges")
-    .insert({
-      name: form.institutionName,
-      slug: collegeSlug,
-      city: form.city || null,
-      allowed_domains: allowedDomains,
-      is_active: true,
-    })
-    .select("id")
-    .single();
+  let collegeId = "";
+  let isNewCollege = false;
 
-  if (collegeError || !college) {
-    // Clean up auth user on failure
-    await admin.auth.admin.deleteUser(userId);
-    return { ok: false, error: collegeError?.message ?? "Failed to create institution" };
+  // Search if an active college with the exact name (case-insensitive) already exists
+  const { data: existingCollege } = await admin
+    .from("colleges")
+    .select("id")
+    .ilike("name", form.institutionName.trim())
+    .eq("is_active", true)
+    .limit(1)
+    .maybeSingle();
+
+  if (existingCollege) {
+    collegeId = existingCollege.id;
+  } else {
+    // Create new college
+    const { data: college, error: collegeError } = await admin
+      .from("colleges")
+      .insert({
+        name: form.institutionName.trim(),
+        slug: collegeSlug,
+        city: form.city || null,
+        allowed_domains: allowedDomains,
+        is_active: true,
+      })
+      .select("id")
+      .single();
+
+    if (collegeError || !college) {
+      // Clean up auth user on failure
+      await admin.auth.admin.deleteUser(userId);
+      return { ok: false, error: collegeError?.message ?? "Failed to create institution" };
+    }
+    collegeId = college.id;
+    isNewCollege = true;
   }
 
   // ── 4. Create first tenant (canteen) ─────────────────────────────────────────
@@ -121,7 +140,7 @@ export async function createInstitution(
       name: form.canteenName,
       slug: canteenSlug,
       college_name: form.institutionName,
-      college_id: college.id,
+      college_id: collegeId,
       building: form.canteenBuilding || null,
       upi_vpa: form.upiVpa || null,
       opens_at: form.opensAt || null,
@@ -136,13 +155,15 @@ export async function createInstitution(
 
   if (tenantError || !tenant) {
     await admin.auth.admin.deleteUser(userId);
-    await admin.from("colleges").delete().eq("id", college.id);
+    if (isNewCollege) {
+      await admin.from("colleges").delete().eq("id", collegeId);
+    }
     return { ok: false, error: tenantError?.message ?? "Failed to create canteen" };
   }
 
   // ── 5. Create college_membership ─────────────────────────────────────────────
   const { error: colMemberError } = await admin.from("college_memberships").insert({
-    college_id: college.id,
+    college_id: collegeId,
     user_id: userId,
     is_active: true,
   });
