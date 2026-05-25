@@ -94,5 +94,29 @@ export default async function AnalyticsPage() {
     },
   ];
 
-  return <AnalyticsView cells={cells} dailyBuckets={dailyBuckets} tenantId={tenant.id} />;
+  // ── UPI payment reconciliation (last 30 days) ─────────────────────────────
+  // Fetch UPI logs so admin can see exactly which payments arrived and to which VPA
+  let upiLogs: { id: string; amount_paise: number; upi_vpa: string; student_name: string | null; short_code: string | null; created_at: string }[] = [];
+  try {
+    const { data: logs } = await supabase
+      .from("upi_payment_logs" as any)
+      .select("id, amount_paise, upi_vpa, student_name, short_code, created_at")
+      .eq("tenant_id", tenant.id)
+      .gte("created_at", start30d)
+      .order("created_at", { ascending: false })
+      .limit(200);
+    if (logs) upiLogs = logs as any;
+  } catch {
+    // Table may not exist yet (migration pending) — degrade gracefully
+    upiLogs = [];
+  }
+
+  return (
+    <AnalyticsView
+      cells={cells}
+      dailyBuckets={dailyBuckets}
+      tenantId={tenant.id}
+      upiLogs={upiLogs}
+    />
+  );
 }

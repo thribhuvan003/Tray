@@ -482,12 +482,30 @@ export async function verifyPaymentNow(orderId: string): Promise<VerifyResult> {
       return { status: "failed" };
     }
 
+    // Fetch tenant's UPI VPA so we can record WHICH account received the money
+    // This is critical for admin reconciliation (trust-but-verify audit trail)
+    const globalAdminForTenant = getAdminClient();
+    const { data: tenantRow } = await globalAdminForTenant
+      .from("tenants")
+      .select("upi_vpa, name")
+      .eq("id", orderRow.tenant_id)
+      .maybeSingle<{ upi_vpa: string | null; name: string }>();
+    const tenantUpiVpa = tenantRow?.upi_vpa ?? null;
+
+    // Also fetch order amount from order row directly (don't rely on payRow which may have 0)
+    const { data: orderAmount } = await admin
+      .from("orders")
+      .select("total_paise, customer_name, short_code")
+      .eq("id", orderId)
+      .maybeSingle<{ total_paise: number; customer_name: string | null; short_code: string }>();
+    const amountPaise = orderAmount?.total_paise ?? payRow?.amount_paise ?? 0;
+
     const { data: rpcResult, error: rpcError } = await (admin as any).rpc("execute_idempotent_payment_capture", {
       p_order_id: orderId,
       p_tenant_id: orderRow.tenant_id,
       p_payment_id: `pay_upi_${orderId.slice(0, 8)}`,
       p_razorpay_order_id: payRow?.razorpay_order_id ?? null,
-      p_amount_paise: payRow?.amount_paise ?? 0,
+      p_amount_paise: amountPaise,
       p_raw_event_id: `upi_trust_${orderId}`
     });
 
@@ -503,6 +521,32 @@ export async function verifyPaymentNow(orderId: string): Promise<VerifyResult> {
     }
 
     if (resObj.updated) {
+      // ── Record UPI VPA in payments row for admin visibility ────────────────
+      if (tenantUpiVpa) {
+        await admin
+          .from("payments")
+          .update({ upi_vpa: tenantUpiVpa } as any)
+          .eq("order_id", orderId)
+          .eq("tenant_id", orderRow.tenant_id);
+      }
+
+      // ── UPI payment audit log — gives admin full reconciliation trail ───────
+      // Admin can see: order ID, amount, UPI VPA that received money, student name, time
+      try {
+        await (admin as any).from("upi_payment_logs").insert({
+          tenant_id: orderRow.tenant_id,
+          order_id: orderId,
+          amount_paise: amountPaise,
+          upi_vpa: tenantUpiVpa ?? "unknown",
+          student_name: orderAmount?.customer_name ?? user?.displayName ?? user?.email ?? "Guest",
+          short_code: orderAmount?.short_code ?? "",
+          trust_event: "student_confirmed",
+        });
+      } catch (logErr) {
+        // Never fail the payment for an audit log error — just log it
+        console.error("[verifyPaymentNow] Failed to write UPI audit log:", logErr);
+      }
+
       const { data: updated } = await admin
         .from("orders")
         .select("id, short_code, status, total_paise, placed_at, ready_at, collected_at, customer_name, order_type, table_label")
@@ -524,7 +568,14 @@ export async function verifyPaymentNow(orderId: string): Promise<VerifyResult> {
         tenant_id: orderRow.tenant_id,
         order_id: orderId,
         event_type: "status_changed",
-        payload: { from: "pending_payment", to: "placed", source: "upi_trust", order: updated, lines: orderLines },
+        payload: {
+          from: "pending_payment",
+          to: "placed",
+          source: "upi_trust",
+          upi_vpa: tenantUpiVpa,
+          order: updated,
+          lines: orderLines
+        },
       });
       await admin.from("order_status_logs").insert({
         tenant_id: orderRow.tenant_id,
@@ -532,7 +583,7 @@ export async function verifyPaymentNow(orderId: string): Promise<VerifyResult> {
         from_status: "pending_payment",
         to_status: "placed",
         actor_user_id: user?.id ?? null,
-        note: "UPI payment confirmed by student",
+        note: `UPI payment confirmed by student → ${tenantUpiVpa ?? "UPI"}`,
       });
     }
 

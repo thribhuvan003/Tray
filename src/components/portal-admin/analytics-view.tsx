@@ -4,7 +4,11 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { getBrowserClient } from "@/lib/supabase/browser";
 import { motion } from "framer-motion";
-import { TrendingUp, TrendingDown } from "lucide-react";
+import { TrendingUp, TrendingDown, Smartphone, CheckCircle2 } from "lucide-react";
+import { formatRupees } from "@/lib/utils";
+import dayjs from "dayjs";
+import relativeTime from "dayjs/plugin/relativeTime";
+dayjs.extend(relativeTime);
 
 type Cell = {
   label: string;
@@ -15,14 +19,25 @@ type Cell = {
 
 type Day = { label: string; key: string; revenue: number; orders: number };
 
+type UpiLog = {
+  id: string;
+  amount_paise: number;
+  upi_vpa: string;
+  student_name: string | null;
+  short_code: string | null;
+  created_at: string;
+};
+
 export function AnalyticsView({
   cells,
   dailyBuckets,
   tenantId,
+  upiLogs = [],
 }: {
   cells: Cell[];
   dailyBuckets: Day[];
   tenantId: string;
+  upiLogs?: UpiLog[];
 }) {
   const router = useRouter();
 
@@ -74,6 +89,7 @@ export function AnalyticsView({
   const labelEvery = dailyBuckets.length > 14 ? 5 : 3;
 
   return (
+    <>
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
       {/* Header */}
       <div className="mb-6 pb-5" style={{ borderBottom: "1px solid var(--admin-line)" }}>
@@ -223,5 +239,79 @@ export function AnalyticsView({
         </svg>
       </div>
     </motion.div>
+
+    {/* UPI Payment Reconciliation */}
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.3 }}
+      className="rounded-2xl border"
+      style={{ background: "var(--admin-bg-2)", borderColor: "var(--admin-line)" }}
+    >
+      <div className="px-6 py-4 border-b flex items-center gap-3" style={{ borderColor: "var(--admin-line)" }}>
+        <Smartphone size={16} style={{ color: "var(--admin-lime)" }} />
+        <h2 className="font-semibold text-[14px]" style={{ color: "var(--admin-ink)" }}>
+          UPI Payment Ledger
+        </h2>
+        <span className="ml-auto text-[11px] font-mono" style={{ color: "var(--admin-ink-3)" }}>
+          {upiLogs.length} payments · last 30 days
+        </span>
+      </div>
+
+      {upiLogs.length === 0 ? (
+        <div className="px-6 py-10 text-center">
+          <p className="text-[13px]" style={{ color: "var(--admin-ink-3)" }}>
+            No UPI payments recorded yet.<br />
+            UPI payments will appear here as students pay via QR code.
+          </p>
+        </div>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="w-full text-[12.5px]">
+            <thead>
+              <tr style={{ borderBottom: "1px solid var(--admin-line)", color: "var(--admin-ink-3)" }}>
+                <th className="text-left px-6 py-3 font-mono font-medium uppercase tracking-wider" style={{ fontSize: 10 }}>Order</th>
+                <th className="text-left px-6 py-3 font-mono font-medium uppercase tracking-wider" style={{ fontSize: 10 }}>Student</th>
+                <th className="text-left px-6 py-3 font-mono font-medium uppercase tracking-wider" style={{ fontSize: 10 }}>Amount</th>
+                <th className="text-left px-6 py-3 font-mono font-medium uppercase tracking-wider" style={{ fontSize: 10 }}>Paid to UPI</th>
+                <th className="text-left px-6 py-3 font-mono font-medium uppercase tracking-wider" style={{ fontSize: 10 }}>Time</th>
+                <th className="text-left px-6 py-3 font-mono font-medium uppercase tracking-wider" style={{ fontSize: 10 }}>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {upiLogs.map((log) => (
+                <tr
+                  key={log.id}
+                  className="border-b hover:bg-[var(--admin-bg-3)] transition-colors"
+                  style={{ borderColor: "var(--admin-line)" }}
+                >
+                  <td className="px-6 py-3 font-mono" style={{ color: "var(--admin-lime)" }}>
+                    {log.short_code ? `T-${log.short_code}` : "—"}
+                  </td>
+                  <td className="px-6 py-3" style={{ color: "var(--admin-ink)" }}>
+                    {log.student_name ?? "Guest"}
+                  </td>
+                  <td className="px-6 py-3 font-semibold" style={{ color: "var(--admin-ink)" }}>
+                    {formatRupees(log.amount_paise)}
+                  </td>
+                  <td className="px-6 py-3 font-mono text-[11px]" style={{ color: "var(--admin-ink-2)" }}>
+                    {log.upi_vpa}
+                  </td>
+                  <td className="px-6 py-3 font-mono text-[11px]" style={{ color: "var(--admin-ink-3)" }}>
+                    {dayjs(log.created_at).fromNow()}
+                  </td>
+                  <td className="px-6 py-3">
+                    <span className="inline-flex items-center gap-1 text-[11px] font-semibold" style={{ color: "#0c8a43" }}>
+                      <CheckCircle2 size={12} /> Received
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </motion.div>
+    </>
   );
 }
