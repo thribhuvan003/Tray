@@ -63,7 +63,7 @@ export default async function StudentLayout({ children }: { children: React.Reac
           Mobile stays single-column; the CartDrawer self-promotes to a
           floating button + Vaul drawer below the lg breakpoint. */}
       <main
-        className="lg:pb-12 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8"
+        className="lg:pb-12 w-full"
         style={{ paddingBottom: "calc(5rem + env(safe-area-inset-bottom, 0px))" }}
       >
         <div className="min-w-0">{children}</div>

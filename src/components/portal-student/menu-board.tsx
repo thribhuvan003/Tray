@@ -77,9 +77,19 @@ export function MenuBoard({
   const [activeCat, setActiveCat] = useState<string>("all");
   const [isBrowseOpen, setIsBrowseOpen] = useState(false);
   const [vegOnly, setVegOnly] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(false);
   const searchParams = useSearchParams();
   const q = searchParams.get("q") || "";
   const router = useRouter();
+
+  // JS-driven desktop detection — reliable regardless of parent container width
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 1024px)");
+    const update = () => setIsDesktop(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
 
   const [liveStatus, setLiveStatus] = useState({
     isOpen: initialIsOpen,
@@ -273,17 +283,22 @@ export function MenuBoard({
 
   return (
     /* shell: 3-column flex row matching demo layout */
-    <div className="w-full max-w-[1440px] mx-auto" style={{ display: "flex", flex: 1, minHeight: 0, position: "relative" }}>
+    <div className="w-full max-w-[1440px] mx-auto min-h-screen" style={{ display: "flex", flex: 1, position: "relative", alignItems: "flex-start" }}>
 
       {/* ——— LEFT: Desktop Category Nav (200px, demo .cat-nav) ——— */}
       <nav
         aria-label="Categories"
-        className="hidden lg:block"
         style={{
+          display: isDesktop ? "block" : "none",
           width: 200,
           flexShrink: 0,
           padding: "20px 12px 20px 16px",
           borderRight: `1px solid ${S.border}`,
+          position: "sticky",
+          top: 56,
+          maxHeight: "calc(100vh - 56px)",
+          overflowY: "auto",
+          alignSelf: "flex-start",
         }}
       >
         <p style={{
@@ -325,7 +340,6 @@ export function MenuBoard({
           {categories.map((cat) => {
             const cnt = byCat.get(cat.id)?.length ?? 0;
             const isActive = activeCat === cat.id;
-            if (cnt === 0 && !isActive) return null;
             return (
               <li key={cat.id}>
                 <button
@@ -360,7 +374,7 @@ export function MenuBoard({
       {/* ——— MIDDLE: Main content (flex-1) ——— */}
       <main style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
         <div
-          style={{ flex: 1, padding: "24px 28px 40px", maxWidth: 900, width: "100%", margin: "0 auto" }}
+          style={{ flex: 1, padding: "24px 28px 40px", width: "100%", margin: "0 auto" }}
           className="px-4 sm:px-5 lg:px-7"
         >
 
@@ -597,11 +611,10 @@ export function MenuBoard({
             </div>
           </div>
 
-          {/* ——— Mobile category pills ——— */}
+          {/* ——— Mobile category pills (hidden on desktop) ——— */}
           <div
-            className="lg:hidden"
             style={{
-              display: "flex",
+              display: isDesktop ? "none" : "flex",
               gap: 8,
               overflowX: "auto",
               paddingBottom: 16,
@@ -799,8 +812,8 @@ export function MenuBoard({
 
       {/* ——— RIGHT: Persistent Desktop Cart Sidebar (demo .cart-sidebar) ——— */}
       <aside
-        className="hidden lg:flex"
         style={{
+          display: isDesktop ? "flex" : "none",
           width: 320,
           flexShrink: 0,
           flexDirection: "column",
