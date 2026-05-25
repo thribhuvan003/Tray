@@ -7,17 +7,7 @@ import { WelcomeBanner } from "@/components/portal-admin/welcome-banner";
 import { CanteenLinks } from "@/components/portal-admin/canteen-links";
 import { env } from "@/lib/env";
 
-type OrderRow = {
-  id: string;
-  short_code: string;
-  status: "pending_payment" | "placed" | "preparing" | "ready" | "collected" | "rejected" | "expired";
-  total_paise: number;
-  placed_at: string;
-  collected_at: string | null;
-  ready_at: string | null;
-  customer_name: string | null;
-  order_type: "takeaway" | "dine_in";
-};
+import { OrderRow } from "@/types/portal";
 
 type StatusLog = {
   id: string;

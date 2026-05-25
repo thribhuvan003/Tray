@@ -4,6 +4,7 @@ import { resolveTenant, getTenantSlugFromHeaders } from "@/lib/tenant";
 import { getServerClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth/get-user";
 import { TrackPanel } from "@/components/portal-student/track-panel";
+import { OrderRow } from "@/types/portal";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;

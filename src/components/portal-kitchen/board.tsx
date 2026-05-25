@@ -11,26 +11,7 @@ import { OtpVerifyDialog } from "./otp-verify-dialog";
 import { KitchenMarquee } from "./marquee";
 import { SpecialsPanel } from "./specials-panel";
 
-type Status = "placed" | "preparing" | "ready" | "collected";
-type OrderRow = {
-  id: string;
-  short_code: string;
-  status: Status | "pending_payment" | "rejected" | "expired";
-  total_paise: number;
-  placed_at: string;
-  ready_at: string | null;
-  collected_at: string | null;
-  customer_name: string | null;
-  order_type: "takeaway" | "dine_in";
-  table_label: string | null;
-};
-type LineRow = {
-  id: string;
-  order_id: string;
-  name_snapshot: string;
-  qty: number;
-  diet_snapshot: "veg" | "nonveg" | "egg";
-};
+import { Status, OrderRow, LineRow } from "@/types/portal";
 
 export function KitchenBoard({
   tenantId,

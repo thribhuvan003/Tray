@@ -5,21 +5,7 @@ import { getBrowserClient } from "@/lib/supabase/browser";
 import { formatRupees } from "@/lib/utils";
 import { toast } from "sonner";
 
-type OrderRow = {
-  id: string;
-  short_code: string;
-  status: string;
-  total_paise: number;
-  placed_at: string;
-  customer_name: string | null;
-};
-
-type LineRow = {
-  id: string;
-  order_id: string;
-  name_snapshot: string;
-  qty: number;
-};
+import { OrderRow, LineRow } from "@/types/portal";
 
 export function HistoryView({
   tenantId,

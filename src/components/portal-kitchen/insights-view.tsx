@@ -4,12 +4,7 @@ import { useEffect, useState } from "react";
 import { getBrowserClient } from "@/lib/supabase/browser";
 import { formatRupees } from "@/lib/utils";
 
-type OrderRow = {
-  id: string;
-  total_paise: number;
-  placed_at: string;
-  ready_at: string | null;
-};
+import { OrderRow } from "@/types/portal";
 
 type ItemSold = {
   name: string;
