@@ -627,9 +627,9 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
               <p className="font-code mb-5 text-[0.85rem] font-bold uppercase tracking-[0.22em] text-[var(--tray-muted)]">Product</p>
               <ul className="flex flex-col gap-3 text-[1.05rem]">
                 {[
-                  ["Student app",   "/menu"],
-                  ["Kitchen view",  "/kitchen"],
-                  ["Admin console", "/admin/dashboard"],
+                  ["Student view",  "/login?role=student"],
+                  ["Kitchen view",  "/login?role=kitchen"],
+                  ["Admin view",    "/login?role=owner"],
                   ["Get started",   "/get-started"],
                 ].map(([label, href]) => (
                   <li key={label}>

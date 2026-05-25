@@ -208,17 +208,14 @@ export async function POST(req: NextRequest) {
       query = query.eq("short_code", orderId.replace("T-", ""));
     }
 
-    const { data: o } = await query.maybeSingle<{ id: string; status: string; otp_hash: string | null }>();
+    const { data: o } = await query.maybeSingle<{ id: string }>();
     if (!o) return NextResponse.json({ error: "Order not found" }, { status: 404 });
-    if (!o.otp_hash) return NextResponse.json({ error: "Order not ready for pickup" }, { status: 400 });
-    if (o.status !== "ready") return NextResponse.json({ error: `Order is "${o.status}"` }, { status: 400 });
 
     // Call the new atomic verify_and_increment_otp_limit function
     const { data: result, error: rpcErr } = await (dbClient as any).rpc("verify_and_increment_otp_limit", {
       p_order_id: o.id,
       p_tenant_id: tenant.id,
       p_input_otp: otp,
-      p_expected_hash: o.otp_hash,
     });
 
     if (rpcErr || !result) {

@@ -141,24 +141,11 @@ export async function verifyAndCollect(
 
   const admin = getAdminClient(ctx.tenant.id);
 
-  // 1. Fetch the order status and hash first
-  const { data: orderData, error: loadErr } = await admin
-    .from("orders")
-    .select("status, otp_hash")
-    .eq("id", orderId)
-    .eq("tenant_id", ctx.tenant.id)
-    .maybeSingle<{ status: string; otp_hash: string | null }>();
-
-  if (loadErr || !orderData) return { ok: false, error: "Order not found" };
-  if (!orderData.otp_hash) return { ok: false, error: "Order not ready for pickup" };
-  if (orderData.status !== "ready") return { ok: false, error: `Order is "${orderData.status}"` };
-
-  // 2. Call the new atomic verify_and_increment_otp_limit function
+  // Call the atomic verify_and_increment_otp_limit function directly
   const { data: result, error: rpcErr } = await (admin as any).rpc("verify_and_increment_otp_limit", {
     p_order_id: orderId,
     p_tenant_id: ctx.tenant.id,
     p_input_otp: otp,
-    p_expected_hash: orderData.otp_hash,
   });
 
   if (rpcErr || !result) {
