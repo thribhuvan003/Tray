@@ -5,8 +5,10 @@ import { getServerClient } from "@/lib/supabase/server";
 import { requireRole } from "@/lib/auth/get-user";
 
 type Row = {
+  id: string;
   short_code: string;
   placed_at: string;
+  collected_at: string | null;
   status: string;
   total_paise: number;
   customer_name: string | null;
@@ -34,7 +36,7 @@ export async function GET(req: NextRequest) {
   const supabase = await getServerClient(tenant.id);
   let q = supabase
     .from("orders")
-    .select("short_code, placed_at, status, total_paise, customer_name, order_type, table_label")
+    .select("id, short_code, placed_at, collected_at, status, total_paise, customer_name, order_type, table_label")
     .eq("tenant_id", tenant.id)
     .order("placed_at", { ascending: false })
     .limit(5000);
@@ -42,12 +44,14 @@ export async function GET(req: NextRequest) {
   if (to) q = q.lte("placed_at", to);
   const { data } = await q.returns<Row[]>();
 
-  const header = "short_code,placed_at,status,total_inr,order_type,table,customer\n";
+  const header = "order_id,short_code,placed_at,collected_at,status,total_inr,order_type,table,customer\n";
   const body = (data ?? [])
     .map((r) =>
       [
+        csvEscape(r.id),
         csvEscape(r.short_code),
         csvEscape(r.placed_at),
+        csvEscape(r.collected_at),
         csvEscape(r.status),
         csvEscape((r.total_paise / 100).toFixed(2)),
         csvEscape(r.order_type),

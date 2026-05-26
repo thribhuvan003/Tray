@@ -169,7 +169,33 @@ export async function POST(req: NextRequest) {
         .update({ status: "failed" })
         .eq("razorpay_order_id", payment.order_id)
         .eq("tenant_id", orderRow.tenant_id);
-      tenantLog.info("payment marked failed via webhook");
+
+      const { data: failedUpdate } = await adminScoped
+        .from("orders")
+        .update({ status: "payment_failed" })
+        .eq("id", orderRow.id)
+        .eq("tenant_id", orderRow.tenant_id)
+        .eq("status", "pending_payment")
+        .select("id");
+
+      if (failedUpdate && failedUpdate.length > 0) {
+        await (adminScoped.from("order_events") as any).insert({
+          tenant_id: orderRow.tenant_id,
+          order_id: orderRow.id,
+          event_type: "payment_failed",
+          payload: { source: "razorpay_webhook", razorpay_order_id: payment.order_id },
+        });
+        await adminScoped.from("order_status_logs").insert({
+          tenant_id: orderRow.tenant_id,
+          order_id: orderRow.id,
+          from_status: "pending_payment",
+          to_status: "payment_failed",
+          note: "Razorpay payment.failed event",
+        });
+        tenantLog.info("order transitioned to payment_failed via webhook", { latency_ms: Date.now() - start });
+      } else {
+        tenantLog.info("payment.failed no-op (guard or prior path won the race)");
+      }
     }
 
     tenantLog.info("webhook processed successfully", { latency_ms: Date.now() - start });

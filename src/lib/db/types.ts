@@ -842,6 +842,7 @@ export type Database = {
         | "cancelled_by_kitchen"
         | "partially_ready"
         | "refunded"
+        | "payment_failed"
       order_type: "takeaway" | "dine_in"
       payment_status: "initiated" | "captured" | "failed" | "refunded"
     }
@@ -991,6 +992,7 @@ export const Constants = {
         "cancelled_by_kitchen",
         "partially_ready",
         "refunded",
+        "payment_failed",
       ],
       order_type: ["takeaway", "dine_in"],
       payment_status: ["initiated", "captured", "failed", "refunded"],
