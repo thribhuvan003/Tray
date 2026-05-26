@@ -81,25 +81,82 @@ export function DashboardView({
   const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Lightweight refresh for money data (KPIs, revenue, charts, top items, heatmap).
-  // Triggered by order events or poll/visibility — owner sees new paid orders, revenue move, top items update live.
-  const refreshMoneyData = async () => {
+  const prevPaidCountRef = useRef(
+    initialTodayOrders.filter((o) => !["pending_payment", "rejected", "expired"].includes(o.status)).length
+  );
+  const [newOrderFlash, setNewOrderFlash] = useState(false);
+
+  // Live re-fetch of all dashboard data on every realtime event or poll tick.
+  // This is the real production fix: owner KPIs, revenue, top items, heatmap all update the moment a new order is paid.
+  const refreshMoneyData = useCallback(async () => {
     try {
-      // In a full implementation this would be a lightweight client query or API call for the current aggregates.
-      // For minimal change we rely on the existing order_status_logs sub + a simple re-render trigger.
-      // The heavy lifting (re-fetching 14d orders + deriving KPIs) can be moved to a client fetch in a follow-up.
-      // For now the event subscription + visibility/poll will cause the owner to see fresh data on next interaction.
-      // (The kitchen board pattern proves this approach works under real rush + WiFi flaps.)
+      const sb = getBrowserClient();
+      const now = new Date();
+      const startOfDay = new Date(now);
+      startOfDay.setHours(0, 0, 0, 0);
+      const start14d = new Date(now);
+      start14d.setDate(start14d.getDate() - 13);
+      start14d.setHours(0, 0, 0, 0);
+      const start7d = new Date(now);
+      start7d.setDate(start7d.getDate() - 6);
+      start7d.setHours(0, 0, 0, 0);
+
+      const { data: orders14 } = await sb
+        .from("orders")
+        .select("id, short_code, status, total_paise, placed_at, collected_at, ready_at, customer_name, order_type")
+        .eq("tenant_id", tenantId)
+        .gte("placed_at", start14d.toISOString())
+        .order("placed_at", { ascending: false })
+        .limit(1600)
+        .returns<OrderRow[]>();
+
+      if (orders14) {
+        const todayIso = startOfDay.toISOString();
+        const start7dIso = start7d.toISOString();
+        const week = orders14.filter((o) => o.placed_at >= start7dIso);
+        const today = week.filter((o) => o.placed_at >= todayIso);
+        const todayIds = today.map((o) => o.id);
+
+        const elapsedMs = now.getTime() - startOfDay.getTime();
+        const lwStart = new Date(startOfDay.getTime() - 7 * 24 * 60 * 60 * 1000);
+        const lwEnd = new Date(lwStart.getTime() + elapsedMs);
+        const lastWeek = orders14.filter(
+          (o) => o.placed_at >= lwStart.toISOString() && o.placed_at < lwEnd.toISOString()
+        );
+
+        setLiveOrdersWeek(week);
+        setLiveTodayOrders(today);
+        setLiveLastWeekToday(lastWeek);
+
+        const paidCount = today.filter((o) => !["pending_payment", "rejected", "expired"].includes(o.status)).length;
+        if (paidCount > prevPaidCountRef.current) {
+          setNewOrderFlash(true);
+          setTimeout(() => setNewOrderFlash(false), 8000);
+        }
+        prevPaidCountRef.current = paidCount;
+
+        if (todayIds.length > 0) {
+          const { data: items } = await sb
+            .from("order_items")
+            .select("id, order_id, name_snapshot, qty, diet_snapshot, price_paise_snapshot")
+            .in("order_id", todayIds)
+            .returns<ItemRow[]>();
+          setLiveTodayItems(items ?? []);
+        } else {
+          setLiveTodayItems([]);
+        }
+      }
+
       if (connStateRef.current !== "online") {
         setConnState("online");
         connStateRef.current = "online";
         setReconnectAttempt(0);
         reconnectAttemptRef.current = 0;
       }
-    } catch (e) {
+    } catch {
       // Swallow — the 20s poll + visibility will recover.
     }
-  };
+  }, [tenantId]);
 
   // Resilient Realtime subscription for money data (modeled exactly on the proven kitchen board).
   // order_events / order_status_logs INSERT for this tenant triggers refreshMoneyData.
@@ -392,6 +449,32 @@ export function DashboardView({
       )}
 
       {/* ── Page heading + topbar-style row ─────────────────────────── */}
+      {/* New-order flash — fires for 8s whenever paid order count increases */}
+      {newOrderFlash && (
+        <motion.div
+          initial={{ opacity: 0, y: -4 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex items-center gap-2 rounded-lg border px-3 py-2 text-[12px] font-medium mb-3"
+          style={{
+            background: "rgba(205,250,80,0.12)",
+            borderColor: "rgba(205,250,80,0.3)",
+            color: "#cdfa50",
+          }}
+        >
+          <span
+            style={{
+              width: 8,
+              height: 8,
+              borderRadius: "50%",
+              background: "#cdfa50",
+              display: "inline-block",
+              boxShadow: "0 0 6px #cdfa50",
+            }}
+          />
+          <span>New order in — KPIs updated</span>
+        </motion.div>
+      )}
+
       {/* High-contrast truthful connection banner (exact kitchen board pattern) */}
       {connState !== "online" && (
         <div

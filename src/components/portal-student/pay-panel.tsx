@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import QRCode from "react-qr-code";
 import Link from "next/link";
@@ -41,6 +41,7 @@ export function PayPanel({
   lines: Line[];
 }) {
   const router = useRouter();
+  const redirectedRef = useRef(false);
   const [pending, start] = useTransition();
   const [verifying, startVerify] = useTransition();
   const [stillWaiting, setStillWaiting] = useState(false);
@@ -58,11 +59,22 @@ export function PayPanel({
   useEffect(() => {
     if (!order.payment_expires_at) return;
     const expiry = new Date(order.payment_expires_at).getTime();
-    const tick = () => setRemaining(Math.max(0, Math.floor((expiry - Date.now()) / 1000)));
+    const tick = () => {
+      const secs = Math.max(0, Math.floor((expiry - Date.now()) / 1000));
+      setRemaining(secs);
+      // BUG 1 FIX: redirect to track page when the payment window expires so
+      // the student isn't stuck on a dead pay screen.
+      if (secs === 0) {
+        if (!redirectedRef.current) {
+          redirectedRef.current = true;
+          router.push(`/c/${tenantSlug}/track/${order.id}`);
+        }
+      }
+    };
     tick();
     const id = setInterval(tick, 1000);
     return () => clearInterval(id);
-  }, [order.payment_expires_at]);
+  }, [order.payment_expires_at, order.id, router, tenantSlug]);
 
   // Live UPI VPA subscription — when the canteen owner changes their UPI ID in settings,
   // the QR on this student's pay panel updates in real time without a full reload.
@@ -97,6 +109,10 @@ export function PayPanel({
         (payload) => {
           const next = (payload.new as { status: string }).status;
           if (next === "placed" || next === "preparing" || next === "ready") {
+            // BUG 2 FIX: guard against double-redirect when both Realtime and
+            // polling handlers fire at the same time.
+            if (redirectedRef.current) return;
+            redirectedRef.current = true;
             router.push(`/c/${tenantSlug}/track/${order.id}`);
           }
         }
@@ -116,6 +132,9 @@ export function PayPanel({
         .eq("id", order.id)
         .maybeSingle<{ status: string }>();
       if (data && data.status !== "pending_payment") {
+        // BUG 2 FIX: guard against double-redirect when Realtime already fired.
+        if (redirectedRef.current) return;
+        redirectedRef.current = true;
         router.push(`/c/${tenantSlug}/track/${order.id}`);
       }
     }, 4000);
@@ -140,6 +159,8 @@ export function PayPanel({
       if (!r.ok) toast.error(r.error ?? "Could not simulate payment");
       else {
         toast.success("Payment captured");
+        if (redirectedRef.current) return;
+        redirectedRef.current = true;
         router.push(`/c/${tenantSlug}/track/${order.id}`);
       }
     });
@@ -152,6 +173,8 @@ export function PayPanel({
       const r = await verifyPaymentNow(order.id);
       if (r.status === "paid") {
         toast.success("Order placed — kitchen has it!");
+        if (redirectedRef.current) return;
+        redirectedRef.current = true;
         router.push(`/c/${tenantSlug}/track/${order.id}`);
       } else if (r.status === "failed") {
         toast.error("Payment failed — try the QR again");
