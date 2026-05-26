@@ -1,16 +1,14 @@
-import { headers } from "next/headers";
 import { notFound, redirect } from "next/navigation";
-import { resolveTenant } from "@/lib/tenant";
 import { getServerClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth/get-user";
 import { PayPanel } from "@/components/portal-student/pay-panel";
+import { requireTenantContext } from "@/lib/tenant";
 
 export default async function PayPage({ params }: { params: Promise<{ orderId: string }> }) {
   const { orderId } = await params;
-  const h = await headers();
-  const slug = h.get("x-tenant-slug") ?? "aditya";
-  const tenant = await resolveTenant(slug);
-  if (!tenant) notFound();
+  // Production-grade tenant context — the UPI VPA and QR for this order's canteen must be correct and isolated.
+  // Changes the owner makes to their UPI will be reflected here on next load (revalidation from admin settings).
+  const { tenant } = await requireTenantContext();
 
   const user = await getCurrentUser();
   if (!user) redirect(`/c/${tenant.slug}/login?next=/c/${tenant.slug}/pay/${orderId}`);

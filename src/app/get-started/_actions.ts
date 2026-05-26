@@ -3,6 +3,7 @@
 import { getAdminClient } from "@/lib/supabase/admin";
 import { sendEmail } from "@/lib/email/resend";
 import { env } from "@/lib/env";
+import { logger } from "@/lib/logging";
 
 function toSlug(name: string): string {
   return name
@@ -147,7 +148,10 @@ export async function createInstitution(
 
   if (colMemberError) {
     // Non-fatal — log but continue
-    console.error("[get-started] college_membership insert failed", colMemberError.message);
+    logger.error("get-started college_membership insert failed", colMemberError, {
+      college_id: college.id,
+      user_id: userId,
+    });
   }
 
   // ── 6. Create tenant_membership with canteen_admin role ──────────────────────
@@ -161,7 +165,10 @@ export async function createInstitution(
 
   if (memberError) {
     // Non-fatal — the user was created, they can still log in
-    console.error("[get-started] tenant_membership insert failed", memberError.message);
+    logger.error("get-started tenant_membership insert failed", memberError, {
+      tenant_id: tenant.id,
+      user_id: userId,
+    });
   }
 
   // ── 7. Send welcome email ────────────────────────────────────────────────────
@@ -202,7 +209,10 @@ export async function createInstitution(
       </div>
     `,
   }).catch((e) => {
-    console.error("[get-started] welcome email failed", e);
+    logger.error("get-started welcome email failed", e, {
+      tenant_id: tenant.id,
+      user_id: userId,
+    });
   });
 
   return { ok: true, canteenSlug };

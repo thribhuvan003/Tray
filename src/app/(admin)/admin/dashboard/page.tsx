@@ -1,11 +1,10 @@
-import { headers } from "next/headers";
-import { resolveTenant } from "@/lib/tenant";
 import { getServerClient } from "@/lib/supabase/server";
 import { getAdminClient } from "@/lib/supabase/admin";
 import { DashboardView } from "@/components/portal-admin/dashboard-view";
 import { WelcomeBanner } from "@/components/portal-admin/welcome-banner";
 import { CanteenLinks } from "@/components/portal-admin/canteen-links";
 import { env } from "@/lib/env";
+import { requireTenantContext } from "@/lib/tenant";
 
 type OrderRow = {
   id: string;
@@ -47,10 +46,9 @@ export default async function DashboardPage({
   const sp = await searchParams;
   const showWelcome = sp.welcome === "1";
 
-  const h = await headers();
-  const slug = h.get("x-tenant-slug") ?? "aditya";
-  const tenant = await resolveTenant(slug);
-  if (!tenant) return null;
+  // Production-grade tenant context (enforces "one login = own dedicated system per canteen" promise).
+  // Fail-fast with structured logging; no silent "aditya" default ever again.
+  const { tenant } = await requireTenantContext();
   const supabase = await getServerClient(tenant.id);
 
   // Fetch college slug for the welcome banner (only on first load).

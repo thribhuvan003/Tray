@@ -2,6 +2,8 @@ import { NextResponse, type NextRequest } from "next/server";
 import { verifyWebhookSignature } from "@/lib/payments/razorpay";
 import { getAdminClient } from "@/lib/supabase/admin";
 import { env } from "@/lib/env";
+import { logger, withRequestContext } from "@/lib/logging";
+import { rateLimit } from "@/lib/rate-limit";
 
 type RazorpayEvent = {
   event: string;
@@ -20,101 +22,175 @@ type RazorpayEvent = {
 };
 
 export async function POST(req: NextRequest) {
+  const start = Date.now();
+
+  // Basic defense-in-depth rate limiting on the money webhook (per SRE recommendation).
+  // Uses the existing rateLimit helper. Per-IP or global burst protection.
+  const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+  const rl = await rateLimit(`webhook:razorpay:${ip}`, { limit: 120, windowMs: 60_000 });
+  if (!rl.success) {
+    logger.warn("razorpay webhook rate limited", { ip });
+    return NextResponse.json({ ok: true }, { status: 200 }); // still ack to provider
+  }
+
   if (!env.RAZORPAY_WEBHOOK_SECRET || !env.SUPABASE_SERVICE_ROLE_KEY) {
+    logger.error("webhook misconfigured", null, { latency_ms: Date.now() - start });
     return NextResponse.json({ ok: false, error: "Not configured" }, { status: 503 });
   }
+
   const sig = req.headers.get("x-razorpay-signature");
-  if (!sig) return NextResponse.json({ ok: false }, { status: 400 });
+  if (!sig) {
+    logger.warn("webhook missing signature");
+    return NextResponse.json({ ok: false }, { status: 400 });
+  }
+
   const raw = await req.text();
+
   if (!verifyWebhookSignature(raw, sig)) {
+    logger.error("webhook invalid signature", null, { latency_ms: Date.now() - start });
     return NextResponse.json({ ok: false, error: "Invalid signature" }, { status: 400 });
   }
+
   let body: RazorpayEvent;
   try {
     body = JSON.parse(raw) as RazorpayEvent;
   } catch {
+    logger.error("webhook bad JSON", null, { latency_ms: Date.now() - start });
     return NextResponse.json({ ok: false, error: "Bad JSON" }, { status: 400 });
   }
+
   const payment = body.payload?.payment?.entity;
-  if (!payment?.order_id) return NextResponse.json({ ok: true, skipped: true });
+  if (!payment?.order_id) {
+    return NextResponse.json({ ok: true, skipped: true });
+  }
 
   const tenantSlug = payment.notes?.tenant;
   const tenantOrderId = payment.notes?.order;
+
   if (!tenantSlug || !tenantOrderId) {
-    console.warn("[razorpay] webhook payment missing notes", { event: body.event, payment_id: payment.id });
+    logger.warn("webhook payment missing tenant/order notes", {
+      event: body.event,
+      razorpay_payment_id: payment.id,
+      latency_ms: Date.now() - start,
+    });
     return NextResponse.json({ ok: true, skipped: true });
   }
+
+  const log = logger.withContext({
+    tenant_slug: tenantSlug,
+    order_id: tenantOrderId,
+    razorpay_order_id: payment.order_id,
+    razorpay_payment_id: payment.id,
+    event: body.event,
+  });
+
+  log.info("razorpay webhook received");
 
   const admin = getAdminClient();
   const eventId = `${body.event}:${payment.id ?? "x"}:${body.created_at ?? Date.now()}`;
 
-  // Look up the order; idempotent on raw_event_id.
   const { data: orderRow } = await admin
     .from("orders")
     .select("id, tenant_id, status")
     .eq("id", tenantOrderId)
     .maybeSingle<{ id: string; tenant_id: string; status: string }>();
-  if (!orderRow) return NextResponse.json({ ok: true, skipped: true });
 
-  if (body.event === "payment.captured" || payment.status === "captured") {
-    // Idempotent — duplicate webhooks share the same eventId and get
-    // silently dropped by the raw_event_id unique constraint.
-    const { error: dupe } = await admin.from("payments").upsert(
-      {
-        tenant_id: orderRow.tenant_id,
-        order_id: orderRow.id,
+  if (!orderRow) {
+    // Webhook arrived before the order row was visible (race with placeOrder).
+    // This is a real scenario in the checklist. We DLQ it for visibility and let
+    // the existing reconcile cron (with the same guards) catch it later.
+    try {
+      await admin.from("webhook_dlq" as any).insert({
+        tenant_id: null,
+        razorpay_event: body.event,
+        razorpay_payment_id: payment.id,
         razorpay_order_id: payment.order_id,
-        razorpay_payment_id: payment.id ?? null,
-        amount_paise: payment.amount ?? 0,
-        status: "captured",
-        raw_event_id: eventId,
-      },
-      { onConflict: "raw_event_id", ignoreDuplicates: true }
-    );
-    if (dupe) return NextResponse.json({ ok: false, error: dupe.message }, { status: 500 });
-
-    // Gated update — duplicate webhooks (or manual verify racing the webhook)
-    // can't re-transition a row past pending_payment.
-    const { data: updated } = await admin
-      .from("orders")
-      .update({ status: "placed" })
-      .eq("id", orderRow.id)
-      .eq("tenant_id", orderRow.tenant_id)
-      .eq("status", "pending_payment")
-      .select("id");
-
-    if (updated && updated.length > 0) {
-      type OrderEventInsert = {
-        tenant_id: string;
-        order_id: string;
-        event_type: string;
-        payload: Record<string, unknown>;
-      };
-      await (
-        admin.from("order_events") as unknown as {
-          insert: (row: OrderEventInsert) => Promise<unknown>;
-        }
-      ).insert({
-        tenant_id: orderRow.tenant_id,
-        order_id: orderRow.id,
-        event_type: "status_changed",
-        payload: { from: "pending_payment", to: "placed", source: "razorpay_webhook" },
+        payload: body as any,
+        error_message: "Order row not found at webhook processing time",
       });
-      await admin.from("order_status_logs").insert({
-        tenant_id: orderRow.tenant_id,
-        order_id: orderRow.id,
-        from_status: "pending_payment",
-        to_status: "placed",
-        note: "Razorpay captured",
-      });
+    } catch (dlqErr) {
+      logger.error("CRITICAL: failed to write to webhook_dlq", dlqErr);
     }
-  } else if (body.event === "payment.failed") {
-    await admin
-      .from("payments")
-      .update({ status: "failed" })
-      .eq("razorpay_order_id", payment.order_id)
-      .eq("tenant_id", orderRow.tenant_id);
+    log.warn("webhook order not found — queued to DLQ (reconcile safety net active)");
+    return NextResponse.json({ ok: true, skipped: true });
   }
 
-  return NextResponse.json({ ok: true });
+  const adminScoped = getAdminClient(orderRow.tenant_id);
+  const tenantLog = log.withContext({ tenant_id: orderRow.tenant_id, order_id: orderRow.id });
+
+  try {
+    if (body.event === "payment.captured" || payment.status === "captured") {
+      const { error: dupe } = await adminScoped.from("payments").upsert(
+        {
+          tenant_id: orderRow.tenant_id,
+          order_id: orderRow.id,
+          razorpay_order_id: payment.order_id,
+          razorpay_payment_id: payment.id ?? null,
+          amount_paise: payment.amount ?? 0,
+          status: "captured",
+          raw_event_id: eventId,
+        },
+        { onConflict: "raw_event_id", ignoreDuplicates: true }
+      );
+      if (dupe) {
+        tenantLog.error("payments upsert failed", dupe);
+        throw dupe;
+      }
+
+      const { data: updated } = await adminScoped
+        .from("orders")
+        .update({ status: "placed" })
+        .eq("id", orderRow.id)
+        .eq("tenant_id", orderRow.tenant_id)
+        .eq("status", "pending_payment")
+        .select("id");
+
+      if (updated && updated.length > 0) {
+        await (adminScoped.from("order_events") as any).insert({
+          tenant_id: orderRow.tenant_id,
+          order_id: orderRow.id,
+          event_type: "status_changed",
+          payload: { from: "pending_payment", to: "placed", source: "razorpay_webhook" },
+        });
+        await adminScoped.from("order_status_logs").insert({
+          tenant_id: orderRow.tenant_id,
+          order_id: orderRow.id,
+          from_status: "pending_payment",
+          to_status: "placed",
+          note: "Razorpay captured",
+        });
+        tenantLog.info("order transitioned via webhook", { latency_ms: Date.now() - start });
+      } else {
+        tenantLog.info("webhook capture no-op (guard or prior path won the race)");
+      }
+    } else if (body.event === "payment.failed") {
+      await adminScoped
+        .from("payments")
+        .update({ status: "failed" })
+        .eq("razorpay_order_id", payment.order_id)
+        .eq("tenant_id", orderRow.tenant_id);
+      tenantLog.info("payment marked failed via webhook");
+    }
+
+    tenantLog.info("webhook processed successfully", { latency_ms: Date.now() - start });
+    return NextResponse.json({ ok: true });
+  } catch (err) {
+    // Any transient error after signature verification → DLQ + ack to Razorpay.
+    // This prevents infinite retries while giving us full forensics.
+    tenantLog.error("webhook processing error — DLQ entry created", err);
+    try {
+      await admin.from("webhook_dlq" as any).insert({
+        tenant_id: orderRow.tenant_id,
+        razorpay_event: body.event,
+        razorpay_payment_id: payment.id,
+        razorpay_order_id: payment.order_id,
+        payload: body as any,
+        error_message: err instanceof Error ? err.message : String(err),
+        error_stack: err instanceof Error ? err.stack : undefined,
+      });
+    } catch (dlqErr) {
+      logger.error("CRITICAL: DLQ write also failed", dlqErr);
+    }
+    return NextResponse.json({ ok: true, dlq: true });
+  }
 }

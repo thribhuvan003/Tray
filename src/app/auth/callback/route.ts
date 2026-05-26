@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { getServerClient } from "@/lib/supabase/server";
 import { getAdminClient } from "@/lib/supabase/admin";
 import { resolveTenant } from "@/lib/tenant";
+import { logger } from "@/lib/logging";
 
 /**
  * Enrolls the authenticated user into every open-access tenant they are not
@@ -25,7 +26,9 @@ async function ensureStudentEnrolled(userId: string): Promise<void> {
     .filter("colleges.allowed_domains", "eq", "{}");
 
   if (error) {
-    console.error("[auth/callback] ensureStudentEnrolled — query failed:", error.message);
+    logger.error("auth callback ensureStudentEnrolled query failed", error, {
+      user_id: userId,
+    });
     return;
   }
   if (!openTenants || openTenants.length === 0) return;
@@ -44,7 +47,9 @@ async function ensureStudentEnrolled(userId: string): Promise<void> {
     .upsert(inserts, { onConflict: "user_id,tenant_id", ignoreDuplicates: true });
 
   if (upsertError) {
-    console.error("[auth/callback] ensureStudentEnrolled — upsert failed:", upsertError.message);
+    logger.error("auth callback ensureStudentEnrolled upsert failed", upsertError, {
+      user_id: userId,
+    });
   }
 }
 
@@ -54,7 +59,9 @@ export async function GET(req: NextRequest) {
   const token_hash = searchParams.get("token_hash");
   const type = searchParams.get("type");
   const next = searchParams.get("next") ?? "/";
-  const tenantSlug = searchParams.get("tenant") ?? req.headers.get("x-tenant-slug") ?? "aditya";
+  // Prefer explicit tenant from the invite/signup link or the x-tenant-slug header (set by middleware for /c/slug/... flows).
+  // No silent "aditya" default for normal auth — fail loud with a clear error so broken invites/links are obvious.
+  const tenantSlug = searchParams.get("tenant") ?? req.headers.get("x-tenant-slug");
 
   const supabase = await getServerClient();
   let authError: { message: string } | null = null;
@@ -77,7 +84,7 @@ export async function GET(req: NextRequest) {
   if (authError) {
     return NextResponse.redirect(new URL(`/login?error=${encodeURIComponent(authError.message)}`, origin));
   }
-  const tenant = await resolveTenant(tenantSlug);
+  const tenant = tenantSlug ? await resolveTenant(tenantSlug) : null;
   const { data: u } = await supabase.auth.getUser();
   if (tenant && u.user) {
     try {
@@ -105,7 +112,10 @@ export async function GET(req: NextRequest) {
     // allowed_domains array are intentionally skipped by this RPC.
     const { error: enrollError } = await supabase.rpc("auto_enroll_student");
     if (enrollError) {
-      console.error("[auth/callback] auto_enroll_student failed:", enrollError.message);
+      logger.error("auth callback auto_enroll_student failed", enrollError, {
+        user_id: u.user.id,
+        tenant_slug: tenantSlug,
+      });
     }
 
     // Step 2 — open-access enroll: enrolls users in every tenant whose parent
@@ -123,7 +133,10 @@ export async function GET(req: NextRequest) {
       .eq("user_id", u.user.id)
       .eq("is_active", true);
     if (countError) {
-      console.error("[auth/callback] membership count failed:", countError.message);
+      logger.error("auth callback membership count failed", countError, {
+        user_id: u.user.id,
+        tenant_slug: tenantSlug,
+      });
     } else if ((count ?? 0) === 0) {
       return NextResponse.redirect(new URL("/?msg=no-college", origin));
     }

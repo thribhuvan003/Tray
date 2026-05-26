@@ -6,6 +6,10 @@ const DEFAULT_TENANT_SLUG = process.env.DEFAULT_TENANT_SLUG ?? "aditya";
 
 // Path-based tenant routing: `/c/[slug]/...` for canteens, `/college/[slug]/...` for college portal.
 // Subdomain routing (`aditya.tray.local`) is kept as a fallback for backwards compat.
+//
+// This is the entry point that makes the core promise real:
+// "One login → each admin gets their own URL/subdomain + their own dedicated-feeling system + their own data."
+// Every request must resolve to a tenant early and reliably so downstream code can enforce isolation.
 export async function middleware(req: NextRequest) {
   const url = req.nextUrl;
   const pathname = url.pathname;

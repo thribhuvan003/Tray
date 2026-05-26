@@ -1,31 +1,90 @@
 "use server";
 
+/**
+ * Admin (canteen owner) Server Actions — production hardened.
+ *
+ * These are the privileged "owner console" surfaces for each tenant.
+ * One login for a canteen_admin → their own dedicated pages, own subdomain/URL,
+ * own isolated data, own "system" feel. Every write here must carry explicit,
+ * observable tenant context so the promise is real at scale (thousands of users,
+ * many simultaneous college canteens, no noisy neighbor, no cross-tenant leaks).
+ *
+ * Pattern reused exactly from the already-wired kitchen + student surfaces:
+ *   - requireTenantContext (or ForJob variant) for fail-fast + rich logging
+ *   - tenantRateLimit per-tenant+per-user for rush/abuse protection
+ *   - getAdminClient(tenant.id) explicit scoping on every DB write
+ *   - .eq("tenant_id", ...) guards on every query
+ *   - Full audit_logs + order_status_logs + structured logger with all context keys
+ *
+ * BlackRock/HFT standard: defensive, observable, minimal, operator-empathic.
+ * Never silent on missing context. 2am debugging must be trivial.
+ */
+
 import { revalidatePath, revalidateTag } from "next/cache";
 import { headers } from "next/headers";
 import crypto from "node:crypto";
 import dayjs from "dayjs";
-import { resolveTenant } from "@/lib/tenant";
+import { requireTenantContext } from "@/lib/tenant";
 import { getAdminClient } from "@/lib/supabase/admin";
 import { requireRole } from "@/lib/auth/get-user";
 import { sendEmail } from "@/lib/email/resend";
 import { env } from "@/lib/env";
+import { logger } from "@/lib/logging";
+import { tenantRateLimit } from "@/lib/rate-limit/tenant";
 
-async function ctx() {
-  const h = await headers();
-  const slug = h.get("x-tenant-slug") ?? "aditya";
-  const tenant = await resolveTenant(slug);
-  if (!tenant) return { ok: false as const, error: "Tenant missing" };
+import type { ResolvedTenant } from "@/lib/tenant";
+import type { CurrentUser } from "@/lib/auth/get-user";
+
+type AdminCtx =
+  | { ok: false; error: string }
+  | { ok: true; tenant: ResolvedTenant; user: CurrentUser };
+
+/**
+ * Production ctx helper for canteen_admin surfaces.
+ * Delegates to the standardized requireTenantContext (header-driven, logged, fail-fast)
+ * then enforces the role. This makes every admin action participate in the
+ * "one login = own dedicated isolated system" enforcement + observability story.
+ */
+async function adminContext(): Promise<AdminCtx> {
+  let tenantCtx;
+  try {
+    tenantCtx = await requireTenantContext();
+  } catch (e) {
+    logger.error("admin context resolution failed", e, {
+      reason: "requireTenantContext threw",
+    });
+    return { ok: false, error: "Tenant context invalid" };
+  }
+
   const user = await requireRole(["canteen_admin", "super_admin"]);
-  if (!user) return { ok: false as const, error: "Not authorised" };
-  return { ok: true as const, tenant, user };
+  if (!user) {
+    return { ok: false, error: "Not authorised" };
+  }
+
+  logger.info("admin context established", {
+    tenant_id: tenantCtx.tenant.id,
+    slug: tenantCtx.tenant.slug,
+    user_id: user.id,
+    actor_role: user.role,
+  });
+
+  return { ok: true, tenant: tenantCtx.tenant, user };
 }
 
 export async function setMenuItemStatus(
   id: string,
   status: "draft" | "live" | "archived"
 ): Promise<{ ok: boolean; error?: string }> {
-  const c = await ctx();
+  const c = await adminContext();
   if (!c.ok) return { ok: false, error: c.error };
+
+  // Per-tenant + per-user rate limit for admin actions (rush protection + noisy-neighbor defense)
+  const rate = await tenantRateLimit(c.tenant.id, "admin_action", c.user.id);
+  if (!rate.success) {
+    return { ok: false, error: "Too many admin actions — slow down a little" };
+  }
+
+  const start = Date.now();
   const admin = getAdminClient(c.tenant.id);
   const { error } = await admin
     .from("menu_items")
@@ -33,14 +92,32 @@ export async function setMenuItemStatus(
     .eq("id", id)
     .eq("tenant_id", c.tenant.id);
   if (error) return { ok: false, error: error.message };
+
+  logger.info("admin menu item status changed", {
+    tenant_id: c.tenant.id,
+    slug: c.tenant.slug,
+    actor_user_id: c.user.id,
+    target: "menu_item",
+    target_id: id,
+    new_status: status,
+    latency_ms: Date.now() - start,
+  });
+
   revalidatePath(`/c/${c.tenant.slug}/admin/menu`);
   revalidatePath(`/c/${c.tenant.slug}/menu`);
   return { ok: true };
 }
 
 export async function setMenuItemStock(id: string, inStock: boolean): Promise<{ ok: boolean; error?: string }> {
-  const c = await ctx();
+  const c = await adminContext();
   if (!c.ok) return { ok: false, error: c.error };
+
+  const rate = await tenantRateLimit(c.tenant.id, "admin_action", c.user.id);
+  if (!rate.success) {
+    return { ok: false, error: "Too many admin actions — slow down a little" };
+  }
+
+  const start = Date.now();
   const admin = getAdminClient(c.tenant.id);
   const { error } = await admin
     .from("menu_items")
@@ -48,6 +125,17 @@ export async function setMenuItemStock(id: string, inStock: boolean): Promise<{ 
     .eq("id", id)
     .eq("tenant_id", c.tenant.id);
   if (error) return { ok: false, error: error.message };
+
+  logger.info("admin menu item stock changed", {
+    tenant_id: c.tenant.id,
+    slug: c.tenant.slug,
+    actor_user_id: c.user.id,
+    target: "menu_item",
+    target_id: id,
+    in_stock: inStock,
+    latency_ms: Date.now() - start,
+  });
+
   revalidatePath(`/c/${c.tenant.slug}/admin/menu`);
   revalidatePath(`/c/${c.tenant.slug}/menu`);
   return { ok: true };
@@ -57,8 +145,15 @@ export async function inviteStaff(
   email: string,
   role: "kitchen_staff" | "canteen_admin"
 ): Promise<{ ok: boolean; error?: string; url?: string }> {
-  const c = await ctx();
+  const c = await adminContext();
   if (!c.ok) return { ok: false, error: c.error };
+
+  const rate = await tenantRateLimit(c.tenant.id, "admin_action", c.user.id);
+  if (!rate.success) {
+    return { ok: false, error: "Too many admin actions — slow down a little" };
+  }
+
+  const start = Date.now();
   const admin = getAdminClient(c.tenant.id);
   const token = crypto.randomBytes(24).toString("hex");
   const expiresAt = dayjs().add(48, "hour").toISOString();
@@ -84,13 +179,30 @@ export async function inviteStaff(
     target_type: "invite",
     meta: { email, role },
   });
+
+  logger.info("admin staff invited", {
+    tenant_id: c.tenant.id,
+    slug: c.tenant.slug,
+    actor_user_id: c.user.id,
+    invited_email: email,
+    invited_role: role,
+    latency_ms: Date.now() - start,
+  });
+
   revalidatePath(`/c/${c.tenant.slug}/admin/staff`);
   return { ok: true, url };
 }
 
 export async function revokeStaff(membershipId: string): Promise<{ ok: boolean; error?: string }> {
-  const c = await ctx();
+  const c = await adminContext();
   if (!c.ok) return { ok: false, error: c.error };
+
+  const rate = await tenantRateLimit(c.tenant.id, "admin_action", c.user.id);
+  if (!rate.success) {
+    return { ok: false, error: "Too many admin actions — slow down a little" };
+  }
+
+  const start = Date.now();
   const admin = getAdminClient(c.tenant.id);
   const { error } = await admin
     .from("tenant_memberships")
@@ -105,6 +217,15 @@ export async function revokeStaff(membershipId: string): Promise<{ ok: boolean; 
     target_type: "membership",
     target_id: membershipId,
   });
+
+  logger.info("admin staff revoked", {
+    tenant_id: c.tenant.id,
+    slug: c.tenant.slug,
+    actor_user_id: c.user.id,
+    target_id: membershipId,
+    latency_ms: Date.now() - start,
+  });
+
   revalidatePath(`/c/${c.tenant.slug}/admin/staff`);
   return { ok: true };
 }
@@ -116,8 +237,15 @@ export async function updateCanteenHours(opts: {
   opensAt: string | null; // "HH:MM" or null
   closesAt: string | null; // "HH:MM" or null
 }): Promise<{ ok: boolean; error?: string }> {
-  const c = await ctx();
+  const c = await adminContext();
   if (!c.ok) return { ok: false, error: c.error };
+
+  const rate = await tenantRateLimit(c.tenant.id, "admin_action", c.user.id);
+  if (!rate.success) {
+    return { ok: false, error: "Too many admin actions — slow down a little" };
+  }
+
+  const start = Date.now();
   const admin = getAdminClient(c.tenant.id);
   const { error } = await admin
     .from("tenants")
@@ -128,6 +256,15 @@ export async function updateCanteenHours(opts: {
     })
     .eq("id", c.tenant.id);
   if (error) return { ok: false, error: error.message };
+
+  logger.info("admin canteen hours updated", {
+    tenant_id: c.tenant.id,
+    slug: c.tenant.slug,
+    actor_user_id: c.user.id,
+    is_open: opts.isOpen,
+    latency_ms: Date.now() - start,
+  });
+
   revalidatePath(`/c/${c.tenant.slug}/admin/settings`);
   revalidatePath(`/c/${c.tenant.slug}/menu`);
   revalidateTag("tenant");
@@ -135,8 +272,15 @@ export async function updateCanteenHours(opts: {
 }
 
 export async function pauseCanteen(minutes: number): Promise<{ ok: boolean; error?: string }> {
-  const c = await ctx();
+  const c = await adminContext();
   if (!c.ok) return { ok: false, error: c.error };
+
+  const rate = await tenantRateLimit(c.tenant.id, "admin_action", c.user.id);
+  if (!rate.success) {
+    return { ok: false, error: "Too many admin actions — slow down a little" };
+  }
+
+  const start = Date.now();
   const admin = getAdminClient(c.tenant.id);
   const pausedUntil =
     minutes > 0 ? dayjs().add(minutes, "minute").toISOString() : null;
@@ -145,6 +289,15 @@ export async function pauseCanteen(minutes: number): Promise<{ ok: boolean; erro
     .update({ paused_until: pausedUntil })
     .eq("id", c.tenant.id);
   if (error) return { ok: false, error: error.message };
+
+  logger.info("admin canteen paused", {
+    tenant_id: c.tenant.id,
+    slug: c.tenant.slug,
+    actor_user_id: c.user.id,
+    minutes,
+    latency_ms: Date.now() - start,
+  });
+
   revalidatePath(`/c/${c.tenant.slug}/admin/settings`);
   revalidatePath(`/c/${c.tenant.slug}/menu`);
   revalidateTag("tenant");
@@ -155,8 +308,15 @@ export async function updateCanteenSettings(opts: {
   guestOrdersEnabled: boolean;
   upiVpa: string | null;
 }): Promise<{ ok: boolean; error?: string }> {
-  const c = await ctx();
+  const c = await adminContext();
   if (!c.ok) return { ok: false, error: c.error };
+
+  const rate = await tenantRateLimit(c.tenant.id, "admin_action", c.user.id);
+  if (!rate.success) {
+    return { ok: false, error: "Too many admin actions — slow down a little" };
+  }
+
+  const start = Date.now();
   const admin = getAdminClient(c.tenant.id);
   const { error } = await admin
     .from("tenants")
@@ -166,6 +326,15 @@ export async function updateCanteenSettings(opts: {
     })
     .eq("id", c.tenant.id);
   if (error) return { ok: false, error: error.message };
+
+  logger.info("admin canteen settings updated", {
+    tenant_id: c.tenant.id,
+    slug: c.tenant.slug,
+    actor_user_id: c.user.id,
+    guest_orders_enabled: opts.guestOrdersEnabled,
+    latency_ms: Date.now() - start,
+  });
+
   revalidatePath(`/c/${c.tenant.slug}/admin/settings`);
   revalidatePath(`/c/${c.tenant.slug}/menu`);
   revalidateTag("tenant");
@@ -183,8 +352,15 @@ export async function createMenuItem(form: {
   image_url: string | null;
   sort_order: number;
 }): Promise<{ ok: boolean; error?: string; id?: string }> {
-  const c = await ctx();
+  const c = await adminContext();
   if (!c.ok) return { ok: false, error: c.error };
+
+  const rate = await tenantRateLimit(c.tenant.id, "admin_action", c.user.id);
+  if (!rate.success) {
+    return { ok: false, error: "Too many admin actions — slow down a little" };
+  }
+
+  const start = Date.now();
   const admin = getAdminClient(c.tenant.id);
   const { data, error } = await admin
     .from("menu_items")
@@ -203,6 +379,15 @@ export async function createMenuItem(form: {
     .select("id")
     .single();
   if (error) return { ok: false, error: error.message };
+
+  logger.info("admin menu item created", {
+    tenant_id: c.tenant.id,
+    slug: c.tenant.slug,
+    actor_user_id: c.user.id,
+    item_name: form.name,
+    latency_ms: Date.now() - start,
+  });
+
   revalidatePath(`/c/${c.tenant.slug}/admin/menu`);
   revalidatePath(`/c/${c.tenant.slug}/menu`);
   return { ok: true, id: data.id };
@@ -222,8 +407,15 @@ export async function updateMenuItem(
     in_stock: boolean;
   }
 ): Promise<{ ok: boolean; error?: string }> {
-  const c = await ctx();
+  const c = await adminContext();
   if (!c.ok) return { ok: false, error: c.error };
+
+  const rate = await tenantRateLimit(c.tenant.id, "admin_action", c.user.id);
+  if (!rate.success) {
+    return { ok: false, error: "Too many admin actions — slow down a little" };
+  }
+
+  const start = Date.now();
   const admin = getAdminClient(c.tenant.id);
   const { error } = await admin
     .from("menu_items")
@@ -241,14 +433,30 @@ export async function updateMenuItem(
     .eq("id", id)
     .eq("tenant_id", c.tenant.id);
   if (error) return { ok: false, error: error.message };
+
+  logger.info("admin menu item updated", {
+    tenant_id: c.tenant.id,
+    slug: c.tenant.slug,
+    actor_user_id: c.user.id,
+    target_id: id,
+    latency_ms: Date.now() - start,
+  });
+
   revalidatePath(`/c/${c.tenant.slug}/admin/menu`);
   revalidatePath(`/c/${c.tenant.slug}/menu`);
   return { ok: true };
 }
 
 export async function deleteMenuItem(id: string): Promise<{ ok: boolean; error?: string }> {
-  const c = await ctx();
+  const c = await adminContext();
   if (!c.ok) return { ok: false, error: c.error };
+
+  const rate = await tenantRateLimit(c.tenant.id, "admin_action", c.user.id);
+  if (!rate.success) {
+    return { ok: false, error: "Too many admin actions — slow down a little" };
+  }
+
+  const start = Date.now();
   const admin = getAdminClient(c.tenant.id);
   const { error } = await admin
     .from("menu_items")
@@ -256,6 +464,15 @@ export async function deleteMenuItem(id: string): Promise<{ ok: boolean; error?:
     .eq("id", id)
     .eq("tenant_id", c.tenant.id);
   if (error) return { ok: false, error: error.message };
+
+  logger.info("admin menu item deleted (archived)", {
+    tenant_id: c.tenant.id,
+    slug: c.tenant.slug,
+    actor_user_id: c.user.id,
+    target_id: id,
+    latency_ms: Date.now() - start,
+  });
+
   revalidatePath(`/c/${c.tenant.slug}/admin/menu`);
   revalidatePath(`/c/${c.tenant.slug}/menu`);
   return { ok: true };

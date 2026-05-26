@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Tray — Out of the Box Directions</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=Space+Mono:wght@400;700&family=Unbounded:wght@300;400;700;900&family=Familjen+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#000;font-family:sans-serif;padding:24px}
+h1{text-align:center;font-size:12px;letter-spacing:0.2em;text-transform:uppercase;color:#333;margin-bottom:28px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;max-width:1300px;margin:0 auto}
+.opt{cursor:pointer;border-radius:10px;overflow:hidden;border:2px solid #1a1a1a;transition:border-color 0.2s,transform 0.15s}
+.opt:hover{border-color:#333;transform:translateY(-2px)}
+.opt.sel{border-color:#fff}
+.lbl{padding:12px 16px;background:#111}
+.lbl strong{display:block;color:#ccc;font-size:13px;margin-bottom:2px}
+.lbl span{font-size:11px;color:#444;letter-spacing:0.08em;text-transform:uppercase}
+
+/* ── 1. EDITORIAL NEWSPAPER ── */
+.e1{background:#F0EBE1;padding:0;font-family:'Unbounded',sans-serif;min-height:460px;position:relative}
+.e1-topbar{border-bottom:2px solid #1a1a12;padding:10px 24px;display:flex;align-items:center;justify-content:space-between}
+.e1-date{font-family:'Space Mono',monospace;font-size:9px;color:#7a6550;letter-spacing:0.1em}
+.e1-masthead{font-size:12px;font-weight:700;color:#1a1a12;letter-spacing:0.2em;text-transform:uppercase}
+.e1-body{display:grid;grid-template-columns:1fr 1px 2fr;gap:0}
+.e1-col1{padding:20px 18px;border-right:1px solid #ccc4b4}
+.e1-col1-tag{font-family:'Space Mono',monospace;font-size:8px;letter-spacing:0.15em;color:#8a7a60;text-transform:uppercase;margin-bottom:12px}
+.e1-hed{font-size:38px;font-weight:900;color:#1a1a12;line-height:0.92;letter-spacing:-0.03em;margin-bottom:12px}
+.e1-hed em{display:block;font-style:italic;color:#D4522A;font-size:42px}
+.e1-dek{font-family:'Familjen Grotesk',sans-serif;font-size:12px;color:#5a4a34;line-height:1.65;border-top:1px solid #ccc4b4;padding-top:12px}
+.e1-col2{padding:20px 18px}
+.e1-col2-label{font-family:'Space Mono',monospace;font-size:8px;letter-spacing:0.15em;color:#8a7a60;text-transform:uppercase;margin-bottom:10px}
+.e1-ticker{border:1px solid #ccc4b4;padding:8px 12px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center}
+.e1-ticker-name{font-size:11px;color:#1a1a12;font-weight:700}
+.e1-ticker-val{font-family:'Space Mono',monospace;font-size:11px;color:#D4522A;font-weight:700}
+.e1-ticker-wait{font-family:'Familjen Grotesk',sans-serif;font-size:10px;color:#8a7a60}
+.e1-cta{background:#1a1a12;color:#F0EBE1;padding:11px 20px;font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;display:inline-block;margin-top:14px;cursor:pointer}
+.e1-bottom{border-top:2px solid #1a1a12;padding:8px 24px;display:grid;grid-template-columns:repeat(4,1fr);gap:0}
+.e1-stat{padding:8px 0;border-right:1px solid #ccc4b4}
+.e1-stat:last-child{border-right:none}
+.e1-stat-n{font-size:20px;font-weight:900;color:#1a1a12;letter-spacing:-0.04em}
+.e1-stat-l{font-family:'Space Mono',monospace;font-size:8px;color:#8a7a60;letter-spacing:0.1em;text-transform:uppercase}
+
+/* ── 2. BRUTALIST POSTER ── */
+.e2{background:#CFFF04;padding:0;font-family:'Syne',sans-serif;min-height:460px;position:relative;overflow:hidden}
+.e2-badge{position:absolute;top:16px;right:16px;background:#000;color:#CFFF04;padding:6px 12px;font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;border-radius:2px}
+.e2-body{padding:28px 28px 0}
+.e2-label{font-size:10px;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:#000;opacity:0.4;margin-bottom:8px}
+.e2-hed{font-size:56px;font-weight:800;color:#000;line-height:0.88;letter-spacing:-0.04em}
+.e2-hed em{font-style:normal;color:#FF2400;display:block}
+.e2-mid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px}
+.e2-box{border:2px solid #000;padding:12px}
+.e2-box-n{font-size:28px;font-weight:800;color:#000;letter-spacing:-0.04em;line-height:1}
+.e2-box-l{font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#000;opacity:0.5;margin-top:2px}
+.e2-bottom{background:#000;padding:16px 28px;display:flex;align-items:center;justify-content:space-between;margin-top:16px}
+.e2-cta{color:#CFFF04;font-size:13px;font-weight:800;letter-spacing:-0.01em}
+.e2-arrow{color:#CFFF04;font-size:24px;font-weight:900}
+
+/* ── 3. DARK + NEON SCAN-LINES ── */
+.e3{background:#060A0F;padding:0;font-family:'Space Mono',monospace;min-height:460px;position:relative;overflow:hidden}
+.e3::after{content:'';position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,255,150,0.015) 2px,rgba(0,255,150,0.015) 4px);pointer-events:none}
+.e3-topbar{padding:12px 20px;border-bottom:1px solid rgba(0,255,150,0.15);display:flex;align-items:center;justify-content:space-between}
+.e3-sys{font-size:10px;color:rgba(0,255,150,0.5);letter-spacing:0.15em;text-transform:uppercase}
+.e3-status{font-size:10px;color:#00FF96;letter-spacing:0.1em}
+.e3-body{padding:24px 20px}
+.e3-prompt{font-size:11px;color:rgba(0,255,150,0.4);letter-spacing:0.1em;margin-bottom:8px}
+.e3-hed{font-size:34px;font-weight:700;color:#00FF96;line-height:1;letter-spacing:-0.02em;margin-bottom:4px}
+.e3-hed2{font-size:34px;font-weight:700;color:#E8E2D9;line-height:1;letter-spacing:-0.02em;margin-bottom:20px}
+.e3-log{background:rgba(0,255,150,0.04);border:1px solid rgba(0,255,150,0.12);padding:12px;border-radius:4px;margin-bottom:16px}
+.e3-log-row{font-size:10px;color:rgba(0,255,150,0.5);line-height:1.8}
+.e3-log-row span{color:#00FF96}
+.e3-log-row em{font-style:normal;color:#FF6B35}
+.e3-input{background:rgba(0,255,150,0.06);border:1px solid rgba(0,255,150,0.2);padding:10px 14px;font-family:'Space Mono',monospace;font-size:12px;color:#00FF96;width:100%;border-radius:3px;cursor:text}
+.e3-input::placeholder{color:rgba(0,255,150,0.25)}
+.e3-cta-row{display:flex;gap:10px;margin-top:12px}
+.e3-cta{background:#00FF96;color:#060A0F;padding:10px 20px;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;border-radius:3px;cursor:pointer}
+.e3-ghost{border:1px solid rgba(0,255,150,0.2);color:rgba(0,255,150,0.5);padding:10px 20px;font-size:11px;letter-spacing:0.08em;text-transform:uppercase;border-radius:3px;cursor:pointer}
+
+/* ── 4. WARM GRADIENT + BIG NUMBER ── */
+.e4{background:linear-gradient(160deg,#1A0A00 0%,#2D0E05 50%,#0D0505 100%);padding:0;min-height:460px;position:relative;overflow:hidden}
+.e4::before{content:'';position:absolute;top:-80px;right:-80px;width:360px;height:360px;background:radial-gradient(circle,rgba(255,120,40,0.25) 0%,transparent 65%);pointer-events:none}
+.e4-nav{padding:16px 24px;display:flex;align-items:center;justify-content:space-between}
+.e4-logo{font-family:'Familjen Grotesk',sans-serif;font-size:18px;font-weight:700;color:#F5E8D4;letter-spacing:-0.03em}
+.e4-logo span{color:#FF7028}
+.e4-tag{font-family:'Familjen Grotesk',sans-serif;font-size:11px;color:rgba(255,112,40,0.7);border:1px solid rgba(255,112,40,0.2);padding:4px 10px;border-radius:4px}
+.e4-body{padding:12px 24px 24px}
+.e4-super{font-family:'Familjen Grotesk',sans-serif;font-size:11px;color:rgba(245,232,212,0.4);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:6px}
+.e4-big-n{font-family:'Unbounded',sans-serif;font-size:80px;font-weight:900;color:#FF7028;line-height:0.9;letter-spacing:-0.04em}
+.e4-big-n sub{font-size:28px;vertical-align:super}
+.e4-big-sub{font-family:'Familjen Grotesk',sans-serif;font-size:13px;color:rgba(245,232,212,0.45);letter-spacing:0.04em;text-transform:uppercase;margin-bottom:20px;margin-top:4px}
+.e4-copy{font-family:'Familjen Grotesk',sans-serif;font-size:20px;font-weight:700;color:#F5E8D4;line-height:1.25;letter-spacing:-0.02em;margin-bottom:8px;max-width:280px}
+.e4-sub{font-family:'Familjen Grotesk',sans-serif;font-size:13px;color:rgba(245,232,212,0.45);line-height:1.6;margin-bottom:20px;max-width:240px}
+.e4-cta{background:#FF7028;color:#1A0A00;padding:12px 24px;border-radius:8px;font-family:'Familjen Grotesk',sans-serif;font-size:13px;font-weight:800;display:inline-block;cursor:pointer}
+.e4-pills{position:absolute;bottom:16px;right:16px;display:flex;flex-direction:column;gap:6px;align-items:flex-end}
+.e4-pill{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);padding:6px 12px;border-radius:6px;font-family:'Familjen Grotesk',sans-serif;font-size:11px;color:rgba(245,232,212,0.4)}
+.e4-pill strong{color:#FF7028}
+
+.sel-bar{margin-top:20px;background:#111;border-radius:8px;padding:14px;text-align:center;max-width:1300px;margin-left:auto;margin-right:auto}
+.sel-bar p{font-size:12px;color:#444}
+</style>
+</head>
+<body>
+<h1>Think out of the box — Tray landing directions</h1>
+<div class="grid">
+
+  <!-- 1. NEWSPAPER EDITORIAL -->
+  <div class="opt" onclick="pick(this,'editorial')">
+    <div class="e1">
+      <div class="e1-topbar">
+        <span class="e1-date">THE TRAY · EST. 2025 · VOL. 1</span>
+        <span class="e1-masthead">Canteen Intelligence</span>
+        <span class="e1-date">CAMPUS EDITION</span>
+      </div>
+      <div class="e1-body">
+        <div class="e1-col1">
+          <div class="e1-col1-tag">Breaking · Lunch is served</div>
+          <h1 class="e1-hed">Skip<br/>the<br/><em>queue.</em></h1>
+          <p class="e1-dek">Order from any canteen on campus. Pay once. Eat when it's ready. No app. No chaos. Just Tray.</p>
+          <div class="e1-cta">Start ordering →</div>
+        </div>
+        <div class="e1-col2">
+          <div class="e1-col2-label">Live canteen feed</div>
+          <div class="e1-ticker"><span class="e1-ticker-name">H9 Mess</span><span class="e1-ticker-wait">8 min wait</span><span class="e1-ticker-val">OPEN</span></div>
+          <div class="e1-ticker"><span class="e1-ticker-name">Main Canteen</span><span class="e1-ticker-wait">12 min wait</span><span class="e1-ticker-val">BUSY</span></div>
+          <div class="e1-ticker"><span class="e1-ticker-name">Night Canteen</span><span class="e1-ticker-wait">2 min wait</span><span class="e1-ticker-val">OPEN</span></div>
+          <div class="e1-ticker" style="opacity:0.4"><span class="e1-ticker-name">SAC Canteen</span><span class="e1-ticker-wait">—</span><span class="e1-ticker-val" style="color:#8a7a60">CLOSED</span></div>
+        </div>
+      </div>
+      <div class="e1-bottom">
+        <div class="e1-stat"><div class="e1-stat-n">38</div><div class="e1-stat-l">Canteens</div></div>
+        <div class="e1-stat" style="padding-left:12px"><div class="e1-stat-n">2.4k</div><div class="e1-stat-l">Daily orders</div></div>
+        <div class="e1-stat" style="padding-left:12px"><div class="e1-stat-n">8m</div><div class="e1-stat-l">Avg wait</div></div>
+        <div class="e1-stat" style="padding-left:12px"><div class="e1-stat-n">12+</div><div class="e1-stat-l">Colleges</div></div>
+      </div>
+    </div>
+    <div class="lbl"><strong>1 — Newspaper Editorial</strong><span>Warm broadsheet · Terracotta on cream · Unbounded + Space Mono · No one does this for food tech</span></div>
+  </div>
+
+  <!-- 2. BRUTALIST POSTER -->
+  <div class="opt" onclick="pick(this,'brutalist')">
+    <div class="e2">
+      <div class="e2-badge">Now live at IIT Bombay</div>
+      <div class="e2-body">
+        <div class="e2-label">Tray — campus food ordering</div>
+        <h1 class="e2-hed">Food<br/>now.<br/><em>Not later.</em></h1>
+        <div class="e2-mid">
+          <div class="e2-box"><div class="e2-box-n">38</div><div class="e2-box-l">Canteens live</div></div>
+          <div class="e2-box"><div class="e2-box-n">8m</div><div class="e2-box-l">Avg pickup</div></div>
+          <div class="e2-box"><div class="e2-box-n">2k+</div><div class="e2-box-l">Daily orders</div></div>
+          <div class="e2-box" style="background:#FF2400;border-color:#FF2400"><div class="e2-box-n" style="color:#CFFF04">₹0</div><div class="e2-box-l" style="color:rgba(207,255,4,0.6)">Platform fee</div></div>
+        </div>
+      </div>
+      <div class="e2-bottom">
+        <span class="e2-cta">Open Tray — it's free →</span>
+        <span class="e2-arrow">↗</span>
+      </div>
+    </div>
+    <div class="lbl"><strong>2 — Brutalist Poster</strong><span>Acid yellow + signal red + black · Syne 800 · Bauhaus energy · Extremely bold · Zero AI vibes</span></div>
+  </div>
+
+  <!-- 3. TERMINAL / HACKER -->
+  <div class="opt" onclick="pick(this,'terminal')">
+    <div class="e3">
+      <div class="e3-topbar">
+        <span class="e3-sys">TRAY.OS v2.0 · Campus Edition</span>
+        <span class="e3-status">● 38 canteens online</span>
+      </div>
+      <div class="e3-body">
+        <div class="e3-prompt">// order faster. eat better.</div>
+        <div class="e3-hed">Skip the</div>
+        <div class="e3-hed2">queue_<span style="animation:blink 1s step-end infinite;color:#00FF96">█</span></div>
+        <div class="e3-log">
+          <div class="e3-log-row">[09:32] <span>H9 Mess</span> → <em>Dal Makhani ×2</em> — placed ✓</div>
+          <div class="e3-log-row">[09:33] <span>Main Canteen</span> → order <em>PREPARING</em>...</div>
+          <div class="e3-log-row">[09:41] <span>H9 Mess</span> → <em>READY FOR PICKUP</em> 🎉</div>
+        </div>
+        <div class="e3-input" contenteditable="false" placeholder="> search canteen or menu item..."></div>
+        <div class="e3-cta-row">
+          <div class="e3-cta">Start ordering →</div>
+          <div class="e3-ghost">For colleges</div>
+        </div>
+      </div>
+    </div>
+    <div class="lbl"><strong>3 — Terminal / Live Feed</strong><span>Dark + neon green · Space Mono · Real-time log aesthetic · Very engineering-college appropriate</span></div>
+  </div>
+
+  <!-- 4. WARM DARK + BIG NUMBER -->
+  <div class="opt" onclick="pick(this,'warm-dark')">
+    <div class="e4">
+      <div class="e4-nav">
+        <div class="e4-logo">tr<span>a</span>y</div>
+        <div class="e4-tag">38 canteens live ↗</div>
+      </div>
+      <div class="e4-body">
+        <div class="e4-super">Average wait time, today</div>
+        <div class="e4-big-n">8<sub>min</sub></div>
+        <div class="e4-big-sub">vs 25 min standing in line</div>
+        <div class="e4-copy">Order before you leave your hostel.</div>
+        <div class="e4-sub">Pick up when it's ready. One UPI payment. Works at every canteen on campus.</div>
+        <div class="e4-cta">See your canteens →</div>
+      </div>
+      <div class="e4-pills">
+        <div class="e4-pill">H9 Mess — <strong>8 min</strong></div>
+        <div class="e4-pill">Main Canteen — <strong>12 min</strong></div>
+        <div class="e4-pill">Night Canteen — <strong>2 min</strong></div>
+      </div>
+    </div>
+    <div class="lbl"><strong>4 — Warm Dark + Big Number</strong><span>Deep amber-black · Familjen Grotesk + Unbounded · Lead with the stat that matters · Raycast energy</span></div>
+  </div>
+
+</div>
+<div class="sel-bar" style="margin-top:16px">
+  <p id="m">Click the direction that doesn't look AI-made. Describe in chat what feels closer.</p>
+</div>
+<style>@keyframes blink{50%{opacity:0}}</style>
+<script>function pick(el,c){document.querySelectorAll('.opt').forEach(e=>e.classList.remove('sel'));el.classList.add('sel');document.getElementById('m').textContent='Picked: '+c+' — now tell me what to tweak or mix.';if(window.__superpowers_record_click)window.__superpowers_record_click(c,el.querySelector('strong').textContent)}</script>
+</body>
+</html>

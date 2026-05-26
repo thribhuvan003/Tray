@@ -3,11 +3,13 @@
 import { revalidatePath } from "next/cache";
 import { cookies, headers } from "next/headers";
 import bcrypt from "bcryptjs";
-import { resolveTenant } from "@/lib/tenant";
+import { requireTenantContext, requireTenantContextForJob, resolveTenant } from "@/lib/tenant";
 import { getAdminClient } from "@/lib/supabase/admin";
 import { requireRole } from "@/lib/auth/get-user";
 import { randomOtp } from "@/lib/utils";
 import { initiateRefundForOrder } from "@/app/(student)/_actions";
+import { logger } from "@/lib/logging";
+import { tenantRateLimit } from "@/lib/rate-limit/tenant";
 
 type Outcome = { ok: true } | { ok: false; error: string };
 
@@ -19,13 +21,28 @@ type Ctx =
   | { ok: true; tenant: ResolvedTenant; user: CurrentUser };
 
 async function staffContext(): Promise<Ctx> {
-  const h = await headers();
-  const slug = h.get("x-tenant-slug") ?? "aditya";
-  const tenant = await resolveTenant(slug);
-  if (!tenant) return { ok: false, error: "Tenant not found" };
+  // Use the standardized production-grade tenant context helper.
+  // This guarantees fail-fast behavior, rich structured logging, and
+  // consistent enforcement of the "one login = own dedicated system" contract
+  // (as validated by the Multi-Tenant Isolation Architect).
+  let tenantCtx;
+  try {
+    tenantCtx = await requireTenantContext();
+  } catch (e) {
+    logger.error("kitchen staffContext failed to acquire tenant context", e);
+    return { ok: false, error: "Tenant context invalid" };
+  }
+
   const user = await requireRole(["kitchen_staff", "canteen_admin", "super_admin"]);
   if (!user) return { ok: false, error: "Not authorised" };
-  return { ok: true, tenant, user };
+
+  logger.info("kitchen staff context established", {
+    tenant_id: tenantCtx.tenant.id,
+    slug: tenantCtx.tenant.slug,
+    user_id: user.id,
+  });
+
+  return { ok: true, tenant: tenantCtx.tenant, user };
 }
 
 // Append-only Realtime log. Insert via the un-typed channel because the
@@ -43,6 +60,12 @@ export async function markPreparing(orderId: string): Promise<Outcome> {
   const ctx = await staffContext();
   if (!ctx.ok) return ctx;
 
+  // Per-tenant rate limiting for kitchen actions (protects against accidental or malicious spam during rush)
+  const rate = await tenantRateLimit(ctx.tenant.id, "kitchen_action", ctx.user.id);
+  if (!rate.success) {
+    return { ok: false, error: "Too many actions — slow down a little" };
+  }
+
   const admin = getAdminClient(ctx.tenant.id);
   const { data: cur } = await admin
     .from("orders")
@@ -52,6 +75,8 @@ export async function markPreparing(orderId: string): Promise<Outcome> {
     .maybeSingle<{ status: string }>();
   if (!cur) return { ok: false, error: "Order not found" };
   if (cur.status !== "placed") return { ok: false, error: `Cannot start an order in "${cur.status}"` };
+
+  const start = Date.now();
 
   await admin.from("orders").update({ status: "preparing" }).eq("id", orderId);
   await admin.from("order_status_logs").insert({
@@ -74,6 +99,17 @@ export async function markPreparing(orderId: string): Promise<Outcome> {
     event_type: "preparing",
     payload: { actor: "kitchen" },
   });
+
+  // High-signal structured log for real production debugging (BlackRock/HFT level)
+  logger.info("kitchen status transition", {
+    tenant_id: ctx.tenant.id,
+    order_id: orderId,
+    from: "placed",
+    to: "preparing",
+    actor_user_id: ctx.user.id,
+    latency_ms: Date.now() - start,
+  });
+
   revalidatePath(`/c/${ctx.tenant.slug}/kitchen`);
   return { ok: true };
 }
@@ -92,6 +128,7 @@ export async function markReady(orderId: string): Promise<Outcome> {
   if (!cur) return { ok: false, error: "Order not found" };
   if (cur.status !== "preparing") return { ok: false, error: `Cannot mark ready from "${cur.status}"` };
 
+  const start = Date.now();
   const otp = randomOtp();
   const hash = await bcrypt.hash(otp, 10);
 
@@ -128,6 +165,17 @@ export async function markReady(orderId: string): Promise<Outcome> {
     event_type: "ready",
     payload: { actor: "kitchen" },
   });
+
+  logger.info("kitchen status transition", {
+    tenant_id: ctx.tenant.id,
+    order_id: orderId,
+    from: "preparing",
+    to: "ready",
+    actor_user_id: ctx.user.id,
+    latency_ms: Date.now() - start,
+    has_otp: true,
+  });
+
   revalidatePath(`/c/${ctx.tenant.slug}/kitchen`);
   return { ok: true };
 }
@@ -138,6 +186,12 @@ export async function verifyAndCollect(
 ): Promise<{ ok: boolean; error?: string; locked?: boolean; attemptsLeft?: number }> {
   const ctx = await staffContext();
   if (!ctx.ok) return ctx;
+
+  // Per-tenant rate limiting on the critical handover step (prevents abuse or accidental spam during busy periods)
+  const rate = await tenantRateLimit(ctx.tenant.id, "kitchen_action", ctx.user.id);
+  if (!rate.success) {
+    return { ok: false, error: "Too many attempts — please slow down" };
+  }
 
   const admin = getAdminClient(ctx.tenant.id);
   const { data: cur } = await admin
@@ -150,6 +204,8 @@ export async function verifyAndCollect(
   if (cur.status !== "ready") return { ok: false, error: `Order is "${cur.status}"` };
   if (cur.otp_attempts >= 3) return { ok: false, error: "Locked — ask an admin to unlock", locked: true };
 
+  const start = Date.now();
+
   const ok = await bcrypt.compare(otp, cur.otp_hash);
   if (!ok) {
     const left = 3 - (cur.otp_attempts + 1);
@@ -157,6 +213,14 @@ export async function verifyAndCollect(
       .from("orders")
       .update({ otp_attempts: cur.otp_attempts + 1 })
       .eq("id", orderId);
+
+    logger.warn("kitchen OTP verification failed", {
+      tenant_id: ctx.tenant.id,
+      order_id: orderId,
+      attempts: cur.otp_attempts + 1,
+      latency_ms: Date.now() - start,
+    });
+
     return { ok: false, error: "Wrong code", attemptsLeft: Math.max(0, left) };
   }
 
@@ -187,6 +251,13 @@ export async function verifyAndCollect(
     event_type: "collected",
     payload: { actor: "kitchen" },
   });
+
+  logger.info("kitchen order collected (OTP verified)", {
+    tenant_id: ctx.tenant.id,
+    order_id: orderId,
+    latency_ms: Date.now() - start,
+  });
+
   revalidatePath(`/c/${ctx.tenant.slug}/kitchen`);
   return { ok: true };
 }
@@ -266,10 +337,9 @@ export async function verifyStaffPinAction(
   p_user_id: string,
   p_pin: string
 ): Promise<{ ok: boolean; error?: string; locked?: boolean; lockedUntil?: string }> {
-  const h = await headers();
-  const slug = h.get("x-tenant-slug") ?? "aditya";
-  const tenant = await resolveTenant(slug);
-  if (!tenant) return { ok: false, error: "Tenant not found" };
+  // Production-grade tenant context for staff PIN login (kitchen staff on cheap tablets during rush).
+  // Guarantees the PIN verification and subsequent kitchen board are scoped to the correct canteen only.
+  const { tenant } = await requireTenantContext();
 
   // requireRole is skipped here — staff-select is accessed before PIN auth.
   // We use the admin client so the RPC call succeeds regardless of the calling
@@ -339,6 +409,7 @@ export async function verifyStaffPinAction(
   return { ok: true };
 }
 
+
 export async function rejectOrder(orderId: string, reason: string): Promise<Outcome> {
   const ctx = await staffContext();
   if (!ctx.ok) return ctx;
@@ -379,6 +450,77 @@ export async function rejectOrder(orderId: string, reason: string): Promise<Outc
     event_type: "rejected",
     payload: { actor: "kitchen", reason: reason.slice(0, 200) },
   });
+  revalidatePath(`/c/${ctx.tenant.slug}/kitchen`);
+  return { ok: true };
+}
+
+/**
+ * 5-second "I made a mistake" undo for status advances.
+ * Only allows safe backward transitions that kitchen staff commonly fat-finger:
+ *   preparing → placed   (tapped "Start" on wrong ticket)
+ *   ready → preparing    (tapped "Ready" too soon)
+ * Always writes full audit trail via order_status_logs + audit_logs + order_events
+ * so nothing is ever silent. Reuses staffContext + emitOrderEvent exactly like all other ops.
+ */
+export async function revertStatus(
+  orderId: string,
+  toStatus: "placed" | "preparing"
+): Promise<Outcome> {
+  const ctx = await staffContext();
+  if (!ctx.ok) return ctx;
+
+  const admin = getAdminClient(ctx.tenant.id);
+  const { data: cur } = await admin
+    .from("orders")
+    .select("status, ready_at")
+    .eq("id", orderId)
+    .eq("tenant_id", ctx.tenant.id)
+    .maybeSingle<{ status: string; ready_at: string | null }>();
+  if (!cur) return { ok: false, error: "Order not found" };
+
+  const isValidRevert =
+    (cur.status === "preparing" && toStatus === "placed") ||
+    (cur.status === "ready" && toStatus === "preparing");
+  if (!isValidRevert) {
+    return { ok: false, error: `Cannot undo from "${cur.status}" to "${toStatus}"` };
+  }
+
+  // Perform the revert (typed explicitly to satisfy strict Supabase update types)
+  if (toStatus === "placed") {
+    await admin.from("orders").update({ status: "placed", ready_at: null }).eq("id", orderId);
+  } else {
+    await admin.from("orders").update({ status: "preparing" }).eq("id", orderId);
+  }
+
+  // Clean up secrets if backing out of ready (harmless to leave otp_hash; next Ready will overwrite)
+  if (cur.status === "ready" && toStatus === "preparing") {
+    await admin.from("pickup_secrets").delete().eq("order_id", orderId);
+  }
+
+  // Full paper trail — identical pattern to mark*/reject
+  await admin.from("order_status_logs").insert({
+    tenant_id: ctx.tenant.id,
+    order_id: orderId,
+    from_status: cur.status as "placed" | "preparing" | "ready",
+    to_status: toStatus,
+    actor_user_id: ctx.user.id,
+    note: "staff undo (5s mistake window)",
+  });
+  await admin.from("audit_logs").insert({
+    tenant_id: ctx.tenant.id,
+    actor_user_id: ctx.user.id,
+    action: "order.revert",
+    target_type: "order",
+    target_id: orderId,
+    meta: { from: cur.status, to: toStatus, window: "5s" },
+  });
+  await emitOrderEvent(admin, {
+    order_id: orderId,
+    tenant_id: ctx.tenant.id,
+    event_type: "reverted",
+    payload: { actor: "kitchen", from: cur.status, to: toStatus, reason: "5s undo" },
+  });
+
   revalidatePath(`/c/${ctx.tenant.slug}/kitchen`);
   return { ok: true };
 }

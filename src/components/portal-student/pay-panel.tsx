@@ -48,6 +48,10 @@ export function PayPanel({
     if (!order.payment_expires_at) return 900;
     return Math.max(0, Math.floor((new Date(order.payment_expires_at).getTime() - Date.now()) / 1000));
   });
+
+  // Live UPI VPA for real-time QR update when the canteen owner changes their UPI ID.
+  // Reuses the exact browser Supabase client + postgres_changes pattern from the admin activity feed and kitchen board.
+  const [liveTenantUpi, setLiveTenantUpi] = useState(tenantUpi);
   const [demoDismissed, setDemoDismissed] = useState(false);
   const isSimMode = !process.env.NEXT_PUBLIC_RAZORPAY_LIVE;
 
@@ -59,6 +63,29 @@ export function PayPanel({
     const id = setInterval(tick, 1000);
     return () => clearInterval(id);
   }, [order.payment_expires_at]);
+
+  // Live UPI VPA subscription — when the canteen owner changes their UPI ID in settings,
+  // the QR on this student's pay panel updates in real time without a full reload.
+  // Reuses the exact browser Supabase client + postgres_changes pattern from the admin activity feed and kitchen board.
+  useEffect(() => {
+    const sb = getBrowserClient();
+    const ch = sb
+      .channel(`tenant-upi-${tenantSlug}`)
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "tenants", filter: `slug=eq.${tenantSlug}` },
+        (payload) => {
+          const nextUpi = (payload.new as { upi_vpa: string | null }).upi_vpa;
+          if (nextUpi && nextUpi !== liveTenantUpi) {
+            setLiveTenantUpi(nextUpi);
+          }
+        }
+      )
+      .subscribe();
+    return () => {
+      sb.removeChannel(ch);
+    };
+  }, [tenantSlug, liveTenantUpi]);
 
   useEffect(() => {
     const sb = getBrowserClient();
@@ -99,8 +126,9 @@ export function PayPanel({
   const secs = remaining % 60;
   const expired = remaining === 0 && order.payment_expires_at;
 
+  // Use the live UPI VPA (updated in real time via the postgres_changes subscription above).
   const upiUri = upiQrPayload({
-    vpa: tenantUpi,
+    vpa: liveTenantUpi,
     name: tenantName,
     amountPaise: order.total_paise,
     note: order.short_code,
@@ -203,7 +231,7 @@ export function PayPanel({
           </details>
 
           <div className="mt-4 text-[12px] text-[color:var(--color-ink)]/55">
-            Paying <span className="font-semibold text-[color:var(--color-ink)]">{tenantName}</span> · {tenantUpi}
+            Paying <span className="font-semibold text-[color:var(--color-ink)]">{tenantName}</span> · {liveTenantUpi}
           </div>
         </div>
 

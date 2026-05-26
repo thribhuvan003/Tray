@@ -1,0 +1,44 @@
+﻿
+> tray@0.1.0 build
+> next build
+
+   Γû▓ Next.js 15.5.18
+
+   Creating an optimized production build ...
+node.exe : <w> [webpack.cache.PackFileCacheStrategy] Serializing big strings (101kiB) impacts deserialization 
+performance (consider using Buffer instead and decode when needed)
+At line:1 char:1
++ & "C:\Program Files\nodejs/node.exe" "C:\Program Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (<w> [webpack.ca...de when needed):String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+<w> [webpack.cache.PackFileCacheStrategy] Serializing big strings (231kiB) impacts deserialization performance 
+(consider using Buffer instead and decode when needed)
+<w> [webpack.cache.PackFileCacheStrategy] Serializing big strings (128kiB) impacts deserialization performance 
+(consider using Buffer instead and decode when needed)
+ Γ£ô Compiled successfully in 12.2s
+   Linting and checking validity of types ...
+
+./src/components/portal-kitchen/board.tsx
+382:6  Warning: React Hook useEffect has missing dependencies: 'connState', 'forceReconnect', 'refreshFn', and 'setupRealtime'. Either include them or remove the dependency array.  react-hooks/exhaustive-deps
+
+info  - Need to disable some ESLint rules? Learn more here: https://nextjs.org/docs/app/api-reference/config/eslint#disabling-rules
+   Collecting page data ...
+Error: Invalid environment variables: 
+{"NEXT_PUBLIC_SUPABASE_URL":["Required"],"NEXT_PUBLIC_SUPABASE_ANON_KEY":["Required"]}
+    at 87447 (C:\Users\ntena\CascadeProjects\Tray\.next\server\app\api\webhooks\razorpay\route.js:1:14808)
+    at c (C:\Users\ntena\CascadeProjects\Tray\.next\server\webpack-runtime.js:1:143)
+    at 81978 (C:\Users\ntena\CascadeProjects\Tray\.next\server\app\api\webhooks\razorpay\route.js:1:11174)
+    at c (C:\Users\ntena\CascadeProjects\Tray\.next\server\webpack-runtime.js:1:143)
+    at 3110 (C:\Users\ntena\CascadeProjects\Tray\.next\server\app\api\webhooks\razorpay\route.js:1:885)
+    at c (C:\Users\ntena\CascadeProjects\Tray\.next\server\webpack-runtime.js:1:143)
+    at <unknown> (C:\Users\ntena\CascadeProjects\Tray\.next\server\app\api\webhooks\razorpay\route.js:1:15259)
+    at c.X (C:\Users\ntena\CascadeProjects\Tray\.next\server\webpack-runtime.js:1:1285)
+    at <unknown> (C:\Users\ntena\CascadeProjects\Tray\.next\server\app\api\webhooks\razorpay\route.js:1:15234)
+    at Object.<anonymous> (C:\Users\ntena\CascadeProjects\Tray\.next\server\app\api\webhooks\razorpay\route.js:1:15290)
+
+> Build error occurred
+[Error: Failed to collect page data for /api/webhooks/razorpay] {
+  type: 'Error'
+}

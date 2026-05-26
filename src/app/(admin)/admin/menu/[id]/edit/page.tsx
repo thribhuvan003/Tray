@@ -1,11 +1,10 @@
 import { redirect, notFound } from "next/navigation";
-import { headers } from "next/headers";
 import Link from "next/link";
-import { resolveTenant } from "@/lib/tenant";
 import { getAdminClient } from "@/lib/supabase/admin";
 import { updateMenuItem, deleteMenuItem } from "@/app/(admin)/admin/_actions";
 import { DeleteItemButton } from "@/components/portal-admin/delete-item-button";
 import type { MenuItem } from "@/lib/db/types";
+import { requireTenantContext } from "@/lib/tenant";
 
 export const dynamic = "force-dynamic";
 
@@ -13,10 +12,8 @@ type Props = { params: Promise<{ id: string }> };
 
 export default async function EditMenuItemPage({ params }: Props) {
   const { id } = await params;
-  const h = await headers();
-  const slug = h.get("x-tenant-slug") ?? "aditya";
-  const tenant = await resolveTenant(slug);
-  if (!tenant) return null;
+  // Production-grade tenant context for editing menu items in the owner's dedicated canteen only.
+  const { tenant } = await requireTenantContext();
   const supabase = getAdminClient(tenant.id);
 
   const [{ data: item }, { data: cats }] = await Promise.all([
@@ -69,7 +66,7 @@ export default async function EditMenuItemPage({ params }: Props) {
     });
 
     if (result.ok) {
-      redirect("/admin/menu");
+      redirect(`/c/${tenant.slug}/admin/menu`);
     }
   }
 
@@ -77,7 +74,7 @@ export default async function EditMenuItemPage({ params }: Props) {
     "use server";
     const result = await deleteMenuItem(id);
     if (result.ok) {
-      redirect("/admin/menu");
+      redirect(`/c/${tenant.slug}/admin/menu`);
     }
   }
 
@@ -87,7 +84,7 @@ export default async function EditMenuItemPage({ params }: Props) {
     <div>
       <div className="mb-5 flex items-center gap-3">
         <Link
-          href="/admin/menu"
+          href={`/c/${tenant.slug}/admin/menu`}
           className="text-[11px] font-mono uppercase tracking-[0.12em] text-graphite-400 hover:text-graphite-700 transition-colors"
         >
           ← Menu
@@ -259,7 +256,7 @@ export default async function EditMenuItemPage({ params }: Props) {
             Save changes
           </button>
           <Link
-            href="/admin/menu"
+            href={`/c/${tenant.slug}/admin/menu`}
             className="rounded-lg px-5 py-2 text-[14px] font-medium text-graphite-600 hover:text-graphite-900 transition-colors"
           >
             Cancel
