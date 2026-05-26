@@ -2,7 +2,7 @@ import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { resolveTenant } from "@/lib/tenant";
 import { StudentTopBar } from "@/components/portal-student/top-bar";
-import { CartDrawer } from "@/components/portal-student/cart-drawer";
+import { CartDrawerConditional } from "@/components/portal-student/cart-drawer-conditional";
 import { CartTenantSync } from "@/components/portal-student/cart-tenant-sync";
 
 export default async function StudentLayout({ children }: { children: React.ReactNode }) {
@@ -19,7 +19,7 @@ export default async function StudentLayout({ children }: { children: React.Reac
           floating button + Vaul drawer below the lg breakpoint. */}
       <main className="pb-32 sm:pb-20 lg:pb-12 lg:grid lg:grid-cols-[1fr,20rem] lg:gap-6 lg:max-w-7xl lg:mx-auto lg:px-6">
         <div className="min-w-0">{children}</div>
-        <CartDrawer tenantSlug={tenant.slug} tenantName={tenant.name} />
+        <CartDrawerConditional tenantSlug={tenant.slug} tenantName={tenant.name} />
       </main>
     </div>
   );

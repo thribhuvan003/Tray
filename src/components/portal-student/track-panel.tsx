@@ -8,6 +8,25 @@ import { formatRupees, formatTimeIST, cn } from "@/lib/utils";
 import { getBrowserClient } from "@/lib/supabase/browser";
 import { getMyOrderOtp, cancelOrderByStudent } from "@/app/(student)/_actions";
 
+// BUG 4 FIX: Wraps getMyOrderOtp with a 10-second timeout so the student
+// is never stuck staring at an infinite spinner if the server action hangs.
+async function getMyOrderOtpWithTimeout(orderId: string): Promise<{ otp: string | null; timedOut?: boolean }> {
+  try {
+    const result = await Promise.race([
+      getMyOrderOtp(orderId),
+      new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error("timeout")), 10_000)
+      ),
+    ]);
+    return result;
+  } catch (err) {
+    if (err instanceof Error && err.message === "timeout") {
+      return { otp: null, timedOut: true };
+    }
+    return { otp: null };
+  }
+}
+
 type Status =
   | "pending_payment"
   | "placed"

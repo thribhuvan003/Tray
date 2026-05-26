@@ -119,7 +119,7 @@ export async function POST(req: NextRequest) {
   const tenantLog = log.withContext({ tenant_id: orderRow.tenant_id, order_id: orderRow.id });
 
   try {
-    if (body.event === "payment.captured" || payment.status === "captured") {
+    if (body.event === "payment.captured" || body.event === "payment.authorized" || payment.status === "captured") {
       // Use the DB-level row-locked capture function (FOR UPDATE) to guarantee atomicity
       // even under thundering-herd webhook retries and concurrent reconcile runs.
       const { data: captureResult, error: captureErr } = await (adminScoped as unknown as {
