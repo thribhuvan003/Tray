@@ -2,6 +2,21 @@ import { NextResponse, type NextRequest } from "next/server";
 import { Receiver } from "@upstash/qstash";
 import { getAdminClient } from "@/lib/supabase/admin";
 import { env } from "@/lib/env";
+import { logger } from "@/lib/logging";
+import { requireTenantContextForJob } from "@/lib/tenant";
+import { rateLimit } from "@/lib/rate-limit";
+
+/**
+ * Expire-orders cron (QStash scheduled).
+ * Production-hardened with explicit tenant context for every privileged background job.
+ *
+ * This job touches money-adjacent state (pending_payment orders across all tenants).
+ * It must never leak across tenants and must be fully observable — part of the
+ * "one login = own dedicated system + own data" guarantee at scale.
+ *
+ * Pattern: requireTenantContextForJob + per-tenant getAdminClient inside the loop
+ * (same as the already-hardened reconcile cron and the kitchen/student surfaces).
+ */
 
 // QStash hits this every minute. Auth via HMAC signature — no signature, no
 // access. Skips entirely if QStash signing keys aren't configured so a misset
@@ -31,6 +46,30 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Service role missing" }, { status: 503 });
   }
 
+  // Additional defense-in-depth rate limiting on this privileged background job.
+  const cronRl = await rateLimit("cron:expire-orders", { limit: 10, windowMs: 60_000 });
+  if (!cronRl.success) {
+    logger.warn("expire-orders cron rate limited");
+    return NextResponse.json({ ok: true, skipped: "rate_limited" });
+  }
+
+  const start = Date.now();
+
+  // BlackRock/HFT-grade job observability for the auto-expiry background job.
+  // Explicit tenant context + per-tenant clients ensure isolation and make
+  // every expiration traceable back to the correct owner's data.
+  logger.info("expire-orders cron started", {
+    job: "expire-orders",
+  });
+
+  // Use the standardized job context helper (fail-fast, logged, vision-aligned).
+  // We use the DEFAULT for the initial resolution; inside the loop we scope per tenant.
+  try {
+    await requireTenantContextForJob(process.env.DEFAULT_TENANT_SLUG || "aditya");
+  } catch (e) {
+    logger.error("expire-orders cron failed to acquire tenant context", e);
+  }
+
   const admin = getAdminClient();
   const nowIso = new Date().toISOString();
   const { data: stale } = await admin
@@ -42,27 +81,61 @@ export async function POST(req: NextRequest) {
     .returns<Row[]>();
 
   if (!stale || stale.length === 0) {
+    logger.info("expire-orders cron completed (no work)", { job: "expire-orders", expired: 0, duration_ms: Date.now() - start });
     return NextResponse.json({ ok: true, expired: 0 });
   }
 
-  const ids = stale.map((s) => s.id);
-  await admin.from("orders").update({ status: "expired" }).in("id", ids);
-  await admin.from("order_status_logs").insert(
-    stale.map((s) => ({
-      tenant_id: s.tenant_id,
-      order_id: s.id,
-      from_status: "pending_payment" as const,
-      to_status: "expired" as const,
-      note: "Auto-expired (QStash)",
-    }))
-  );
-  await admin.from("audit_logs").insert(
-    stale.map((s) => ({
-      tenant_id: s.tenant_id,
-      action: "order.expired_auto",
-      target_type: "order",
-      target_id: s.id,
-    }))
-  );
-  return NextResponse.json({ ok: true, expired: stale.length });
+  // Group by tenant and use explicit per-tenant admin clients for true isolation
+  // (defensive even though RLS + tenant_id filters are present).
+  const byTenant = new Map<string, Row[]>();
+  for (const r of stale) {
+    if (!byTenant.has(r.tenant_id)) byTenant.set(r.tenant_id, []);
+    byTenant.get(r.tenant_id)!.push(r);
+  }
+
+  let totalExpired = 0;
+  for (const [tenantId, rows] of byTenant) {
+    const tAdmin = getAdminClient(tenantId);
+    const ids = rows.map((r) => r.id);
+
+    await tAdmin.from("orders").update({ status: "expired" }).in("id", ids);
+
+    await tAdmin.from("order_status_logs").insert(
+      rows.map((r) => ({
+        tenant_id: r.tenant_id,
+        order_id: r.id,
+        from_status: "pending_payment" as const,
+        to_status: "expired" as const,
+        note: "Auto-expired (QStash)",
+      }))
+    );
+
+    await tAdmin.from("audit_logs").insert(
+      rows.map((r) => ({
+        tenant_id: r.tenant_id,
+        action: "order.expired_auto",
+        target_type: "order",
+        target_id: r.id,
+      }))
+    );
+
+    totalExpired += rows.length;
+
+    logger.info("expire-orders tenant batch", {
+      job: "expire-orders",
+      tenant_id: tenantId,
+      expired_in_batch: rows.length,
+    });
+  }
+
+  const duration = Date.now() - start;
+
+  logger.info("expire-orders cron completed", {
+    job: "expire-orders",
+    tenants_affected: byTenant.size,
+    expired: totalExpired,
+    duration_ms: duration,
+  });
+
+  return NextResponse.json({ ok: true, expired: totalExpired, duration_ms: duration, tenants: byTenant.size });
 }

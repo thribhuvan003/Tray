@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
-import { resolveTenant } from "@/lib/tenant";
+import { requireTenantContext } from "@/lib/tenant";
 import { getServerClient } from "@/lib/supabase/server";
 import { requireRole } from "@/lib/auth/get-user";
 import { KitchenBoard } from "@/components/portal-kitchen/board";
@@ -29,10 +29,16 @@ type LineRow = {
 type MarqueeRow = { id: string; name: string; price_paise: number; diet: "veg" | "nonveg" | "egg" };
 
 export default async function KitchenPage() {
-  const h = await headers();
-  const slug = h.get("x-tenant-slug") ?? "aditya";
-  const tenant = await resolveTenant(slug);
-  if (!tenant) return null;
+  // Use the standardized production-grade tenant context (fail-fast + rich logging).
+  // This removes the ad-hoc ?? "aditya" fallback and makes kitchen pages consistent
+  // with the "own dedicated system" contract (as emphasized by the Isolation Architect).
+  let tenantCtx;
+  try {
+    tenantCtx = await requireTenantContext();
+  } catch {
+    return null;
+  }
+  const tenant = tenantCtx.tenant;
 
   const user = await requireRole(["kitchen_staff", "canteen_admin", "super_admin"]);
   if (!user) redirect(`/c/${tenant.slug}/login?next=/c/${tenant.slug}/kitchen`);

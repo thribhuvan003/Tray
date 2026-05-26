@@ -1,0 +1,84 @@
+<h2>Landing Page — Colour Direction</h2>
+<p class="subtitle">Kitchen & admin are locked in. Pick a direction for landing + student pages.</p>
+
+<div class="cards">
+
+  <div class="card" data-choice="saffron" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:linear-gradient(135deg,#0f0f0e 60%,#1a1208);padding:20px;display:flex;flex-direction:column;gap:8px">
+      <div style="display:flex;gap:8px;align-items:center">
+        <div style="width:32px;height:32px;background:#F4A100;border-radius:6px"></div>
+        <div style="width:32px;height:32px;background:#E8E2D9;border-radius:6px"></div>
+        <div style="width:32px;height:32px;background:#2C2416;border-radius:6px"></div>
+        <div style="width:32px;height:32px;background:#0f0f0e;border-radius:6px;border:1px solid #333"></div>
+      </div>
+      <div style="font-family:'Bricolage Grotesque',sans-serif;font-size:28px;font-weight:700;color:#F4A100;line-height:1">Students<br/>order.</div>
+      <div style="font-family:monospace;font-size:11px;color:#7a6a4e;letter-spacing:0.1em">Aditya Canteen · 3 min wait</div>
+      <div style="background:#F4A100;color:#0f0f0e;padding:8px 16px;border-radius:4px;font-weight:700;font-size:13px;display:inline-block;width:fit-content">Order now →</div>
+    </div>
+    <div class="card-body">
+      <h3>Saffron Night</h3>
+      <p>Deep charcoal + bold saffron amber. Warm, Indian food culture energy. Bricolage Grotesque display. Screams "built for India" — zero AI vibes.</p>
+      <p style="font-size:11px;opacity:0.6">#0f0f0e · #F4A100 · #E8E2D9 · #2C2416</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="chalk" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#F7F4EE;padding:20px;display:flex;flex-direction:column;gap:8px">
+      <div style="display:flex;gap:8px;align-items:center">
+        <div style="width:32px;height:32px;background:#1B1B18;border-radius:6px"></div>
+        <div style="width:32px;height:32px;background:#D4522A;border-radius:6px"></div>
+        <div style="width:32px;height:32px;background:#F7F4EE;border-radius:6px;border:1px solid #ddd"></div>
+        <div style="width:32px;height:32px;background:#8B7355;border-radius:6px"></div>
+      </div>
+      <div style="font-family:'Fraunces',serif;font-size:28px;font-weight:900;color:#1B1B18;line-height:1;font-style:italic">Skip the<br/>queue.</div>
+      <div style="font-family:sans-serif;font-size:11px;color:#8B7355;letter-spacing:0.12em;text-transform:uppercase">Hostel 9 Mess · Open</div>
+      <div style="background:#D4522A;color:#F7F4EE;padding:8px 16px;border-radius:2px;font-weight:600;font-size:13px;display:inline-block;width:fit-content">Get started</div>
+    </div>
+    <div class="card-body">
+      <h3>Chalk & Terracotta</h3>
+      <p>Warm off-white + deep terracotta red. Feels like a college notice board — nostalgic but modern. Fraunces serif headings for character.</p>
+      <p style="font-size:11px;opacity:0.6">#F7F4EE · #D4522A · #1B1B18 · #8B7355</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="midnight" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:linear-gradient(160deg,#070B14 50%,#0D1525);padding:20px;display:flex;flex-direction:column;gap:8px">
+      <div style="display:flex;gap:8px;align-items:center">
+        <div style="width:32px;height:32px;background:#4DFFB4;border-radius:6px"></div>
+        <div style="width:32px;height:32px;background:#1A2744;border-radius:6px"></div>
+        <div style="width:32px;height:32px;background:#E2E8F0;border-radius:6px"></div>
+        <div style="width:32px;height:32px;background:#FF6B35;border-radius:6px"></div>
+      </div>
+      <div style="font-family:'Cabinet Grotesk',sans-serif;font-size:28px;font-weight:800;color:#E2E8F0;line-height:1">Canteen<br/><span style="color:#4DFFB4">live.</span></div>
+      <div style="font-family:monospace;font-size:11px;color:#4a6fa5;letter-spacing:0.1em">12 orders · 2 counters online</div>
+      <div style="background:#4DFFB4;color:#070B14;padding:8px 16px;border-radius:4px;font-weight:700;font-size:13px;display:inline-block;width:fit-content">Open kitchen →</div>
+    </div>
+    <div class="card-body">
+      <h3>Midnight Green</h3>
+      <p>Deep navy + electric mint. Very Linear/Vercel energy. Premium SaaS feel. Best for the B2B pitch to college admins (DSA offices).</p>
+      <p style="font-size:11px;opacity:0.6">#070B14 · #4DFFB4 · #E2E8F0 · #FF6B35</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="mango" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#FFFBF5;padding:20px;display:flex;flex-direction:column;gap:8px">
+      <div style="display:flex;gap:8px;align-items:center">
+        <div style="width:32px;height:32px;background:#FF8C00;border-radius:50%"></div>
+        <div style="width:32px;height:32px;background:#1C1917;border-radius:50%"></div>
+        <div style="width:32px;height:32px;background:#FFF7ED;border-radius:50%;border:1px solid #eee"></div>
+        <div style="width:32px;height:32px;background:#78350F;border-radius:50%"></div>
+      </div>
+      <div style="font-family:'Plus Jakarta Sans',sans-serif;font-size:26px;font-weight:800;color:#1C1917;line-height:1.1">Food, faster.<br/><span style="color:#FF8C00">No queues.</span></div>
+      <div style="font-size:11px;color:#78350F;letter-spacing:0.08em">IIT Bombay · 20+ canteens</div>
+      <div style="background:#FF8C00;color:white;padding:8px 16px;border-radius:999px;font-weight:700;font-size:13px;display:inline-block;width:fit-content">See canteens ↗</div>
+    </div>
+    <div class="card-body">
+      <h3>Mango Cream</h3>
+      <p>Warm white + bold mango orange. Closest to Swiggy but cleaner. Familiar food-app energy, instantly readable, plus works great at WCAG AA.</p>
+      <p style="font-size:11px;opacity:0.6">#FFFBF5 · #FF8C00 · #1C1917 · #78350F</p>
+    </div>
+  </div>
+
+</div>
+
+<p class="subtitle" style="margin-top:16px">Click your favourite (or top 2). The design research agent will bring real inspiration examples.</p>

@@ -1,17 +1,14 @@
 import { redirect } from "next/navigation";
-import { headers } from "next/headers";
 import Link from "next/link";
-import { resolveTenant } from "@/lib/tenant";
 import { getServerClient } from "@/lib/supabase/server";
 import { createMenuItem } from "@/app/(admin)/admin/_actions";
+import { requireTenantContext } from "@/lib/tenant";
 
 export const dynamic = "force-dynamic";
 
 export default async function NewMenuItemPage() {
-  const h = await headers();
-  const slug = h.get("x-tenant-slug") ?? "aditya";
-  const tenant = await resolveTenant(slug);
-  if (!tenant) return null;
+  // Production-grade tenant context for creating menu items in the owner's dedicated canteen only.
+  const { tenant } = await requireTenantContext();
   const supabase = await getServerClient(tenant.id);
   const { data: cats } = await supabase
     .from("menu_categories")
@@ -46,7 +43,7 @@ export default async function NewMenuItemPage() {
     });
 
     if (result.ok) {
-      redirect("/admin/menu");
+      redirect(`/c/${tenant.slug}/admin/menu`);
     }
   }
 
@@ -54,7 +51,7 @@ export default async function NewMenuItemPage() {
     <div>
       <div className="mb-5 flex items-center gap-3">
         <Link
-          href="/admin/menu"
+          href={`/c/${tenant.slug}/admin/menu`}
           className="text-[11px] font-mono uppercase tracking-[0.12em] text-graphite-400 hover:text-graphite-700 transition-colors"
         >
           ← Menu
@@ -191,7 +188,7 @@ export default async function NewMenuItemPage() {
             Create item
           </button>
           <Link
-            href="/admin/menu"
+            href={`/c/${tenant.slug}/admin/menu`}
             className="rounded-lg px-5 py-2 text-[14px] font-medium text-graphite-600 hover:text-graphite-900 transition-colors"
           >
             Cancel

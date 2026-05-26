@@ -1,9 +1,8 @@
 import Link from "next/link";
-import { headers } from "next/headers";
 
-import { resolveTenant } from "@/lib/tenant";
 import { getServerClient } from "@/lib/supabase/server";
 import { MenuTable } from "@/components/portal-admin/menu-table";
+import { requireTenantContext } from "@/lib/tenant";
 
 type Row = {
   id: string;
@@ -20,10 +19,9 @@ type Row = {
 export const dynamic = "force-dynamic";
 
 export default async function AdminMenuPage() {
-  const h = await headers();
-  const slug = h.get("x-tenant-slug") ?? "aditya";
-  const tenant = await resolveTenant(slug);
-  if (!tenant) return null;
+  // Production-grade tenant context for owner menu management.
+  // Each canteen's menu is fully isolated; changes only affect the correct /c/slug/ surface.
+  const { tenant } = await requireTenantContext();
   const supabase = await getServerClient(tenant.id);
   const [{ data: items }, { data: cats }] = await Promise.all([
     supabase
@@ -49,7 +47,7 @@ export default async function AdminMenuPage() {
           </div>
         </div>
         <Link
-          href="/admin/menu/new"
+          href={`/c/${tenant.slug}/admin/menu/new`}
           className="shrink-0 rounded-lg bg-primary px-4 py-2 text-[13px] font-medium text-white hover:bg-primary/90 transition-colors"
         >
           + New item

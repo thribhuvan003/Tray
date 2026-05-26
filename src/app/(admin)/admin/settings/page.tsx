@@ -1,8 +1,7 @@
-import { headers } from "next/headers";
-import { resolveTenant } from "@/lib/tenant";
 import { getAdminClient } from "@/lib/supabase/admin";
 import { updateCanteenHours, pauseCanteen, updateCanteenSettings } from "../_actions";
 import type { Tenant } from "@/lib/db/types";
+import { requireTenantContext } from "@/lib/tenant";
 
 export const dynamic = "force-dynamic";
 
@@ -22,10 +21,8 @@ function formatPausedUntil(pausedUntil: string | null): string | null {
 }
 
 export default async function SettingsPage() {
-  const h = await headers();
-  const slug = h.get("x-tenant-slug") ?? "aditya";
-  const tenant = await resolveTenant(slug);
-  if (!tenant) return null;
+  // Production-grade tenant context — UPI VPA changes here must instantly affect the student pay QR for this canteen only.
+  const { tenant } = await requireTenantContext();
 
   // Fetch full tenant row (resolveTenant only returns a subset)
   const admin = getAdminClient(tenant.id);

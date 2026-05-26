@@ -60,11 +60,23 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ toke
     .update({ accepted_at: new Date().toISOString() })
     .eq("id", invite.id);
 
+  // Resolve slug for the invited tenant so the new user lands in *their* dedicated canteen admin/kitchen (critical for same-college multi-outlet owners).
+  // No silent "aditya" fallback — if the tenant row is missing after a valid invite, something is wrong; fail loud with a clear error.
+  const { data: t } = await admin
+    .from("tenants")
+    .select("slug")
+    .eq("id", invite.tenant_id)
+    .maybeSingle<{ slug: string }>();
+  if (!t?.slug) {
+    return NextResponse.redirect(new URL("/login?error=Invite+tenant+not+found", origin));
+  }
+  const tenantSlug = t.slug;
+
   const dest =
     invite.role === "kitchen_staff"
-      ? "/kitchen"
+      ? `/c/${tenantSlug}/kitchen`
       : invite.role === "canteen_admin" || invite.role === "super_admin"
-      ? "/admin/dashboard"
-      : "/menu";
+      ? `/c/${tenantSlug}/admin/dashboard`
+      : `/c/${tenantSlug}/menu`;
   return NextResponse.redirect(new URL(dest, origin));
 }

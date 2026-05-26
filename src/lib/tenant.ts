@@ -3,6 +3,7 @@ import { cache } from "react";
 import { unstable_cache } from "next/cache";
 import { createClient } from "@supabase/supabase-js";
 import { env } from "@/lib/env";
+import { logger } from "@/lib/logging";
 import type { Database } from "@/lib/db/types";
 
 export type ResolvedTenant = {
@@ -120,3 +121,88 @@ const fetchCollegeCanteensCached = unstable_cache(
 export const collegeCanteens = cache(async (slug: string): Promise<CollegeCanteen[]> => {
   return fetchCollegeCanteensCached(slug);
 });
+
+// ── Production-Grade Tenant Context Helper (BlackRock/HFT level) ─────────────
+//
+// This helper is one of the central "puzzle pieces" for the core product promise:
+//
+// "One login → each admin gets:
+//   - their own pages / experience
+//   - their own URL / subdomain (or custom domain)
+//   - their own data (respective DB or strong isolation to store & retrieve)
+//   - their own servers (feeling of a dedicated system)"
+//
+// Every critical path in the system must flow through explicit tenant context
+// so that this promise is not just marketing — it is technically enforced and
+// observable.
+//
+// Design goals:
+// - Fail fast with clear errors (better than silent cross-tenant data leaks)
+// - Works for both authenticated user flows and service-role background jobs
+// - Rich structured logging on every resolution (for 2am debugging + audits)
+// - Minimal magic — easy to audit, extend toward dedicated DB resources per large tenant
+// - Makes the "own subdomain + own data" vision real and defensible at scale (thousands of users/orders across many tenants)
+
+export type TenantContext = {
+  tenant: ResolvedTenant;
+  slug: string;
+  isServiceRole: boolean;
+};
+
+/**
+ * Resolves and returns a strict tenant context from the current request.
+ * Use this at the very top of Server Actions and API routes.
+ *
+ * Throws on missing/invalid tenant (intentional — better to fail loud in production).
+ */
+export async function requireTenantContext(): Promise<TenantContext> {
+  const { headers } = await import("next/headers");
+  const h = await headers();
+  const slug = h.get("x-tenant-slug");
+
+  if (!slug) {
+    logger.error("tenant context resolution failed — missing x-tenant-slug header", null, { reason: "no_header" });
+    throw new Error("Invalid tenant context: missing x-tenant-slug header (middleware should have set this)");
+  }
+
+  const tenant = await resolveTenant(slug);
+  if (!tenant) {
+    logger.error("tenant context resolution failed", null, { slug, reason: "not_found" });
+    throw new Error(`Invalid tenant context: ${slug}`);
+  }
+
+  logger.info("tenant context resolved", {
+    tenant_id: tenant.id,
+    slug: tenant.slug,
+    source: "header",
+  });
+
+  return {
+    tenant,
+    slug: tenant.slug,
+    isServiceRole: false, // will be enhanced later for cron paths
+  };
+}
+
+/**
+ * For background jobs / crons that run across tenants or with service role.
+ * Accepts an explicit tenant slug (or runs with a provided admin client).
+ */
+export async function requireTenantContextForJob(slug: string): Promise<TenantContext> {
+  const tenant = await resolveTenant(slug);
+  if (!tenant) {
+    logger.error("tenant context resolution failed in job", null, { slug, reason: "not_found" });
+    throw new Error(`Invalid tenant for job: ${slug}`);
+  }
+
+  logger.info("tenant context resolved for job", {
+    tenant_id: tenant.id,
+    slug: tenant.slug,
+  });
+
+  return {
+    tenant,
+    slug: tenant.slug,
+    isServiceRole: true,
+  };
+}
