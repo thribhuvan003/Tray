@@ -9,6 +9,7 @@ import { cn, formatRupees, formatTimeIST } from "@/lib/utils";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { OrderColumn } from "./order-column";
 import { OtpVerifyDialog } from "./otp-verify-dialog";
+import { WalkInDialog } from "./walk-in-dialog";
 import { KitchenMarquee } from "./marquee";
 import { logger } from "@/lib/logging";
 
@@ -24,6 +25,7 @@ type OrderRow = {
   customer_name: string | null;
   order_type: "takeaway" | "dine_in";
   table_label: string | null;
+  otp_attempts: number;
 };
 type LineRow = {
   id: string;
@@ -51,6 +53,7 @@ export function KitchenBoard({
   const [orders, setOrders] = useState(initialOrders);
   const [lines, setLines] = useState(initialLines);
   const [verifyId, setVerifyId] = useState<string | null>(null);
+  const [walkInOpen, setWalkInOpen] = useState(false);
   const [clock, setClock] = useState<string>("--:--");
   const [connState, setConnState] = useState<'online' | 'reconnecting' | 'offline'>('online');
   const [reconnectAttempt, setReconnectAttempt] = useState(0);
@@ -213,7 +216,7 @@ export function KitchenBoard({
     const { data } = await sb
       .from("orders")
       .select(
-        "id, short_code, status, total_paise, placed_at, ready_at, collected_at, customer_name, order_type, table_label"
+        "id, short_code, status, total_paise, placed_at, ready_at, collected_at, customer_name, order_type, table_label, otp_attempts"
       )
       .eq("tenant_id", tenantId)
       .in("status", ["placed", "preparing", "ready", "collected"])
@@ -869,6 +872,27 @@ export function KitchenBoard({
 
             {/* Right controls */}
             <div className="flex items-center gap-2">
+              {/* Walk-in order button — KFC-style quick counter order */}
+              <button
+                type="button"
+                onClick={() => setWalkInOpen(true)}
+                className="inline-flex items-center gap-2 transition-all active:scale-[0.97]"
+                style={{
+                  height: "34px",
+                  padding: "0 12px",
+                  borderRadius: "7px",
+                  fontSize: "12px",
+                  fontWeight: 700,
+                  border: "2px solid var(--kt-tomato)",
+                  background: "var(--kt-tomato)",
+                  color: "var(--kt-cream)",
+                  cursor: "pointer",
+                  boxShadow: "0 2px 0 var(--kt-ink)",
+                }}
+              >
+                + Walk-in
+              </button>
+
               {/* Bell toggle — always visible */}
               <button
                 type="button"
@@ -1102,6 +1126,17 @@ export function KitchenBoard({
           onClose={() => setVerifyId(null)}
           onResult={(ok) => {
             if (ok) setVerifyId(null);
+          }}
+        />
+
+        <WalkInDialog
+          tenantId={tenantId}
+          tenantSlug={tenantSlug}
+          open={walkInOpen}
+          onClose={() => setWalkInOpen(false)}
+          onCreated={(shortCode) => {
+            void refreshFn();
+            toast.success(`#${shortCode} placed — it's in the queue`);
           }}
         />
       </div>

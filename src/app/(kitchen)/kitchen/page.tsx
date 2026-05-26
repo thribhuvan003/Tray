@@ -18,6 +18,7 @@ type OrderRow = {
   customer_name: string | null;
   order_type: "takeaway" | "dine_in";
   table_label: string | null;
+  otp_attempts: number;
 };
 type LineRow = {
   id: string;
@@ -52,7 +53,7 @@ export default async function KitchenPage() {
     supabase
       .from("orders")
       .select(
-        "id, short_code, status, total_paise, placed_at, ready_at, collected_at, customer_name, order_type, table_label"
+        "id, short_code, status, total_paise, placed_at, ready_at, collected_at, customer_name, order_type, table_label, otp_attempts"
       )
       .eq("tenant_id", tenant.id)
       .in("status", ["placed", "preparing", "ready", "collected"])

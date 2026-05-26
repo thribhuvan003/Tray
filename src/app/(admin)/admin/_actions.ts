@@ -31,6 +31,7 @@ import { sendEmail } from "@/lib/email/resend";
 import { env } from "@/lib/env";
 import { logger } from "@/lib/logging";
 import { tenantRateLimit } from "@/lib/rate-limit/tenant";
+import { initiateRefundForOrder } from "@/app/(student)/_actions";
 
 import type { ResolvedTenant } from "@/lib/tenant";
 import type { CurrentUser } from "@/lib/auth/get-user";
@@ -485,5 +486,97 @@ export async function deleteMenuItem(id: string): Promise<{ ok: boolean; error?:
 
   revalidatePath(`/c/${c.tenant.slug}/admin/menu`);
   revalidatePath(`/c/${c.tenant.slug}/menu`);
+  return { ok: true };
+}
+
+// ── Order Management ──────────────────────────────────────────────────────────
+
+export async function cancelOrderAsAdmin(
+  orderId: string,
+  reason: string
+): Promise<{ ok: boolean; error?: string }> {
+  const c = await adminContext();
+  if (!c.ok) return { ok: false, error: c.error };
+
+  const rate = await tenantRateLimit(c.tenant.id, "admin_action", c.user.id);
+  if (!rate.success) {
+    return { ok: false, error: "Too many admin actions — slow down a little" };
+  }
+
+  const start = Date.now();
+  const admin = getAdminClient(c.tenant.id);
+
+  // Fetch current status first so we log the right from_status
+  const { data: cur } = await admin
+    .from("orders")
+    .select("status")
+    .eq("id", orderId)
+    .eq("tenant_id", c.tenant.id)
+    .maybeSingle<{ status: string }>();
+
+  if (!cur) return { ok: false, error: "Order not found" };
+
+  // Only cancel orders that are still in-flight (not already terminal)
+  const cancellable = ["placed", "preparing", "pending_payment"] as const;
+  if (!(cancellable as readonly string[]).includes(cur.status)) {
+    return { ok: false, error: `Cannot cancel order in "${cur.status}" status` };
+  }
+
+  const { data: updated } = await admin
+    .from("orders")
+    .update({ status: "cancelled_by_kitchen" })
+    .eq("id", orderId)
+    .eq("tenant_id", c.tenant.id)
+    .in("status", cancellable)
+    .select("id");
+
+  if (!updated || updated.length === 0) {
+    return { ok: false, error: "Order was already updated by another action" };
+  }
+
+  await admin.from("order_status_logs").insert({
+    tenant_id: c.tenant.id,
+    order_id: orderId,
+    from_status: cur.status as "placed" | "preparing" | "pending_payment",
+    to_status: "cancelled_by_kitchen" as const,
+    actor_user_id: c.user.id,
+    note: `Admin cancelled: ${reason}`,
+  });
+
+  await (admin.from("order_events") as unknown as {
+    insert: (r: object) => Promise<unknown>;
+  }).insert({
+    order_id: orderId,
+    tenant_id: c.tenant.id,
+    event_type: "cancelled_by_admin",
+    payload: { reason, actor_user_id: c.user.id },
+  });
+
+  await admin.from("audit_logs").insert({
+    tenant_id: c.tenant.id,
+    actor_user_id: c.user.id,
+    action: "order.admin_cancelled",
+    target_type: "order",
+    target_id: orderId,
+    meta: { reason, from_status: cur.status },
+  });
+
+  // Queue refund if the order was paid
+  if (cur.status !== "pending_payment") {
+    void initiateRefundForOrder(orderId, c.tenant.id).catch(() => {});
+  }
+
+  logger.info("admin cancelled order", {
+    tenant_id: c.tenant.id,
+    slug: c.tenant.slug,
+    actor_user_id: c.user.id,
+    order_id: orderId,
+    from_status: cur.status,
+    reason,
+    latency_ms: Date.now() - start,
+  });
+
+  revalidatePath(`/c/${c.tenant.slug}/admin/orders`);
+  revalidatePath(`/c/${c.tenant.slug}/kitchen`);
   return { ok: true };
 }
