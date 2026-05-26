@@ -24,13 +24,16 @@ const TONE: Record<string, string> = {
   collected: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30",
   rejected: "bg-rose-500/15 text-rose-400 border-rose-500/30",
   expired: "bg-rose-500/15 text-rose-400 border-rose-500/30",
+  payment_failed: "bg-rose-500/15 text-rose-400 border-rose-500/30",
+  cancelled_by_kitchen: "bg-rose-500/15 text-rose-400 border-rose-500/30",
+  refunded: "bg-amber-500/15 text-amber-400 border-amber-500/30",
 };
 
 export const dynamic = "force-dynamic";
 
 export default async function OrdersPage() {
   const h = await headers();
-  const slug = h.get("x-tenant-slug") ?? "aditya";
+  const slug = h.get("x-tenant-slug") ?? "";
   const tenant = await resolveTenant(slug);
   if (!tenant) return null;
   const supabase = await getServerClient(tenant.id);

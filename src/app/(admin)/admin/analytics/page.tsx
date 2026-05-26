@@ -10,7 +10,7 @@ type O = { id: string; total_paise: number; placed_at: string; collected_at: str
 
 export default async function AnalyticsPage() {
   const h = await headers();
-  const slug = h.get("x-tenant-slug") ?? "aditya";
+  const slug = h.get("x-tenant-slug") ?? "";
   const tenant = await resolveTenant(slug);
   if (!tenant) return null;
   const supabase = await getServerClient(tenant.id);

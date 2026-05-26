@@ -16,8 +16,8 @@ export type CurrentUser = {
 
 export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
   const h = await headers();
-  const slug = h.get("x-tenant-slug") ?? "aditya";
-  const tenant = await resolveTenant(slug);
+  const slug = h.get("x-tenant-slug") ?? "";
+  const tenant = slug ? await resolveTenant(slug) : null;
   if (!tenant) return null;
 
   const supabase = await getServerClient(tenant.id);

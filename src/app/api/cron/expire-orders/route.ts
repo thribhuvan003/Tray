@@ -3,7 +3,6 @@ import { Receiver } from "@upstash/qstash";
 import { getAdminClient } from "@/lib/supabase/admin";
 import { env } from "@/lib/env";
 import { logger } from "@/lib/logging";
-import { requireTenantContextForJob } from "@/lib/tenant";
 import { rateLimit } from "@/lib/rate-limit";
 
 /**
@@ -55,20 +54,9 @@ export async function POST(req: NextRequest) {
 
   const start = Date.now();
 
-  // BlackRock/HFT-grade job observability for the auto-expiry background job.
-  // Explicit tenant context + per-tenant clients ensure isolation and make
-  // every expiration traceable back to the correct owner's data.
   logger.info("expire-orders cron started", {
     job: "expire-orders",
   });
-
-  // Use the standardized job context helper (fail-fast, logged, vision-aligned).
-  // We use the DEFAULT for the initial resolution; inside the loop we scope per tenant.
-  try {
-    await requireTenantContextForJob(process.env.DEFAULT_TENANT_SLUG || "aditya");
-  } catch (e) {
-    logger.error("expire-orders cron failed to acquire tenant context", e);
-  }
 
   const admin = getAdminClient();
   const nowIso = new Date().toISOString();

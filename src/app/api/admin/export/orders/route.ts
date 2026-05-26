@@ -24,7 +24,7 @@ function csvEscape(v: string | number | null) {
 
 export async function GET(req: NextRequest) {
   const h = await headers();
-  const slug = h.get("x-tenant-slug") ?? "aditya";
+  const slug = h.get("x-tenant-slug") ?? "";
   const tenant = await resolveTenant(slug);
   if (!tenant) return new NextResponse("Tenant not found", { status: 404 });
   const user = await requireRole(["canteen_admin", "super_admin"]);

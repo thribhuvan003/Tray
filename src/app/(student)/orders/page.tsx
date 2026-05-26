@@ -17,11 +17,12 @@ const STATUS_LABEL: Record<string, { label: string; tone: string }> = {
   cancelled_by_kitchen: { label: "Cancelled", tone: "rose" },
   refunded: { label: "Refunded", tone: "rose" },
   partially_ready: { label: "Partially ready", tone: "amber" },
+  payment_failed: { label: "Payment failed", tone: "rose" },
 };
 
 export default async function OrdersPage() {
   const h = await headers();
-  const slug = h.get("x-tenant-slug") ?? "aditya";
+  const slug = h.get("x-tenant-slug") ?? "";
   const tenant = await resolveTenant(slug);
   if (!tenant) return null;
   const user = await getCurrentUser();

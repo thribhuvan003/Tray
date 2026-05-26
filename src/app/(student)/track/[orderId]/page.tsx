@@ -8,7 +8,7 @@ import { TrackPanel } from "@/components/portal-student/track-panel";
 export default async function TrackPage({ params }: { params: Promise<{ orderId: string }> }) {
   const { orderId } = await params;
   const h = await headers();
-  const slug = h.get("x-tenant-slug") ?? "aditya";
+  const slug = h.get("x-tenant-slug") ?? "";
   const tenant = await resolveTenant(slug);
   if (!tenant) notFound();
   const user = await getCurrentUser();

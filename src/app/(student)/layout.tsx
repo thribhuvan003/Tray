@@ -7,7 +7,7 @@ import { CartTenantSync } from "@/components/portal-student/cart-tenant-sync";
 
 export default async function StudentLayout({ children }: { children: React.ReactNode }) {
   const h = await headers();
-  const slug = h.get("x-tenant-slug") ?? "aditya";
+  const slug = h.get("x-tenant-slug") ?? "";
   const tenant = await resolveTenant(slug);
   if (!tenant) notFound();
   return (
