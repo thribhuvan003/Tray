@@ -348,6 +348,17 @@ export function PayPanel({
             </p>
           )}
 
+          {/* Razorpay trust signal — required for live and student confidence */}
+          <div className="flex items-center justify-center gap-1.5 mt-1">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" className="text-[color:var(--color-ink)]/40">
+              <path d="M12 2L4 5v6c0 5.25 3.5 10.15 8 11.35C16.5 21.15 20 16.25 20 11V5l-8-3z" fill="currentColor" opacity=".2" stroke="currentColor" strokeWidth="1.5"/>
+              <path d="M9 12l2 2 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            <p className="text-[11px] text-[color:var(--color-ink)]/40">
+              Payments secured by <span className="font-semibold">Razorpay</span> · No card details stored
+            </p>
+          </div>
+
           {!process.env.NEXT_PUBLIC_RAZORPAY_LIVE && (
             <>
               <button
