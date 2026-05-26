@@ -120,32 +120,25 @@ export async function POST(req: NextRequest) {
 
   try {
     if (body.event === "payment.captured" || payment.status === "captured") {
-      const { error: dupe } = await adminScoped.from("payments").upsert(
-        {
-          tenant_id: orderRow.tenant_id,
-          order_id: orderRow.id,
-          razorpay_order_id: payment.order_id,
-          razorpay_payment_id: payment.id ?? null,
-          amount_paise: payment.amount ?? 0,
-          status: "captured",
-          raw_event_id: eventId,
-        },
-        { onConflict: "raw_event_id", ignoreDuplicates: true }
-      );
-      if (dupe) {
-        tenantLog.error("payments upsert failed", dupe);
-        throw dupe;
+      // Use the DB-level row-locked capture function (FOR UPDATE) to guarantee atomicity
+      // even under thundering-herd webhook retries and concurrent reconcile runs.
+      const { data: captureResult, error: captureErr } = await (adminScoped as unknown as {
+        rpc: (fn: string, args: Record<string, unknown>) => Promise<{ data: string | null; error: unknown }>;
+      }).rpc("safe_capture_payment", {
+        p_order_id: orderRow.id,
+        p_tenant_id: orderRow.tenant_id,
+        p_razorpay_pid: payment.id ?? null,
+        p_razorpay_oid: payment.order_id,
+        p_amount_paise: payment.amount ?? 0,
+        p_raw_event_id: eventId,
+      });
+
+      if (captureErr) {
+        tenantLog.error("safe_capture_payment rpc failed", captureErr);
+        throw captureErr;
       }
 
-      const { data: updated } = await adminScoped
-        .from("orders")
-        .update({ status: "placed" })
-        .eq("id", orderRow.id)
-        .eq("tenant_id", orderRow.tenant_id)
-        .eq("status", "pending_payment")
-        .select("id");
-
-      if (updated && updated.length > 0) {
+      if (captureResult === "captured") {
         await (adminScoped.from("order_events") as any).insert({
           tenant_id: orderRow.tenant_id,
           order_id: orderRow.id,
@@ -159,9 +152,9 @@ export async function POST(req: NextRequest) {
           to_status: "placed",
           note: "Razorpay captured",
         });
-        tenantLog.info("order transitioned via webhook", { latency_ms: Date.now() - start });
+        tenantLog.info("order transitioned via webhook (row-locked capture)", { result: captureResult, latency_ms: Date.now() - start });
       } else {
-        tenantLog.info("webhook capture no-op (guard or prior path won the race)");
+        tenantLog.info("webhook capture no-op", { result: captureResult });
       }
     } else if (body.event === "payment.failed") {
       await adminScoped

@@ -209,12 +209,23 @@ export async function verifyAndCollect(
 
   const ok = await bcrypt.compare(otp, cur.otp_hash);
   if (!ok) {
-    const left = 3 - (cur.otp_attempts + 1);
-    await admin
+    // Optimistic locking: only increment if otp_attempts hasn't changed since
+    // our read. Prevents TOCTOU race where two concurrent wrong submissions both
+    // pass the >= 3 check before either increments the counter.
+    const { data: atomicUpdate } = await admin
       .from("orders")
       .update({ otp_attempts: cur.otp_attempts + 1 })
       .eq("id", orderId)
-      .eq("tenant_id", ctx.tenant.id);
+      .eq("tenant_id", ctx.tenant.id)
+      .eq("otp_attempts", cur.otp_attempts) // optimistic lock
+      .select("otp_attempts");
+
+    if (!atomicUpdate || atomicUpdate.length === 0) {
+      // Concurrent update won the race — return a safe "try again" signal.
+      return { ok: false, error: "Try again", attemptsLeft: 0 };
+    }
+
+    const left = 3 - (cur.otp_attempts + 1);
 
     logger.warn("kitchen OTP verification failed", {
       tenant_id: ctx.tenant.id,
@@ -266,9 +277,9 @@ export async function verifyAndCollect(
 }
 
 // Mark a menu item sold out (86) or back in stock from kitchen board.
-// Looks up the item by name within this tenant — name_snapshot matches menu_items.name.
+// Accepts the item's UUID to avoid ambiguity when two items share the same name.
 export async function markItemSoldOut(
-  itemName: string,
+  itemId: string,
   inStock: boolean
 ): Promise<{ ok: boolean; error?: string; itemId?: string }> {
   const ctx = await staffContext();
@@ -276,21 +287,22 @@ export async function markItemSoldOut(
 
   const admin = getAdminClient(ctx.tenant.id);
 
-  // Resolve menu item by name within this tenant (live items only).
+  // Verify the item belongs to this tenant and is live before updating.
   const { data: item } = await admin
     .from("menu_items")
-    .select("id")
+    .select("id, name")
+    .eq("id", itemId)
     .eq("tenant_id", ctx.tenant.id)
-    .eq("name", itemName)
     .eq("status", "live")
-    .maybeSingle<{ id: string }>();
+    .maybeSingle<{ id: string; name: string }>();
 
-  if (!item) return { ok: false, error: "Item not found — check the name" };
+  if (!item) return { ok: false, error: "Item not found" };
 
   const { error: updateErr } = await admin
     .from("menu_items")
     .update({ in_stock: inStock })
-    .eq("id", item.id);
+    .eq("id", item.id)
+    .eq("tenant_id", ctx.tenant.id);
 
   if (updateErr) return { ok: false, error: updateErr.message };
 
@@ -300,7 +312,7 @@ export async function markItemSoldOut(
     action: inStock ? "menu.86_undo" : "menu.86",
     target_type: "menu_item",
     target_id: item.id,
-    meta: { name: itemName },
+    meta: { name: item.name },
   });
 
   // Emit a menu_item_86 event so kitchen Realtime subscribers pick it up.
@@ -323,12 +335,151 @@ export async function markItemSoldOut(
     order_id: activeOrder?.id ?? DUMMY_ORDER_ID,
     tenant_id: ctx.tenant.id,
     event_type: "menu_item_86",
-    payload: { name: itemName, in_stock: inStock },
+    payload: { name: item.name, in_stock: inStock },
   });
 
   revalidatePath(`/c/${ctx.tenant.slug}/menu`);
   revalidatePath(`/c/${ctx.tenant.slug}/kitchen`);
   return { ok: true, itemId: item.id };
+}
+
+// ── Walk-in Orders (cash counter flow, like KFC) ─────────────────────────────
+// Kitchen staff creates an order for a walk-in customer who pays at the counter.
+// Bypasses the UPI payment flow: order is immediately "placed" (already paid or cash).
+// Staff searches/selects items from the live menu, sets qty, and confirms.
+export async function createWalkInOrder(opts: {
+  items: { itemId: string; qty: number }[];
+  customerName?: string;
+  orderType: "takeaway" | "dine_in";
+  tableLabel?: string;
+  paymentMethod: "cash";
+}): Promise<{ ok: boolean; error?: string; orderId?: string; shortCode?: string }> {
+  const ctx = await staffContext();
+  if (!ctx.ok) return ctx;
+
+  const rate = await tenantRateLimit(ctx.tenant.id, "kitchen_action", ctx.user.id);
+  if (!rate.success) {
+    return { ok: false, error: "Too many actions — slow down a little" };
+  }
+
+  if (!opts.items || opts.items.length === 0) {
+    return { ok: false, error: "Add at least one item" };
+  }
+
+  const admin = getAdminClient(ctx.tenant.id);
+
+  // Validate every item — must be live + in_stock for this tenant (server-side, no client trust)
+  const ids = opts.items.map((i) => i.itemId);
+  const { data: menuItems } = await admin
+    .from("menu_items")
+    .select("id, name, price_paise, diet, status, in_stock")
+    .eq("tenant_id", ctx.tenant.id)
+    .in("id", ids)
+    .returns<{ id: string; name: string; price_paise: number; diet: "veg" | "nonveg" | "egg"; status: string; in_stock: boolean }[]>();
+
+  if (!menuItems || menuItems.length !== ids.length) {
+    return { ok: false, error: "One or more items not found" };
+  }
+
+  const itemMap = new Map(menuItems.map((m) => [m.id, m]));
+  let total = 0;
+  const validated: { item: typeof menuItems[0]; qty: number }[] = [];
+
+  for (const req of opts.items) {
+    const item = itemMap.get(req.itemId);
+    if (!item) return { ok: false, error: "Item not found" };
+    if (item.status !== "live") return { ok: false, error: `${item.name} is not available` };
+    if (!item.in_stock) return { ok: false, error: `${item.name} is sold out` };
+    if (req.qty < 1 || req.qty > 20) return { ok: false, error: "Qty must be 1–20 per item" };
+    total += item.price_paise * req.qty;
+    validated.push({ item, qty: req.qty });
+  }
+
+  const start = Date.now();
+
+  // Assign short code
+  const { data: codeData, error: codeErr } = await admin.rpc("next_order_short_code", {
+    p_tenant: ctx.tenant.id,
+  });
+  if (codeErr || !codeData) return { ok: false, error: "Could not assign order code" };
+
+  // Create order directly as "placed" — cash collected at counter
+  const { data: order, error: orderErr } = await admin
+    .from("orders")
+    .insert({
+      tenant_id: ctx.tenant.id,
+      user_id: null,
+      short_code: codeData as string,
+      status: "placed",
+      total_paise: total,
+      order_type: opts.orderType,
+      table_label: opts.tableLabel ?? null,
+      customer_name: opts.customerName?.trim() || "Walk-in",
+      notes: "walk-in",
+    })
+    .select("id, short_code")
+    .single<{ id: string; short_code: string }>();
+
+  if (orderErr || !order) return { ok: false, error: orderErr?.message ?? "Could not create order" };
+
+  await admin.from("order_items").insert(
+    validated.map((v) => ({
+      tenant_id: ctx.tenant.id,
+      order_id: order.id,
+      menu_item_id: v.item.id,
+      name_snapshot: v.item.name,
+      price_paise_snapshot: v.item.price_paise,
+      diet_snapshot: v.item.diet,
+      qty: v.qty,
+    }))
+  );
+
+  await admin.from("payments").insert({
+    tenant_id: ctx.tenant.id,
+    order_id: order.id,
+    amount_paise: total,
+    status: "captured",
+    raw_event_id: `walkin:${order.id}`,
+  });
+
+  await admin.from("order_status_logs").insert({
+    tenant_id: ctx.tenant.id,
+    order_id: order.id,
+    from_status: null,
+    to_status: "placed",
+    actor_user_id: ctx.user.id,
+    note: "Walk-in cash order created by kitchen staff",
+  });
+
+  await admin.from("audit_logs").insert({
+    tenant_id: ctx.tenant.id,
+    actor_user_id: ctx.user.id,
+    action: "order.walkin_created",
+    target_type: "order",
+    target_id: order.id,
+    meta: { total_paise: total, items: validated.length, payment_method: opts.paymentMethod },
+  });
+
+  await emitOrderEvent(admin, {
+    order_id: order.id,
+    tenant_id: ctx.tenant.id,
+    event_type: "status_changed",
+    payload: { from: null, to: "placed", source: "walkin_counter" },
+  });
+
+  logger.info("kitchen walk-in order created", {
+    tenant_id: ctx.tenant.id,
+    order_id: order.id,
+    short_code: order.short_code,
+    total_paise: total,
+    items: validated.length,
+    actor_user_id: ctx.user.id,
+    latency_ms: Date.now() - start,
+  });
+
+  revalidatePath(`/c/${ctx.tenant.slug}/kitchen`);
+  revalidatePath(`/c/${ctx.tenant.slug}/admin/orders`);
+  return { ok: true, orderId: order.id, shortCode: order.short_code };
 }
 
 // ── Staff PIN login ───────────────────────────────────────────────────────────

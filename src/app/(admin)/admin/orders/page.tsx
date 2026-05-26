@@ -4,6 +4,7 @@ import { Download } from "lucide-react";
 import { resolveTenant } from "@/lib/tenant";
 import { getServerClient } from "@/lib/supabase/server";
 import { formatRupees, formatDateIST, formatTimeIST } from "@/lib/utils";
+import { CancelOrderButton } from "@/components/portal-admin/cancel-order-button";
 
 type Row = {
   id: string;
@@ -108,6 +109,7 @@ export default async function OrdersPage() {
               <th className="text-left px-4 py-3 font-medium">Type</th>
               <th className="text-right px-4 py-3 font-medium">Total</th>
               <th className="text-left px-4 py-3 font-medium">Status</th>
+              <th className="px-4 py-3 font-medium"></th>
             </tr>
           </thead>
           <tbody>
@@ -131,14 +133,19 @@ export default async function OrdersPage() {
                       (TONE[o.status] ?? "bg-graphite-600 text-graphite-300 border-graphite-500/30")
                     }
                   >
-                    {o.status.replace("_", " ")}
+                    {o.status.replace(/_/g, " ")}
                   </span>
+                </td>
+                <td className="px-4 py-2.5">
+                  {["placed", "preparing", "pending_payment"].includes(o.status) && (
+                    <CancelOrderButton orderId={o.id} shortCode={o.short_code} />
+                  )}
                 </td>
               </tr>
             ))}
             {(!orders || orders.length === 0) && (
               <tr>
-                <td colSpan={6} className="text-center py-12 text-graphite-400 text-[13px]">
+                <td colSpan={7} className="text-center py-12 text-graphite-400 text-[13px]">
                   No orders yet.
                 </td>
               </tr>

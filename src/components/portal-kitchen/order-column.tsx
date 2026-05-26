@@ -17,6 +17,7 @@ type Order = {
   customer_name: string | null;
   order_type: "takeaway" | "dine_in";
   table_label: string | null;
+  otp_attempts: number;
 };
 type Line = {
   id: string;
@@ -369,8 +370,33 @@ function TicketCard({
             </button>
           )}
 
+          {/* Locked badge — OTP failed 3 times, admin must reset */}
+          {order.status === "ready" && order.otp_attempts >= 3 && (
+            <span
+              title="3 wrong OTP attempts — admin must reset this order"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "4px",
+                padding: "0 8px",
+                height: "44px",
+                borderRadius: "5px",
+                background: "#2a160a",
+                color: "var(--kt-tomato)",
+                border: "2px solid var(--kt-tomato)",
+                fontFamily: "var(--font-jetbrains), ui-monospace, Menlo, monospace",
+                fontSize: "10px",
+                fontWeight: 800,
+                letterSpacing: "0.08em",
+                textTransform: "uppercase",
+              }}
+            >
+              🔒 LOCKED
+            </span>
+          )}
+
           {/* .tkt-action — tomato button for status advances */}
-          {cta && (
+          {cta && !(order.status === "ready" && order.otp_attempts >= 3) && (
             <button
               type="button"
               disabled={pending}
