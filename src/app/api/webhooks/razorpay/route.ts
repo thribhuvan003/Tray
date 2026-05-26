@@ -139,55 +139,30 @@ export async function POST(req: NextRequest) {
       }
 
       if (captureResult === "captured") {
-        await (adminScoped.from("order_events") as any).insert({
-          tenant_id: orderRow.tenant_id,
-          order_id: orderRow.id,
-          event_type: "status_changed",
-          payload: { from: "pending_payment", to: "placed", source: "razorpay_webhook" },
-        });
-        await adminScoped.from("order_status_logs").insert({
-          tenant_id: orderRow.tenant_id,
-          order_id: orderRow.id,
-          from_status: "pending_payment",
-          to_status: "placed",
-          note: "Razorpay captured",
-        });
+        // order_events + order_status_logs are inserted inside safe_capture_payment
+        // in the same DB transaction — Realtime notification is guaranteed atomic.
         tenantLog.info("order transitioned via webhook (row-locked capture)", { result: captureResult, latency_ms: Date.now() - start });
       } else {
         tenantLog.info("webhook capture no-op", { result: captureResult });
       }
     } else if (body.event === "payment.failed") {
-      await adminScoped
-        .from("payments")
-        .update({ status: "failed" })
-        .eq("razorpay_order_id", payment.order_id)
-        .eq("tenant_id", orderRow.tenant_id);
+      const { data: failResult, error: failErr } = await (adminScoped as unknown as {
+        rpc: (fn: string, args: Record<string, unknown>) => Promise<{ data: string | null; error: unknown }>;
+      }).rpc("safe_fail_payment", {
+        p_order_id:     orderRow.id,
+        p_tenant_id:    orderRow.tenant_id,
+        p_razorpay_oid: payment.order_id,
+      });
 
-      const { data: failedUpdate } = await adminScoped
-        .from("orders")
-        .update({ status: "payment_failed" })
-        .eq("id", orderRow.id)
-        .eq("tenant_id", orderRow.tenant_id)
-        .eq("status", "pending_payment")
-        .select("id");
+      if (failErr) {
+        tenantLog.error("safe_fail_payment rpc failed", failErr);
+        throw failErr;
+      }
 
-      if (failedUpdate && failedUpdate.length > 0) {
-        await (adminScoped.from("order_events") as any).insert({
-          tenant_id: orderRow.tenant_id,
-          order_id: orderRow.id,
-          event_type: "payment_failed",
-          payload: { source: "razorpay_webhook", razorpay_order_id: payment.order_id },
-        });
-        await adminScoped.from("order_status_logs").insert({
-          tenant_id: orderRow.tenant_id,
-          order_id: orderRow.id,
-          from_status: "pending_payment",
-          to_status: "payment_failed",
-          note: "Razorpay payment.failed event",
-        });
-        tenantLog.info("order transitioned to payment_failed via webhook", { latency_ms: Date.now() - start });
+      if (failResult === "failed") {
+        tenantLog.info("order transitioned to payment_failed via webhook (atomic)", { latency_ms: Date.now() - start });
       } else {
-        tenantLog.info("payment.failed no-op (guard or prior path won the race)");
+        tenantLog.info("payment.failed no-op (guard or prior path won the race)", { result: failResult });
       }
     }
 
