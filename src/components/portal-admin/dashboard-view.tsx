@@ -511,7 +511,7 @@ export function DashboardView({
         </div>
         <div className="flex items-center gap-2">
           <a
-            href="/api/admin/export/orders"
+            href={`/api/admin/export/orders?slug=${tenantSlug}`}
             className="inline-flex items-center gap-1.5 font-mono uppercase tracking-wider transition-colors"
             style={{
               height: 36,

@@ -98,9 +98,20 @@ export function TrackPanel({ tenantSlug, tenantName, order: initial, lines }: { 
     };
   }, [order.id, router]);
 
+  // Poll fallback: if Realtime drops (campus WiFi, tab backgrounded), the 10s
+  // poll ensures the student always sees the correct status without a manual reload.
+  useEffect(() => {
+    const terminal = ["collected", "rejected", "expired", "cancelled_by_kitchen", "refunded", "payment_failed"];
+    if (terminal.includes(order.status)) return;
+    const id = setInterval(() => {
+      if (document.visibilityState === "visible") router.refresh();
+    }, 10_000);
+    return () => clearInterval(id);
+  }, [order.status, router]);
+
   useEffect(() => {
     if (order.status === "ready") {
-      getMyOrderOtp(order.id).then((r) => setOtp(r.otp));
+      getMyOrderOtpWithTimeout(order.id).then((r) => setOtp(r.otp));
     } else {
       setOtp(null);
     }

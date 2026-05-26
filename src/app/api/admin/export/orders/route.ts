@@ -24,7 +24,9 @@ function csvEscape(v: string | number | null) {
 
 export async function GET(req: NextRequest) {
   const h = await headers();
-  const slug = h.get("x-tenant-slug") ?? "";
+  // Prefer middleware-injected header; fall back to explicit ?slug= for direct
+  // navigation (e.g. admin clicks export from dashboard).
+  const slug = h.get("x-tenant-slug") || req.nextUrl.searchParams.get("slug") || "";
   const tenant = await resolveTenant(slug);
   if (!tenant) return new NextResponse("Tenant not found", { status: 404 });
   const user = await requireRole(["canteen_admin", "super_admin"]);
