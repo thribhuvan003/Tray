@@ -117,8 +117,8 @@ export const viewport: Viewport = {
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const h = await headers();
-  const slug = h.get("x-tenant-slug") ?? "aditya";
-  const tenant = await resolveTenant(slug);
+  const slug = h.get("x-tenant-slug") ?? "";
+  const tenant = slug ? await resolveTenant(slug) : null;
 
   // Blocking inline script: resolve theme synchronously before first paint so
   // dark-mode users never see a white flash (FOUC). Mirrors the logic in

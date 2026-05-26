@@ -5,7 +5,6 @@ import { fetchRazorpayOrderStatus } from "@/lib/payments/razorpay";
 import { env } from "@/lib/env";
 import { initiateRefundForOrder } from "@/app/(student)/_actions";
 import { logger } from "@/lib/logging";
-import { requireTenantContextForJob } from "@/lib/tenant";
 import { rateLimit } from "@/lib/rate-limit";
 
 // Belt-and-braces for the webhook: India sees ~2-3% Razorpay webhook drops
@@ -65,18 +64,6 @@ export async function POST(req: NextRequest) {
   }
 
   const start = Date.now();
-
-  // BlackRock/HFT-grade job observability + tenant context
-  // Using the new production-grade requireTenantContextForJob pattern for
-  // explicit, logged, auditable job context even though this job is intentionally
-  // cross-tenant for reconciliation purposes.
-  try {
-    await requireTenantContextForJob(process.env.DEFAULT_TENANT_SLUG || "aditya");
-  } catch (e) {
-    logger.warn("reconcile job context warning (expected for cross-tenant job)", {
-      job: "reconcile-payments",
-    });
-  }
 
   logger.info("reconcile cron started", {
     job: "reconcile-payments",

@@ -16,7 +16,7 @@ type StaffProfile = {
 
 export default async function StaffSelectPage() {
   const h = await headers();
-  const slug = h.get("x-tenant-slug") ?? "aditya";
+  const slug = h.get("x-tenant-slug") ?? "";
   const tenant = await resolveTenant(slug);
   if (!tenant) return null;
 

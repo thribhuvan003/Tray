@@ -15,7 +15,6 @@ const schema = z.object({
   QSTASH_CURRENT_SIGNING_KEY: z.string().optional(),
   QSTASH_NEXT_SIGNING_KEY: z.string().optional(),
   APP_URL: z.string().url().default("http://localhost:3000"),
-  DEFAULT_TENANT_SLUG: z.string().default("aditya"),
 });
 
 const parsed = schema.safeParse({
@@ -33,7 +32,6 @@ const parsed = schema.safeParse({
   QSTASH_CURRENT_SIGNING_KEY: process.env.QSTASH_CURRENT_SIGNING_KEY,
   QSTASH_NEXT_SIGNING_KEY: process.env.QSTASH_NEXT_SIGNING_KEY,
   APP_URL: process.env.APP_URL,
-  DEFAULT_TENANT_SLUG: process.env.DEFAULT_TENANT_SLUG,
 });
 
 if (!parsed.success) {

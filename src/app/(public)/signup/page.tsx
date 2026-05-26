@@ -12,7 +12,8 @@ export default async function SignupPage({
 }) {
   const sp = await searchParams;
   const h = await headers();
-  const tenant = await resolveTenant(h.get("x-tenant-slug") ?? "aditya");
+  const slug = h.get("x-tenant-slug") ?? "";
+  const tenant = slug ? await resolveTenant(slug) : null;
   return (
     <div
       data-portal="student"
@@ -34,7 +35,7 @@ export default async function SignupPage({
             {tenant?.allowed_domain ? ` (@${tenant.allowed_domain})` : ""}.
           </p>
           <div className="mt-7">
-            <SignupForm next={sp.next ?? "/"} tenantSlug={tenant?.slug ?? "aditya"} allowedDomain={tenant?.allowed_domain ?? null} />
+            <SignupForm next={sp.next ?? "/"} tenantSlug={tenant?.slug ?? ""} allowedDomain={tenant?.allowed_domain ?? null} />
           </div>
           <p className="mt-8 text-[12.5px] text-[color:var(--color-ink)]/55">
             Already have an account?{" "}

@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 
 export default async function KitchenLayout({ children }: { children: React.ReactNode }) {
   const h = await headers();
-  const slug = h.get("x-tenant-slug") ?? "aditya";
+  const slug = h.get("x-tenant-slug") ?? "";
   const tenant = await resolveTenant(slug);
   if (!tenant) notFound();
   return (

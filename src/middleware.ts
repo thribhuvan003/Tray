@@ -2,10 +2,8 @@ import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { tenantSlugFromHost } from "@/lib/tenant";
 
-const DEFAULT_TENANT_SLUG = process.env.DEFAULT_TENANT_SLUG ?? "aditya";
-
 // Path-based tenant routing: `/c/[slug]/...` for canteens, `/college/[slug]/...` for college portal.
-// Subdomain routing (`aditya.tray.local`) is kept as a fallback for backwards compat.
+// Subdomain routing (`<slug>.tray.local`) is kept as a fallback for custom domains.
 //
 // This is the entry point that makes the core promise real:
 // "One login → each admin gets their own URL/subdomain + their own dedicated-feeling system + their own data."
@@ -33,7 +31,7 @@ export async function middleware(req: NextRequest) {
   const queryOverride = url.searchParams.get("tenant");
   if (queryOverride) tenantSlug = queryOverride.toLowerCase();
 
-  const resolvedTenantSlug = (tenantSlug || DEFAULT_TENANT_SLUG).toLowerCase();
+  const resolvedTenantSlug = (tenantSlug ?? "").toLowerCase();
   requestHeaders.set("x-tenant-slug", resolvedTenantSlug);
   if (collegeSlug) requestHeaders.set("x-college-slug", collegeSlug);
 

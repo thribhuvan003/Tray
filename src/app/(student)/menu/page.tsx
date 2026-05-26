@@ -9,7 +9,7 @@ export const revalidate = 15;
 
 export default async function MenuPage() {
   const h = await headers();
-  const slug = h.get("x-tenant-slug") ?? "aditya";
+  const slug = h.get("x-tenant-slug") ?? "";
   const tenant = await resolveTenant(slug);
   if (!tenant) notFound();
 

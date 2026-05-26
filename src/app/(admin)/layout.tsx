@@ -6,7 +6,7 @@ import { AdminShell } from "@/components/portal-admin/shell";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const h = await headers();
-  const slug = h.get("x-tenant-slug") ?? "aditya";
+  const slug = h.get("x-tenant-slug") ?? "";
   const tenant = await resolveTenant(slug);
   if (!tenant) redirect("/");
   const user = await requireRole(["canteen_admin", "super_admin"]);

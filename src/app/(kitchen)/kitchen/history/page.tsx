@@ -51,7 +51,7 @@ function summariseItems(items: HistoryItem[]): string {
 
 export default async function KitchenHistoryPage() {
   const h = await headers();
-  const slug = h.get("x-tenant-slug") ?? "aditya";
+  const slug = h.get("x-tenant-slug") ?? "";
   const tenant = await resolveTenant(slug);
   if (!tenant) return null;
 
