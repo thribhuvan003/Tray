@@ -1785,6 +1785,13 @@ export function LandingPage({ tenant, msg }: { tenant: ResolvedTenant | null; ms
               <a href="https://github.com/thribhuvan003/Tray" target="_blank" rel="noreferrer">github.com/thribhuvan003</a>
             </div>
           </div>
+          <div>
+            <h4>Legal</h4>
+            <div className="tl-links">
+              <Link href="/legal/terms">Terms of Service</Link>
+              <Link href="/legal/privacy">Privacy Policy</Link>
+            </div>
+          </div>
         </div>
         <div className="tl-footer-mark" aria-hidden="true">
           <span className="tl-footer-mark-inner">
@@ -1804,7 +1811,7 @@ export function LandingPage({ tenant, msg }: { tenant: ResolvedTenant | null; ms
           </span>
         </div>
         <div className="tl-footer-bot">
-          <span>© 2025 Tray · Built by thribhuvan003 · Data stays yours</span>
+          <span>© 2025 Tray · Built by thribhuvan003 · Data stays yours · <Link href="/legal/terms" style={{ color: "inherit" }}>Terms</Link> · <Link href="/legal/privacy" style={{ color: "inherit" }}>Privacy</Link></span>
           <span>v3.0 · CAMPUS EDITION</span>
         </div>
       </footer>
