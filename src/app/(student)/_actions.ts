@@ -714,60 +714,38 @@ export async function verifyPaymentNow(orderId: string): Promise<VerifyResult> {
     .maybeSingle<{ razorpay_order_id: string | null; amount_paise: number }>();
   if (!paymentRow?.razorpay_order_id) return { status: "pending" };
 
-  const { fetchRazorpayOrderStatus } = await import("@/lib/payments/razorpay");
+  const { fetchRazorpayOrderStatus, fetchRazorpayOrderPayments } = await import("@/lib/payments/razorpay");
   const remote = await fetchRazorpayOrderStatus(paymentRow.razorpay_order_id);
   if (remote === "failed") return { status: "failed" };
   if (remote !== "paid") return { status: "pending" };
 
-  // Idempotent payments insert — unique constraint on raw_event_id silently
-  // dedupes if a duplicate webhook or another verifyPaymentNow call beat us.
-  await admin.from("payments").upsert(
-    {
-      tenant_id: tenant.id,
-      order_id: orderId,
-      razorpay_order_id: paymentRow.razorpay_order_id,
-      amount_paise: paymentRow.amount_paise,
-      status: "captured",
-      raw_event_id: `manual_verify_${paymentRow.razorpay_order_id}`,
-    },
-    { onConflict: "raw_event_id", ignoreDuplicates: true }
-  );
+  // Fetch the actual captured payment ID + amount from Razorpay.
+  // This lets us go through safe_capture_payment (which validates amount against
+  // order total) — same path as the webhook. Prevents tampered amount from
+  // being accepted on the manual verify path.
+  const capturedPayment = await fetchRazorpayOrderPayments(paymentRow.razorpay_order_id);
+  const paymentId = capturedPayment?.paymentId ?? `pay_manual_${orderId.slice(0, 8)}`;
+  const amountPaise = capturedPayment?.amountPaise ?? paymentRow.amount_paise;
+  const rawEventId = `manual_verify_${paymentRow.razorpay_order_id}`;
 
-  // Gated update — if another path already flipped this to placed (webhook
-  // raced us), this no-ops and we never re-trigger order_events.
-  const { data: updated } = await admin
-    .from("orders")
-    .update({ status: "placed" })
-    .eq("id", orderId)
-    .eq("tenant_id", tenant.id)
-    .eq("status", "pending_payment")
-    .select("id");
+  // Use same atomic DB function as the webhook: validates amount, inserts payment,
+  // transitions order status, and fires order_events in one transaction.
+  const { data: captureResult } = await (admin as unknown as {
+    rpc: (fn: string, args: Record<string, unknown>) => Promise<{ data: string | null; error: unknown }>;
+  }).rpc("safe_capture_payment", {
+    p_order_id: orderId,
+    p_tenant_id: tenant.id,
+    p_razorpay_pid: paymentId,
+    p_razorpay_oid: paymentRow.razorpay_order_id,
+    p_amount_paise: amountPaise,
+    p_raw_event_id: rawEventId,
+  });
 
-  if (updated && updated.length > 0) {
-    type OrderEventInsert = {
-      tenant_id: string;
-      order_id: string;
-      event_type: string;
-      payload: Record<string, unknown>;
-    };
-    await (
-      admin.from("order_events") as unknown as {
-        insert: (row: OrderEventInsert) => Promise<unknown>;
-      }
-    ).insert({
-      tenant_id: tenant.id,
-      order_id: orderId,
-      event_type: "status_changed",
-      payload: { from: "pending_payment", to: "placed", source: "manual_verify" },
+  if (captureResult === "amount_mismatch") {
+    log.error("verifyPaymentNow: amount mismatch on manual verify path", null, {
+      order_id: orderId, razorpay_amount: amountPaise,
     });
-    await admin.from("order_status_logs").insert({
-      tenant_id: tenant.id,
-      order_id: orderId,
-      from_status: "pending_payment",
-      to_status: "placed",
-      actor_user_id: user.id,
-      note: "Manual verify (Razorpay fetch)",
-    });
+    return { status: "failed" };
   }
 
   const success: VerifyResult = { status: "paid" };
