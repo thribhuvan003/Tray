@@ -26,6 +26,7 @@ type LineRow = {
   name_snapshot: string;
   qty: number;
   diet_snapshot: "veg" | "nonveg" | "egg";
+  menu_item_id: string | null;
 };
 type MarqueeRow = { id: string; name: string; price_paise: number; diet: "veg" | "nonveg" | "egg" };
 
@@ -77,7 +78,7 @@ export default async function KitchenPage() {
   if (orderIds.length > 0) {
     const { data: lines } = await supabase
       .from("order_items")
-      .select("id, order_id, name_snapshot, qty, diet_snapshot")
+      .select("id, order_id, name_snapshot, qty, diet_snapshot, menu_item_id")
       .in("order_id", orderIds)
       .returns<LineRow[]>();
     filteredLines = lines ?? [];

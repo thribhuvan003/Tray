@@ -288,12 +288,16 @@ export async function markItemSoldOut(
   const admin = getAdminClient(ctx.tenant.id);
 
   // Verify the item belongs to this tenant and is live before updating.
-  const { data: item } = await admin
+  // itemId is always a UUID from board.tsx (Priority 3 fix). The eq("id") filter
+  // is safe because PostgreSQL will reject a non-UUID string before querying.
+  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(itemId);
+  const query = admin
     .from("menu_items")
     .select("id, name")
-    .eq("id", itemId)
     .eq("tenant_id", ctx.tenant.id)
-    .eq("status", "live")
+    .eq("status", "live");
+  // UUID path (normal): look up by PK. Name path (last-resort fallback): look up by name.
+  const { data: item } = await (isUuid ? query.eq("id", itemId) : query.eq("name", itemId))
     .maybeSingle<{ id: string; name: string }>();
 
   if (!item) return { ok: false, error: "Item not found" };

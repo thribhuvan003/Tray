@@ -33,6 +33,7 @@ type LineRow = {
   name_snapshot: string;
   qty: number;
   diet_snapshot: "veg" | "nonveg" | "egg";
+  menu_item_id: string | null;
 };
 
 export function KitchenBoard({
@@ -70,6 +71,10 @@ export function KitchenBoard({
 
   // Per-order pending state for primary actions (Start/Ready/Verify) — immediate visual feedback so staff doesn't hammer during rush + flaky WiFi (direct from real bhaiya testing).
   const [pendingActionId, setPendingActionId] = useState<string | null>(null);
+
+  // Priority 1: Track orders that came in via UPI-trust path (unverified payment)
+  // Set is populated from Realtime event payload; clears when order is collected/rejected.
+  const [unverifiedUpiOrders, setUnverifiedUpiOrders] = useState<Set<string>>(new Set());
 
   const bellOnRef = useRef(true);
   const seenOrderIdsRef = useRef<Set<string>>(new Set(initialOrders.map((o) => o.id)));
@@ -235,7 +240,7 @@ export function KitchenBoard({
       } else {
         const { data: l } = await sb
           .from("order_items")
-          .select("id, order_id, name_snapshot, qty, diet_snapshot")
+          .select("id, order_id, name_snapshot, qty, diet_snapshot, menu_item_id")
           .in("order_id", ids)
           .returns<LineRow[]>();
         setLines(l ?? []);
@@ -281,9 +286,17 @@ export function KitchenBoard({
           filter: `tenant_id=eq.${tenantId}`,
         },
         (payload) => {
+          // Priority 1: detect UPI-trust (unverified) orders and badge them in kitchen
+          const ev = payload.new as { order_id?: string; payload?: { upi_unverified?: boolean; to?: string } } | null;
+          if (ev?.payload?.upi_unverified && ev.order_id) {
+            setUnverifiedUpiOrders((prev) => new Set(prev).add(ev.order_id!));
+          }
+          // Clear unverified flag when order is collected/rejected/cancelled
+          if (ev?.order_id && ["collected","rejected","expired","cancelled_by_kitchen"].includes(ev?.payload?.to ?? "")) {
+            setUnverifiedUpiOrders((prev) => { const next = new Set(prev); next.delete(ev.order_id!); return next; });
+          }
+
           void refreshFn();
-          // If we receive events while marked offline/reconnecting, auto-promote to online.
-          // Use ref to avoid stale closure during network flaps (real campus WiFi reality).
           if (connStateRef.current !== "online") {
             setConnState("online");
             setReconnectAttempt(0);
@@ -985,6 +998,7 @@ export function KitchenBoard({
                 orders={groups.placed}
                 linesByOrder={linesByOrder}
                 pendingActionId={pendingActionId}
+                unverifiedUpiOrders={unverifiedUpiOrders}
                 onAction={async (id, action) => {
                   setPendingActionId(id);
                   try {
@@ -1225,36 +1239,44 @@ function KitchenKpiStrip({ orders, newOrderFlash }: { orders: OrderRow[]; newOrd
 function PrepTotalsStrip({ orders, lines, onSessionExpired }: { orders: OrderRow[]; lines: LineRow[]; onSessionExpired: () => void }) {
   // loading: set of item names currently being 86'd/un-86'd
   const [loading, setLoading] = useState<Set<string>>(new Set());
-  // recentlySoldOut: tracks items 86'd this session so we can show undo pill
-  // Map<name, true> — persists until undo is pressed or page refreshes
-  const [recentlySoldOut, setRecentlySoldOut] = useState<Map<string, true>>(new Map());
+  // recentlySoldOut: Map<name, menuItemId | null> — persists until undo or refresh
+  const [recentlySoldOut, setRecentlySoldOut] = useState<Map<string, string | null>>(new Map());
 
   const totals = useMemo(() => {
     const activeIds = new Set(
       orders.filter((o) => o.status === "placed" || o.status === "preparing").map((o) => o.id)
     );
-    const m = new Map<string, number>();
+    // Build name→{qty, menuItemId} — first seen menuItemId wins (all rows for same item share it)
+    const m = new Map<string, { qty: number; menuItemId: string | null }>();
     for (const l of lines) {
       if (!activeIds.has(l.order_id)) continue;
-      m.set(l.name_snapshot, (m.get(l.name_snapshot) ?? 0) + l.qty);
+      const existing = m.get(l.name_snapshot);
+      m.set(l.name_snapshot, {
+        qty: (existing?.qty ?? 0) + l.qty,
+        menuItemId: existing?.menuItemId ?? l.menu_item_id ?? null,
+      });
     }
     return Array.from(m.entries())
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 8);
+      .sort((a, b) => b[1].qty - a[1].qty)
+      .slice(0, 8)
+      .map(([name, { qty, menuItemId }]) => ({ name, qty, menuItemId }));
   }, [orders, lines]);
 
-  // Collect item names that were recently 86'd but have dropped to 0 active qty
-  // so we can render ghost "undo" pills for them.
-  const zeroedOut86Names = useMemo(() => {
-    const activeNames = new Set(totals.map(([n]) => n));
-    return Array.from(recentlySoldOut.keys()).filter((n) => !activeNames.has(n));
+  // Ghost "undo" pills: recently 86'd items that no longer appear in active queue
+  const zeroedOut86Items = useMemo(() => {
+    const activeNames = new Set(totals.map((t) => t.name));
+    return Array.from(recentlySoldOut.entries())
+      .filter(([name]) => !activeNames.has(name))
+      .map(([name, menuItemId]) => ({ name, menuItemId }));
   }, [totals, recentlySoldOut]);
 
-  const handle86 = async (name: string, inStock: boolean) => {
+  const handle86 = async (name: string, menuItemId: string | null, inStock: boolean) => {
     setLoading((prev) => new Set(prev).add(name));
     try {
       const { markItemSoldOut } = await import("@/app/(kitchen)/_actions");
-      const r = await markItemSoldOut(name, inStock);
+      // Priority 3 fix: pass UUID (menuItemId) not name. Falls back to name-based
+      // lookup inside the action if menuItemId is somehow null (shouldn't happen with real DB data).
+      const r = await markItemSoldOut(menuItemId ?? name, inStock);
       if (!r.ok) {
         const err = r.error ?? "Failed";
         if (err.toLowerCase().includes("not authorised") || err.toLowerCase().includes("unauthorized")) {
@@ -1264,7 +1286,7 @@ function PrepTotalsStrip({ orders, lines, onSessionExpired }: { orders: OrderRow
         }
       } else if (!inStock) {
         toast.success(`${name} marked as sold out. Student menu updated.`);
-        setRecentlySoldOut((prev) => new Map(prev).set(name, true));
+        setRecentlySoldOut((prev) => new Map(prev).set(name, menuItemId));
       } else {
         toast.success(`${name} back in stock.`);
         setRecentlySoldOut((prev) => {
@@ -1284,7 +1306,7 @@ function PrepTotalsStrip({ orders, lines, onSessionExpired }: { orders: OrderRow
     }
   };
 
-  if (totals.length === 0 && zeroedOut86Names.length === 0) return null;
+  if (totals.length === 0 && zeroedOut86Items.length === 0) return null;
 
   return (
     <section
@@ -1312,7 +1334,7 @@ function PrepTotalsStrip({ orders, lines, onSessionExpired }: { orders: OrderRow
         Prep totals · placed + preparing
       </div>
       <div className="flex flex-wrap" style={{ gap: "8px" }}>
-        {totals.map(([name, qty]) => {
+        {totals.map(({ name, qty, menuItemId }) => {
           const isLoading = loading.has(name);
           return (
             <div
@@ -1352,7 +1374,7 @@ function PrepTotalsStrip({ orders, lines, onSessionExpired }: { orders: OrderRow
               <button
                 type="button"
                 disabled={isLoading}
-                onClick={() => void handle86(name, false)}
+                onClick={() => void handle86(name, menuItemId, false)}
                 title={`Mark as sold out`}
                 aria-label={`Mark ${name} sold out`}
                 className="inline-flex items-center justify-center transition-colors"
@@ -1380,7 +1402,7 @@ function PrepTotalsStrip({ orders, lines, onSessionExpired }: { orders: OrderRow
         })}
 
         {/* Ghost "undo 86" pills for items recently sold out with 0 active qty */}
-        {zeroedOut86Names.map((name) => {
+        {zeroedOut86Items.map(({ name, menuItemId }) => {
           const isLoading = loading.has(name);
           return (
             <div
@@ -1422,7 +1444,7 @@ function PrepTotalsStrip({ orders, lines, onSessionExpired }: { orders: OrderRow
               <button
                 type="button"
                 disabled={isLoading}
-                onClick={() => void handle86(name, true)}
+                onClick={() => void handle86(name, menuItemId, true)}
                 title={`Mark ${name} back in stock`}
                 aria-label={`Mark ${name} back in stock`}
                 className="inline-flex items-center justify-center transition-colors"

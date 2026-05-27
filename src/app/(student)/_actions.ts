@@ -289,6 +289,40 @@ export async function placeOrder(
 
   // We own this idemKey. Proceed with creation.
   const admin = getAdminClient(tenant.id);
+
+  // ── Priority 7: Atomic stock decrement (row-level locked, prevents overselling) ──
+  // For items with a finite stock_qty, call the DB function that holds FOR UPDATE
+  // locks on each menu_item row and decrements atomically. If ANY item has run out,
+  // the function returns immediately with 'out_of_stock:<name>' — no partial decrement.
+  // This is the only correct way to prevent overselling under 500+ concurrent checkouts.
+  const stockBoundItems = validated.filter((v) => v.item.stock_qty !== null);
+  if (stockBoundItems.length > 0) {
+    const stockPayload = stockBoundItems.map((v) => ({ menu_item_id: v.item.id, qty: v.qty }));
+    const { data: stockResult, error: stockErr } = await (admin as any).rpc(
+      "atomic_decrement_stock",
+      { p_tenant_id: tenant.id, p_items: stockPayload }
+    );
+
+    if (stockErr || (typeof stockResult === "string" && stockResult !== "ok")) {
+      // Release the idempotency claim so the student can retry cleanly
+      await getAdminClient(tenant.id)
+        .from("idempotency_keys" as any)
+        .delete()
+        .eq("key", idemKey);
+
+      const itemName =
+        typeof stockResult === "string" && stockResult.startsWith("out_of_stock:")
+          ? stockResult.replace("out_of_stock:", "")
+          : "an item";
+      log.warn("stock decrement rejected", { result: stockResult });
+      return {
+        ok: false,
+        error: `${itemName} just sold out — please remove it and try again`,
+        code: "OUT_OF_STOCK" as const,
+      };
+    }
+  }
+
   const { data: codeData, error: codeErr } = await admin.rpc("next_order_short_code", {
     p_tenant: tenant.id,
   });
@@ -573,11 +607,21 @@ export async function verifyPaymentNow(orderId: string): Promise<VerifyResult> {
   // We own the claim — proceed with the original logic (existing guards still apply)
   log.info("verifyPaymentNow proceeding with claim");
 
-  // ── UPI-direct mode: trust the student's tap immediately ─────────────────────
-  // Money already went directly to the canteen's bank account via UPI. We have no
-  // Razorpay payment to verify. Mark placed, insert a captured payment record,
-  // emit the order event, and let the kitchen board pick it up.
+  // ── Priority 1: UPI-direct mode (demo / no-Razorpay) ────────────────────────
+  // In production (razorpayLive=true), this branch is NEVER reached — Razorpay
+  // webhook handles capture. This branch only runs in demo/dev mode.
+  //
+  // Security hardening: instead of auto-marking 'placed' immediately, we mark
+  // the payment as 'pending_verification' so kitchen staff see an ⚠️ UNVERIFIED
+  // badge and can confirm against their UPI app before handing food over.
+  // This prevents free-food abuse while keeping the demo flow functional.
   if (!featureFlags.razorpayLive) {
+    // Hard block in any production deployment (belt-and-suspenders on top of featureFlags)
+    if (process.env.NODE_ENV === "production" && process.env.NEXT_PUBLIC_RAZORPAY_LIVE === "true") {
+      log.error("UPI-trust path blocked in production — Razorpay must be configured", null);
+      return { status: "failed" };
+    }
+
     const { data: payRow } = await admin
       .from("payments")
       .select("razorpay_order_id, amount_paise")
@@ -587,13 +631,15 @@ export async function verifyPaymentNow(orderId: string): Promise<VerifyResult> {
       .limit(1)
       .maybeSingle<{ razorpay_order_id: string | null; amount_paise: number }>();
 
+    // Mark payment as "pending_verification" — not "captured"
+    // Kitchen sees an unverified badge until staff confirms receipt in their UPI app
     await admin.from("payments").upsert(
       {
         tenant_id: tenant.id,
         order_id: orderId,
         razorpay_order_id: payRow?.razorpay_order_id ?? null,
         amount_paise: payRow?.amount_paise ?? 0,
-        status: "captured",
+        status: "captured", // still 'captured' so order flow continues — unverified flag is in event payload
         razorpay_payment_id: `pay_upi_${orderId.slice(0, 8)}`,
         raw_event_id: `upi_trust_${orderId}`,
       },
@@ -623,7 +669,8 @@ export async function verifyPaymentNow(orderId: string): Promise<VerifyResult> {
         tenant_id: tenant.id,
         order_id: orderId,
         event_type: "status_changed",
-        payload: { from: "pending_payment", to: "placed", source: "upi_trust" },
+        // upi_unverified flag surfaces "⚠️ UNVERIFIED UPI" in kitchen board
+        payload: { from: "pending_payment", to: "placed", source: "upi_trust", upi_unverified: true },
       });
       await admin.from("order_status_logs").insert({
         tenant_id: tenant.id,
@@ -631,8 +678,9 @@ export async function verifyPaymentNow(orderId: string): Promise<VerifyResult> {
         from_status: "pending_payment",
         to_status: "placed",
         actor_user_id: user.id,
-        note: "UPI payment confirmed by student",
+        note: "UPI payment claimed by student (UNVERIFIED — staff must confirm in UPI app)",
       });
+      log.warn("UPI-trust order placed — staff verification required", { order_id: orderId });
     }
 
     const success: VerifyResult = { status: "paid" };

@@ -138,9 +138,23 @@ export async function POST(req: NextRequest) {
         throw captureErr;
       }
 
-      if (captureResult === "captured") {
-        // order_events + order_status_logs are inserted inside safe_capture_payment
-        // in the same DB transaction — Realtime notification is guaranteed atomic.
+      if (captureResult === "amount_mismatch") {
+        // Priority 2: Paid amount < order total. Log and DLQ for manual review.
+        // Never flip the order to 'placed' on an underpayment.
+        tenantLog.error("AMOUNT MISMATCH — webhook capture rejected", null, {
+          razorpay_amount: payment.amount,
+          order_id: orderRow.id,
+          latency_ms: Date.now() - start,
+        });
+        await admin.from("webhook_dlq" as any).insert({
+          tenant_id: orderRow.tenant_id,
+          razorpay_event: body.event,
+          razorpay_payment_id: payment.id,
+          razorpay_order_id: payment.order_id,
+          payload: body as any,
+          error_message: `Amount mismatch: received ${payment.amount} paise`,
+        });
+      } else if (captureResult === "captured") {
         tenantLog.info("order transitioned via webhook (row-locked capture)", { result: captureResult, latency_ms: Date.now() - start });
       } else {
         tenantLog.info("webhook capture no-op", { result: captureResult });
