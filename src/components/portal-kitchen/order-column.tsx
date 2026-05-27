@@ -51,6 +51,7 @@ export function OrderColumn({
   onAction,
   onReject,
   pendingActionId,
+  unverifiedUpiOrders,
 }: {
   title: string;
   subtitle: string;
@@ -60,6 +61,7 @@ export function OrderColumn({
   onAction: (id: string, action: "start" | "ready" | "verify") => void;
   onReject?: (id: string, reason: string) => Promise<void>;
   pendingActionId?: string | null;
+  unverifiedUpiOrders?: Set<string>;
 }) {
   const dot = COL_DOT[status];
   const cta = COL_CTA[status];
@@ -142,6 +144,7 @@ export function OrderColumn({
               onAction={(act) => onAction(o.id, act)}
               onReject={onReject ? (reason) => onReject(o.id, reason) : undefined}
               pending={pendingActionId === o.id}
+              isUnverifiedUpi={unverifiedUpiOrders?.has(o.id) ?? false}
             />
           ))
         )}
@@ -158,6 +161,7 @@ function TicketCard({
   onAction,
   onReject,
   pending = false,
+  isUnverifiedUpi = false,
 }: {
   order: Order;
   lines: Line[];
@@ -166,6 +170,7 @@ function TicketCard({
   onAction: (action: "start" | "ready" | "verify") => void;
   onReject?: (reason: string) => Promise<void>;
   pending?: boolean;
+  isUnverifiedUpi?: boolean;
 }) {
   const [elapsed, setElapsed] = useState(elapsedSeconds(order.placed_at));
   const [showReject, setShowReject] = useState(false);
@@ -239,18 +244,40 @@ function TicketCard({
     >
       {/* .tkt-r1 — order id + placed time */}
       <div className="flex justify-between items-center">
-        <span
-          className="tabular"
-          style={{
-            fontFamily: "var(--font-jetbrains), ui-monospace, Menlo, monospace",
-            fontSize: "13px",
-            fontWeight: 700,
-            color: "var(--kt-ink)",
-            letterSpacing: "0.02em",
-          }}
-        >
-          {order.short_code}
-        </span>
+        <div className="flex items-center gap-2">
+          <span
+            className="tabular"
+            style={{
+              fontFamily: "var(--font-jetbrains), ui-monospace, Menlo, monospace",
+              fontSize: "13px",
+              fontWeight: 700,
+              color: "var(--kt-ink)",
+              letterSpacing: "0.02em",
+            }}
+          >
+            {order.short_code}
+          </span>
+          {/* Priority 1: warn staff about unverified UPI payment */}
+          {isUnverifiedUpi && (
+            <span
+              title="Payment unverified — student tapped 'I've paid'. Check your UPI app before handing over food."
+              style={{
+                fontFamily: "var(--font-jetbrains), ui-monospace, Menlo, monospace",
+                fontSize: "9px",
+                fontWeight: 700,
+                letterSpacing: "0.06em",
+                textTransform: "uppercase",
+                color: "#d97706",
+                background: "rgba(245,158,11,0.12)",
+                border: "1px solid rgba(245,158,11,0.3)",
+                borderRadius: "3px",
+                padding: "1px 5px",
+              }}
+            >
+              ⚠ UPI UNVERIFIED
+            </span>
+          )}
+        </div>
         <span
           className="tabular"
           style={{
