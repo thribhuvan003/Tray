@@ -80,6 +80,34 @@ export function verifyWebhookSignature(rawBody: string, signature: string): bool
 }
 
 /**
+ * Fetches the payments associated with a Razorpay order.
+ * Returns the captured payment ID + amount so verifyPaymentNow can pass them
+ * to safe_capture_payment (which validates amount against order total).
+ * Returns null when not in live mode or on any error.
+ */
+export async function fetchRazorpayOrderPayments(
+  razorpayOrderId: string
+): Promise<{ paymentId: string; amountPaise: number } | null> {
+  if (!featureFlags.razorpayLive) return null;
+  try {
+    const auth = Buffer.from(`${env.RAZORPAY_KEY_ID}:${env.RAZORPAY_KEY_SECRET}`).toString("base64");
+    const res = await fetch(`https://api.razorpay.com/v1/orders/${razorpayOrderId}/payments`, {
+      method: "GET",
+      headers: { Authorization: `Basic ${auth}` },
+      cache: "no-store",
+      signal: AbortSignal.timeout(8000),
+    });
+    if (!res.ok) return null;
+    const data = await res.json() as { items?: Array<{ id: string; amount: number; status: string }> };
+    const captured = data.items?.find((p) => p.status === "captured");
+    if (!captured) return null;
+    return { paymentId: captured.id, amountPaise: captured.amount };
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Polls Razorpay's REST API for the current order status. Used by the
  * "I've paid" manual-verify path and the QStash reconcile cron when a webhook
  * was dropped. In simulator mode (no live keys) we treat sim orders as

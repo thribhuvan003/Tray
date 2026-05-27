@@ -62,10 +62,29 @@ function format(level: LogLevel, msg: string, ctx?: LogContext, err?: unknown) {
 
 function emit(level: LogLevel, msg: string, ctx?: LogContext, err?: unknown) {
   const line = format(level, msg, ctx, err);
-  // In production (Vercel/Supabase) this goes to their log drains.
-  // Later: replace with pino({ level: ... }).child(ctx) or Sentry.captureMessage + breadcrumbs.
   if (level === "error") {
     console.error(line);
+    // Report to Sentry — lazy import so the logger stays usable in edge/middleware
+    // and in tests where @sentry/nextjs is not loaded.
+    if (typeof process !== "undefined" && process.env.SENTRY_DSN) {
+      import("@sentry/nextjs").then(({ captureException, captureMessage, withScope }) => {
+        withScope((scope) => {
+          if (ctx) {
+            Object.entries(ctx).forEach(([k, v]) => {
+              if (v !== undefined) scope.setTag(k, String(v));
+            });
+          }
+          scope.setTag("log_msg", msg);
+          if (err instanceof Error) {
+            captureException(err);
+          } else {
+            captureMessage(msg, "error");
+          }
+        });
+      }).catch(() => {
+        // Sentry not available — silently continue
+      });
+    }
   } else if (level === "warn") {
     console.warn(line);
   } else {
