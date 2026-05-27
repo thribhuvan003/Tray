@@ -1,16 +1,14 @@
-import { LandingPage } from "@/components/landing/landing-page";
-import { resolveTenant } from "@/lib/tenant";
 import { headers } from "next/headers";
+import { resolveTenant, getTenantSlugFromHeaders } from "@/lib/tenant";
+import { LandingPage } from "@/components/landing/landing-page";
 
-export default async function Home({
-  searchParams,
-}: {
-  searchParams: Promise<Record<string, string | string[] | undefined>>;
-}) {
+export const dynamic = "force-dynamic";
+
+export default async function Page() {
   const h = await headers();
-  const slug = h.get("x-tenant-slug") ?? "aditya";
+  // Fall back to default tenant slug or null
+  const slug = getTenantSlugFromHeaders(h);
   const tenant = await resolveTenant(slug);
-  const sp = await searchParams;
-  const msg = typeof sp.msg === "string" ? sp.msg : undefined;
-  return <LandingPage tenant={tenant} msg={msg} />;
+
+  return <LandingPage tenant={tenant} />;
 }

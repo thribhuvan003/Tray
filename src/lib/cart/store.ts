@@ -15,12 +15,18 @@ type State = {
   tenantSlug: string;
   lines: CartLine[];
   note: string;
+  orderType: "takeaway" | "dine_in";
+  tableLabel: string;
+  isOpen: boolean;
+  setIsOpen: (open: boolean) => void;
   add: (item: Omit<CartLine, "qty">, qty?: number) => void;
   increment: (id: string) => void;
   decrement: (id: string) => void;
   remove: (id: string) => void;
   clear: () => void;
   setNote: (n: string) => void;
+  setOrderType: (t: "takeaway" | "dine_in") => void;
+  setTableLabel: (tbl: string) => void;
   ensureTenant: (s: string) => void;
 };
 
@@ -32,6 +38,10 @@ export const useCart = create<State>()(
       tenantSlug: "",
       lines: [],
       note: "",
+      orderType: "takeaway",
+      tableLabel: "",
+      isOpen: false,
+      setIsOpen: (isOpen) => set({ isOpen }),
       add: (item, qty = 1) =>
         set(({ lines }) => {
           const existing = lines.find((l) => l.menuItemId === item.menuItemId);
@@ -56,31 +66,58 @@ export const useCart = create<State>()(
         })),
       remove: (id) =>
         set(({ lines }) => ({ lines: lines.filter((l) => l.menuItemId !== id) })),
-      clear: () => set({ lines: [], note: "" }),
+      clear: () => set({ lines: [], note: "", orderType: "takeaway", tableLabel: "" }),
       setNote: (note) => set({ note }),
+      setOrderType: (orderType) => set({ orderType }),
+      setTableLabel: (tableLabel) => set({ tableLabel }),
       ensureTenant: (slug) => {
         if (get().tenantSlug === slug) return;
         if (typeof window === "undefined") return;
         const stash = readBucket();
-        // Save outgoing tenant's lines, load incoming tenant's.
+        // Save outgoing tenant's lines, note, and service preferences.
         if (get().tenantSlug) {
-          stash[get().tenantSlug] = { lines: get().lines, note: get().note };
+          stash[get().tenantSlug] = {
+            lines: get().lines,
+            note: get().note,
+            orderType: get().orderType,
+            tableLabel: get().tableLabel,
+          };
         }
         writeBucket(stash);
-        const incoming = stash[slug] ?? { lines: [], note: "" };
-        set({ tenantSlug: slug, lines: incoming.lines, note: incoming.note });
+        const incoming = stash[slug] ?? { lines: [], note: "", orderType: "takeaway" as const, tableLabel: "" };
+        set({
+          tenantSlug: slug,
+          lines: incoming.lines,
+          note: incoming.note,
+          orderType: incoming.orderType ?? "takeaway",
+          tableLabel: incoming.tableLabel ?? "",
+        });
       },
     }),
     {
       name: "tray:cart:active",
       storage: createJSONStorage(() => localStorage),
-      partialize: (s) => ({ tenantSlug: s.tenantSlug, lines: s.lines, note: s.note }),
+      partialize: (s) => ({
+        tenantSlug: s.tenantSlug,
+        lines: s.lines,
+        note: s.note,
+        orderType: s.orderType,
+        tableLabel: s.tableLabel,
+      }),
     }
   )
 );
 
 const BUCKET_KEY = "tray:cart:bucket";
-type Bucket = Record<string, { lines: CartLine[]; note: string }>;
+type Bucket = Record<
+  string,
+  {
+    lines: CartLine[];
+    note: string;
+    orderType?: "takeaway" | "dine_in";
+    tableLabel?: string;
+  }
+>;
 function readBucket(): Bucket {
   try {
     return JSON.parse(localStorage.getItem(BUCKET_KEY) ?? "{}") as Bucket;
