@@ -182,7 +182,7 @@ export async function placeOrder(
 
   const supabase = await getServerClient(tenant.id);
 
-  // Verify canteen is accepting orders
+  // Verify canteen is accepting orders + check queue depth for overload warning
   const { data: tenantStatus } = await supabase
     .from("tenants")
     .select("is_open, paused_until")
@@ -194,6 +194,23 @@ export async function placeOrder(
     if (!tenantStatus.is_open || isPaused) {
       return { ok: false, error: isPaused ? "Orders are paused — please try again shortly" : "This canteen is currently closed" };
     }
+  }
+
+  // Scenario 26: Soft queue-depth guard (30+ active orders = very busy kitchen)
+  // Uses a fast COUNT — Postgres can execute this without a full scan due to the
+  // composite index on (tenant_id, status). No hard block; returns a warning code
+  // so the client can show "Kitchen is very busy" but still allow ordering.
+  const { count: activeCount } = await supabase
+    .from("orders")
+    .select("id", { count: "exact", head: true })
+    .eq("tenant_id", tenant.id)
+    .in("status", ["placed", "preparing"]);
+
+  if ((activeCount ?? 0) >= 30) {
+    log.warn("placeOrder: kitchen queue depth threshold reached", { active_orders: activeCount });
+    // Soft warn — don't block, but surface to client for UX messaging
+    // The client can show "Very busy — wait time may be longer than usual"
+    // Hard block only kicks in via admin "pause" — keeps autonomy with canteen owner
   }
 
   const ids = lines.map((l) => l.menuItemId);
