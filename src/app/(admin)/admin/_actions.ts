@@ -632,3 +632,61 @@ export async function refundOrderAsAdmin(
   revalidatePath(`/c/${c.tenant.slug}/admin/orders`);
   return { ok: true };
 }
+
+// ── UPI VPA Validation ────────────────────────────────────────────────────────
+// Calls Razorpay's VPA validation endpoint to confirm the UPI address actually
+// exists at the bank level (not just regex-valid). Requires live keys.
+// Used by the admin settings UPI field before allowing Save.
+
+export async function validateUpiVpa(
+  vpa: string
+): Promise<{ valid: boolean; customerName?: string; error?: string }> {
+  // Auth guard: only canteen admins can call this
+  const { tenant } = await requireTenantContext();
+  void tenant; // tenant context validates session — we don't need the ID here
+
+  // 1. Regex guard (fast reject before network call)
+  const vpaRegex = /^[a-zA-Z0-9.\-_+]{2,256}@[a-zA-Z]{2,64}$/;
+  if (!vpaRegex.test(vpa.trim())) {
+    return { valid: false, error: "Invalid format — expected name@bankcode (e.g. 9876543210@paytm)" };
+  }
+
+  // 2. Razorpay VPA validation API (live keys required — test keys return inaccurate results)
+  if (!env.RAZORPAY_KEY_ID || !env.RAZORPAY_KEY_SECRET) {
+    // No live keys configured: skip API check, trust regex only
+    return { valid: true, customerName: undefined };
+  }
+
+  try {
+    const auth = Buffer.from(`${env.RAZORPAY_KEY_ID}:${env.RAZORPAY_KEY_SECRET}`).toString("base64");
+    const res = await fetch("https://api.razorpay.com/v1/payments/validate/vpa", {
+      method: "POST",
+      headers: {
+        "Authorization": `Basic ${auth}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ vpa: vpa.trim() }),
+      signal: AbortSignal.timeout(8000), // 8s timeout — Razorpay can be slow on cold paths
+    });
+
+    if (!res.ok) {
+      // Razorpay returns 4xx for invalid VPAs in some cases
+      const body = await res.json().catch(() => ({}));
+      const description = (body as any)?.error?.description ?? `HTTP ${res.status}`;
+      return { valid: false, error: description };
+    }
+
+    const data = await res.json() as { vpa: string; success: boolean; customer_name?: string };
+    if (!data.success) {
+      return { valid: false, error: "UPI address not found — check the ID and try again" };
+    }
+    return { valid: true, customerName: data.customer_name };
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : "Unknown error";
+    // Timeout or network error — fail open with a warning (don't block the admin)
+    if (msg.includes("timed out") || msg.includes("AbortError")) {
+      return { valid: true, error: "Razorpay took too long to respond — VPA accepted without full verification" };
+    }
+    return { valid: false, error: "Could not reach Razorpay to validate VPA — check your connection" };
+  }
+}

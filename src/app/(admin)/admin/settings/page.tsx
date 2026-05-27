@@ -2,6 +2,7 @@ import { getAdminClient } from "@/lib/supabase/admin";
 import { updateCanteenHours, pauseCanteen, updateCanteenSettings } from "../_actions";
 import type { Tenant } from "@/lib/db/types";
 import { requireTenantContext } from "@/lib/tenant";
+import { UpiVpaField } from "@/components/portal-admin/upi-vpa-field";
 
 export const dynamic = "force-dynamic";
 
@@ -87,16 +88,17 @@ export default async function SettingsPage() {
     "use server";
     const guestOrdersEnabled = fd.get("guest_orders_enabled") === "on";
     const rawVpa = (fd.get("upi_vpa") as string | null)?.trim() || null;
+    const vpaVerified = fd.get("upi_vpa_verified") === "1";
 
-    // Scenario 1/2: Validate UPI VPA format before saving so money never goes
-    // to an invalid address. Format: localpart@provider (e.g. name@okaxis, 9876543210@paytm)
-    // Real-world format from NPCI spec: alphanumeric + dots/hyphens @ provider
+    // Guard: only save a VPA that has been verified via Razorpay API (client component sets upi_vpa_verified=1).
+    // Regex fallback catches any bypass attempt.
     if (rawVpa) {
+      if (!vpaVerified) {
+        throw new Error("Please verify your UPI ID before saving.");
+      }
       const vpaRegex = /^[a-zA-Z0-9.\-_+]{2,256}@[a-zA-Z]{2,64}$/;
       if (!vpaRegex.test(rawVpa)) {
-        // Server actions can't return errors to the form directly without useActionState,
-        // but we guard against obviously malformed VPAs. The input has pattern validation on the client too.
-        throw new Error(`Invalid UPI VPA format: "${rawVpa}". Expected format: name@bankcode (e.g. 9876543210@paytm)`);
+        throw new Error(`Invalid UPI VPA format: "${rawVpa}".`);
       }
     }
     await updateCanteenSettings({ guestOrdersEnabled, upiVpa: rawVpa });
@@ -263,30 +265,8 @@ export default async function SettingsPage() {
               </label>
             </div>
 
-            {/* UPI ID */}
-            <div className="border-t border-graphite-200/10 pt-4 flex flex-col gap-1.5">
-              <label
-                htmlFor="upi_vpa"
-                className="text-[11px] font-mono uppercase tracking-[0.1em] text-graphite-400"
-              >
-                UPI ID <span className="normal-case tracking-normal font-sans text-graphite-500">(your payment address)</span>
-              </label>
-              <input
-                id="upi_vpa"
-                type="text"
-                name="upi_vpa"
-                defaultValue={row.upi_vpa ?? ""}
-                placeholder="e.g. canteen@okaxis or 9876543210@ybl"
-                pattern="^[a-zA-Z0-9.\-_+]{2,256}@[a-zA-Z]{2,64}$"
-                title="Enter a valid UPI VPA: localpart@provider (e.g. 9876543210@paytm)"
-                spellCheck={false}
-                autoComplete="off"
-                className="h-9 px-3 rounded-md border border-graphite-200/15 bg-graphite-700/60 text-[13px] text-graphite-200 placeholder:text-graphite-500 focus:outline-none focus:border-lime/60 transition-colors invalid:border-rose-500/60"
-              />
-              <p className="text-[11px] text-graphite-500">
-                Your UPI ID (e.g. yourname@okaxis). Students pay <strong className="text-graphite-300">directly</strong> to this — money lands in your bank, not ours. Double-check it before saving. Wrong VPA = wrong bank.
-              </p>
-            </div>
+            {/* UPI ID — verify with Razorpay before Save is enabled */}
+            <UpiVpaField currentVpa={row.upi_vpa} />
 
             <div>
               <button
