@@ -321,15 +321,25 @@ export function LandingMotion() {
             }
             const stackLede = stackSection.querySelector<HTMLElement>("p");
             if (stackLede) gsap.from(stackLede, { scrollTrigger: { trigger: stackSection, start: "top 78%" }, opacity: 0, y: 16, duration: 0.85, ease: "power3.out", delay: 0.1 });
-            const techCards = stackSection.querySelectorAll<HTMLElement>(".grid.grid-cols-2 > *, .grid.grid-cols-4 > *");
-            if (techCards.length) {
-              gsap.from(techCards, {
-                scrollTrigger: { trigger: stackSection, start: "top 80%" },
-                scale: 0.55, opacity: 0,
-                stagger: { amount: 0.65, from: "center" },
-                duration: 0.95, ease: "back.out(2)",
-              });
-            }
+            // Per-card scroll reveal: each card triggers individually as user scrolls.
+            // "Boring stack, on purpose" — the cards appear one-by-one, not all-at-once.
+            const techCards = stackSection.querySelectorAll<HTMLElement>("[data-stack-card]");
+            techCards.forEach((card) => {
+              gsap.fromTo(
+                card,
+                { y: 28, opacity: 0, scale: 0.93 },
+                {
+                  y: 0, opacity: 1, scale: 1,
+                  duration: 0.52,
+                  ease: "back.out(1.6)",
+                  scrollTrigger: {
+                    trigger: card,
+                    start: "top 90%",
+                    toggleActions: "play none none reverse",
+                  },
+                }
+              );
+            });
           }
 
           // ═══════════════════════════════════════════════════════════════

@@ -380,13 +380,11 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
         </SectionReveal>
 
         {/* ── STACK ─────────────────────────────────────────────────── */}
-        <SectionReveal id="stack" as="div" className="px-5 py-24 sm:px-8 lg:px-10 lg:min-h-screen lg:flex lg:flex-col lg:justify-center lg:py-24">
+        <SectionReveal id="stack" as="div" className="px-5 py-20 sm:px-8 sm:py-28 lg:px-10 lg:min-h-screen lg:flex lg:flex-col lg:justify-center lg:py-24">
           <div className="mx-auto max-w-7xl">
-            <div className="mb-4 flex flex-wrap items-center gap-3">
-              <p className="text-xs uppercase tracking-[0.3em]" style={{ fontFamily: "var(--font-dm-mono)", color: "var(--tray-muted)" }}>
-                05 / Built with
-              </p>
-            </div>
+            <p className="mb-6 text-[0.72rem] font-bold uppercase tracking-[0.28em]" style={{ fontFamily: "var(--font-dm-mono)", color: "var(--tray-muted)" }}>
+              05 / Built with
+            </p>
             <h2
               className="leading-[0.88] tracking-[-0.04em]"
               style={{ fontFamily: "var(--font-space-grotesk)", fontWeight: 700, fontSize: "clamp(2.8rem,6.5vw,6.5rem)" }}
@@ -400,7 +398,8 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
             >
               Everything runs on a free tier until you have real users. No exotic infra. No lock-in surprises.
             </p>
-            <div className="mt-10 grid grid-cols-2 gap-3 sm:grid-cols-4">
+            {/* Cards — data-stack-card lets GSAP trigger each one individually on scroll */}
+            <div className="mt-12 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
               {([
                 ["Next.js 15",        "Framework · App Router"],
                 ["TypeScript",        "Language · strict mode"],
@@ -411,14 +410,25 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
                 ["Vercel Edge",       "Hosting · CDN"],
                 ["Supabase Realtime", "Live · WebSocket"],
               ] as const).map(([name, role]) => (
-                <HoverCard
+                <div
                   key={name}
-                  className="rounded-[1.25rem] border p-4"
-                  style={{ border: "1px solid var(--tray-border)", background: "rgba(255,255,255,0.52)" }}
+                  data-stack-card=""
+                  className="group rounded-[1.5rem] border p-5 sm:p-6 flex flex-col gap-2 transition-all duration-300 hover:scale-[1.03] hover:shadow-[0_12px_36px_rgba(26,26,25,0.08)] hover:-translate-y-1 cursor-default"
+                  style={{ border: "1px solid var(--tray-border)", background: "rgba(255,255,255,0.62)", minHeight: "104px" }}
                 >
-                  <p className="tracking-tight" style={{ fontFamily: "var(--font-space-grotesk)", fontWeight: 600 }}>{name}</p>
-                  <p className="mt-1.5 text-[0.72rem] uppercase tracking-[0.14em]" style={{ fontFamily: "var(--font-jetbrains)", color: "var(--tray-muted)" }}>{role}</p>
-                </HoverCard>
+                  <p
+                    className="leading-tight tracking-tight"
+                    style={{ fontFamily: "var(--font-space-grotesk)", fontWeight: 700, fontSize: "clamp(0.88rem,1.4vw,1rem)", color: "var(--tray-ink)" }}
+                  >
+                    {name}
+                  </p>
+                  <p
+                    className="uppercase leading-tight"
+                    style={{ fontFamily: "var(--font-jetbrains)", fontSize: "0.62rem", letterSpacing: "0.14em", color: "var(--tray-muted)" }}
+                  >
+                    {role}
+                  </p>
+                </div>
               ))}
             </div>
           </div>
@@ -449,6 +459,31 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
               <span className="flex items-center gap-2.5 text-[0.72rem] uppercase tracking-[0.22em]" style={{ fontFamily: "var(--font-dm-mono)", color: "var(--tray-muted)" }}>
                 <span className="h-1.5 w-1.5 rounded-full animate-pulse" style={{ background: "var(--tray-green, #2A6E3A)" }} />
                 Every portal · no refresh
+              </span>
+            </div>
+
+            {/* ── Super Admin Coming Soon strip ──────────────────── */}
+            <div
+              className="mt-4 flex items-center justify-between gap-4 rounded-[1.5rem] px-6 py-4 sm:px-8 sm:py-5"
+              style={{ background: "var(--tray-ink)", color: "var(--tray-cream)" }}
+            >
+              <div className="flex items-center gap-3 min-w-0">
+                <span
+                  className="shrink-0 h-1.5 w-1.5 rounded-full"
+                  style={{ background: "var(--tray-clay)", animation: "live-pulse 2.4s ease-out infinite" }}
+                />
+                <span
+                  className="text-[0.72rem] uppercase tracking-[0.2em] truncate"
+                  style={{ fontFamily: "var(--font-dm-mono)", opacity: 0.85 }}
+                >
+                  Master Control Centre · Multi-Canteen Director Console
+                </span>
+              </div>
+              <span
+                className="shrink-0 rounded-full border px-3 py-1 text-[0.62rem] uppercase tracking-[0.16em] font-bold"
+                style={{ borderColor: "var(--tray-clay)", color: "var(--tray-clay)", fontFamily: "var(--font-dm-mono)" }}
+              >
+                Coming Soon
               </span>
             </div>
           </div>
