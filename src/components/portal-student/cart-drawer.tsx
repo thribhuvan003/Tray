@@ -10,6 +10,7 @@ import { useCart, cartTotalPaise, cartItemCount } from "@/lib/cart/store";
 import { formatRupees, cn } from "@/lib/utils";
 import { placeOrder } from "@/app/(student)/_actions";
 import type { OrderType } from "@/lib/db/types";
+import { pickupEtaCartSubline } from "@/lib/student/pickup-eta";
 
 // Tiny inline matchMedia hook — kept local to avoid spawning a /lib/hooks
 // dir just for one consumer. Returns false on the server / first paint so
@@ -96,7 +97,7 @@ export function CartDrawer({ tenantSlug, tenantName }: { tenantSlug: string; ten
         <div>
           <div className="font-display text-[22px] font-medium tracking-tight">Your tray.</div>
           <div className="text-[11px] font-mono uppercase tracking-wider text-[color:var(--color-ink)]/55">
-            Paying to: {tenantName} · ready in ~7 min
+            Paying to: {tenantName} · {pickupEtaCartSubline()}
           </div>
         </div>
         {!isDesktop && (

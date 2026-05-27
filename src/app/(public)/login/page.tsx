@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { headers } from "next/headers";
 import { LoginForm } from "@/components/portal-student/login-form";
+import { safeNext } from "@/lib/auth/safe-redirect";
 
 export const metadata = { title: "Sign in — Tray" };
 
@@ -13,7 +14,7 @@ export default async function LoginPage({
   const h = await headers();
   // ?tenant= explicit override, then x-tenant-slug from middleware (set when /c/[slug]/login rewrites here)
   const slug = sp.tenant ?? h.get("x-tenant-slug") ?? "";
-  const next = sp.next ?? (slug ? `/c/${slug}/menu` : "/");
+  const next = safeNext(sp.next, slug ? `/c/${slug}/menu` : "/");
   return (
     <div
       data-portal="student"
@@ -35,6 +36,17 @@ export default async function LoginPage({
           {sp.error && (
             <div className="mt-5 rounded-xl border border-rose-500/30 bg-rose-500/5 px-4 py-3 text-[13px] text-rose-600">
               {sp.error}
+              {(sp.error.toLowerCase().includes("no account") ||
+                sp.error.toLowerCase().includes("sign up")) && (
+                <span className="ml-1">
+                  <Link
+                    href={`/signup?next=${encodeURIComponent(next)}`}
+                    className="underline font-medium hover:text-rose-700"
+                  >
+                    Create account →
+                  </Link>
+                </span>
+              )}
             </div>
           )}
           <div className="mt-7">

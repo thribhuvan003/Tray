@@ -4,11 +4,18 @@ import { getServerClient } from "@/lib/supabase/server";
 import { MenuBoard } from "@/components/portal-student/menu-board";
 import { ClosedBanner } from "@/components/portal-student/closed-banner";
 import { MenuLiveSync } from "@/components/portal-student/menu-live-sync";
+import { NoUpiNotice } from "@/components/portal-student/no-upi-notice";
 import { notFound } from "next/navigation";
 
 export const revalidate = 15;
 
-export default async function MenuPage() {
+export default async function MenuPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const sp = await searchParams;
+  const msg = typeof sp.msg === "string" ? sp.msg : undefined;
   const h = await headers();
   const slug = h.get("x-tenant-slug") ?? "";
   const tenant = await resolveTenant(slug);
@@ -40,6 +47,7 @@ export default async function MenuPage() {
 
   return (
     <>
+      {msg === "no-upi" && <NoUpiNotice />}
       <MenuLiveSync tenantId={tenant.id} />
       <ClosedBanner
         tenantName={tenant.name}
