@@ -1,806 +1,518 @@
 "use client";
 
 import { useEffect } from "react";
-import { motionTokens } from "@/lib/motionTokens";
+import { triggerDemoEntry } from "@/components/landing/demo-entry-transition";
 
-const HERO_EASE = motionTokens.ease.hero;
-const REVEAL_EASE = motionTokens.ease.reveal;
-const MAGNET_MAX_PX = 8;
-
-type GsapAPI = (typeof import("gsap"))["gsap"];
-
-const LANDING_HASH_IDS = new Set(["system", "sync", "pull", "where", "flow", "stack"]);
-const SCROLL_ANCHOR_MIN_PX = 96;
-const SECTION_REVEAL_SNAP_SELECTOR = [
-  ".tl-section-num",
-  ".tl-section-head",
-  ".tl-section-head h2",
-  ".tl-section-head .tl-side",
-  ".tl-portal-phase-strip",
-  ".tl-portal",
-  ".tl-sync-copy",
-  ".tl-diagram",
-  ".tl-sync-grid > *",
-  ".tl-diagram .tl-node",
-  ".tl-diagram .tl-arr",
-  ".tl-line-leave-grid > *",
-  ".tl-line-chip",
-  ".tl-pull-quote p",
-  ".tl-cite",
-  ".tl-flow-step",
-  ".tl-stack-card",
-  ".tl-feat-tag",
-  ".tl-closing h2",
-  ".tl-closing p",
-  ".tl-closing .tl-btn",
-].join(",");
-
-function getScrollAnchorOffset(root: HTMLElement): number {
-  const nav = root.querySelector<HTMLElement>(".tl-nav");
-  const measured = nav?.getBoundingClientRect().height ?? SCROLL_ANCHOR_MIN_PX;
-  return Math.max(SCROLL_ANCHOR_MIN_PX, Math.round(measured + 6));
-}
-
-function scrollLandingSectionTo(
-  target: HTMLElement,
-  root: HTMLElement,
-  behavior: ScrollBehavior = "smooth",
-) {
-  const offset = getScrollAnchorOffset(root);
-  const top = target.getBoundingClientRect().top + window.scrollY - offset;
-  window.scrollTo({ top: Math.max(0, top), behavior });
-}
-
-function snapSectionRevealState(gsap: GsapAPI, section: HTMLElement) {
-  gsap.killTweensOf(section);
-  const ring = section.querySelector(".tl-arrival-ring");
-  if (ring) gsap.killTweensOf(ring);
-  const nodes = section.querySelectorAll<HTMLElement>(SECTION_REVEAL_SNAP_SELECTOR);
-  if (nodes.length) gsap.killTweensOf(nodes);
-  innerArrivalTargets(section).forEach((el) => gsap.killTweensOf(el));
-  gsap.set(section, { clearProps: "transform,scale" });
-  if (nodes.length) {
-    gsap.set(nodes, {
-      opacity: 1,
-      y: 0,
-      x: 0,
-      scale: 1,
-      rotateX: 0,
-      skewX: 0,
-      clipPath: "inset(0% 0% 0% 0%)",
-      filter: "none",
-      clearProps: "transform",
-    });
-  }
-}
-
-function withRevealCleanup(
-  gsap: GsapAPI,
-  targets: gsap.TweenTarget,
-  vars: gsap.TweenVars,
-) {
-  const userComplete = vars.onComplete;
-  return gsap.to(targets, {
-    ...vars,
-    onComplete: function (this: gsap.core.Tween) {
-      gsap.set(targets, { clearProps: "transform,clipPath,filter" });
-      userComplete?.call(this);
-    },
-  });
-}
-
-function landingHashTarget(root: HTMLElement, rawHref: string | null): HTMLElement | null {
-  if (!rawHref || !rawHref.startsWith("#") || rawHref === "#" || rawHref === "#main") return null;
-  const id = rawHref.slice(1);
-  if (!LANDING_HASH_IDS.has(id)) return null;
-  const el = document.getElementById(id);
-  if (!(el instanceof HTMLElement) || !root.contains(el)) return null;
-  return el;
-}
-
-function ensureArrivalRing(section: HTMLElement): HTMLElement {
-  const existing = section.querySelector(":scope > .tl-arrival-ring");
-  if (existing instanceof HTMLElement) return existing;
-  const ring = document.createElement("div");
-  ring.className = "tl-arrival-ring";
-  ring.setAttribute("aria-hidden", "true");
-  section.prepend(ring);
-  return ring;
-}
-
-function innerArrivalTargets(section: HTMLElement): HTMLElement[] {
-  const id = section.id;
-  let sel = "";
-  if (id === "system") sel = ":scope .tl-portal";
-  else if (id === "flow") sel = ":scope .tl-flow-step";
-  else if (id === "stack") sel = ":scope .tl-stack-card";
-  if (!sel) return [];
-  return Array.from(section.querySelectorAll<HTMLElement>(sel));
-}
-
-function playLandingArrival(gsap: GsapAPI, section: HTMLElement, mode: "full" | "soft") {
-  snapSectionRevealState(gsap, section);
-  const ring = ensureArrivalRing(section);
-  gsap.killTweensOf(ring);
-  const inner = mode === "full" ? innerArrivalTargets(section) : [];
-  inner.forEach((el) => gsap.killTweensOf(el));
-  const ringIn = mode === "soft" ? 0.1 : 0.14;
-  const ringOut = mode === "soft" ? 0.22 : 0.3;
-  const tl = gsap.timeline({
-    defaults: { ease: "power2.out" },
-    onComplete: () => {
-      gsap.set(ring, { clearProps: "transform" });
-      if (inner.length) gsap.set(inner, { clearProps: "transform" });
-    },
-  });
-  tl.fromTo(ring, { opacity: 0, scale: 0.992 }, { opacity: 1, scale: 1, duration: ringIn }, 0).to(
-    ring,
-    { opacity: 0, scale: 1, duration: ringOut, ease: "power2.inOut" },
-    ringIn * 0.35,
-  );
-  if (inner.length) {
-    tl.fromTo(
-      inner,
-      { y: 8 },
-      { y: 0, duration: 0.22, stagger: 0.04, ease: "power2.out", overwrite: "auto" },
-      0.04,
-    );
-  }
-}
-
-function reducedMotionArrivalFlash(target: HTMLElement) {
-  const anim = target.animate([{ opacity: 0.92 }, { opacity: 1 }], { duration: 150, easing: "ease-out" });
-  anim.onfinish = () => anim.cancel();
-}
-
-function installLandingHashNav(
-  root: HTMLElement,
-  gsap: GsapAPI | null,
-  opts: { reduced: boolean; isCancelled: () => boolean },
-): () => void {
-  let settleCtl: AbortController | null = null;
-  let settleTimer: number | undefined;
-  const cancelPendingSettle = () => {
-    settleCtl?.abort();
-    settleCtl = null;
-    if (settleTimer !== undefined) {
-      window.clearTimeout(settleTimer);
-      settleTimer = undefined;
-    }
-  };
-  const scheduleAfterScroll = (target: HTMLElement, mode: "full" | "soft") => {
-    cancelPendingSettle();
-    settleCtl = new AbortController();
-    const { signal } = settleCtl;
-    let done = false;
-    const run = () => {
-      if (done || signal.aborted || opts.isCancelled()) return;
-      done = true;
-      cancelPendingSettle();
-      if (opts.reduced) reducedMotionArrivalFlash(target);
-      else if (gsap) playLandingArrival(gsap, target, mode);
-    };
-    window.addEventListener("scrollend", run, { signal, once: true });
-    settleTimer = window.setTimeout(run, 640);
-  };
-  const onClickCapture = (e: MouseEvent) => {
-    if (opts.isCancelled()) return;
-    const a = (e.target as Element | null)?.closest?.('a[href^="#"]');
-    if (!a || !(a instanceof HTMLAnchorElement)) return;
-    if (e.defaultPrevented) return;
-    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
-    if (!root.contains(a)) return;
-    const href = a.getAttribute("href");
-    const target = landingHashTarget(root, href);
-    if (!target) return;
-    e.preventDefault();
-    window.history.pushState(null, "", href);
-    if (gsap) snapSectionRevealState(gsap, target);
-    scrollLandingSectionTo(target, root, "smooth");
-    scheduleAfterScroll(target, "full");
-  };
-  root.addEventListener("click", onClickCapture, { capture: true });
-  return () => {
-    cancelPendingSettle();
-    root.removeEventListener("click", onClickCapture, { capture: true });
-  };
-}
-
-function scheduleInitialHashArrival(
-  root: HTMLElement,
-  gsap: GsapAPI | null,
-  opts: { reduced: boolean; isCancelled: () => boolean },
-): () => void {
-  const hash = window.location.hash;
-  if (!hash) return () => {};
-  const target = landingHashTarget(root, hash);
-  if (!target) return () => {};
-  if (gsap) snapSectionRevealState(gsap, target);
-  scrollLandingSectionTo(target, root, "auto");
-  let played = false;
-  const tryPlay = () => {
-    if (opts.isCancelled() || played) return;
-    const r = target.getBoundingClientRect();
-    const visible = r.top < window.innerHeight - 48 && r.bottom > 96;
-    if (!visible) return;
-    played = true;
-    if (opts.reduced) reducedMotionArrivalFlash(target);
-    else if (gsap) playLandingArrival(gsap, target, "soft");
-  };
-  const onScrollEnd = () => tryPlay();
-  window.addEventListener("scrollend", onScrollEnd, { once: true });
-  const tEarly = window.setTimeout(tryPlay, 220);
-  const tLate = window.setTimeout(() => {
-    tryPlay();
-    window.removeEventListener("scrollend", onScrollEnd);
-  }, 900);
-  return () => {
-    window.removeEventListener("scrollend", onScrollEnd);
-    window.clearTimeout(tEarly);
-    window.clearTimeout(tLate);
-  };
-}
-
+/**
+ * LandingMotion — GSAP + Lenis scroll engine for the Tray landing page.
+ *
+ * CONFLICT RULES (strictly enforced):
+ *  - PiranhaPortalsSection owns: [data-portal-card] entrance, [data-portals-heading] word reveal.
+ *    → landing-motion ONLY adds mouse-tilt (event listeners, no scroll conflict).
+ *  - TrustSection owns: motion.div card entrance (Framer whileInView opacity/y/scale).
+ *    → landing-motion targets the plain <h2>, <p>, and <svg> icons only.
+ *  - HoverCard (used in Stack) owns: motion.div whileHover 3D tilt.
+ *    → landing-motion adds entrance animation only (one-shot from, finishes before hover).
+ *  - CampusModelSection: canteen cards are motion.div animated by Framer.
+ *    → landing-motion targets the plain outer .grid wrapper only.
+ *  - SyncPipelineVisual: Framer Motion internally.
+ *    → landing-motion targets the section h2 and p only.
+ *  - RevealItem / SectionReveal: animate the motion.div wrapper — children (h2, p) are plain.
+ *    → landing-motion animating h2/p directly is safe (no overlap with Framer).
+ */
 export function LandingMotion() {
   useEffect(() => {
-    const html = document.documentElement;
-    const prevScrollBehavior = html.style.scrollBehavior;
-    const prevScrollPaddingTop = html.style.scrollPaddingTop;
-    html.style.scrollBehavior = "smooth";
-    const root = document.querySelector<HTMLElement>(".tray-landing");
-    if (!root) {
-      return () => {
-        html.style.scrollBehavior = prevScrollBehavior;
-        html.style.scrollPaddingTop = prevScrollPaddingTop;
-      };
-    }
-    html.style.scrollPaddingTop = `${getScrollAnchorOffset(root)}px`;
-    const nav = root.querySelector<HTMLElement>(".tl-nav");
-    const navLinksWrap = root.querySelector<HTMLElement>(".tl-nav-links");
-    const navPill = root.querySelector<HTMLElement>(".tl-nav-pill");
-    const progressBar = root.querySelector<HTMLElement>(".tl-scroll-progress");
-    const ambientShift = root.querySelector<HTMLElement>(".tl-ambient-shift");
-    const portalCleanups: Array<() => void> = [];
-    const btnCleanups: Array<() => void> = [];
-    const magneticCleanups: Array<() => void> = [];
-    let ctxRevert: (() => void) | undefined;
-    let readyTimer: ReturnType<typeof setTimeout> | undefined;
-    let hashNavCleanup: (() => void) | undefined;
-    let initialHashCleanup: (() => void) | undefined;
-    let cancelled = false;
-
-    const markReady = () => {
-      root.classList.remove("tl-anim-init");
-      root.classList.add("tl-motion-ready");
-      if (readyTimer) { clearTimeout(readyTimer); readyTimer = undefined; }
-    };
-
-    const cleanup = () => {
-      html.style.scrollBehavior = prevScrollBehavior;
-      html.style.scrollPaddingTop = prevScrollPaddingTop;
-      if (readyTimer) clearTimeout(readyTimer);
-      hashNavCleanup?.();
-      hashNavCleanup = undefined;
-      initialHashCleanup?.();
-      initialHashCleanup = undefined;
-      ctxRevert?.();
-      portalCleanups.forEach((fn) => fn());
-      btnCleanups.forEach((fn) => fn());
-      magneticCleanups.forEach((fn) => fn());
-      nav?.classList.remove("is-scrolled", "is-scrolled-deep");
-      navLinksWrap?.classList.remove("has-pill");
-      root.querySelectorAll<HTMLElement>(".tl-portal").forEach((p) => {
-        p.classList.remove("is-lift");
-      });
-      markReady();
-    };
-
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
     if (reduced) {
-      markReady();
-      (async () => {
-        try {
-          const [{ gsap }, { ScrollTrigger }] = await Promise.all([
-            import("gsap"),
-            import("gsap/ScrollTrigger"),
-          ]);
-          if (cancelled) return;
-          gsap.registerPlugin(ScrollTrigger);
-          ScrollTrigger.config({ limitCallbacks: true, ignoreMobileResize: true });
-          const prmCtx = gsap.context(() => {
-            if (progressBar) {
-              gsap.set(progressBar, { scaleX: 0, transformOrigin: "0% 50%" });
-              ScrollTrigger.create({
-                start: 0, end: "max",
-                onUpdate: (self) => {
-                  gsap.to(progressBar, { scaleX: self.progress, duration: 0.15, ease: "none", overwrite: true });
-                },
-              });
-            }
-            if (nav) {
-              ScrollTrigger.create({
-                start: "top -48",
-                onEnter: () => nav.classList.add("is-scrolled"),
-                onLeaveBack: () => { nav.classList.remove("is-scrolled", "is-scrolled-deep"); },
-              });
-              ScrollTrigger.create({
-                start: "top -140",
-                onEnter: () => nav.classList.add("is-scrolled-deep"),
-                onLeaveBack: () => nav.classList.remove("is-scrolled-deep"),
-              });
-            }
-            const navLinks = root.querySelectorAll<HTMLAnchorElement>('.tl-nav-links a[href^="#"]');
-            const spySections = ["#system", "#flow"]
-              .map((id) => root.querySelector(id))
-              .filter(Boolean) as HTMLElement[];
-            const moveNavPill = (activeLink: HTMLAnchorElement | null) => {
-              if (!navPill || !navLinksWrap || !activeLink) return;
-              const wrapRect = navLinksWrap.getBoundingClientRect();
-              const linkRect = activeLink.getBoundingClientRect();
-              const left = linkRect.left - wrapRect.left;
-              navLinksWrap.classList.add("has-pill");
-              gsap.set(navPill, { width: linkRect.width });
-              gsap.to(navPill, { x: left, opacity: 1, duration: 0.38, ease: "power3.out", overwrite: true });
-            };
-            if (navLinks.length && spySections.length) {
-              spySections.forEach((section) => {
-                ScrollTrigger.create({
-                  trigger: section, start: "top 55%", end: "bottom 45%",
-                  onToggle: (self) => {
-                    const id = `#${(self.trigger as HTMLElement).id}`;
-                    let active: HTMLAnchorElement | null = null;
-                    navLinks.forEach((link) => {
-                      const on = link.getAttribute("href") === id && self.isActive;
-                      link.classList.toggle("is-active", on);
-                      if (on) active = link;
-                    });
-                    if (self.isActive && active) moveNavPill(active);
-                  },
-                });
-              });
-              const initial = Array.from(navLinks).find((l) => l.classList.contains("is-active"));
-              if (initial) moveNavPill(initial);
-            }
-            const fadeSections = ["#system","#sync","#where","#pull","#flow","#stack",".tl-closing",".tl-footer"] as const;
-            fadeSections.forEach((sel) => {
-              const el = root.querySelector<HTMLElement>(sel);
-              if (!el) return;
-              gsap.set(el, { autoAlpha: 0 });
-              ScrollTrigger.create({
-                trigger: el, start: "top 90%", once: true,
-                onEnter: () => { gsap.to(el, { autoAlpha: 1, duration: 0.42, ease: "power1.out" }); },
-              });
-            });
-          }, root);
-          if (cancelled) return;
-          ctxRevert = () => prmCtx.revert();
-          if (document.fonts?.ready) await document.fonts.ready;
-          if (!cancelled) {
-            requestAnimationFrame(() => ScrollTrigger.refresh());
-            setTimeout(() => ScrollTrigger.refresh(), 150);
-            hashNavCleanup = installLandingHashNav(root, gsap, { reduced: true, isCancelled: () => cancelled });
-            initialHashCleanup = scheduleInitialHashArrival(root, gsap, { reduced: true, isCancelled: () => cancelled });
-          }
-        } catch (err) {
-          console.error("[LandingMotion] GSAP (reduced) failed:", err);
-        }
-      })();
-      return () => { cancelled = true; cleanup(); };
+      document.querySelectorAll(".tray-landing [data-reveal]").forEach((el) => {
+        el.classList.add("tl-visible");
+      });
+      return;
     }
 
-    root.classList.add("tl-anim-init");
-    readyTimer = setTimeout(markReady, 700);
+    let killed = false;
+    let ctx: any = null;
+    type LenisLike = {
+      on(e: string, cb: () => void): void;
+      raf(t: number): void;
+      destroy(): void;
+      scrollTo(target: any, opts?: any): void;
+    };
+    let lenisInstance: LenisLike | null = null;
+    const tiltCleanups: Array<() => void> = [];
+    const roleCardHandlers: Array<[HTMLElement, (e: MouseEvent) => void]> = [];
 
-    (async () => {
-      try {
+    const initAnimations = () => {
+      if (killed) return;
+
+      (async () => {
         const [{ gsap }, { ScrollTrigger }] = await Promise.all([
           import("gsap"),
           import("gsap/ScrollTrigger"),
         ]);
-        if (cancelled) return;
+        if (killed) return;
         gsap.registerPlugin(ScrollTrigger);
-        ScrollTrigger.config({ limitCallbacks: true, ignoreMobileResize: true });
-        const coarsePointer = window.matchMedia("(pointer: coarse)").matches;
-        const narrowViewport = window.matchMedia("(max-width: 768px)").matches;
-        const lightMotion = coarsePointer || narrowViewport;
-        const finePointer = !coarsePointer;
-        const moveNavPill = (activeLink: HTMLAnchorElement | null) => {
-          if (!navPill || !navLinksWrap || !activeLink) return;
-          const wrapRect = navLinksWrap.getBoundingClientRect();
-          const linkRect = activeLink.getBoundingClientRect();
-          const left = linkRect.left - wrapRect.left;
-          navLinksWrap.classList.add("has-pill");
-          gsap.set(navPill, { width: linkRect.width });
-          gsap.to(navPill, { x: left, opacity: 1, duration: 0.38, ease: "power3.out", overwrite: true });
-        };
-        const ctx = gsap.context(() => {
-          if (progressBar) {
-            gsap.set(progressBar, { scaleX: 0, transformOrigin: "0% 50%" });
-            ScrollTrigger.create({
-              start: 0, end: "max",
-              onUpdate: (self) => {
-                gsap.to(progressBar, { scaleX: self.progress, duration: 0.15, ease: "none", overwrite: true });
+
+        // ── Lenis smooth scroll ──────────────────────────────────────────
+        try {
+          const LenisModule = await import("lenis");
+          if (!killed) {
+            const Lenis = (
+              (LenisModule as Record<string, unknown>).default ?? LenisModule
+            ) as new (opts: Record<string, unknown>) => LenisLike;
+            lenisInstance = new Lenis({
+              duration: 1.6,
+              easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+              smoothWheel: true,
+              wheelMultiplier: 0.72,
+            });
+            lenisInstance.on("scroll", ScrollTrigger.update);
+            const li = lenisInstance;
+            gsap.ticker.add((time: number) => { li.raf(time * 1000); });
+            gsap.ticker.lagSmoothing(0);
+          }
+        } catch { /* native scroll fallback */ }
+
+        if (killed) return;
+
+        ctx = gsap.context(() => {
+          const root = document.querySelector<HTMLElement>(".tray-landing");
+          if (!root) return;
+
+          // ── SCROLL PROGRESS BAR ───────────────────────────────────────
+          const bar = root.querySelector<HTMLElement>(".tl-progress-bar");
+          if (bar) {
+            gsap.to(bar, {
+              width: "100%",
+              ease: "none",
+              scrollTrigger: {
+                trigger: document.documentElement,
+                start: "top top",
+                end: "bottom bottom",
+                scrub: 0.2,
               },
             });
           }
-          if (nav) {
-            ScrollTrigger.create({
-              start: "top -48",
-              onEnter: () => nav.classList.add("is-scrolled"),
-              onLeaveBack: () => { nav.classList.remove("is-scrolled", "is-scrolled-deep"); },
-            });
-            ScrollTrigger.create({
-              start: "top -140",
-              onEnter: () => nav.classList.add("is-scrolled-deep"),
-              onLeaveBack: () => nav.classList.remove("is-scrolled-deep"),
+
+          const isDesktop = typeof window !== "undefined" && window.innerWidth >= 1024;
+
+          // ═══════════════════════════════════════════════════════════════
+          // 1. HERO — clip-path curtain word reveal
+          // ═══════════════════════════════════════════════════════════════
+          gsap.from(".tray-landing .tl-h1 .tl-word", {
+            clipPath: "inset(100% 0% 0% 0%)",
+            y: 24,
+            opacity: 0,
+            stagger: 0.09,
+            duration: 1.05,
+            ease: "power4.out",
+            delay: 0.1,
+          });
+
+          gsap.from(".tray-landing .tl-nav-inner > *", {
+            y: -28,
+            opacity: 0,
+            stagger: 0.06,
+            duration: 0.7,
+            ease: "power3.out",
+          });
+
+          const blobA = root.querySelector("[data-blob-a]") as HTMLElement | null;
+          const blobB = root.querySelector("[data-blob-b]") as HTMLElement | null;
+          if (blobA) {
+            gsap.to(blobA, {
+              yPercent: -30, xPercent: 12, ease: "none",
+              scrollTrigger: { trigger: root, start: "top top", end: "80% top", scrub: 1.4 },
             });
           }
-          const navLinks = root.querySelectorAll<HTMLAnchorElement>('.tl-nav-links a[href^="#"]');
-          const spySections = ["#system", "#flow"]
-            .map((id) => root.querySelector(id))
-            .filter(Boolean) as HTMLElement[];
-          if (navLinks.length && spySections.length) {
-            spySections.forEach((section) => {
+          if (blobB) {
+            gsap.to(blobB, {
+              yPercent: 22, xPercent: -12, ease: "none",
+              scrollTrigger: { trigger: root, start: "top top", end: "80% top", scrub: 1.2 },
+            });
+          }
+
+          // ═══════════════════════════════════════════════════════════════
+          // 2. CAMPUS TICKER — velocity skew + enter from opposite edges
+          // ═══════════════════════════════════════════════════════════════
+          const tickerWrappers = root.querySelectorAll<HTMLElement>("[data-ticker-wrapper]");
+
+          ScrollTrigger.create({
+            trigger: "[data-ticker-wrapper]",
+            start: "top bottom",
+            end: "bottom top",
+            onUpdate: (self) => {
+              if (killed) return;
+              const v = self.getVelocity();
+              const skew = gsap.utils.clamp(-9, 9, v * 0.004);
+              tickerWrappers.forEach((w, i) => {
+                gsap.to(w, { skewX: i % 2 === 0 ? skew : -skew, duration: 0.4, ease: "power2.out", overwrite: "auto" });
+              });
+            },
+          });
+
+          tickerWrappers.forEach((wrapper, i) => {
+            gsap.from(wrapper, {
+              scrollTrigger: { trigger: wrapper, start: "top 102%" },
+              x: i % 2 === 0 ? -55 : 55,
+              opacity: 0, duration: 1.2, ease: "power4.out",
+            });
+          });
+
+          // ═══════════════════════════════════════════════════════════════
+          // 3. PORTALS — heading parallax + mouse tilt only
+          // ═══════════════════════════════════════════════════════════════
+          const portalSection = root.querySelector<HTMLElement>("#portals");
+          if (portalSection) {
+            const portalH2 = portalSection.querySelector<HTMLElement>("h2");
+            if (portalH2) {
+              gsap.to(portalH2, {
+                y: -50, ease: "none",
+                scrollTrigger: { trigger: portalSection, start: "top bottom", end: "bottom top", scrub: 2 },
+              });
+            }
+
+            root.querySelectorAll<HTMLElement>("[data-portal-card]").forEach((card) => {
+              const onMove = (e: MouseEvent) => {
+                const r = card.getBoundingClientRect();
+                const nx = ((e.clientX - r.left) / r.width - 0.5) * 2;
+                const ny = ((e.clientY - r.top) / r.height - 0.5) * 2;
+                gsap.to(card, { rotateY: nx * 8, rotateX: -ny * 6, scale: 1.025, transformPerspective: 900, duration: 0.4, ease: "power2.out" });
+              };
+              const onLeave = () => {
+                gsap.to(card, { rotateX: 0, rotateY: 0, scale: 1, duration: 0.65, ease: "power3.out" });
+              };
+              card.addEventListener("mousemove", onMove);
+              card.addEventListener("mouseleave", onLeave);
+              tiltCleanups.push(() => {
+                card.removeEventListener("mousemove", onMove);
+                card.removeEventListener("mouseleave", onLeave);
+              });
+            });
+          }
+
+          // ═══════════════════════════════════════════════════════════════
+          // 4. TRUST — h2 parallax + svg icon spin
+          // ═══════════════════════════════════════════════════════════════
+          const trustSection = root.querySelector<HTMLElement>("#trust");
+          if (trustSection) {
+            const trustH2 = trustSection.querySelector<HTMLElement>("h2");
+            if (trustH2) {
+              gsap.to(trustH2, {
+                y: -38, ease: "none",
+                scrollTrigger: { trigger: trustSection, start: "top bottom", end: "bottom top", scrub: 2 },
+              });
+            }
+            const icons = trustSection.querySelectorAll<SVGElement>("svg");
+            gsap.from(icons, {
+              scrollTrigger: { trigger: trustSection, start: "top 72%" },
+              rotate: -110, scale: 0.2, opacity: 0,
+              stagger: 0.15, duration: 1.0, ease: "back.out(2.5)",
+            });
+          }
+
+          // ═══════════════════════════════════════════════════════════════
+          // 5. CAMPUS MODEL — iris expand + h2 parallax
+          // ═══════════════════════════════════════════════════════════════
+          const campusSection = root.querySelector<HTMLElement>("#campus");
+          if (campusSection) {
+            const campusGrid = campusSection.querySelector<HTMLElement>(".grid");
+            if (campusGrid) {
+              gsap.fromTo(campusGrid,
+                { clipPath: "circle(0% at 50% 50%)", opacity: 0 },
+                { clipPath: "circle(100% at 50% 50%)", opacity: 1, duration: 1.5, ease: "power3.inOut", scrollTrigger: { trigger: campusSection, start: "top 80%" } }
+              );
+            }
+            const campusH2 = campusSection.querySelector<HTMLElement>("h2");
+            if (campusH2) {
+              gsap.to(campusH2, { y: -42, ease: "none", scrollTrigger: { trigger: campusSection, start: "top bottom", end: "bottom top", scrub: 1.8 } });
+            }
+          }
+
+          // ═══════════════════════════════════════════════════════════════
+          // 6. REALTIME SYNC — h2 scale-blur entrance
+          // ═══════════════════════════════════════════════════════════════
+          const syncSection = root.querySelector<HTMLElement>("#sync");
+          if (syncSection) {
+            const syncH2 = syncSection.querySelector<HTMLElement>("h2");
+            if (syncH2) {
+              gsap.fromTo(syncH2,
+                { scale: 1.08, opacity: 0, filter: "blur(8px)" },
+                { scale: 1, opacity: 1, filter: "blur(0px)", duration: 1.2, ease: "power3.out", scrollTrigger: { trigger: syncSection, start: "top 80%" } }
+              );
+              gsap.to(syncH2, { y: -35, ease: "none", scrollTrigger: { trigger: syncSection, start: "top bottom", end: "bottom top", scrub: 2 } });
+            }
+            const syncLede = syncSection.querySelector<HTMLElement>("p");
+            if (syncLede) {
+              gsap.from(syncLede, {
+                scrollTrigger: { trigger: syncSection, start: "top 76%" },
+                opacity: 0, y: 18, filter: "blur(8px)", duration: 1.0, ease: "power3.out", delay: 0.25,
+              });
+            }
+          }
+
+          // ═══════════════════════════════════════════════════════════════
+          // 7. KITCHEN QUOTE — clip-path wipe
+          // ═══════════════════════════════════════════════════════════════
+          const quoteSection = Array.from(root.querySelectorAll<HTMLElement>("section"))
+            .find((s) => (s.getAttribute("style") ?? "").includes("tray-ink"));
+          const quote = root.querySelector<HTMLElement>(".tray-landing blockquote");
+
+          if (quoteSection && quote) {
+            gsap.fromTo(quote,
+              { clipPath: "inset(100% 0% 0% 0%)", y: 40 },
+              { clipPath: "inset(0% 0% 0% 0%)", y: 0, duration: 1.45, ease: "power4.out", scrollTrigger: { trigger: quoteSection, start: "top 82%" } }
+            );
+            gsap.to(quote, { scale: 1.04, ease: "none", scrollTrigger: { trigger: quoteSection, start: "top top", end: "bottom top", scrub: 1.6 } });
+            const quoteEyebrow = quoteSection.querySelector<HTMLElement>("p");
+            if (quoteEyebrow) gsap.from(quoteEyebrow, { scrollTrigger: { trigger: quoteSection, start: "top 85%" }, x: -28, opacity: 0, duration: 0.8, ease: "power3.out" });
+            const quoteCite = quoteSection.querySelector<HTMLElement>("footer");
+            if (quoteCite) gsap.from(quoteCite, { scrollTrigger: { trigger: quoteSection, start: "top 78%" }, x: 28, opacity: 0, duration: 0.8, ease: "power3.out", delay: 0.3 });
+          }
+
+          // ═══════════════════════════════════════════════════════════════
+          // 8. FLOW (#flow) — card-deal flip + horizontal marquee (desktop)
+          // ═══════════════════════════════════════════════════════════════
+          const flowSection = root.querySelector<HTMLElement>("#flow");
+          if (flowSection) {
+            const flowH2 = flowSection.querySelector<HTMLElement>("h2");
+            if (flowH2) {
+              gsap.from(flowH2, {
+                scrollTrigger: { trigger: flowSection, start: "top 82%" },
+                clipPath: "inset(0% 100% 0% 0%)", opacity: 0, duration: 1.1, ease: "power4.inOut",
+              });
+              gsap.to(flowH2, { y: -38, ease: "none", scrollTrigger: { trigger: flowSection, start: "top bottom", end: "bottom top", scrub: 2 } });
+            }
+
+            if (isDesktop && !reduced) {
+              const track = flowSection.querySelector<HTMLElement>(".tl-flow-track-horizontal");
+              if (track) {
+                const halfWidth = track.scrollWidth / 2;
+                const tween = gsap.to(track, { x: -halfWidth, duration: 35, ease: "none", repeat: -1 });
+                const onMouseEnter = () => gsap.to(tween, { timeScale: 0, duration: 0.5, ease: "power2.out" });
+                const onMouseLeave = () => gsap.to(tween, { timeScale: 1, duration: 0.5, ease: "power2.out" });
+                track.addEventListener("mouseenter", onMouseEnter);
+                track.addEventListener("mouseleave", onMouseLeave);
+                tiltCleanups.push(() => {
+                  track.removeEventListener("mouseenter", onMouseEnter);
+                  track.removeEventListener("mouseleave", onMouseLeave);
+                });
+              }
+            } else {
+              const flowCards = flowSection.querySelectorAll<HTMLElement>(".mt-14 > div");
+              if (flowCards.length) {
+                gsap.fromTo(flowCards,
+                  { rotateY: -50, x: 70, opacity: 0, transformPerspective: 1200 },
+                  { scrollTrigger: { trigger: flowSection, start: "top 88%" }, rotateY: 0, x: 0, opacity: 1, stagger: 0.1, duration: 1.25, ease: "power4.out", clearProps: "rotateY,x,opacity,transformPerspective" }
+                );
+              }
+            }
+          }
+
+          // ═══════════════════════════════════════════════════════════════
+          // 9. STACK (#stack) — center-out pop entrance
+          // ═══════════════════════════════════════════════════════════════
+          const stackSection = root.querySelector<HTMLElement>("#stack");
+          if (stackSection) {
+            const stackH2 = stackSection.querySelector<HTMLElement>("h2");
+            if (stackH2) {
+              gsap.from(stackH2, { scrollTrigger: { trigger: stackSection, start: "top 82%" }, y: 50, opacity: 0, clipPath: "inset(0% 0% 100% 0%)", duration: 1.1, ease: "power4.out" });
+              gsap.to(stackH2, { y: -36, ease: "none", scrollTrigger: { trigger: stackSection, start: "top bottom", end: "bottom top", scrub: 2 } });
+            }
+            const stackLede = stackSection.querySelector<HTMLElement>("p");
+            if (stackLede) gsap.from(stackLede, { scrollTrigger: { trigger: stackSection, start: "top 78%" }, opacity: 0, y: 16, duration: 0.85, ease: "power3.out", delay: 0.1 });
+            const techCards = stackSection.querySelectorAll<HTMLElement>(".grid.grid-cols-2 > *, .grid.grid-cols-4 > *");
+            if (techCards.length) {
+              gsap.from(techCards, {
+                scrollTrigger: { trigger: stackSection, start: "top 80%" },
+                scale: 0.55, opacity: 0,
+                stagger: { amount: 0.65, from: "center" },
+                duration: 0.95, ease: "back.out(2)",
+              });
+            }
+          }
+
+          // ═══════════════════════════════════════════════════════════════
+          // 10. REALTIME STRIP — number count-up
+          // ═══════════════════════════════════════════════════════════════
+          const bigNumWrapper = root.querySelector("[data-realtime-counter='wrapper']") as HTMLElement ?? null;
+          const bigNumVal = bigNumWrapper?.querySelector("[data-realtime-value='true']") as HTMLElement ?? null;
+          if (bigNumWrapper && bigNumVal) {
+            const obj = { val: 0 };
+            const trigger = bigNumWrapper.closest("[class*='rounded']") as HTMLElement ?? bigNumWrapper;
+            gsap.to(obj, {
+              val: 240, duration: 1.5, ease: "power3.out",
+              scrollTrigger: { trigger, start: "top 85%", once: true },
+              onUpdate: () => { bigNumVal.textContent = `${Math.round(obj.val)}`; },
+              onComplete: () => { bigNumVal.textContent = "240"; },
+            });
+          }
+
+          // ═══════════════════════════════════════════════════════════════
+          // 11. CLOSING CTA — letter-spacing stamp
+          // ═══════════════════════════════════════════════════════════════
+          const closingSection = root.querySelector<HTMLElement>("#closing");
+          if (closingSection) {
+            const closingH2 = closingSection.querySelector<HTMLElement>("h2");
+            if (closingH2) {
+              gsap.fromTo(closingH2,
+                { letterSpacing: "0.2em", scale: 0.9, filter: "blur(10px)", opacity: 0 },
+                { letterSpacing: "-0.02em", scale: 1, filter: "blur(0px)", opacity: 1, duration: 1.55, ease: "power4.out", scrollTrigger: { trigger: closingSection, start: "top 82%" } }
+              );
+              gsap.to(closingH2, { y: -28, ease: "none", scrollTrigger: { trigger: closingSection, start: "top bottom", end: "bottom top", scrub: 2.5 } });
+            }
+            const closingGlow = closingSection.querySelector<HTMLElement>("[class*='blur-3xl']");
+            if (closingGlow) {
+              gsap.fromTo(closingGlow,
+                { scale: 0.2, opacity: 0 },
+                { scale: 1, opacity: 1, duration: 2.0, ease: "power3.out", scrollTrigger: { trigger: closingSection, start: "top 88%" } }
+              );
+            }
+            const closingP = closingSection.querySelector<HTMLElement>("p");
+            if (closingP) gsap.from(closingP, { scrollTrigger: { trigger: closingSection, start: "top 80%" }, opacity: 0, y: 20, filter: "blur(6px)", duration: 0.95, ease: "power3.out", delay: 0.2 });
+            const closingCTAs = closingSection.querySelectorAll<HTMLElement>("a");
+            if (closingCTAs.length) gsap.from(closingCTAs, { scrollTrigger: { trigger: closingSection, start: "top 78%" }, y: 38, opacity: 0, scale: 0.94, stagger: 0.12, duration: 0.95, ease: "back.out(1.6)", delay: 0.35 });
+          }
+
+          // ═══════════════════════════════════════════════════════════════
+          // 12. FOOTER — watermark parallax + link wave-in
+          // ═══════════════════════════════════════════════════════════════
+          const footerMark = root.querySelector<HTMLElement>("footer .tl-footer-mark");
+          if (footerMark) gsap.from(footerMark, { scrollTrigger: { trigger: "footer", start: "top 95%" }, opacity: 0, scale: 0.94, duration: 1.5, ease: "power3.out" });
+          const footerLinks = root.querySelectorAll<HTMLElement>("footer li, footer .tl-footer-link-item");
+          if (footerLinks.length) gsap.from(footerLinks, { scrollTrigger: { trigger: "footer", start: "top 92%" }, y: 20, opacity: 0, stagger: 0.04, duration: 0.8, ease: "power3.out" });
+
+          // ═══════════════════════════════════════════════════════════════
+          // 13. MAGNETIC BUTTONS
+          // ═══════════════════════════════════════════════════════════════
+          root.querySelectorAll<HTMLElement>("[data-magnetic]").forEach((btn) => {
+            const innerText = btn.querySelector("span, .liquid-btn-text") as HTMLElement | null;
+            const onMove = (e: MouseEvent) => {
+              const r = btn.getBoundingClientRect();
+              const dx = (e.clientX - (r.left + r.width / 2)) * 0.28;
+              const dy = (e.clientY - (r.top + r.height / 2)) * 0.28;
+              gsap.to(btn, { x: dx, y: dy, duration: 0.42, ease: "power2.out" });
+              if (innerText) gsap.to(innerText, { x: dx * 0.15, y: dy * 0.15, duration: 0.42, ease: "power2.out" });
+            };
+            const onLeave = () => {
+              gsap.to(btn, { x: 0, y: 0, duration: 0.7, ease: "elastic.out(1, 0.4)" });
+              if (innerText) gsap.to(innerText, { x: 0, y: 0, duration: 0.7, ease: "elastic.out(1, 0.4)" });
+            };
+            btn.addEventListener("mousemove", onMove);
+            btn.addEventListener("mouseleave", onLeave);
+            tiltCleanups.push(() => {
+              btn.removeEventListener("mousemove", onMove);
+              btn.removeEventListener("mouseleave", onLeave);
+            });
+          });
+
+          // ═══════════════════════════════════════════════════════════════
+          // 14. SECTION EYEBROW DIVIDER LINE DRAW
+          // ═══════════════════════════════════════════════════════════════
+          root.querySelectorAll<HTMLElement>(
+            "#portals .font-code, #campus .font-code, #sync .font-code, #trust .font-code, #flow .font-code, #stack .font-code, #closing .font-code"
+          ).forEach((eyebrow) => {
+            const parent = eyebrow.parentElement;
+            if (!parent || parent.querySelector(".tl-divider-line")) return;
+            const line = document.createElement("div");
+            line.className = "tl-divider-line";
+            line.style.cssText = "height:1px;background:currentColor;width:0%;opacity:0.13;margin-top:10px;transform-origin:left;will-change:width;";
+            parent.appendChild(line);
+            gsap.to(line, { width: "100%", duration: 1.5, ease: "power3.inOut", scrollTrigger: { trigger: parent, start: "top 88%", once: true } });
+          });
+
+          // ═══════════════════════════════════════════════════════════════
+          // 15. NAV SLIDING PILL + SCROLL SPY
+          // ═══════════════════════════════════════════════════════════════
+          const nav = root.querySelector<HTMLElement>("nav[aria-label='Main navigation']");
+          const pill = nav?.querySelector<HTMLElement>(".tl-nav-pill");
+          const links = nav?.querySelectorAll<HTMLAnchorElement>("a");
+
+          if (nav && pill && links?.length) {
+            let activeLink: HTMLAnchorElement | null = null;
+            const updatePill = (link: HTMLAnchorElement) => {
+              gsap.to(pill, { x: link.offsetLeft, width: link.offsetWidth, opacity: 1, duration: 0.35, ease: "power2.out", overwrite: "auto" });
+            };
+            const hidePill = () => {
+              if (activeLink) { updatePill(activeLink); }
+              else gsap.to(pill, { opacity: 0, duration: 0.3, ease: "power2.out", overwrite: "auto" });
+            };
+            links.forEach((link) => link.addEventListener("mouseenter", () => updatePill(link)));
+            nav.addEventListener("mouseleave", hidePill);
+            ["#portals", "#campus", "#stack"].forEach((id) => {
+              const sec = root.querySelector(id);
+              if (!sec) return;
+              const targetLink = Array.from(links).find((l) => l.getAttribute("href") === id);
+              if (!targetLink) return;
               ScrollTrigger.create({
-                trigger: section, start: "top 55%", end: "bottom 45%",
+                trigger: sec, start: "top 40%", end: "bottom 40%",
                 onToggle: (self) => {
-                  const id = `#${(self.trigger as HTMLElement).id}`;
-                  let active: HTMLAnchorElement | null = null;
-                  navLinks.forEach((link) => {
-                    const on = link.getAttribute("href") === id && self.isActive;
-                    link.classList.toggle("is-active", on);
-                    if (on) active = link;
-                  });
-                  if (self.isActive && active) moveNavPill(active);
+                  if (self.isActive && !killed) { activeLink = targetLink; updatePill(targetLink); }
+                  else if (!self.isActive && activeLink === targetLink && !killed) { activeLink = null; hidePill(); }
                 },
               });
             });
-            const initial = Array.from(navLinks).find((l) => l.classList.contains("is-active"));
-            if (initial) moveNavPill(initial);
           }
 
-          // Hero entrance
-          const heroTl = gsap.timeline({ defaults: { ease: HERO_EASE }, onComplete: markReady });
-          heroTl
-            .from(".tray-landing .tl-hero-top", { y: 18, opacity: 0, duration: 0.65 })
-            .from(
-              ".tray-landing .tl-h1 .tl-word",
-              { y: 40, opacity: 0, clipPath: "inset(100% 0% 0% 0%)", stagger: { each: 0.048, from: "start" }, duration: 0.88, ease: "power3.out" },
-              "-=0.38",
-            )
-            .from(".tray-landing .tl-hero-lede", { y: 22, opacity: 0, duration: 0.78 }, "-=0.52")
-            .from(".tray-landing .tl-hero-cta .tl-row .tl-btn", { y: 14, opacity: 0, stagger: 0.07, duration: 0.62, ease: "power3.out" }, "-=0.48")
-            .from(".tray-landing .tl-note", { opacity: 0, duration: 0.45 }, "-=0.38")
-            .from(".tray-landing .tl-trust", { opacity: 0, y: 6, duration: 0.42 }, "-=0.28")
-            .from(".tray-landing .tl-hero-stat", { y: 24, opacity: 0, stagger: 0.07, duration: 0.68 }, "-=0.34");
+        }); // end gsap.context
 
-          // Stat count-up
-          root.querySelectorAll<HTMLElement>(".tl-hero-stat[data-count]").forEach((stat, i) => {
-            const target = Number(stat.dataset.count);
-            const numEl = stat.querySelector<HTMLElement>(".tl-stat-num");
-            if (!numEl || !Number.isFinite(target)) return;
-            const counter = { val: 0 };
-            heroTl.to(counter, {
-              val: target, duration: 1.05, ease: "expo.out",
-              onUpdate: () => { numEl.textContent = String(Math.round(counter.val)); },
-            }, i === 0 ? "-=0.42" : "<0.08");
-          });
+        // ── Demo role card click transitions ─────────────────────────────
+        const ROLE_LABELS: Record<string, string> = {
+          student: "Student portal",
+          kitchen: "Kitchen view",
+          admin: "Admin console",
+        };
+        document.querySelectorAll<HTMLAnchorElement>(".tl-role-card[data-r]").forEach((card) => {
+          const r = card.dataset.r ?? "";
+          const label = ROLE_LABELS[r];
+          if (!label || !card.href || card.tagName !== "A") return;
+          const href = card.href;
+          const handler = (e: MouseEvent) => { e.preventDefault(); triggerDemoEntry(href, label); };
+          card.addEventListener("click", handler as EventListener);
+          roleCardHandlers.push([card as HTMLElement, handler as (e: MouseEvent) => void]);
+        });
 
-          // Ticker reveal
-          const ticker = root.querySelector<HTMLElement>(".tl-ticker[data-tl-scroll='1']");
-          const tickerItems = ticker?.querySelectorAll<HTMLElement>(".tl-ticker-item");
-          if (ticker && tickerItems?.length) {
-            ScrollTrigger.create({
-              trigger: ticker, start: "top 88%", once: true,
-              onEnter: () => {
-                gsap.to(tickerItems, {
-                  opacity: 1, y: 0, stagger: { each: 0.032, from: "center" }, duration: 0.68, ease: REVEAL_EASE, overwrite: "auto",
-                  onComplete: () => { ticker.classList.add("tl-ticker-revealed"); gsap.set(tickerItems, { clearProps: "transform" }); },
-                });
-              },
-            });
-          }
+      })();
+    };
 
-          if (!lightMotion) {
-            const glow = root.querySelector(".tl-hero-glow");
-            if (glow) {
-              gsap.to(glow, { y: 72, ease: "none", scrollTrigger: { trigger: ".tray-landing .tl-hero", start: "top top", end: "bottom top", scrub: 0.95 } });
-            }
-            const heroRibbon = root.querySelector<HTMLElement>(".tl-hero-ribbon");
-            const syncRibbon = root.querySelector<HTMLElement>(".tl-queue-ribbon");
-            [heroRibbon, syncRibbon].forEach((ribbon) => {
-              if (!ribbon) return;
-              gsap.fromTo(ribbon, { x: -28, opacity: 0.35 }, { x: 24, opacity: 0.75, ease: "none", scrollTrigger: { trigger: ribbon.closest(".tl-hero, .tl-sync") ?? ribbon, start: "top 90%", end: "bottom 20%", scrub: 1 } });
-            });
-            const heroStats = root.querySelector<HTMLElement>(".tl-hero-stats");
-            if (heroStats) {
-              gsap.to(heroStats, { y: -32, ease: "none", scrollTrigger: { trigger: ".tray-landing .tl-hero", start: "top top", end: "bottom top", scrub: 0.72 } });
-            }
-            root.querySelectorAll<HTMLElement>(".tl-orb").forEach((orb, i) => {
-              gsap.to(orb, { y: i % 2 === 0 ? 72 : -56, x: i % 2 === 0 ? 28 : -22, ease: "none", scrollTrigger: { trigger: root, start: "top top", end: "bottom bottom", scrub: 1.1 + i * 0.15 } });
-            });
-            if (finePointer && ambientShift) {
-              const onAmbientMove = (e: MouseEvent) => {
-                const px = (e.clientX / window.innerWidth - 0.5) * 2;
-                const py = (e.clientY / window.innerHeight - 0.5) * 2;
-                gsap.to(ambientShift, { x: px * 14, y: py * 10, duration: 1.15, ease: "power2.out", overwrite: "auto" });
-              };
-              window.addEventListener("mousemove", onAmbientMove, { passive: true });
-              magneticCleanups.push(() => window.removeEventListener("mousemove", onAmbientMove));
-            }
+    // ── Smooth anchor scroll ──────────────────────────────────────────────
+    const handleAnchorClick = (e: MouseEvent) => {
+      const link = (e.target as HTMLElement).closest("a");
+      if (!link) return;
+      const href = link.getAttribute("href");
+      if (href?.startsWith("#")) {
+        const targetEl = document.querySelector(href);
+        if (targetEl) {
+          e.preventDefault();
+          if (lenisInstance) {
+            (lenisInstance as any).scrollTo(targetEl, { offset: -40, duration: 1.5 });
+          } else {
+            targetEl.scrollIntoView({ behavior: "smooth" });
           }
-
-          // Below-fold reveals
-          const clipBottom = "inset(86% 0% 0% 0%)";
-          const clipOpen = "inset(0% 0% 0% 0%)";
-          const systemReveal = gsap.utils.toArray<HTMLElement>(
-            "#system .tl-section-num, #system .tl-section-head, #system .tl-portal-phase-strip, #system .tl-portal",
-          );
-          if (systemReveal.length) {
-            gsap.set(systemReveal, { opacity: 0.55, clipPath: clipBottom, transformOrigin: "50% 0%" });
-            ScrollTrigger.create({
-              trigger: "#system", start: "top 82%", once: true,
-              onEnter: () => { withRevealCleanup(gsap, systemReveal, { opacity: 1, clipPath: clipOpen, duration: 0.82, stagger: 0.11, ease: "power3.out" }); },
-            });
-          }
-          const systemTags = gsap.utils.toArray<HTMLElement>("#system .tl-feat-tag");
-          if (systemTags.length) {
-            gsap.set(systemTags, { opacity: 0, y: 10 });
-            ScrollTrigger.create({
-              trigger: "#system", start: "top 74%", once: true,
-              onEnter: () => withRevealCleanup(gsap, systemTags, { opacity: 1, y: 0, stagger: 0.045, duration: 0.44, ease: "power2.out" }),
-            });
-          }
-          const syncSection = root.querySelector<HTMLElement>(".tl-sync");
-          const syncNum = syncSection?.querySelector<HTMLElement>(".tl-section-num");
-          const syncHead = syncSection?.querySelector<HTMLElement>(".tl-sync-copy");
-          const syncDiagram = syncSection?.querySelector<HTMLElement>(".tl-diagram");
-          const syncReveal = [syncNum, syncHead, syncDiagram].filter(Boolean) as HTMLElement[];
-          if (syncSection && syncReveal.length) {
-            gsap.set(syncReveal, { opacity: 0, y: 16 });
-            const diagramBits = syncDiagram
-              ? (gsap.utils.toArray(syncDiagram.querySelectorAll<HTMLElement>(".tl-node, .tl-arr")) as HTMLElement[])
-              : [];
-            if (diagramBits.length) gsap.set(diagramBits, { opacity: 0, y: 14 });
-            ScrollTrigger.create({
-              trigger: syncSection, start: "top 84%", once: true,
-              onEnter: () => {
-                const tl = gsap.timeline({
-                  defaults: { ease: REVEAL_EASE },
-                  onComplete: () => {
-                    gsap.set(syncReveal, { clearProps: "transform" });
-                    if (diagramBits.length) gsap.set(diagramBits, { clearProps: "transform" });
-                  },
-                });
-                tl.to(syncReveal, { opacity: 1, y: 0, stagger: 0.08, duration: 0.68 });
-                if (diagramBits.length) tl.to(diagramBits, { opacity: 1, y: 0, stagger: 0.08, duration: 0.55 }, "-=0.38");
-              },
-            });
-          }
-          const where = root.querySelector<HTMLElement>("#where");
-          if (where) {
-            const cols = where.querySelectorAll<HTMLElement>(".tl-line-leave-grid > div");
-            cols.forEach((col, i) => {
-              gsap.set(col, { opacity: 0, rotateX: i === 0 ? 7 : -7, skewX: i === 0 ? 3 : -3, transformOrigin: "50% 50%", force3D: true });
-            });
-            const chips = where.querySelectorAll<HTMLElement>(".tl-line-chip");
-            gsap.set(chips, { opacity: 0, y: 12 });
-            ScrollTrigger.create({
-              trigger: where, start: "top 84%", once: true,
-              onEnter: () => {
-                withRevealCleanup(gsap, cols, { opacity: 1, rotateX: 0, skewX: 0, duration: 0.78, stagger: 0.14, ease: "power3.out" });
-                withRevealCleanup(gsap, chips, { opacity: 1, y: 0, duration: 0.55, stagger: 0.07, delay: 0.12, ease: "power2.out" });
-              },
-            });
-          }
-          const pull = root.querySelector<HTMLElement>("#pull");
-          if (pull) {
-            const pullText = pull.querySelector<HTMLElement>("p");
-            const cite = pull.querySelector<HTMLElement>(".tl-cite");
-            if (pullText) gsap.set(pullText, { opacity: 0, y: 14, transformOrigin: "50% 50%" });
-            if (cite) gsap.set(cite, { opacity: 0, y: 10 });
-            ScrollTrigger.create({
-              trigger: pull, start: "top 80%", once: true,
-              onEnter: () => {
-                if (pullText) withRevealCleanup(gsap, pullText, { opacity: 1, y: 0, duration: 0.78, ease: "power3.out" });
-                if (cite) withRevealCleanup(gsap, cite, { opacity: 1, y: 0, duration: 0.45, ease: "power2.out", delay: 0.18 });
-              },
-            });
-          }
-          const flowAccent = root.querySelector<HTMLElement>(".tl-flow-accent");
-          if (flowAccent && !lightMotion) {
-            gsap.set(flowAccent, { scaleX: 0, transformOrigin: "0% 50%" });
-            ScrollTrigger.create({
-              trigger: flowAccent, start: "top 92%", end: "top 40%", scrub: 1.05,
-              onUpdate: (self) => { gsap.set(flowAccent, { scaleX: self.progress }); },
-            });
-          }
-          const flow = root.querySelector<HTMLElement>("#flow");
-          if (flow) {
-            const fNum = flow.querySelector<HTMLElement>(".tl-section-num");
-            const fH2 = flow.querySelector<HTMLElement>(".tl-section-head h2");
-            const fSide = flow.querySelector<HTMLElement>(".tl-section-head .tl-side");
-            const headEls = [fNum, fH2, fSide].filter(Boolean) as HTMLElement[];
-            headEls.forEach((el, i) => { gsap.set(el, { opacity: 0, x: i % 2 === 0 ? -34 : 30 }); });
-            ScrollTrigger.create({
-              trigger: flow, start: "top 86%", once: true,
-              onEnter: () => { withRevealCleanup(gsap, headEls, { opacity: 1, x: 0, duration: 0.72, stagger: 0.1, ease: "power3.out" }); },
-            });
-            flow.querySelectorAll<HTMLElement>(".tl-flow-step").forEach((step, i) => {
-              const fromX = i % 2 === 0 ? -44 : 44;
-              gsap.set(step, { opacity: 0, x: fromX });
-              ScrollTrigger.create({
-                trigger: step, start: "top 88%", once: true,
-                onEnter: () => { withRevealCleanup(gsap, step, { opacity: 1, x: 0, duration: 0.72, ease: "power3.out", delay: i * 0.05 }); },
-              });
-            });
-          }
-          const stack = root.querySelector<HTMLElement>("#stack");
-          if (stack) {
-            const sNum = stack.querySelector<HTMLElement>(".tl-section-num");
-            const sSide = stack.querySelector<HTMLElement>(".tl-section-head .tl-side");
-            const lineLead = stack.querySelector<HTMLElement>(".tl-anim-stack-line");
-            const lineIt = stack.querySelector<HTMLElement>(".tl-section-head h2 .tl-it");
-            const cards = stack.querySelectorAll<HTMLElement>(".tl-stack-card");
-            [sNum, sSide, lineLead, lineIt].forEach((el) => { if (el) gsap.set(el, { opacity: 0, y: 22 }); });
-            gsap.set(cards, { opacity: 0, y: 18 });
-            ScrollTrigger.create({
-              trigger: stack, start: "top 84%", once: true,
-              onEnter: () => {
-                const tl = gsap.timeline({
-                  defaults: { ease: HERO_EASE },
-                  onComplete: () => { gsap.set([sNum, sSide, lineLead, lineIt, ...Array.from(cards)].filter(Boolean), { clearProps: "transform" }); },
-                });
-                if (sNum) tl.to(sNum, { opacity: 1, y: 0, duration: 0.52 });
-                if (lineLead) tl.to(lineLead, { opacity: 1, y: 0, duration: 0.52 }, "-=0.22");
-                if (lineIt) tl.to(lineIt, { opacity: 1, y: 0, duration: 0.52 }, "-=0.38");
-                if (sSide) tl.to(sSide, { opacity: 1, y: 0, duration: 0.62 }, "-=0.32");
-                tl.to(cards, { opacity: 1, y: 0, stagger: { each: 0.055, from: "start" }, duration: 0.58 }, "-=0.36");
-              },
-            });
-          }
-          const closing = root.querySelector<HTMLElement>(".tl-closing");
-          if (closing) {
-            const closingNum = closing.querySelector<HTMLElement>(".tl-section-num");
-            const closingH2 = closing.querySelector<HTMLElement>("h2");
-            const closingP = closing.querySelector<HTMLElement>("p");
-            const closingCtas = closing.querySelectorAll<HTMLElement>(".tl-btn");
-            if (closingNum) gsap.set(closingNum, { opacity: 0, y: 16 });
-            if (closingH2) gsap.set(closingH2, { opacity: 0, y: 36, scale: 0.94, transformOrigin: "50% 50%" });
-            if (closingP) gsap.set(closingP, { opacity: 0, y: 20 });
-            gsap.set(closingCtas, { opacity: 0, y: 14 });
-            ScrollTrigger.create({
-              trigger: closing, start: "top 78%", once: true,
-              onEnter: () => {
-                const tl = gsap.timeline({
-                  defaults: { ease: HERO_EASE },
-                  onComplete: () => { gsap.set([closingNum, closingH2, closingP, ...Array.from(closingCtas)].filter(Boolean), { clearProps: "transform,filter" }); },
-                });
-                if (closingNum) tl.to(closingNum, { opacity: 1, y: 0, duration: 0.48, ease: "power3.out" });
-                if (closingH2) tl.to(closingH2, { opacity: 1, y: 0, scale: 1, duration: 0.95 }, closingNum ? "-=0.18" : 0);
-                if (closingP) tl.to(closingP, { opacity: 1, y: 0, duration: 0.65, ease: "power2.out" }, closingH2 ? "-=0.52" : 0);
-                tl.to(closingCtas, { opacity: 1, y: 0, stagger: 0.07, duration: 0.52, ease: "power2.out" }, "-=0.32");
-              },
-            });
-          }
-          const footer = root.querySelector<HTMLElement>(".tl-footer");
-          if (footer) {
-            const rowKids = footer.querySelectorAll<HTMLElement>(".tl-footer-row1 > *");
-            gsap.set(rowKids, { opacity: 0, y: 18 });
-            ScrollTrigger.create({
-              trigger: footer, start: "top 92%", once: true,
-              onEnter: () => gsap.to(rowKids, { opacity: 1, y: 0, stagger: 0.07, duration: 0.62, ease: "power2.out" }),
-            });
-          }
-          const footerMark = root.querySelector<HTMLElement>(".tl-footer-mark");
-          if (footerMark) {
-            const footerChars = footerMark.querySelectorAll<HTMLElement>("[data-tl-footer-char]");
-            gsap.set(footerMark, { opacity: 0, scale: 0.94, transformOrigin: "50% 50%" });
-            if (footerChars.length) gsap.set(footerChars, { y: 56, opacity: 0, rotateX: -18, transformOrigin: "50% 100%" });
-            ScrollTrigger.create({
-              trigger: footerMark, start: "top 94%", once: true,
-              onEnter: () => {
-                const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
-                tl.to(footerMark, { opacity: 1, scale: 1, duration: 0.88 }, 0);
-                if (footerChars.length) {
-                  tl.to(footerChars, { y: 0, opacity: 1, rotateX: 0, duration: 0.72, stagger: 0.055, ease: "power3.out" }, 0.06);
-                }
-              },
-            });
-          }
-
-          if (finePointer) {
-            root.querySelectorAll<HTMLElement>(".tl-portal").forEach((portal) => {
-              const chrome = portal.querySelector<HTMLElement>(".tl-browser-chrome");
-              const quickY = gsap.quickTo(portal, "y", { duration: 0.2, ease: "power4.out" });
-              const onEnter = () => {
-                portal.classList.add("is-lift");
-                quickY(-18);
-                if (chrome) gsap.to(chrome, { scale: 1.02, rotateY: 0, rotateX: 0, duration: 0.24, ease: "power4.out" });
-              };
-              const onMove = (e: MouseEvent) => {
-                const rect = portal.getBoundingClientRect();
-                const spotX = ((e.clientX - rect.left) / rect.width) * 100;
-                const spotY = ((e.clientY - rect.top) / rect.height) * 100;
-                portal.style.setProperty("--spot-x", `${spotX}%`);
-                portal.style.setProperty("--spot-y", `${spotY}%`);
-                if (!chrome) return;
-                const px = (e.clientX - rect.left) / rect.width - 0.5;
-                const py = (e.clientY - rect.top) / rect.height - 0.5;
-                gsap.to(chrome, { rotateY: px * 11, rotateX: -py * 7, duration: 0.22, ease: "power4.out", overwrite: "auto" });
-              };
-              const onLeave = () => {
-                portal.classList.remove("is-lift");
-                quickY(0);
-                if (chrome) gsap.to(chrome, { scale: 1, rotateY: 0, rotateX: 0, duration: 0.32, ease: "power3.out" });
-              };
-              portal.addEventListener("mouseenter", onEnter);
-              portal.addEventListener("mousemove", onMove);
-              portal.addEventListener("mouseleave", onLeave);
-              portalCleanups.push(() => {
-                portal.removeEventListener("mouseenter", onEnter);
-                portal.removeEventListener("mousemove", onMove);
-                portal.removeEventListener("mouseleave", onLeave);
-                portal.classList.remove("is-lift");
-              });
-            });
-            root.querySelectorAll<HTMLElement>(".tl-btn").forEach((btn) => {
-              const onEnter = () => gsap.to(btn, { scale: 1.03, y: -1, boxShadow: btn.classList.contains("tl-btn-pri") ? "inset 0 1px 0 rgba(242, 235, 227, 0.2), 0 10px 28px rgba(0, 0, 0, 0.38)" : "0 6px 18px rgba(0, 0, 0, 0.28)", duration: 0.22, ease: "power2.out" });
-              const onLeave = () => gsap.to(btn, { scale: 1, y: 0, clearProps: "boxShadow", duration: 0.28, ease: "power2.out" });
-              const onDown = () => gsap.to(btn, { scale: 0.97, y: 0, duration: 0.08 });
-              const onUp = () => gsap.to(btn, { scale: 1.03, y: -1, duration: 0.15 });
-              btn.addEventListener("mouseenter", onEnter);
-              btn.addEventListener("mouseleave", onLeave);
-              btn.addEventListener("mousedown", onDown);
-              btn.addEventListener("mouseup", onUp);
-              btnCleanups.push(() => {
-                btn.removeEventListener("mouseenter", onEnter);
-                btn.removeEventListener("mouseleave", onLeave);
-                btn.removeEventListener("mousedown", onDown);
-                btn.removeEventListener("mouseup", onUp);
-              });
-            });
-            const bindMagnetic = (btn: HTMLElement) => {
-              const qx = gsap.quickTo(btn, "x", { duration: 0.38, ease: motionTokens.ease.nav });
-              const qy = gsap.quickTo(btn, "y", { duration: 0.38, ease: motionTokens.ease.nav });
-              gsap.set(btn, { x: 0, y: 0 });
-              const onMagMove = (e: MouseEvent) => {
-                const rect = btn.getBoundingClientRect();
-                const cx = rect.left + rect.width / 2;
-                const cy = rect.top + rect.height / 2;
-                const dx = ((e.clientX - cx) / rect.width) * MAGNET_MAX_PX * 2;
-                const dy = ((e.clientY - cy) / rect.height) * MAGNET_MAX_PX * 2;
-                qx(Math.max(-MAGNET_MAX_PX, Math.min(MAGNET_MAX_PX, dx)));
-                qy(Math.max(-MAGNET_MAX_PX, Math.min(MAGNET_MAX_PX, dy)));
-              };
-              const onMagLeave = () => { qx(0); qy(0); };
-              btn.addEventListener("mousemove", onMagMove);
-              btn.addEventListener("mouseleave", onMagLeave);
-              magneticCleanups.push(() => {
-                btn.removeEventListener("mousemove", onMagMove);
-                btn.removeEventListener("mouseleave", onMagLeave);
-                gsap.set(btn, { clearProps: "x,y" });
-              });
-            };
-            root.querySelectorAll<HTMLElement>(".tl-btn-pri[data-magnetic]").forEach(bindMagnetic);
-          }
-        }, root);
-        ctxRevert = () => ctx.revert();
-        if (document.fonts?.ready) await document.fonts.ready;
-        if (!cancelled) {
-          requestAnimationFrame(() => ScrollTrigger.refresh());
-          setTimeout(() => ScrollTrigger.refresh(), 150);
-          hashNavCleanup = installLandingHashNav(root, gsap, { reduced: false, isCancelled: () => cancelled });
-          initialHashCleanup = scheduleInitialHashArrival(root, gsap, { reduced: false, isCancelled: () => cancelled });
         }
-      } catch (err) {
-        console.error("[LandingMotion] GSAP failed:", err);
-        markReady();
       }
-    })();
+    };
+    document.addEventListener("click", handleAnchorClick);
 
-    return () => { cancelled = true; cleanup(); };
+    // ── Coordinate with LandingIntro preloader ────────────────────────────
+    let introListener: (() => void) | null = null;
+    if ((window as any).__trayIntroStarted) {
+      initAnimations();
+    } else {
+      introListener = () => { initAnimations(); };
+      window.addEventListener("tray-intro-start", introListener);
+    }
+
+    return () => {
+      killed = true;
+      document.removeEventListener("click", handleAnchorClick);
+      if (introListener) window.removeEventListener("tray-intro-start", introListener);
+      tiltCleanups.forEach((fn) => fn());
+      roleCardHandlers.forEach(([el, fn]) => el.removeEventListener("click", fn as EventListener));
+      if (lenisInstance) lenisInstance.destroy();
+      if (ctx) ctx.revert();
+    };
   }, []);
+
   return null;
 }

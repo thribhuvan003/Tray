@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { headers } from "next/headers";
 import { LoginForm } from "@/components/portal-student/login-form";
+import { LoginRoleTabs } from "@/components/portal-student/login-role-tabs";
 import { safeNext } from "@/lib/auth/safe-redirect";
 
 export const metadata = { title: "Sign in — Tray" };
@@ -8,13 +9,15 @@ export const metadata = { title: "Sign in — Tray" };
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ next?: string; tenant?: string; error?: string }>;
+  searchParams: Promise<{ next?: string; tenant?: string; error?: string; role?: string }>;
 }) {
   const sp = await searchParams;
   const h = await headers();
   // ?tenant= explicit override, then x-tenant-slug from middleware (set when /c/[slug]/login rewrites here)
   const slug = sp.tenant ?? h.get("x-tenant-slug") ?? "";
   const next = safeNext(sp.next, slug ? `/c/${slug}/menu` : "/");
+  const initialRole = (sp.role === "kitchen" || sp.role === "owner") ? sp.role : "student";
+
   return (
     <div
       data-portal="student"
@@ -22,42 +25,37 @@ export default async function LoginPage({
     >
       <div className="flex-1 flex items-center justify-center px-5 py-12">
         <div className="w-full max-w-md">
-          <Link href="/" className="inline-flex items-center gap-2.5 font-display text-[19px] tracking-tight mb-10">
-            <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-ocean-500 text-white font-mono text-[12px] font-bold">T</span>
-            <span className="font-medium">Tray<span className="italic text-ocean-500">.</span></span>
+          {/* Brand */}
+          <Link
+            href="/"
+            className="inline-flex items-center gap-2.5 mb-10"
+            aria-label="Tray home"
+          >
+            <span
+              className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-ocean-500 text-white text-[12px] font-bold"
+              style={{ fontFamily: "var(--font-bricolage)", fontWeight: 900 }}
+            >
+              T
+            </span>
+            <span
+              className="tracking-[-0.02em]"
+              style={{
+                fontFamily: "var(--font-bricolage)",
+                fontWeight: 700,
+                fontSize: "1.2rem",
+              }}
+            >
+              Tray
+            </span>
           </Link>
-          <h1 className="font-display text-[40px] leading-[1.05] tracking-tight font-medium">
-            Sign in.<br />
-            <span className="italic text-ocean-500">Eat sooner.</span>
-          </h1>
-          <p className="text-[14px] text-[color:var(--color-ink)]/65 mt-3">
-            Use your campus email — we&rsquo;ll send a magic link, no password required.
-          </p>
-          {sp.error && (
-            <div className="mt-5 rounded-xl border border-rose-500/30 bg-rose-500/5 px-4 py-3 text-[13px] text-rose-600">
-              {sp.error}
-              {(sp.error.toLowerCase().includes("no account") ||
-                sp.error.toLowerCase().includes("sign up")) && (
-                <span className="ml-1">
-                  <Link
-                    href={`/signup?next=${encodeURIComponent(next)}`}
-                    className="underline font-medium hover:text-rose-700"
-                  >
-                    Create account →
-                  </Link>
-                </span>
-              )}
-            </div>
-          )}
-          <div className="mt-7">
-            <LoginForm next={next} slug={slug} />
-          </div>
-          <p className="mt-8 text-[12.5px] text-[color:var(--color-ink)]/55">
-            New to Tray?{" "}
-            <Link href={`/signup?next=${encodeURIComponent(next)}`} className="text-ocean-500 hover:underline">
-              Create an account
-            </Link>
-          </p>
+
+          {/* Role tabs + dynamic copy + form */}
+          <LoginRoleTabs
+            initialRole={initialRole as "student" | "kitchen" | "owner"}
+            next={next}
+            slug={slug}
+            error={sp.error}
+          />
         </div>
       </div>
     </div>

@@ -1,39 +1,75 @@
-import Link from "next/link";
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
-import { resolveTenant } from "@/lib/tenant";
+import { resolveTenant, collegeCanteens, getTenantSlugFromHeaders } from "@/lib/tenant";
+import { getCurrentUser } from "@/lib/auth/get-user";
+import { getAdminClient } from "@/lib/supabase/admin";
 import { StudentTopBar } from "@/components/portal-student/top-bar";
-import { CartDrawerConditional } from "@/components/portal-student/cart-drawer-conditional";
+import { CartDrawer } from "@/components/portal-student/cart-drawer";
 import { CartTenantSync } from "@/components/portal-student/cart-tenant-sync";
+import { OrderReadyListener } from "@/components/portal-student/order-ready-listener";
 
 export default async function StudentLayout({ children }: { children: React.ReactNode }) {
   const h = await headers();
-  const slug = h.get("x-tenant-slug") ?? "";
+  const slug = getTenantSlugFromHeaders(h);
   const tenant = await resolveTenant(slug);
   if (!tenant) notFound();
+
+  // Fetch sibling canteens — use cached version (30s TTL)
+  const siblings = tenant.college_slug
+    ? await collegeCanteens(tenant.college_slug).catch(() => [])
+    : [];
+
+  if (siblings.length > 0) {
+    try {
+      const admin = getAdminClient();
+      // Scope to only the sibling slugs — avoids full-table scan across all tenants
+      const siblingSlugSet = siblings.map((s) => s.slug);
+      const { data: counts } = await admin
+        .from("menu_items")
+        .select("id, tenants!inner(slug)")
+        .in("tenants.slug", siblingSlugSet)
+        .eq("status", "live");
+
+      if (counts) {
+        const dishCountsMap: Record<string, number> = {};
+        for (const item of counts) {
+          const s = (item.tenants as any)?.slug;
+          if (s) {
+            dishCountsMap[s] = (dishCountsMap[s] || 0) + 1;
+          }
+        }
+        for (const sib of siblings) {
+          sib.dishCount = dishCountsMap[sib.slug] ?? 0;
+        }
+      }
+    } catch (err) {
+      console.error("Failed to fetch dish counts for siblings:", err);
+    }
+  }
+
+  // Auth is optional on the student portal (browse without sign-in is fine).
+  // We pass the user id to OrderReadyListener so it can subscribe; nullable
+  // means the listener no-ops for guests.
+  const user = await getCurrentUser();
+
   return (
-    <div data-portal="student" className="min-h-screen bg-[color:var(--color-paper)] text-[color:var(--color-ink)] antialiased flex flex-col">
+    <div
+      data-portal="student"
+      className="min-h-screen font-sans bg-[color:var(--color-paper)] text-[color:var(--color-ink)] antialiased"
+    >
       <CartTenantSync slug={tenant.slug} />
-      <StudentTopBar tenant={tenant} />
+      <OrderReadyListener userId={user?.id ?? null} tenantSlug={tenant.slug} tenantId={tenant.id} />
+      <StudentTopBar tenant={tenant} siblings={siblings} user={user} />
       {/* Desktop reserves a 20rem right column for the sticky cart sidebar.
           Mobile stays single-column; the CartDrawer self-promotes to a
           floating button + Vaul drawer below the lg breakpoint. */}
-      <main className="flex-1 pb-32 sm:pb-20 lg:pb-12 lg:grid lg:grid-cols-[1fr,20rem] lg:gap-6 lg:max-w-7xl lg:mx-auto lg:px-6">
+      <main
+        className="lg:pb-12 w-full"
+        style={{ paddingBottom: "calc(5rem + env(safe-area-inset-bottom, 0px))" }}
+      >
         <div className="min-w-0">{children}</div>
-        <CartDrawerConditional tenantSlug={tenant.slug} tenantName={tenant.name} />
+        <CartDrawer tenantSlug={tenant.slug} tenantName={tenant.name} />
       </main>
-      <footer className="border-t border-[color:var(--color-line)] mt-auto">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 py-4 flex flex-wrap items-center justify-between gap-2 text-[11px] text-[color:var(--color-ink)]/45">
-          <span>
-            Powered by <Link href="/" className="hover:text-ocean-500 transition-colors font-medium">Tray</Link>
-            {" "}· Campus Edition · Payments by Razorpay
-          </span>
-          <span className="flex items-center gap-3">
-            <Link href="/legal/terms" className="hover:text-ocean-500 transition-colors">Terms</Link>
-            <Link href="/legal/privacy" className="hover:text-ocean-500 transition-colors">Privacy</Link>
-          </span>
-        </div>
-      </footer>
     </div>
   );
 }

@@ -1,6 +1,6 @@
 import { headers } from "next/headers";
 import { notFound, redirect } from "next/navigation";
-import { resolveTenant } from "@/lib/tenant";
+import { resolveTenant, getTenantSlugFromHeaders } from "@/lib/tenant";
 import { getServerClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth/get-user";
 import { TrackPanel } from "@/components/portal-student/track-panel";
@@ -8,7 +8,7 @@ import { TrackPanel } from "@/components/portal-student/track-panel";
 export default async function TrackPage({ params }: { params: Promise<{ orderId: string }> }) {
   const { orderId } = await params;
   const h = await headers();
-  const slug = h.get("x-tenant-slug") ?? "";
+  const slug = getTenantSlugFromHeaders(h);
   const tenant = await resolveTenant(slug);
   if (!tenant) notFound();
   const user = await getCurrentUser();

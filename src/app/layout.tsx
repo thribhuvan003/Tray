@@ -3,10 +3,11 @@ import {
   Inter, Fraunces, Manrope, JetBrains_Mono, Instrument_Serif,
   Newsreader, Geist, Geist_Mono, Space_Grotesk,
   Bebas_Neue, Cormorant_Garamond, Plus_Jakarta_Sans, Barlow_Condensed, DM_Serif_Display,
+  DM_Mono, Krona_One, Chewy, Bricolage_Grotesque,
 } from "next/font/google";
 import { headers } from "next/headers";
 import { Toaster } from "sonner";
-import { resolveTenant } from "@/lib/tenant";
+import { resolveTenant, getTenantSlugFromHeaders } from "@/lib/tenant";
 import { Providers } from "@/components/providers";
 import "./globals.css";
 
@@ -57,6 +58,8 @@ const bebasNeue = Bebas_Neue({
   variable: "--font-bebas",
   display: "swap",
 });
+// Note: bigShoulders removed — was a duplicate Barlow_Condensed instantiation;
+// barlowCondensed (line below) covers the same font with full weight range.
 const cormorant = Cormorant_Garamond({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
@@ -71,7 +74,7 @@ const plusJakarta = Plus_Jakarta_Sans({
 });
 const barlowCondensed = Barlow_Condensed({
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+  weight: ["400", "500", "600", "700", "800", "900"],
   variable: "--font-barlow",
   display: "swap",
 });
@@ -92,11 +95,35 @@ const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   display: "swap",
 });
+const dmMono = DM_Mono({
+  subsets: ["latin"],
+  weight: ["300", "400", "500"],
+  style: ["normal", "italic"],
+  variable: "--font-dm-mono",
+  display: "swap",
+});
+const kronaOne = Krona_One({
+  subsets: ["latin"],
+  weight: "400",
+  variable: "--font-krona-one",
+  display: "swap",
+});
+const chewy = Chewy({
+  subsets: ["latin"],
+  weight: "400",
+  variable: "--font-chewy",
+  display: "swap",
+});
+const bricolage = Bricolage_Grotesque({
+  subsets: ["latin"],
+  variable: "--font-bricolage",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
-  title: "Tray — Skip the line. Eat sooner.",
+  title: "Tray — Campus food, without the queue.",
   description:
-    "A canteen ordering system for college campuses. Order on your phone, pay by UPI, collect with a 4-digit code.",
+    "Students order from any canteen in their campus. Kitchens run live queues. Admins see orders, revenue, and handovers in real time.",
   metadataBase: new URL(process.env.APP_URL ?? "http://localhost:3000"),
   openGraph: {
     title: "Tray",
@@ -115,22 +142,24 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
+export const dynamic = "force-dynamic";
+
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const h = await headers();
-  const slug = h.get("x-tenant-slug") ?? "";
-  const tenant = slug ? await resolveTenant(slug) : null;
+  const slug = getTenantSlugFromHeaders(h);
+  const tenant = await resolveTenant(slug);
 
   // Blocking inline script: resolve theme synchronously before first paint so
   // dark-mode users never see a white flash (FOUC). Mirrors the logic in
   // ThemeProvider; that effect later re-applies idempotently.
-  const fouc = `(()=>{try{var t=localStorage.getItem('tray:theme')||'system';var d=t==='dark'||(t==='system'&&matchMedia('(prefers-color-scheme: dark)').matches);var r=document.documentElement;r.classList.toggle('dark',d);r.setAttribute('data-theme',d?'dark':'light');}catch(e){}})();`;
+  const fouc = `(()=>{try{var t=localStorage.getItem('tray:theme')||'light';var d=t==='dark'||(t==='system'&&matchMedia('(prefers-color-scheme: dark)').matches);var r=document.documentElement;r.classList.toggle('dark',d);r.setAttribute('data-theme',d?'dark':'light');if(sessionStorage.getItem('tray_landing_intro_seen')==='1'){r.classList.add('tl-intro-seen');}}catch(e){}})();`;
 
   return (
     <html
       lang="en"
       data-tenant-id={tenant?.id ?? ""}
       data-tenant-slug={tenant?.slug ?? ""}
-      className={`${inter.variable} ${fraunces.variable} ${manrope.variable} ${jetbrains.variable} ${instrumentSerif.variable} ${newsreader.variable} ${spaceGrotesk.variable} ${geist.variable} ${geistMono.variable} ${bebasNeue.variable} ${cormorant.variable} ${plusJakarta.variable} ${barlowCondensed.variable} ${dmSerif.variable}`}
+      className={`${inter.variable} ${fraunces.variable} ${manrope.variable} ${jetbrains.variable} ${instrumentSerif.variable} ${newsreader.variable} ${spaceGrotesk.variable} ${geist.variable} ${geistMono.variable} ${bebasNeue.variable} ${cormorant.variable} ${plusJakarta.variable} ${barlowCondensed.variable} ${dmSerif.variable} ${dmMono.variable} ${kronaOne.variable} ${chewy.variable} ${bricolage.variable}`}
       suppressHydrationWarning
     >
       <head>

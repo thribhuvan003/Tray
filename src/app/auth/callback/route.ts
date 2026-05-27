@@ -171,5 +171,35 @@ export async function GET(req: NextRequest) {
     }
   }
 
+  // If next === "/" (user signed in from landing), route to their portal instead.
+  // A bare landing-page redirect is confusing — the student or admin should land
+  // on the ordering menu or the admin dashboard, not the marketing page.
+  if (next === "/" && u.user) {
+    // Find the user's most recent tenant membership and redirect there.
+    const { data: memberships } = await supabase
+      .from("tenant_memberships")
+      .select("tenant_id, role, tenants(slug)")
+      .eq("user_id", u.user.id)
+      .eq("is_active", true)
+      .order("created_at", { ascending: false })
+      .limit(1);
+
+    const mem = memberships?.[0] as
+      | { tenant_id: string; role: string; tenants: { slug: string } | null }
+      | undefined;
+
+    if (mem?.tenants?.slug) {
+      const slug = mem.tenants.slug;
+      const role = mem.role;
+      if (role === "canteen_admin" || role === "super_admin") {
+        return NextResponse.redirect(new URL(`/c/${slug}/admin/dashboard`, origin));
+      } else if (role === "kitchen") {
+        return NextResponse.redirect(new URL(`/c/${slug}/kitchen`, origin));
+      } else {
+        return NextResponse.redirect(new URL(`/c/${slug}/menu`, origin));
+      }
+    }
+  }
+
   return NextResponse.redirect(new URL(next, origin));
 }
