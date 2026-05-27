@@ -27,7 +27,14 @@ export function LoginForm({ next, slug = "" }: { next: string; slug?: string }) 
           ).toString(),
         },
       });
-      if (error) toast.error(error.message);
+      if (error) {
+        const msg =
+          error.message.toLowerCase().includes("provider") ||
+          error.message.toLowerCase().includes("not enabled")
+            ? "Google sign-in isn't enabled for this canteen. Use your email instead."
+            : "Google sign-in failed. Try again or use email.";
+        toast.error(msg);
+      }
     });
   };
   const [sent, setSent] = useState(false);
@@ -56,7 +63,18 @@ export function LoginForm({ next, slug = "" }: { next: string; slug?: string }) 
     const sb = getBrowserClient();
     const { error } = await sb.auth.verifyOtp({ email, token: otp, type: "email" });
     if (error) {
-      toast.error(error.message);
+      const msg = error.message.toLowerCase().includes("expired")
+        ? "Code expired — request a new magic link."
+        : error.message.toLowerCase().includes("invalid")
+        ? "Wrong code. Check your email and try again."
+        : error.message;
+      toast.error(msg);
+      setVerifying(false);
+      return;
+    }
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) {
+      toast.error("Sign-in failed. Please try again.");
       setVerifying(false);
       return;
     }
@@ -74,17 +92,27 @@ export function LoginForm({ next, slug = "" }: { next: string; slug?: string }) 
       if (mode === "magic") {
         const { error } = await sb.auth.signInWithOtp({
           email,
-          options: { emailRedirectTo: redirectTo, shouldCreateUser: true },
+          options: { emailRedirectTo: redirectTo, shouldCreateUser: false },
         });
-        if (error) toast.error(error.message);
-        else {
+        if (error) {
+          const msg =
+            error.message.toLowerCase().includes("signup") ||
+            error.message.toLowerCase().includes("not allowed")
+              ? "No account found with that email. Sign up first or use Google."
+              : error.message;
+          toast.error(msg);
+        } else {
           setSent(true);
           toast.success("Magic link sent — check your inbox.");
         }
       } else {
         const { error } = await sb.auth.signInWithPassword({ email, password });
-        if (error) toast.error(error.message);
-        else window.location.href = next;
+        if (error) {
+          const msg = error.message.toLowerCase().includes("invalid")
+            ? "Wrong email or password. Try again."
+            : error.message;
+          toast.error(msg);
+        } else window.location.href = next;
       }
     });
   };

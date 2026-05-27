@@ -3,6 +3,22 @@ import { getServerClient } from "@/lib/supabase/server";
 import { getAdminClient } from "@/lib/supabase/admin";
 import { resolveTenant } from "@/lib/tenant";
 import { logger } from "@/lib/logging";
+import { safeNext } from "@/lib/auth/safe-redirect";
+
+// Maps raw Supabase auth error messages to user-friendly strings so we never
+// reflect internal error details back to the browser URL bar.
+function userFacingAuthError(raw: string): string {
+  const msg = raw.toLowerCase();
+  if (msg.includes("expired") || msg.includes("invalid") || msg.includes("link"))
+    return "Sign-in link expired or invalid — please request a new one.";
+  if (msg.includes("email") && msg.includes("not confirmed"))
+    return "Email not confirmed. Check your inbox for a confirmation link.";
+  if (msg.includes("already") && msg.includes("registered"))
+    return "An account with this email already exists. Try signing in instead.";
+  if (msg.includes("signup") || msg.includes("not allowed"))
+    return "No account found with that email. Sign up first.";
+  return "Sign-in failed. Please try again.";
+}
 
 /**
  * Enrolls the authenticated user into every open-access tenant they are not
@@ -58,7 +74,7 @@ export async function GET(req: NextRequest) {
   const code = searchParams.get("code");
   const token_hash = searchParams.get("token_hash");
   const type = searchParams.get("type");
-  const next = searchParams.get("next") ?? "/";
+  const next = safeNext(searchParams.get("next"), "/");
   // Prefer explicit tenant from the invite/signup link or the x-tenant-slug header (set by middleware for /c/slug/... flows).
   // No silent "aditya" default for normal auth — fail loud with a clear error so broken invites/links are obvious.
   const tenantSlug = searchParams.get("tenant") ?? req.headers.get("x-tenant-slug");
@@ -82,11 +98,24 @@ export async function GET(req: NextRequest) {
   }
 
   if (authError) {
-    return NextResponse.redirect(new URL(`/login?error=${encodeURIComponent(authError.message)}`, origin));
+    const msg = userFacingAuthError(authError.message);
+    return NextResponse.redirect(new URL(`/login?error=${encodeURIComponent(msg)}`, origin));
   }
   const tenant = tenantSlug ? await resolveTenant(tenantSlug) : null;
   const { data: u } = await supabase.auth.getUser();
   if (tenant && u.user) {
+    // Server-side domain check — client-side validation alone is not enough.
+    // If the tenant restricts by email domain, reject OAuth users from other domains.
+    if (tenant.allowed_domain) {
+      const userDomain = u.user.email?.split("@")[1]?.toLowerCase();
+      if (userDomain !== tenant.allowed_domain.toLowerCase()) {
+        await supabase.auth.signOut();
+        const msg = encodeURIComponent(
+          `This canteen requires a @${tenant.allowed_domain} email address. Please sign in with your campus email.`
+        );
+        return NextResponse.redirect(new URL(`/c/${tenant.slug}/login?error=${msg}`, origin));
+      }
+    }
     try {
       const admin = getAdminClient(tenant.id);
       await admin
