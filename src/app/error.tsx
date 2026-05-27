@@ -29,7 +29,7 @@ export default function GlobalError({
         <div className="mt-6 flex gap-2 justify-center">
           <button
             onClick={reset}
-            className="h-11 px-5 rounded-full bg-ocean-500 text-white text-[13px] font-medium hover:bg-ocean-600 transition-colors"
+            className="h-11 px-5 rounded-full bg-ocean-500 text-black text-[13px] font-medium hover:bg-ocean-600 transition-colors"
           >
             Try again
           </button>
