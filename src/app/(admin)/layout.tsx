@@ -10,7 +10,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const tenant = await resolveTenant(slug);
   if (!tenant) redirect("/");
   const user = await requireRole(["canteen_admin", "super_admin"]);
-  if (!user) redirect(`/c/${tenant.slug}/login?next=/c/${tenant.slug}/admin/dashboard`);
+  // role=owner ensures the login form routes back to the admin dashboard
+  // rather than falling through to the student menu on re-login.
+  if (!user) redirect(`/c/${tenant.slug}/login?role=owner&next=${encodeURIComponent(`/c/${tenant.slug}/admin/dashboard`)}`);
   return (
     <div
       data-portal="admin"

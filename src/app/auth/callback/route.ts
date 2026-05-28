@@ -32,6 +32,21 @@ function userFacingAuthError(raw: string): string {
 async function ensureStudentEnrolled(userId: string): Promise<void> {
   const admin = getAdminClient();
 
+  // Skip auto-enrollment for users who are already staff/admin anywhere.
+  // Root-cause fix for "admin lands on stranger's student menu": without this
+  // guard, an admin who sets up an open-access canteen gets enrolled as a
+  // student in every OTHER open-access canteen on the platform. Those new
+  // student rows have the freshest created_at, so the callback routes them
+  // to the wrong canteen/portal on every subsequent login.
+  const { count: staffCount } = await admin
+    .from("tenant_memberships")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", userId)
+    .eq("is_active", true)
+    .in("role", ["canteen_admin", "super_admin", "kitchen_staff"]);
+
+  if ((staffCount ?? 0) > 0) return;
+
   // Find every active tenant whose parent college imposes no domain restriction.
   // We filter server-side using the Postgres array equality operator via PostgREST.
   const { data: openTenants, error } = await admin
@@ -238,6 +253,17 @@ export async function GET(req: NextRequest) {
           return m.role === "student";
         });
         if (match) activeMem = match;
+      } else {
+        // No explicit role hint — always prefer admin > kitchen > student.
+        // This prevents the case where ensureStudentEnrolled just created fresh
+        // student rows (newest created_at) that would otherwise win as memberships[0].
+        const adminMem = memberships.find((m) =>
+          m.role === "canteen_admin" || m.role === "super_admin"
+        );
+        const kitchenMem = memberships.find((m) =>
+          m.role === "kitchen_staff" || m.role === "kitchen"
+        );
+        activeMem = adminMem ?? kitchenMem ?? activeMem;
       }
 
       if (tenantSlug) {
