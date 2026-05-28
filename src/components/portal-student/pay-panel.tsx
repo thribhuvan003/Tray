@@ -191,6 +191,23 @@ export function PayPanel({
     };
   }, [phase, showFallback]);
 
+  // ── Auto-verify every 15s during monitoring ────────────────────────────────
+  // Fallback for when the Razorpay webhook fails or is delayed: polls
+  // Razorpay's API server-side and calls safe_capture_payment if paid.
+  // Without this, a failed webhook leaves the student stranded indefinitely.
+  useEffect(() => {
+    if (phase !== "monitoring") return;
+    const id = setInterval(() => {
+      if (redirectedRef.current) return;
+      startVerify(async () => {
+        const r = await verifyPaymentNow(order.id);
+        if (r.status === "paid") handleDetected("placed");
+        else if (r.status === "failed") handleDetected("payment_failed");
+      });
+    }, 15_000);
+    return () => clearInterval(id);
+  }, [phase, order.id, handleDetected]);
+
   // ── Transition to monitoring when student opens UPI app ───────────────────
   const onOpenUpi = () => {
     setPhase("monitoring");

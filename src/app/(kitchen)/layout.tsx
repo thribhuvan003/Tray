@@ -17,7 +17,7 @@ export default async function KitchenLayout({ children }: { children: React.Reac
   // This closes the page-content gap: unauthorized users get a redirect, not content.
   const user = await requireRole(["kitchen_staff", "canteen_admin", "super_admin"]);
   if (!user) {
-    redirect(`/c/${tenant.slug}/login?next=/c/${tenant.slug}/kitchen/staff-select`);
+    redirect(`/c/${tenant.slug}/login?role=kitchen&next=${encodeURIComponent(`/c/${tenant.slug}/kitchen/staff-select`)}`);
   }
 
   return (
