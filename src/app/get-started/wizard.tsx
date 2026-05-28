@@ -663,6 +663,14 @@ export function GetStartedWizard({ isNewUser = false, isSignedIn = false }: { is
 
       const result = await createInstitution(payload);
       if (!result.ok) {
+        // Special case: email already has a canteen — skip the error and
+        // go straight to the login page so they can access their dashboard.
+        const isAlreadyOwner =
+          (result.error ?? "").toLowerCase().includes("already has a canteen");
+        if (isAlreadyOwner) {
+          window.location.href = `/login?role=owner&msg=already-has-canteen`;
+          return;
+        }
         setSubmitError(result.error ?? "Something went wrong. Please try again.");
         return;
       }

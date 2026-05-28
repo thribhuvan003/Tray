@@ -9,6 +9,7 @@ import { headers } from "next/headers";
 import { Toaster } from "sonner";
 import { resolveTenant, getTenantSlugFromHeaders } from "@/lib/tenant";
 import { Providers } from "@/components/providers";
+import { AuthRescue } from "@/components/auth-rescue";
 import "./globals.css";
 
 const inter = Inter({
@@ -166,6 +167,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <script dangerouslySetInnerHTML={{ __html: fouc }} />
       </head>
       <body>
+        <AuthRescue />
         <Providers tenantId={tenant?.id ?? null}>
           {children}
         </Providers>
