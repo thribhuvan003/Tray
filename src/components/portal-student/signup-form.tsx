@@ -93,7 +93,10 @@ export function SignupForm({
           type="button"
           onClick={onGoogleSignIn}
           disabled={pending}
-          className="w-full h-12 rounded-xl border border-[color:var(--color-line)] bg-[color:var(--color-paper)] text-[14px] font-medium inline-flex items-center justify-center gap-2.5 hover:border-[color:var(--color-ocean-500)]/50 hover:bg-[color:var(--color-ocean-500)]/5 transition-colors"
+          className={cn(
+            "w-full h-12 rounded-xl border border-[color:var(--color-line)] bg-[color:var(--color-paper)] text-[14px] font-medium inline-flex items-center justify-center gap-2.5 transition-colors select-none",
+            pending ? "cursor-wait opacity-70" : "cursor-pointer hover:border-[color:var(--color-ocean-500)]/50 hover:bg-[color:var(--color-ocean-500)]/5"
+          )}
         >
           <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
             <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z" fill="#4285F4"/>
