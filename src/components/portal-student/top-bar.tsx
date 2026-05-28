@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Clock, History, User, LogOut, ShoppingCart } from "lucide-react";
+import { History, User, LogOut, ShoppingCart, Search } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { ResolvedTenant, CollegeCanteen } from "@/lib/tenant";
@@ -10,6 +10,7 @@ import { CanteenSwitcher, type CanteenOption } from "@/components/portal-student
 import { getBrowserClient } from "@/lib/supabase/browser";
 import type { CurrentUser } from "@/lib/auth/get-user";
 import { useCart, cartItemCount } from "@/lib/cart/store";
+import { useRef } from "react";
 
 function currentServiceLabel(): string {
   const h = new Date(Date.now() + 5.5 * 3600000).getUTCHours();
@@ -29,6 +30,9 @@ export function StudentTopBar({ tenant, siblings = [], user }: Props) {
   const lines = useCart((s) => s.lines);
   const count = cartItemCount(lines);
   const setIsOpen = useCart((s) => s.setIsOpen);
+  const searchQuery = useCart((s) => s.searchQuery);
+  const setSearchQuery = useCart((s) => s.setSearchQuery);
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   const [t, setT] = useState("");
   const [serviceLabel, setServiceLabel] = useState(() => currentServiceLabel());
@@ -194,16 +198,47 @@ export function StudentTopBar({ tenant, siblings = [], user }: Props) {
           </span>
         </Link>
 
-        {/* Center: Unified Location & Search Bar with max-width constraint */}
-        <div className="flex items-center justify-center flex-1 min-w-0 px-2">
-          <div className="w-full max-w-[640px]">
+        {/* Center: Search bar */}
+        <div className="flex items-center justify-center flex-1 min-w-0 px-2 sm:px-3">
+          <div className="relative w-full max-w-[520px]">
+            <Search
+              size={14}
+              className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none text-[color:var(--color-ink)]/40"
+            />
+            <input
+              ref={searchInputRef}
+              type="search"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search dishes…"
+              aria-label="Search menu items"
+              className="w-full h-9 pl-8 pr-8 rounded-full border border-[color:var(--color-line)] bg-[color:var(--color-paper)] text-[13.5px] placeholder:text-[color:var(--color-ink)]/38 focus:outline-none focus:border-[color:var(--color-ocean-500)] transition-colors"
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => { setSearchQuery(""); searchInputRef.current?.focus(); }}
+                aria-label="Clear search"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-[color:var(--color-ink)]/40 hover:text-[color:var(--color-ink)] transition-colors"
+              >
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor">
+                  <path d="M1 1l10 10M11 1L1 11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" fill="none" />
+                </svg>
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Canteen switcher — hidden on mobile when there's only one canteen */}
+        {canteenOptions.length > 1 && (
+          <div className="hidden md:block shrink-0 max-w-[200px]">
             <CanteenSwitcher
               canteens={canteenOptions}
               selectedCanteenId={tenant.slug}
               onSelect={handleCanteenSelect}
             />
           </div>
-        </div>
+        )}
 
         {/* Right: actions */}
         <div className="flex items-center gap-1 sm:gap-1.5 flex-shrink-0">

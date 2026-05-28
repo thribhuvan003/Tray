@@ -174,7 +174,7 @@ export default async function NewMenuItemPage() {
           <label className="block text-[13px] font-medium text-admin-ink-2 mb-2">
             Image
           </label>
-          <ImageUploadField name="image_url" />
+          <ImageUploadField name="image_url" tenantId={tenant.id} />
         </div>
 
         {/* sort_order is sent as default 0 via server action — no user-facing field needed */}

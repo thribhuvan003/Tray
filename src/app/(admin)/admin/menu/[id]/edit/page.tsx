@@ -210,7 +210,7 @@ export default async function EditMenuItemPage({ params }: Props) {
           <label className="block text-[13px] font-medium text-admin-ink-2 mb-2">
             Image
           </label>
-          <ImageUploadField name="image_url" defaultUrl={item.image_url} />
+          <ImageUploadField name="image_url" defaultUrl={item.image_url} tenantId={tenant.id} />
         </div>
 
         {/* Sort order */}
