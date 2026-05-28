@@ -129,6 +129,7 @@ export async function createInstitution(
       is_active: true,
       is_open: true,
       guest_orders_enabled: true,
+      upi_trust_enabled: true,
     })
     .select("id")
     .single();

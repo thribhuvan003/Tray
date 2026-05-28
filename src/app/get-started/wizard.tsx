@@ -710,18 +710,16 @@ export function GetStartedWizard({ isNewUser = false, isSignedIn = false }: { is
         });
         if (loginError) {
           console.error("Auto login after canteen creation failed:", loginError);
-          router.push(
-            `/c/${result.canteenSlug}/login?next=${encodeURIComponent(
-              `/c/${result.canteenSlug}/admin/dashboard?welcome=1`
-            )}&role=owner`
-          );
+          window.location.href = `/c/${result.canteenSlug}/login?next=${encodeURIComponent(
+            `/c/${result.canteenSlug}/admin/dashboard?welcome=1`
+          )}&role=owner`;
           return;
         }
       } catch (err) {
         console.error("Auto login error:", err);
       }
 
-      router.push(`/c/${result.canteenSlug}/admin/dashboard?welcome=1`);
+      window.location.href = `/c/${result.canteenSlug}/admin/dashboard?welcome=1`;
     });
   }
 

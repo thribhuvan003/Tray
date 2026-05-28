@@ -2,7 +2,7 @@
 
 const S_RADIUS_SM = 10;
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Minus, Plus } from "lucide-react";
 import type { MenuItem, MenuCategory } from "@/lib/db/types";
@@ -154,10 +154,16 @@ export function MenuBoard({
     return `~${wait} min wait`;
   }
 
+  const isScrollingRef = useRef(false);
+
   const scrollToCategory = (catId: string) => {
+    isScrollingRef.current = true;
     setActiveCat(catId);
     if (catId === "all") {
       window.scrollTo({ top: 0, behavior: "smooth" });
+      setTimeout(() => {
+        isScrollingRef.current = false;
+      }, 800);
       return;
     }
     const targetId = (specialsCategory && catId === specialsCategory.id)
@@ -174,6 +180,11 @@ export function MenuBoard({
         top: offsetPosition,
         behavior: "smooth"
       });
+      setTimeout(() => {
+        isScrollingRef.current = false;
+      }, 800);
+    } else {
+      isScrollingRef.current = false;
     }
   };
 
@@ -185,6 +196,7 @@ export function MenuBoard({
     };
 
     const observerCallback = (entries: IntersectionObserverEntry[]) => {
+      if (isScrollingRef.current) return;
       entries.forEach((entry) => {
         if (entry.isIntersecting) {
           const id = entry.target.id;
@@ -429,7 +441,7 @@ export function MenuBoard({
             <div className="mx-auto w-12 h-1.5 rounded-full bg-[color:var(--color-line-strong)] mt-3 mb-2" />
             <div className="px-5 py-3 border-b border-[color:var(--color-line)]"><h3 className="font-display text-[18px] font-bold">Browse Menu</h3></div>
             <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-2">
-              <button onClick={() => { setActiveCat("all"); setIsBrowseOpen(false); }} className={cn("w-full text-left px-4 py-3.5 rounded-2xl text-[14.5px] font-semibold transition-all border flex items-center justify-between", activeCat === "all" ? "bg-ocean-500/10 text-ocean-600 dark:text-ocean-400 font-bold border-ocean-500/20" : "border-[color:var(--color-line)] text-[color:var(--color-ink)] bg-[color:var(--color-paper)]")}>
+              <button onClick={() => { scrollToCategory("all"); setIsBrowseOpen(false); }} className={cn("w-full text-left px-4 py-3.5 rounded-2xl text-[14.5px] font-semibold transition-all border flex items-center justify-between", activeCat === "all" ? "bg-ocean-500/10 text-ocean-600 dark:text-ocean-400 font-bold border-ocean-500/20" : "border-[color:var(--color-line)] text-[color:var(--color-ink)] bg-[color:var(--color-paper)]")}>
                 <span>All items</span><span className="text-[12px] opacity-60 font-normal">{items.filter((it) => !vegOnly || it.diet === "veg").length} items</span>
               </button>
               {categories.map((cat) => {
@@ -439,7 +451,7 @@ export function MenuBoard({
                 if (catCount === 0) return null;
                 const isActive = activeCat === cat.id;
                 return (
-                  <button key={cat.id} onClick={() => { setActiveCat(cat.id); setIsBrowseOpen(false); }} className={cn("w-full text-left px-4 py-3.5 rounded-2xl text-[14.5px] font-semibold transition-all border flex items-center justify-between", isActive ? "bg-ocean-500/10 text-ocean-600 dark:text-ocean-400 font-bold border-ocean-500/20" : "border-[color:var(--color-line)] text-[color:var(--color-ink)] bg-[color:var(--color-paper)]")}>
+                  <button key={cat.id} onClick={() => { scrollToCategory(cat.id); setIsBrowseOpen(false); }} className={cn("w-full text-left px-4 py-3.5 rounded-2xl text-[14.5px] font-semibold transition-all border flex items-center justify-between", isActive ? "bg-ocean-500/10 text-ocean-600 dark:text-ocean-400 font-bold border-ocean-500/20" : "border-[color:var(--color-line)] text-[color:var(--color-ink)] bg-[color:var(--color-paper)]")}>
                     <span>{cat.name}</span><span className="text-[12px] opacity-60 font-normal">{catCount} items</span>
                   </button>
                 );
