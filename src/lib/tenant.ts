@@ -149,7 +149,16 @@ const fetchTenantEdgeCached = unstable_cache(
 
 export const resolveTenant = cache(async (slug: string): Promise<ResolvedTenant | null> => {
   const normalized = slug ? slug.toLowerCase() : "";
-  if (normalized === "aditya" || !slug) {
+
+  // P0-1 FIX: In production, never fall back to the demo canteen.
+  // An invalid/unknown slug returns null → middleware 404s cleanly.
+  // The hardcoded fallback was a data-corruption exploit: any typo in a URL
+  // silently routed orders + UPI payments to the "aditya" demo account.
+  if (!normalized) return null;
+
+  // In development/preview, allow the "aditya" demo slug to work from the
+  // in-memory mock so local dev doesn't need a Supabase row.
+  if (process.env.NODE_ENV !== "production" && normalized === "aditya") {
     return {
       id: "d3b07384-d113-4e6b-a25e-e4a81e355fd5",
       slug: "aditya",
@@ -166,27 +175,9 @@ export const resolveTenant = cache(async (slug: string): Promise<ResolvedTenant 
     };
   }
 
-  const cached = await fetchTenantEdgeCached(slug);
+  const cached = await fetchTenantEdgeCached(normalized);
   if (cached) return cached;
-  const uncached = await fetchTenantUncached(slug);
-  if (uncached) return uncached;
-
-  return {
-    id: "d3b07384-d113-4e6b-a25e-e4a81e355fd5",
-    slug: normalized || "aditya",
-    name: normalized
-      ? `${normalized.charAt(0).toUpperCase() + normalized.slice(1)} Canteen`
-      : "Aditya Canteen",
-    college_name: "Aditya Engineering College",
-    college_slug: "aditya-college",
-    hero_tagline: "High-speed student refueling",
-    logo_url: null,
-    allowed_domain: null,
-    upi_vpa: `${normalized || "aditya"}@upi`,
-    building: "Main Block",
-    zone: "Food Court",
-    is_open: true,
-  };
+  return fetchTenantUncached(normalized);
 });
 
 const DEMO_CANTEENS: CollegeCanteen[] = [

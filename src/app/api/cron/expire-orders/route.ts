@@ -103,6 +103,18 @@ export async function POST(req: NextRequest) {
       }))
     );
 
+    // P1-2 FIX: Emit order_events for pending_payment → expired so student
+    // pay-panel's Realtime subscription fires and redirects immediately.
+    // Before this fix, students relied only on the client-side countdown.
+    await (tAdmin as any).from("order_events").insert(
+      rows.map((r: { id: string; tenant_id: string }) => ({
+        tenant_id: r.tenant_id,
+        order_id: r.id,
+        event_type: "status_changed",
+        payload: { from: "pending_payment", to: "expired", source: "expire_cron" },
+      }))
+    );
+
     totalExpired += rows.length;
 
     logger.info("expire-orders tenant batch", {
