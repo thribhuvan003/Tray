@@ -300,78 +300,91 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
                 <em style={{ fontStyle: "italic", color: "var(--tray-clay)" }}>in eleven minutes.</em>
               </h2>
             </RevealItem>
-            <div className="mt-8 sm:mt-18 grid gap-6 sm:grid-cols-2 lg:grid-cols-5">
-              {([
-                ["01", "Choose canteen",  "Browse active canteens on your campus.",            "SELECTING"],
-                ["02", "Browse menu",     "Live availability, prep times, veg/non-veg.",       "CART"],
-                ["03", "Pay by UPI",      "Single-use QR. Webhook confirms in seconds.",       "PAID"],
-                ["04", "Track live",      "Queued → preparing → ready in ~250 ms.",            "PREPARING"],
-                ["05", "Collect w/ OTP",  "Four-digit code at counter. Staff marks complete.", "READY"],
-              ] as const).map(([num, title, desc, tag], i) => {
-                const isHovered = hoveredStep === i;
-                const baseIdx = i;
+            <div className="mt-12 sm:mt-24 overflow-hidden w-full relative py-2">
+              <div className="grid gap-6 sm:grid-cols-2 lg:flex lg:flex-row tl-flow-track-horizontal py-4">
+                {(
+                  [
+                    ["01", "Choose canteen",  "Browse active canteens on your campus.",            "SELECTING"],
+                    ["02", "Browse menu",     "Live availability, prep times, veg/non-veg.",       "CART"],
+                    ["03", "Pay by UPI",      "Single-use QR. Webhook confirms in seconds.",       "PAID"],
+                    ["04", "Track live",      "Queued → preparing → ready in ~250 ms.",            "PREPARING"],
+                    ["05", "Collect w/ OTP",  "Four-digit code at counter. Staff marks complete.", "READY"],
+                  ] as const
+                ).concat([
+                  ["01", "Choose canteen",  "Browse active canteens on your campus.",            "SELECTING"],
+                  ["02", "Browse menu",     "Live availability, prep times, veg/non-veg.",       "CART"],
+                  ["03", "Pay by UPI",      "Single-use QR. Webhook confirms in seconds.",       "PAID"],
+                  ["04", "Track live",      "Queued → preparing → ready in ~250 ms.",            "PREPARING"],
+                  ["05", "Collect w/ OTP",  "Four-digit code at counter. Staff marks complete.", "READY"],
+                ]).map(([num, title, desc, tag], idx) => {
+                  const originalIdx = idx % 5;
+                  const isHovered = hoveredStep === originalIdx;
+                  const baseIdx = originalIdx;
 
-                let cardBg = "rgba(255,255,255,0.65)";
-                let cardText = "var(--tray-ink, #1A1619)";
-                let numColor = "var(--tray-clay, #E60000)";
-                let tagBg = "rgba(26,22,25,0.05)";
-                let tagBorder = "var(--tray-border)";
-                let tagColor = "var(--tray-muted)";
-                let borderStyle = "1px solid var(--tray-border)";
-                let descOpacity = "0.6";
+                  let cardBg = "rgba(255,255,255,0.65)";
+                  let cardText = "var(--tray-ink, #1A1619)";
+                  let numColor = "var(--tray-clay, #E60000)";
+                  let tagBg = "rgba(26,22,25,0.05)";
+                  let tagBorder = "var(--tray-border)";
+                  let tagColor = "var(--tray-muted)";
+                  let borderStyle = "1px solid var(--tray-border)";
+                  let descOpacity = "0.6";
 
-                const showRedTheme = (
-                  ((baseIdx === 0 || baseIdx === 4 || baseIdx === 2) && isHovered) ||
-                  ((baseIdx === 1 || baseIdx === 3) && !isHovered)
-                );
+                  const showRedTheme = (
+                    ((baseIdx === 0 || baseIdx === 4 || baseIdx === 2) && isHovered) ||
+                    ((baseIdx === 1 || baseIdx === 3) && !isHovered)
+                  );
 
-                if (showRedTheme) {
-                  cardBg = "var(--tray-clay, #E60000)";
-                  cardText = "#FAF8F5";
-                  numColor = "rgba(250,248,245,0.3)";
-                  tagBg = "rgba(250,248,245,0.15)";
-                  tagBorder = "rgba(250,248,245,0.2)";
-                  tagColor = "rgba(250,248,245,0.7)";
-                  borderStyle = "none";
-                  descOpacity = "0.8";
-                } else if (baseIdx === 2 && !isHovered) {
-                  cardBg = "rgba(255,255,255,0.65)";
-                  cardText = "var(--tray-clay, #E60000)";
-                  numColor = "var(--tray-ink, #1A1619)";
-                  tagBg = "rgba(230,0,0,0.05)";
-                  tagBorder = "rgba(230,0,0,0.2)";
-                  tagColor = "var(--tray-clay, #E60000)";
-                  borderStyle = "1px solid var(--tray-border)";
-                  descOpacity = "0.7";
-                }
+                  if (showRedTheme) {
+                    cardBg = "var(--tray-clay, #E60000)";
+                    cardText = "#FAF8F5";
+                    numColor = "rgba(250,248,245,0.3)";
+                    tagBg = "rgba(250,248,245,0.15)";
+                    tagBorder = "rgba(250,248,245,0.2)";
+                    tagColor = "rgba(250,248,245,0.7)";
+                    borderStyle = "1px solid transparent";
+                    descOpacity = "0.8";
+                  } else if (baseIdx === 2 && !isHovered) {
+                    cardBg = "rgba(255,255,255,0.65)";
+                    cardText = "var(--tray-clay, #E60000)";
+                    numColor = "var(--tray-ink, #1A1A19)";
+                    tagBg = "rgba(230,0,0,0.05)";
+                    tagBorder = "rgba(230,0,0,0.2)";
+                    tagColor = "var(--tray-clay, #E60000)";
+                    borderStyle = "1px solid var(--tray-border)";
+                    descOpacity = "0.7";
+                  }
 
-                return (
-                  <div
-                    key={num}
-                    onMouseEnter={() => setHoveredStep(i)}
-                    onMouseLeave={() => setHoveredStep(null)}
-                    className="flex flex-col gap-3 sm:gap-4 rounded-[1.5rem] sm:rounded-[1.75rem] p-6 sm:p-8 lg:p-9 transition-all duration-300 ease-out hover:scale-[1.03] hover:-translate-y-1 hover:shadow-xl select-none cursor-pointer h-full tl-flow-card-horizontal"
-                    style={{ background: cardBg, color: cardText, border: borderStyle }}
-                  >
-                    <span
-                      className="leading-none tracking-[-0.02em] block mb-2"
-                      style={{ fontFamily: "var(--font-bebas)", fontSize: "clamp(3.8rem, 6vw, 4.8rem)", color: numColor }}
-                    >{num}</span>
-                    <h3
-                      className="text-[1.15rem] sm:text-[1.25rem] tracking-tight leading-[1.2]"
-                      style={{ fontFamily: "var(--font-fraunces)", fontStyle: "italic", fontWeight: 500 }}
-                    >{title}</h3>
-                    <p
-                      className="flex-1 text-[0.88rem] leading-[1.65]"
-                      style={{ fontFamily: "var(--font-jakarta)", opacity: descOpacity }}
-                    >{desc}</p>
-                    <span
-                      className="mt-auto self-start rounded-full px-3 py-1 text-[0.68rem] uppercase tracking-[0.16em]"
-                      style={{ fontFamily: "var(--font-dm-mono)", color: tagColor, background: tagBg, border: `1px solid ${tagBorder}` }}
-                    >{tag}</span>
-                  </div>
-                );
-              })}
+                  return (
+                    <div
+                      key={`${num}-${idx}`}
+                      onMouseEnter={() => setHoveredStep(originalIdx)}
+                      onMouseLeave={() => setHoveredStep(null)}
+                      className={`flex flex-col gap-3 sm:gap-4 rounded-[1.5rem] sm:rounded-[1.75rem] p-6 sm:p-8 lg:p-9 transition-all duration-300 ease-out hover:scale-[1.03] hover:-translate-y-1 hover:shadow-xl select-none cursor-pointer h-full tl-flow-card-horizontal ${
+                        idx >= 5 ? "hidden lg:flex" : "flex"
+                      }`}
+                      style={{ background: cardBg, color: cardText, border: borderStyle, minHeight: "340px" }}
+                    >
+                      <span
+                        className="leading-none tracking-[-0.02em] block mb-4"
+                        style={{ fontFamily: "var(--font-bebas)", fontSize: "clamp(3.8rem, 6vw, 4.8rem)", color: numColor }}
+                      >{num}</span>
+                      <h3
+                        className="text-[1.15rem] sm:text-[1.25rem] tracking-tight leading-[1.2]"
+                        style={{ fontFamily: "var(--font-fraunces)", fontStyle: "italic", fontWeight: 500 }}
+                      >{title}</h3>
+                      <p
+                        className="flex-1 text-[0.88rem] leading-[1.65]"
+                        style={{ fontFamily: "var(--font-jakarta)", opacity: descOpacity }}
+                      >{desc}</p>
+                      <span
+                        className="mt-auto self-start rounded-full px-3 py-1 text-[0.68rem] uppercase tracking-[0.16em]"
+                        style={{ fontFamily: "var(--font-dm-mono)", color: tagColor, background: tagBg, border: `1px solid ${tagBorder}` }}
+                      >{tag}</span>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </motion.div>
         </SectionReveal>
@@ -431,58 +444,27 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
           </div>
         </SectionReveal>
 
-        {/* ── REALTIME STRIP ────────────────────────────────────────── */}
-        <div className="px-5 py-12 sm:px-8 lg:px-10">
-          <div className="mx-auto max-w-7xl">
-            <div
-              className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 rounded-[1.5rem] sm:rounded-[1.75rem] border px-4 sm:px-8 py-5 sm:py-6 sm:gap-10"
-              style={{ border: "1px solid var(--tray-border)", background: "rgba(255,255,255,0.38)", backdropFilter: "blur(12px)" }}
+        {/* ── MASTER CONTROL CENTRE COMING SOON ─────────────────────── */}
+        <div className="mx-auto max-w-7xl px-5 py-16 text-center sm:px-8 lg:px-10">
+          <div
+            className="flex flex-col items-center justify-center gap-6 rounded-[2rem] border px-6 py-16 sm:px-12 sm:py-20 lg:py-24"
+            style={{ border: "1px solid var(--tray-border)", background: "var(--tray-ink)", color: "var(--tray-cream)" }}
+          >
+            <span
+              className="rounded-full border px-4 py-1 text-[0.72rem] uppercase tracking-[0.24em] font-bold"
+              style={{ borderColor: "var(--tray-clay)", color: "var(--tray-clay)", fontFamily: "var(--font-dm-mono)" }}
             >
-              <span className="flex items-center gap-2.5 text-[0.72rem] uppercase tracking-[0.22em]" style={{ fontFamily: "var(--font-dm-mono)", color: "var(--tray-muted)" }}>
-                <span className="h-1.5 w-1.5 rounded-full animate-pulse" style={{ background: "var(--tray-clay)" }} />
-                Kitchen pushes update
-              </span>
-              <span className="text-[0.72rem] uppercase tracking-[0.2em] opacity-30" style={{ fontFamily: "var(--font-dm-mono)" }}>——</span>
-              <span
-                data-realtime-counter="wrapper"
-                className="flex items-baseline gap-1 leading-none font-bold"
-                style={{ color: "var(--tray-clay)" }}
-              >
-                <span style={{ fontFamily: "var(--font-newsreader), serif", fontStyle: "italic", fontSize: "clamp(1.15rem, 2vw, 1.55rem)", opacity: 0.85, textTransform: "none" }}>~</span>
-                <span data-realtime-value="true" style={{ fontFamily: "var(--font-bricolage), var(--font-barlow), sans-serif", fontSize: "clamp(2rem, 4vw, 3.2rem)", fontWeight: 800, letterSpacing: "-0.015em" }}>240</span>
-                <span style={{ fontFamily: "var(--font-newsreader), serif", fontStyle: "italic", fontSize: "clamp(1.15rem, 2vw, 1.55rem)", opacity: 0.85, textTransform: "none" }}>ms</span>
-              </span>
-              <span className="text-[0.72rem] uppercase tracking-[0.2em] opacity-30" style={{ fontFamily: "var(--font-dm-mono)" }}>——</span>
-              <span className="flex items-center gap-2.5 text-[0.72rem] uppercase tracking-[0.22em]" style={{ fontFamily: "var(--font-dm-mono)", color: "var(--tray-muted)" }}>
-                <span className="h-1.5 w-1.5 rounded-full animate-pulse" style={{ background: "var(--tray-green, #2A6E3A)" }} />
-                Every portal · no refresh
-              </span>
-            </div>
-
-            {/* ── Super Admin Coming Soon strip ──────────────────── */}
-            <div
-              className="mt-4 flex items-center justify-between gap-4 rounded-[1.5rem] px-6 py-4 sm:px-8 sm:py-5"
-              style={{ background: "var(--tray-ink)", color: "var(--tray-cream)" }}
+              Coming Soon
+            </span>
+            <h3
+              className="max-w-4xl leading-[1.0] tracking-[-0.04em] uppercase"
+              style={{ fontFamily: "var(--font-barlow)", fontWeight: 900, fontSize: "clamp(2rem, 5vw, 4.5rem)" }}
             >
-              <div className="flex items-center gap-3 min-w-0">
-                <span
-                  className="shrink-0 h-1.5 w-1.5 rounded-full"
-                  style={{ background: "var(--tray-clay)", animation: "live-pulse 2.4s ease-out infinite" }}
-                />
-                <span
-                  className="text-[0.72rem] uppercase tracking-[0.2em] truncate"
-                  style={{ fontFamily: "var(--font-dm-mono)", opacity: 0.85 }}
-                >
-                  Master Control Centre · Multi-Canteen Director Console
-                </span>
-              </div>
-              <span
-                className="shrink-0 rounded-full border px-3 py-1 text-[0.62rem] uppercase tracking-[0.16em] font-bold"
-                style={{ borderColor: "var(--tray-clay)", color: "var(--tray-clay)", fontFamily: "var(--font-dm-mono)" }}
-              >
-                Coming Soon
+              Master Control Centre <br />
+              <span className="opacity-50" style={{ fontFamily: "var(--font-fraunces)", fontStyle: "italic", fontWeight: 400, textTransform: "none" }}>
+                Multi-Canteen Director Console
               </span>
-            </div>
+            </h3>
           </div>
         </div>
 

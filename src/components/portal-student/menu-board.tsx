@@ -53,12 +53,11 @@ export function MenuBoard({
   const [isBrowseOpen, setIsBrowseOpen] = useState(false);
   const [vegOnly, setVegOnly] = useState(false);
   const [isDesktop, setIsDesktop] = useState(false);
-  const searchParams = useSearchParams();
-  const q = searchParams.get("q") || "";
+  const q = useCart((s) => s.searchQuery);
   const router = useRouter();
 
   useEffect(() => {
-    const mq = window.matchMedia("(min-width: 1024px)");
+    const mq = window.matchMedia("(min-width: 900px)");
     const update = () => setIsDesktop(mq.matches);
     update();
     mq.addEventListener("change", update);

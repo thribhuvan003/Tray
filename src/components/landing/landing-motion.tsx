@@ -287,6 +287,19 @@ export function LandingMotion() {
             if (isDesktop && !reduced) {
               const track = flowSection.querySelector<HTMLElement>(".tl-flow-track-horizontal");
               if (track) {
+                // Entrance reveal on scroll
+                gsap.set(track, { opacity: 0, y: 50 });
+                gsap.to(track, {
+                  opacity: 1,
+                  y: 0,
+                  duration: 1.25,
+                  ease: "power4.out",
+                  scrollTrigger: {
+                    trigger: flowSection,
+                    start: "top 80%",
+                  }
+                });
+
                 const halfWidth = track.scrollWidth / 2;
                 const tween = gsap.to(track, { x: -halfWidth, duration: 35, ease: "none", repeat: -1 });
                 const onMouseEnter = () => gsap.to(tween, { timeScale: 0, duration: 0.5, ease: "power2.out" });
