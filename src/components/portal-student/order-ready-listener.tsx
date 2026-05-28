@@ -160,7 +160,73 @@ export function OrderReadyListener({
       activeChannels.push(orderCh);
     }
 
-    // 3. Global tenants subscription (new canteens created, switcher status updates)
+    // 3. Cross-canteen order status subscription (scenario 60).
+    // The order_events subscription above only covers the current canteen (filtered by tenant_id).
+    // A student with an order at Canteen B while viewing Canteen A would miss the "Ready" toast.
+    // This second channel subscribes to the orders table filtered by user_id — catches ALL
+    // status transitions across every canteen the student has ever ordered from.
+    if (userId) {
+      const crossCanteenCh = sb
+        .channel(`student-orders-cross:${userId}`)
+        .on(
+          "postgres_changes",
+          {
+            event: "UPDATE",
+            schema: "public",
+            table: "orders",
+            filter: `user_id=eq.${userId}`,
+          },
+          (payload) => {
+            const updated = payload.new as {
+              id: string;
+              status: string;
+              tenant_id?: string;
+            } | null;
+            if (!updated) return;
+
+            // Only handle cross-canteen orders (same tenant is already covered above)
+            if (updated.tenant_id === tenantId) return;
+
+            const orderId = updated.id;
+            const shortCode = activeOrdersRef.current[orderId];
+            if (!shortCode) return; // Not a tracked active order
+
+            const key = `${orderId}:${updated.status}:cross`;
+            if (shownRef.current.has(key)) return;
+
+            if (updated.status === "ready") {
+              shownRef.current.add(key);
+              toast.success(`Order ${shortCode} is ready at another counter! Head there now.`, {
+                duration: 12000,
+                action: {
+                  label: "View",
+                  onClick: () => router.push(`/orders`),
+                },
+              });
+            } else if (updated.status === "preparing") {
+              shownRef.current.add(key);
+              toast(`Order ${shortCode} is being prepared at another counter.`, { duration: 5000 });
+            } else if (
+              ["collected", "rejected", "expired", "cancelled_by_student", "refunded"].includes(
+                updated.status
+              )
+            ) {
+              shownRef.current.add(key);
+              setActiveOrders((prev) => {
+                const next = { ...prev };
+                delete next[orderId];
+                return next;
+              });
+            }
+
+            router.refresh();
+          }
+        )
+        .subscribe();
+      activeChannels.push(crossCanteenCh);
+    }
+
+    // 4. Global tenants subscription (new canteens created, switcher status updates)
     const tenantsCh = sb
       .channel("global-tenants")
       .on(
