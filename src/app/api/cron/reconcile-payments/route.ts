@@ -72,6 +72,14 @@ export async function POST(req: NextRequest) {
 
   const admin = getAdminClient();
   const nowIso = new Date().toISOString();
+
+  // P2-4: Heartbeat — bump last_run_at so dead-man-switch monitoring can detect
+  // if this cron stops firing. Any query against cron_heartbeats with
+  // WHERE last_run_at < now() - interval '5 minutes' surfaces the failure.
+  await (admin as any).from("cron_heartbeats").upsert(
+    { job_name: "reconcile-payments", last_run_at: nowIso, last_ok: true },
+    { onConflict: "job_name" }
+  );
   const thirtyMinAgo = new Date(Date.now() - 30 * 60 * 1000).toISOString();
 
   // Bounded window: only orders that are still inside their payment window
@@ -332,6 +340,43 @@ export async function POST(req: NextRequest) {
     duration_ms: duration,
     candidates_processed: candidates?.length ?? 0,
   });
+
+  // P2-3: Payment failure rate alerting — per-tenant check.
+  // Scan the last 15 minutes for each active tenant. If failed/(total) > 20%
+  // with at least 5 attempts, fire a Sentry-captured error so the owner is paged.
+  try {
+    const fifteenMinAgo = new Date(Date.now() - 15 * 60 * 1000).toISOString();
+    const { data: recentPayments } = await admin
+      .from("payments")
+      .select("tenant_id, status")
+      .gt("created_at", fifteenMinAgo)
+      .in("status", ["captured", "failed"])
+      .limit(500)
+      .returns<{ tenant_id: string; status: string }[]>();
+
+    if (recentPayments && recentPayments.length > 0) {
+      const byTenant = new Map<string, { total: number; failed: number }>();
+      for (const p of recentPayments) {
+        const cur = byTenant.get(p.tenant_id) ?? { total: 0, failed: 0 };
+        cur.total++;
+        if (p.status === "failed") cur.failed++;
+        byTenant.set(p.tenant_id, cur);
+      }
+      for (const [tenantId, stats] of byTenant) {
+        if (stats.total >= 5 && stats.failed / stats.total > 0.2) {
+          logger.error("ALERT: high_payment_failure_rate", null, {
+            tenant_id: tenantId,
+            fail_rate_pct: Math.round((stats.failed / stats.total) * 100),
+            failed: stats.failed,
+            total: stats.total,
+            window_minutes: 15,
+          });
+        }
+      }
+    }
+  } catch {
+    // Non-fatal — don't let alerting logic block the cron response
+  }
 
   return NextResponse.json({ ok: true, reconciled, refunded, dlq_drained: dlqDrained, duration_ms: duration });
 }

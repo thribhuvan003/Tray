@@ -179,14 +179,26 @@ function buildKitchenAdminMock() {
           if (table === "audit_logs") insertedAuditLogs.push(data);
           return Promise.resolve({ data: {}, error: null });
         },
-        update: (payload: unknown) => ({
-          eq: (col: string, val: unknown) => ({
-            eq: (col2: string, val2: unknown) => {
-              if (mockOrderUpdateError) return Promise.resolve({ data: null, error: mockOrderUpdateError });
-              return Promise.resolve({ data: {}, error: null });
-            },
-          }),
-        }),
+        update: (payload: unknown) => {
+          // Build a fully chainable mock that supports arbitrary .eq() depth
+          // plus a terminal .select() for the CAS guard pattern in markPreparing.
+          const chain: any = {};
+          const terminal = () => {
+            if (mockOrderUpdateError) return Promise.resolve({ data: null, error: mockOrderUpdateError });
+            return Promise.resolve({ data: [{ id: "order-1" }], error: null });
+          };
+          chain.eq = () => chain;
+          chain.select = () => ({
+            single: terminal,
+            then: terminal,
+            eq: () => chain.select(),
+            // Allow awaiting the chain directly
+            ...{ then: (resolve: any) => terminal().then(resolve) },
+          });
+          // Also allow direct await (for update().eq().eq() without .select())
+          chain.then = (resolve: any) => terminal().then(resolve);
+          return chain;
+        },
         upsert: () => Promise.resolve({ data: {}, error: null }),
         delete: () => ({ eq: () => Promise.resolve({ data: {}, error: null }) }),
         rpc: vi.fn().mockResolvedValue({ data: true, error: null }),

@@ -5,6 +5,14 @@ export default defineConfig({
   test: {
     environment: "node",
     globals: true,
+    // Exclude agent worktrees and other non-project directories
+    exclude: [
+      "**/.claude/**",
+      "**/node_modules/**",
+      "**/dist/**",
+      "**/.next/**",
+    ],
+    include: ["src/__tests__/**/*.test.ts"],
     // Run each test file in its own isolated worker so "use server" / "server-only"
     // module restrictions don't bleed between suites.
     isolate: true,
