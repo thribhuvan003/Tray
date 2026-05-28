@@ -36,7 +36,7 @@ export function SignupForm({
         provider: "google",
         options: {
           redirectTo: new URL(
-            `/auth/callback?next=${encodeURIComponent(next)}&tenant=${encodeURIComponent(tenantSlug)}&signup=1`,
+            `/auth/callback?next=${encodeURIComponent(next)}&tenant=${encodeURIComponent(tenantSlug)}&signup=1&role=owner`,
             window.location.origin
           ).toString(),
         },
@@ -62,7 +62,7 @@ export function SignupForm({
     start(async () => {
       const sb = getBrowserClient();
       const redirectTo = new URL(
-        `/auth/callback?next=${encodeURIComponent(next)}&tenant=${encodeURIComponent(tenantSlug)}&signup=1`,
+        `/auth/callback?next=${encodeURIComponent(next)}&tenant=${encodeURIComponent(tenantSlug)}&signup=1&role=owner`,
         window.location.origin
       ).toString();
       const { error } = await sb.auth.signUp({

@@ -131,12 +131,10 @@ export async function createInstitution(
     }
 
     // Has an auth account but no canteen yet (previous wizard attempt failed mid-way).
-    // Update their password so signInWithPassword works after we redirect them.
-    await admin.auth.admin.updateUserById(existingId, {
-      password: form.adminPassword,
-      email_confirm: true,
-      user_metadata: { full_name: form.adminName },
-    });
+    // Do NOT reset their password — that would be a credential-takeover: anyone who knows
+    // the victim's email could silently hijack their Supabase account by filling the wizard.
+    // Instead, create the canteen under their account. The wizard will redirect to the login
+    // page on auto-sign-in failure (wrong password) and they sign in with their own credentials.
     userId = existingId;
     userAlreadyExisted = true;
     logger.info("createInstitution: reusing existing auth user", { user_id: userId, email: form.adminEmail });
