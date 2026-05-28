@@ -86,6 +86,28 @@ export function DashboardView({
   );
   const [newOrderFlash, setNewOrderFlash] = useState(false);
 
+  // Scenario 66: Admin audio + visual alert on new paid order — same pattern as kitchen board bell.
+  const playAdminBell = useCallback(() => {
+    try {
+      const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+      // Two-tone chime: softer than kitchen bell, appropriate for an admin console
+      const gain = ctx.createGain();
+      gain.gain.setValueAtTime(0.18, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.9);
+      gain.connect(ctx.destination);
+      [880, 1108].forEach((freq, i) => {
+        const osc = ctx.createOscillator();
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(freq, ctx.currentTime + i * 0.12);
+        osc.connect(gain);
+        osc.start(ctx.currentTime + i * 0.12);
+        osc.stop(ctx.currentTime + 0.9);
+      });
+    } catch {
+      // Audio unavailable — visual flash still fires
+    }
+  }, []);
+
   // Live re-fetch of all dashboard data on every realtime event or poll tick.
   // This is the real production fix: owner KPIs, revenue, top items, heatmap all update the moment a new order is paid.
   const refreshMoneyData = useCallback(async () => {
@@ -132,6 +154,7 @@ export function DashboardView({
         if (paidCount > prevPaidCountRef.current) {
           setNewOrderFlash(true);
           setTimeout(() => setNewOrderFlash(false), 8000);
+          playAdminBell(); // scenario 66: audio + visual in sync
         }
         prevPaidCountRef.current = paidCount;
 
