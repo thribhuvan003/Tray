@@ -15,36 +15,68 @@ export default function StudentError({
   }, [error]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4">
-      <div className="max-w-sm w-full text-center space-y-6">
-        <div className="mx-auto w-16 h-16 rounded-2xl bg-rose-50 dark:bg-rose-950/30 flex items-center justify-center">
-          <svg className="w-8 h-8 text-rose-500" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
-          </svg>
-        </div>
-        <div className="space-y-2">
-          <h1 className="text-2xl font-bold tracking-tight">Something went wrong</h1>
-          <p className="text-sm text-[color:var(--color-ink)]/65">
-            We hit an unexpected error. Your order and payment data are safe — this is just a display issue.
-          </p>
-        </div>
+    <div
+      className="min-h-screen flex items-center justify-center px-5 py-16"
+      style={{
+        background:
+          "radial-gradient(circle at 10% 10%, rgba(230,0,0,0.06), transparent 40%), var(--color-paper, #F4EFE6)",
+        color: "var(--color-ink, #1A1A19)",
+      }}
+    >
+      <div className="w-full max-w-md">
+        <p
+          className="text-[0.68rem] font-bold uppercase tracking-[0.28em] mb-5"
+          style={{ fontFamily: "var(--font-dm-mono)", color: "var(--color-ocean-500, #e60000)" }}
+        >
+          Something broke
+        </p>
+
+        <h1
+          className="leading-[0.9] tracking-[-0.04em] uppercase mb-4"
+          style={{
+            fontFamily: "var(--font-barlow, var(--font-bricolage))",
+            fontWeight: 900,
+            fontSize: "clamp(2rem, 6vw, 3rem)",
+          }}
+        >
+          Unexpected{" "}
+          <span
+            style={{
+              fontFamily: "var(--font-fraunces, serif)",
+              fontStyle: "italic",
+              textTransform: "none",
+              fontWeight: 400,
+              color: "var(--color-ocean-500, #e60000)",
+            }}
+          >
+            error.
+          </span>
+        </h1>
+
+        <p className="text-[13.5px] leading-[1.65] opacity-55 mb-8">
+          Your order and payment data are safe — this is a display issue only. Try again or go back to the menu.
+        </p>
+
         <div className="flex flex-col gap-3">
           <button
             onClick={reset}
-            className="w-full py-2.5 px-4 rounded-xl bg-ocean-500 text-white text-sm font-semibold hover:opacity-90 active:scale-[0.98] transition-all"
+            className="w-full py-3.5 rounded-2xl text-[13.5px] font-semibold text-white transition-all hover:opacity-90 active:scale-[0.98]"
+            style={{ background: "var(--color-ocean-500, #e60000)" }}
           >
             Try again
           </button>
           <Link
             href="/"
-            className="w-full py-2.5 px-4 rounded-xl border border-[color:var(--color-line)] text-sm font-medium hover:bg-[color:var(--color-paper-dim)] transition-colors"
+            className="w-full py-3.5 rounded-2xl text-[13.5px] font-medium text-center transition-colors hover:opacity-80"
+            style={{ border: "1px solid var(--tray-border, rgba(26,26,25,0.12))", background: "rgba(255,255,255,0.5)" }}
           >
-            Go back to menu
+            Back to menu
           </Link>
         </div>
+
         {error.digest && (
-          <p className="text-[10px] text-[color:var(--color-ink)]/45 font-mono">
-            Error ID: {error.digest}
+          <p className="mt-6 text-[10px] font-mono opacity-35 text-center">
+            Reference: {error.digest}
           </p>
         )}
       </div>
