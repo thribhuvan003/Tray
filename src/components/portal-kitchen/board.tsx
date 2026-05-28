@@ -1015,7 +1015,7 @@ export function KitchenBoard({
           <KitchenKpiStrip orders={orders} newOrderFlash={newOrderFlash} />
         </header>
 
-        <KitchenMarquee items={menuItems.filter(it => it.in_stock)} />
+        <KitchenMarquee items={menuItems?.filter(it => it.in_stock)} />
 
         {/* Main board area */}
         <main style={{ padding: "24px 24px 64px" }}>

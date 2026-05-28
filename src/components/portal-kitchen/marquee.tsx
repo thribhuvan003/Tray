@@ -2,7 +2,7 @@ import { formatRupees } from "@/lib/utils";
 
 type Item = { id: string; name: string; price_paise: number; diet: "veg" | "nonveg" | "egg" };
 
-export function KitchenMarquee({ items }: { items: Item[] }) {
+export function KitchenMarquee({ items = [] }: { items: Item[] }) {
   if (!items.length) return null;
   const looped = [...items, ...items];
   return (
