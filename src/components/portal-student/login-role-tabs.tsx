@@ -150,7 +150,7 @@ export function LoginRoleTabs({
       )}
 
       {/* ── Login form ────────────────────────────────────────────── */}
-      <LoginForm next={next} slug={slug} />
+      <LoginForm next={next} slug={slug} role={activeRole} />
 
       {/* ── Footer ────────────────────────────────────────────────── */}
       <div className="mt-7 pt-5 border-t border-[color:var(--color-line)] flex flex-col gap-2">

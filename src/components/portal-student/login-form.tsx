@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 // NOTE: Google OAuth requires "Google" provider enabled in Supabase Dashboard →
 // Authentication → Providers → Google, with a valid Client ID and Secret.
 
-export function LoginForm({ next, slug = "" }: { next: string; slug?: string }) {
+export function LoginForm({ next, slug = "", role = "student" }: { next: string; slug?: string; role?: "student" | "kitchen" | "owner" }) {
   const [mode, setMode] = useState<"magic" | "password">("magic");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -22,7 +22,7 @@ export function LoginForm({ next, slug = "" }: { next: string; slug?: string }) 
         provider: "google",
         options: {
           redirectTo: new URL(
-            `/auth/callback?next=${encodeURIComponent(next)}&tenant=${encodeURIComponent(slug)}`,
+            `/auth/callback?next=${encodeURIComponent(next)}&tenant=${encodeURIComponent(slug)}&role=${encodeURIComponent(role)}`,
             window.location.origin
           ).toString(),
         },
@@ -119,7 +119,12 @@ export function LoginForm({ next, slug = "" }: { next: string; slug?: string }) 
       } else {
         await sb.auth.signOut();
         const currentUrl = new URL(window.location.href);
-        currentUrl.searchParams.set("error", "No canteen account found with this email. Click 'I have a canteen' to create one, or check your login role.");
+        const errMsg = role === "owner"
+          ? "No canteen account found with this email. Click 'I have a canteen' below to set up your canteen."
+          : role === "kitchen"
+          ? "No kitchen staff account found with this email. Please contact your canteen admin to register your account."
+          : "Students: please search for your canteen on the homepage or use your college's canteen URL (e.g., /c/aditya/menu) to log in and order.";
+        currentUrl.searchParams.set("error", errMsg);
         window.location.href = currentUrl.toString();
         return;
       }
