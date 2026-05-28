@@ -77,7 +77,13 @@ export async function createInstitution(
   const canteenSlugBase = toSlug(form.canteenName || form.institutionName + " canteen");
   const canteenSlug = await resolveUniqueTenantSlug(admin, canteenSlugBase);
 
-  // ── 2. Create auth user (auto-confirmed, no email verification required) ─────
+  // ── 2. Resolve or create auth user ───────────────────────────────────────────
+  // If the email already exists (e.g. user started signup but wizard failed),
+  // reuse their account instead of blocking them with "email already registered".
+  // This is the root cause of the "user exists / no account found" split-brain bug.
+  let userId: string;
+  let userAlreadyExisted = false;
+
   const { data: authData, error: authError } = await admin.auth.admin.createUser({
     email: form.adminEmail,
     password: form.adminPassword,
@@ -85,10 +91,54 @@ export async function createInstitution(
     user_metadata: { full_name: form.adminName },
   });
 
-  if (authError || !authData.user) {
-    return { ok: false, error: authError?.message ?? "Failed to create user" };
+  if (authError) {
+    const isEmailTaken =
+      authError.message.toLowerCase().includes("already") ||
+      authError.message.toLowerCase().includes("exists") ||
+      (authError as any).status === 422;
+
+    if (!isEmailTaken) {
+      return { ok: false, error: authError.message ?? "Failed to create account" };
+    }
+
+    // Email already has an auth account — look it up and reuse it.
+    // Uses the DB function we added in migration 0022 which queries auth.users
+    // server-side (the auth schema is not accessible via PostgREST).
+    const { data: existingId, error: lookupErr } = await (admin as any).rpc(
+      "find_auth_user_id_by_email",
+      { p_email: form.adminEmail }
+    ) as { data: string | null; error: unknown };
+
+    if (lookupErr || !existingId) {
+      logger.error("find_auth_user_id_by_email failed", lookupErr, { email: form.adminEmail });
+      return { ok: false, error: "Account setup failed. Please try again." };
+    }
+
+    // Check if this user already has an active canteen — don't create a duplicate
+    const { count: existingAdmin } = await admin
+      .from("tenant_memberships")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", existingId)
+      .in("role", ["canteen_admin", "super_admin"])
+      .eq("is_active", true);
+
+    if ((existingAdmin ?? 0) > 0) {
+      // They already have a working canteen — just tell them to log in
+      return {
+        ok: false,
+        error: "An account with this email already has a canteen. Sign in to access your dashboard.",
+      };
+    }
+
+    // Has an auth account but no canteen yet (previous wizard attempt failed mid-way)
+    userId = existingId;
+    userAlreadyExisted = true;
+    logger.info("createInstitution: reusing existing auth user", { user_id: userId, email: form.adminEmail });
+  } else if (!authData.user) {
+    return { ok: false, error: "Failed to create account" };
+  } else {
+    userId = authData.user.id;
   }
-  const userId = authData.user.id;
 
   // ── 3. Create college ────────────────────────────────────────────────────────
   const allowedDomains: string[] = form.emailDomain
@@ -108,8 +158,7 @@ export async function createInstitution(
     .single();
 
   if (collegeError || !college) {
-    // Clean up auth user on failure
-    await admin.auth.admin.deleteUser(userId);
+    if (!userAlreadyExisted) await admin.auth.admin.deleteUser(userId);
     return { ok: false, error: collegeError?.message ?? "Failed to create institution" };
   }
 
@@ -125,7 +174,7 @@ export async function createInstitution(
       upi_vpa: form.upiVpa || null,
       opens_at: form.opensAt || null,
       closes_at: form.closesAt || null,
-      allowed_domain: allowedDomains[0] ?? null,
+      allowed_domain: null, // never restrict by domain — open to any email
       is_active: true,
       is_open: true,
       guest_orders_enabled: true,
@@ -135,7 +184,7 @@ export async function createInstitution(
     .single();
 
   if (tenantError || !tenant) {
-    await admin.auth.admin.deleteUser(userId);
+    if (!userAlreadyExisted) await admin.auth.admin.deleteUser(userId);
     await admin.from("colleges").delete().eq("id", college.id);
     return { ok: false, error: tenantError?.message ?? "Failed to create canteen" };
   }
@@ -155,7 +204,9 @@ export async function createInstitution(
     });
   }
 
-  // ── 6. Create tenant_membership with canteen_admin role ──────────────────────
+  // ── 6. Create tenant_membership — FATAL: roll back everything if this fails ──
+  // This was non-fatal before — that silent failure is the root cause of every
+  // "user exists / no account found" split-brain complaint.
   const { error: memberError } = await admin.from("tenant_memberships").insert({
     tenant_id: tenant.id,
     user_id: userId,
@@ -165,11 +216,15 @@ export async function createInstitution(
   });
 
   if (memberError) {
-    // Non-fatal — the user was created, they can still log in
-    logger.error("get-started tenant_membership insert failed", memberError, {
+    // Full rollback so nothing is left in a half-created state
+    await admin.from("tenants").delete().eq("id", tenant.id);
+    await admin.from("colleges").delete().eq("id", college.id);
+    if (!userAlreadyExisted) await admin.auth.admin.deleteUser(userId);
+    logger.error("createInstitution membership FATAL — rolled back", memberError, {
       tenant_id: tenant.id,
       user_id: userId,
     });
+    return { ok: false, error: "Failed to set up admin access. Please try again." };
   }
 
   // ── 7. Send welcome email ────────────────────────────────────────────────────
