@@ -715,6 +715,7 @@ export type Database = {
           razorpay_key_id_enc: string | null
           razorpay_key_secret_enc: string | null
           slug: string
+          upi_trust_enabled: boolean
           upi_vpa: string | null
           zone: string | null
         }
@@ -738,6 +739,7 @@ export type Database = {
           razorpay_key_id_enc?: string | null
           razorpay_key_secret_enc?: string | null
           slug: string
+          upi_trust_enabled?: boolean
           upi_vpa?: string | null
           zone?: string | null
         }
@@ -761,6 +763,7 @@ export type Database = {
           razorpay_key_id_enc?: string | null
           razorpay_key_secret_enc?: string | null
           slug?: string
+          upi_trust_enabled?: boolean
           upi_vpa?: string | null
           zone?: string | null
         }

@@ -57,17 +57,33 @@ export function LoginForm({ next, slug = "" }: { next: string; slug?: string }) 
   }, [sent, otpVisible, otpCountdown]);
 
   const redirectUser = async (user: any) => {
-    const isDefaultNext =
-      next === "/" ||
-      next === `/c/${slug}/menu` ||
-      next === `/c/${slug}` ||
-      next === `/c/${slug.toLowerCase()}/menu` ||
-      next === `/c/${slug.toLowerCase()}` ||
-      next.endsWith("/menu");
+    let resolvedSlug = slug;
+    let userRole = "";
 
-    if (isDefaultNext && slug) {
-      try {
-        const sb = getBrowserClient();
+    try {
+      const sb = getBrowserClient();
+      if (!resolvedSlug) {
+        // Query any active membership if slug is empty (global login flow)
+        const { data: memberships } = (await sb
+          .from("tenant_memberships")
+          .select("tenant_id, role")
+          .eq("user_id", user.id)
+          .eq("is_active", true)
+          .order("created_at", { ascending: false })) as unknown as { data: { tenant_id: string; role: string }[] | null };
+
+        if (memberships && memberships.length > 0) {
+          const activeMem = memberships[0];
+          userRole = activeMem.role;
+          const { data: tenantRow } = (await sb
+            .from("tenants")
+            .select("slug")
+            .eq("id", activeMem.tenant_id)
+            .maybeSingle()) as unknown as { data: { slug: string } | null };
+          if (tenantRow?.slug) {
+            resolvedSlug = tenantRow.slug;
+          }
+        }
+      } else {
         const { data: tenantData } = (await sb
           .from("tenants")
           .select("id")
@@ -84,20 +100,41 @@ export function LoginForm({ next, slug = "" }: { next: string; slug?: string }) 
             .maybeSingle()) as unknown as { data: { role: string } | null };
 
           if (membership) {
-            const role = membership.role;
-            if (role === "canteen_admin" || role === "super_admin") {
-              window.location.href = `/c/${slug}/admin/dashboard`;
-              return;
-            } else if (role === "kitchen_staff" || role === "kitchen") {
-              window.location.href = `/c/${slug}/kitchen/staff-select`;
-              return;
-            }
+            userRole = membership.role;
           }
         }
-      } catch (err) {
-        console.error("Failed to query role for login redirect:", err);
       }
+
+      if (resolvedSlug && userRole) {
+        if (userRole === "canteen_admin" || userRole === "super_admin") {
+          window.location.href = `/c/${resolvedSlug}/admin/dashboard`;
+          return;
+        } else if (userRole === "kitchen_staff" || userRole === "kitchen") {
+          window.location.href = `/c/${resolvedSlug}/kitchen/staff-select`;
+          return;
+        } else {
+          window.location.href = `/c/${resolvedSlug}/menu`;
+          return;
+        }
+      }
+    } catch (err) {
+      console.error("Failed to query role for login redirect:", err);
     }
+
+    const isDefaultNext =
+      next === "/" ||
+      (resolvedSlug &&
+        (next === `/c/${resolvedSlug}/menu` ||
+          next === `/c/${resolvedSlug}` ||
+          next === `/c/${resolvedSlug.toLowerCase()}/menu` ||
+          next === `/c/${resolvedSlug.toLowerCase()}` ||
+          next.endsWith("/menu")));
+
+    if (isDefaultNext && resolvedSlug) {
+      window.location.href = `/c/${resolvedSlug}/menu`;
+      return;
+    }
+
     window.location.href = next;
   };
 

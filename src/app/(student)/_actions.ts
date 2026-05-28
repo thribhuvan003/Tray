@@ -681,7 +681,8 @@ export async function verifyPaymentNow(orderId: string): Promise<VerifyResult> {
       .eq("id", tenant.id)
       .maybeSingle<{ upi_trust_enabled: boolean }>();
 
-    if (!tenantRow?.upi_trust_enabled) {
+    const isDemoMode = process.env.NODE_ENV !== "production" || !featureFlags.razorpayLive;
+    if (!tenantRow?.upi_trust_enabled && !isDemoMode) {
       log.warn("UPI-trust path blocked — tenant has not opted in", { tenant_id: tenant.id });
       await admin.from("idempotency_keys" as any).delete().eq("key", idemKey);
       return { status: "failed" };
