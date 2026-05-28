@@ -17,10 +17,13 @@ export default async function LoginPage({
   const next = safeNext(sp.next, slug ? `/c/${slug}/menu` : "/");
   const initialRole = (sp.role === "kitchen" || sp.role === "owner") ? sp.role : "student";
 
-  // Pass through contextual messages (e.g. "select-canteen" after new signup)
-  const infoMsg = sp.msg === "select-canteen"
-    ? "Signed in! Share your canteen URL with students so they can start ordering."
-    : undefined;
+  // Pass through contextual messages
+  const infoMsg =
+    sp.msg === "select-canteen"
+      ? "Signed in! Share your canteen URL with students so they can start ordering."
+      : sp.msg === "already-has-canteen"
+      ? "Your canteen is already set up. Sign in below with the Admin tab to reach your dashboard."
+      : undefined;
 
   return (
     <div

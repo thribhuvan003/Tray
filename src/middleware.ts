@@ -170,11 +170,17 @@ export async function middleware(req: NextRequest) {
 
   // OPTIMIZATION: Only verify token if a Supabase session cookie exists.
   // This cuts redundant auth API calls on public/unauthenticated routes.
-  const hasSessionCookie = req.cookies.getAll().some((c) => c.name.startsWith("sb-"));
+  // getSession() reads the JWT from cookies locally + auto-refreshes via
+  // refresh token — no Supabase auth network round-trip. Using getUser()
+  // (which calls the auth API) caused random null returns on timeout/flakiness,
+  // silently logging out admins mid-session and redirecting sidebars to login.
+  const hasSessionCookie = req.cookies.getAll().some(
+    (c) => c.name.startsWith("sb-") || c.name.startsWith("sb_")
+  );
   let user = null;
   if (hasSessionCookie) {
-    const { data } = await supabase.auth.getUser();
-    user = data.user;
+    const { data: { session } } = await supabase.auth.getSession();
+    user = session?.user ?? null;
   }
 
   // 3. Edge-level role guard for kitchen and admin routes.
