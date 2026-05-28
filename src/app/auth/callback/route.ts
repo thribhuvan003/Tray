@@ -78,6 +78,7 @@ export async function GET(req: NextRequest) {
   // Prefer explicit tenant from the invite/signup link or the x-tenant-slug header (set by middleware for /c/slug/... flows).
   // No silent "aditya" default for normal auth — fail loud with a clear error so broken invites/links are obvious.
   const tenantSlug = searchParams.get("tenant") ?? req.headers.get("x-tenant-slug");
+  const loginRole = searchParams.get("role");
 
   const supabase = await getServerClient();
   let authError: { message: string } | null = null;
@@ -198,10 +199,15 @@ export async function GET(req: NextRequest) {
       });
     } else if ((count ?? 0) === 0) {
       // New user: no canteen association yet.
-      // Route to get-started so they can either create a canteen (admin)
-      // or learn how to find their college's student URL.
-      // Never land on "/" — that's just the marketing page.
-      return NextResponse.redirect(new URL("/get-started?new=1", origin));
+      if (loginRole === "owner") {
+        return NextResponse.redirect(new URL("/get-started?new=1", origin));
+      } else {
+        await supabase.auth.signOut();
+        const errMsg = loginRole === "kitchen"
+          ? "No kitchen staff account found with this email. Please contact your canteen admin to register."
+          : "Students: please search for your canteen on the homepage or use your college's canteen URL (e.g., /c/aditya/menu) to log in and order.";
+        return NextResponse.redirect(new URL(`/login?role=${loginRole ?? "student"}&error=${encodeURIComponent(errMsg)}`, origin));
+      }
     }
   }
 
@@ -224,6 +230,15 @@ export async function GET(req: NextRequest) {
 
     if (memberships && memberships.length > 0) {
       let activeMem = memberships[0];
+
+      if (loginRole) {
+        const match = memberships.find((m) => {
+          if (loginRole === "owner") return m.role === "canteen_admin" || m.role === "super_admin";
+          if (loginRole === "kitchen") return m.role === "kitchen_staff" || m.role === "kitchen";
+          return m.role === "student";
+        });
+        if (match) activeMem = match;
+      }
 
       if (tenantSlug) {
         const { data: specificTenant } = (await supabase
