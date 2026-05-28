@@ -659,7 +659,22 @@ export async function verifyPaymentNow(orderId: string): Promise<VerifyResult> {
   // badge and can confirm against their UPI app before handing food over.
   // This prevents free-food abuse while keeping the demo flow functional.
   if (!featureFlags.razorpayLive) {
-    // Hard block in any production deployment (belt-and-suspenders on top of featureFlags)
+    // P1-5 FIX: Require explicit admin opt-in via upi_trust_enabled on the tenant row.
+    // Default is false — a new canteen never gets the trust flow accidentally.
+    // The canteen admin must explicitly enable it in their settings.
+    const { data: tenantRow } = await admin
+      .from("tenants")
+      .select("upi_trust_enabled")
+      .eq("id", tenant.id)
+      .maybeSingle<{ upi_trust_enabled: boolean }>();
+
+    if (!tenantRow?.upi_trust_enabled) {
+      log.warn("UPI-trust path blocked — tenant has not opted in", { tenant_id: tenant.id });
+      await admin.from("idempotency_keys" as any).delete().eq("key", idemKey);
+      return { status: "failed" };
+    }
+
+    // Hard block in any production deployment with live keys (belt-and-suspenders)
     if (process.env.NODE_ENV === "production" && process.env.NEXT_PUBLIC_RAZORPAY_LIVE === "true") {
       log.error("UPI-trust path blocked in production — Razorpay must be configured", null);
       return { status: "failed" };

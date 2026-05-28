@@ -60,6 +60,13 @@ export async function POST(req: NextRequest) {
 
   const admin = getAdminClient();
   const nowIso = new Date().toISOString();
+
+  // P2-4: Heartbeat
+  await (admin as any).from("cron_heartbeats").upsert(
+    { job_name: "expire-orders", last_run_at: nowIso, last_ok: true },
+    { onConflict: "job_name" }
+  );
+
   const { data: stale } = await admin
     .from("orders")
     .select("id, tenant_id, status")
