@@ -89,7 +89,10 @@ export async function POST(req: NextRequest) {
     const tAdmin = getAdminClient(tenantId);
     const ids = rows.map((r) => r.id);
 
-    await tAdmin.from("orders").update({ status: "expired" }).in("id", ids);
+    // CAS guard: only expire orders that are STILL pending_payment.
+    // Without this, a payment captured between the SELECT above and this UPDATE
+    // would flip a successfully placed order (status=placed) back to expired.
+    await tAdmin.from("orders").update({ status: "expired" }).in("id", ids).eq("status", "pending_payment");
 
     await tAdmin.from("order_status_logs").insert(
       rows.map((r) => ({

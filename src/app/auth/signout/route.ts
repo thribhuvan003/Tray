@@ -7,6 +7,5 @@ export async function POST(req: NextRequest) {
   return NextResponse.redirect(new URL("/", req.url));
 }
 
-export async function GET(req: NextRequest) {
-  return POST(req);
-}
+// GET sign-out is intentionally removed — GET requests are pre-fetched by browsers
+// and can be triggered via <img> tags (CSRF). Sign-out must be POST only.

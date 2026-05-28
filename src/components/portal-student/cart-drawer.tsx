@@ -44,8 +44,13 @@ export function CartDrawer({ tenantSlug, tenantName }: { tenantSlug: string; ten
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [pending, start] = useTransition();
-  const [orderType, setOrderType] = useState<OrderType>("takeaway");
-  const [tableLabel, setTableLabel] = useState("");
+  // Read orderType and tableLabel FROM the cart store (set on the menu board).
+  // Previously these were local state, so the order type chosen on the menu page
+  // was silently ignored when the checkout fired — every order became "takeaway".
+  const orderType = useCart((s) => s.orderType);
+  const setOrderType = useCart((s) => s.setOrderType);
+  const tableLabel = useCart((s) => s.tableLabel);
+  const setTableLabel = useCart((s) => s.setTableLabel);
   const router = useRouter();
   const isDesktop = useMediaQuery("(min-width: 1024px)");
 

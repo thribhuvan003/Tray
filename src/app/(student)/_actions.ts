@@ -868,10 +868,9 @@ export async function initiateRefundForOrder(
       razorpay_payment_id: payment.razorpay_payment_id ?? "unknown",
       error: result.error,
     });
-    await admin.from("payments")
-      .update({ status: "refunded" as unknown as "initiated" }) // use "refund_pending" semantically
-      .eq("id", payment.id)
-      .eq("tenant_id", tenantId);
+    // Do NOT change payment status on refund failure — keep it as "captured" so the
+    // reconcile cron (WHERE status='captured' AND refund_id IS NULL) will retry it.
+    // Setting it to "refunded" on failure was corrupting the reconciliation query.
     return { ok: false, error: result.error };
   }
 

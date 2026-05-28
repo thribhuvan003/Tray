@@ -69,11 +69,13 @@ export function AdminShell({
   tenantName,
   tenantSlug,
   userEmail,
+  userRole,
   children,
 }: {
   tenantName: string;
   tenantSlug: string;
   userEmail: string | null;
+  userRole?: string | null;
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
@@ -244,7 +246,7 @@ export function AdminShell({
                 className="font-mono transition-colors duration-200"
                 style={{ fontSize: 10, color: "var(--admin-ink-3)", letterSpacing: "0.04em" }}
               >
-                canteen_admin
+                {userRole ?? "canteen_admin"}
               </div>
             </div>
             <Link
@@ -341,11 +343,11 @@ export function AdminShell({
         >
           <div className="grid grid-cols-5">
             {[
-              { href: `/c/${tenantSlug}/admin/dashboard`, match: "/admin/dashboard", icon: LayoutGrid, label: "Home" },
-              { href: `/c/${tenantSlug}/admin/orders`, match: "/admin/orders", icon: ListOrdered, label: "Orders" },
-              { href: `/c/${tenantSlug}/admin/menu`, match: "/admin/menu", icon: BookOpen, label: "Menu" },
-              { href: `/c/${tenantSlug}/admin/staff`, match: "/admin/staff", icon: Users, label: "Staff" },
-              { href: `/c/${tenantSlug}/admin/settings`, match: "/admin/settings", icon: Settings, label: "Settings" },
+              { href: `/c/${tenantSlug}/admin/dashboard`, match: `/c/${tenantSlug}/admin/dashboard`, icon: LayoutGrid, label: "Home" },
+              { href: `/c/${tenantSlug}/admin/orders`, match: `/c/${tenantSlug}/admin/orders`, icon: ListOrdered, label: "Orders" },
+              { href: `/c/${tenantSlug}/admin/menu`, match: `/c/${tenantSlug}/admin/menu`, icon: BookOpen, label: "Menu" },
+              { href: `/c/${tenantSlug}/admin/staff`, match: `/c/${tenantSlug}/admin/staff`, icon: Users, label: "Staff" },
+              { href: `/c/${tenantSlug}/admin/settings`, match: `/c/${tenantSlug}/admin/settings`, icon: Settings, label: "Settings" },
             ].map((n) => (
               <Link
                 key={n.href}

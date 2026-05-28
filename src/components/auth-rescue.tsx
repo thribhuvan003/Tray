@@ -18,10 +18,18 @@ export function AuthRescue() {
     const url = new URL(window.location.href);
     const code = url.searchParams.get("code");
     const tokenHash = url.searchParams.get("token_hash");
+    const type = url.searchParams.get("type"); // present on Supabase OTP/magic-link callbacks
     const hash = window.location.hash;
 
-    if (!code && !tokenHash && !hash.includes("access_token=") && !hash.includes("refresh_token=")) {
-      return; // nothing to process
+    // Only intercept when there are clear Supabase auth signals.
+    // A bare ?code= without ?type= or a hash could be a non-auth query param (e.g. promo codes).
+    // Supabase PKCE always sends ?code= alongside other Supabase params; magic links send ?token_hash=&type=.
+    const isSupabaseOAuth = !!code && !type; // PKCE code flow (no type param means OAuth, not OTP)
+    const isSupabaseMagicLink = !!tokenHash && !!type;
+    const isImplicitFlow = hash.includes("access_token=") && hash.includes("token_type=");
+
+    if (!isSupabaseOAuth && !isSupabaseMagicLink && !isImplicitFlow) {
+      return; // not a Supabase auth callback — leave the URL alone
     }
 
     // Build callback URL, forwarding all params + restoring context from cookie
