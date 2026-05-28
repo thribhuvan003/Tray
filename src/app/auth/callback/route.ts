@@ -154,9 +154,10 @@ export async function GET(req: NextRequest) {
     // any authenticated user without email-domain gating.
     await ensureStudentEnrolled(u.user.id);
 
-    // Hard-block: if the user still has zero memberships after both enrollment
-    // passes, their account has no canteen access. Redirect with a contextual
-    // message so they know what to do next.
+    // Check membership count. If zero after both enrollment passes, the user
+    // is brand-new with no canteen. Send them somewhere useful instead of the
+    // landing page (the old "/?msg=no-college" redirect was the bug causing
+    // "sign in with Google → back to landing page" reports).
     const { count, error: countError } = await supabase
       .from("tenant_memberships")
       .select("tenant_id", { count: "exact", head: true })
@@ -168,7 +169,11 @@ export async function GET(req: NextRequest) {
         tenant_slug: tenantSlug,
       });
     } else if ((count ?? 0) === 0) {
-      return NextResponse.redirect(new URL("/?msg=no-college", origin));
+      // New user: no canteen association yet.
+      // Route to get-started so they can either create a canteen (admin)
+      // or learn how to find their college's student URL.
+      // Never land on "/" — that's just the marketing page.
+      return NextResponse.redirect(new URL("/get-started?new=1", origin));
     }
   }
 
@@ -211,10 +216,10 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    // No membership found (brand-new user, or student who signed in from landing).
-    // Send to get-started for owners; for students, they need a canteen URL.
-    // Redirect to login with a helpful message rather than silently landing on "/".
-    return NextResponse.redirect(new URL("/login?msg=select-canteen", origin));
+    // No membership found — brand-new user who signed in from the landing page.
+    // get-started walks them through creating a canteen (admin) or explains
+    // how to find a student ordering URL (student). Never "/".
+    return NextResponse.redirect(new URL("/get-started?new=1", origin));
   }
 
   return NextResponse.redirect(new URL(next, origin));

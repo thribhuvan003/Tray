@@ -646,7 +646,7 @@ const STEP_TITLES: Record<Step, { title: string; subtitle: string }> = {
   3: { title: "Create your admin account", subtitle: "This is the account you'll use to manage everything." },
 };
 
-export function GetStartedWizard() {
+export function GetStartedWizard({ isNewUser = false, isSignedIn = false }: { isNewUser?: boolean; isSignedIn?: boolean } = {}) {
   const router = useRouter();
   const [step, setStep] = useState<Step>(1);
   const [formData, setFormData] = useState<FormData>(INITIAL_FORM);
@@ -829,6 +829,20 @@ export function GetStartedWizard() {
                 padding: "36px 32px",
               }}
             >
+              {isNewUser && step === 1 && (
+                <div style={{
+                  background: "rgba(22,163,74,0.07)",
+                  border: "1px solid rgba(22,163,74,0.22)",
+                  borderRadius: 10,
+                  padding: "11px 14px",
+                  marginBottom: 20,
+                  fontSize: 12.5,
+                  color: "#15803d",
+                  lineHeight: 1.55,
+                }}>
+                  <strong>Account created!</strong> Complete these 3 steps to go live.
+                </div>
+              )}
               <ProgressBar step={step} />
 
               <h1 style={{ fontSize: 24, fontWeight: 700, color: "var(--gs-ink)", margin: "0 0 6px", letterSpacing: "-0.02em" }}>
