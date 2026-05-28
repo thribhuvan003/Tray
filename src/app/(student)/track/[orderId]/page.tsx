@@ -5,6 +5,9 @@ import { getServerClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth/get-user";
 import { TrackPanel } from "@/components/portal-student/track-panel";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export default async function TrackPage({ params }: { params: Promise<{ orderId: string }> }) {
   const { orderId } = await params;
   const h = await headers();
