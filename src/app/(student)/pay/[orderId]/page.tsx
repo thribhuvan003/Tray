@@ -4,6 +4,9 @@ import { getCurrentUser } from "@/lib/auth/get-user";
 import { PayPanel } from "@/components/portal-student/pay-panel";
 import { requireTenantContext } from "@/lib/tenant";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export default async function PayPage({ params }: { params: Promise<{ orderId: string }> }) {
   const { orderId } = await params;
   // Production-grade tenant context — the UPI VPA and QR for this order's canteen must be correct and isolated.
