@@ -130,7 +130,13 @@ export async function createInstitution(
       };
     }
 
-    // Has an auth account but no canteen yet (previous wizard attempt failed mid-way)
+    // Has an auth account but no canteen yet (previous wizard attempt failed mid-way).
+    // Update their password so signInWithPassword works after we redirect them.
+    await admin.auth.admin.updateUserById(existingId, {
+      password: form.adminPassword,
+      email_confirm: true,
+      user_metadata: { full_name: form.adminName },
+    });
     userId = existingId;
     userAlreadyExisted = true;
     logger.info("createInstitution: reusing existing auth user", { user_id: userId, email: form.adminEmail });
@@ -141,17 +147,15 @@ export async function createInstitution(
   }
 
   // ── 3. Create college ────────────────────────────────────────────────────────
-  const allowedDomains: string[] = form.emailDomain
-    ? [form.emailDomain.replace(/^@/, "")]
-    : [];
-
+  // allowed_domains is always empty — any email is accepted by default.
+  // Domain restriction is opt-in only, configurable later via admin settings.
   const { data: college, error: collegeError } = await admin
     .from("colleges")
     .insert({
       name: form.institutionName,
       slug: collegeSlug,
       city: form.city || null,
-      allowed_domains: allowedDomains,
+      allowed_domains: [],
       is_active: true,
     })
     .select("id")

@@ -265,8 +265,14 @@ function InteractivePortalCard({ portal, idx, portalRefs }: InteractivePortalCar
         }
       >
         <div className="flex justify-between items-center text-[10.5px] font-medium tracking-[0.14em]">
-          <span style={{ fontFamily: "var(--font-geist-mono, monospace)", color: "var(--tray-muted, #78716C)" }}>
+          <span className="flex items-center gap-2" style={{ fontFamily: "var(--font-geist-mono, monospace)", color: "var(--tray-muted, #78716C)" }}>
             {portal.eyebrow}
+            <span
+              className="inline-flex items-center rounded-full px-1.5 py-0.5 text-[8.5px] font-bold uppercase tracking-[0.08em] leading-none"
+              style={{ background: "rgba(26,26,25,0.06)", color: "var(--tray-muted, #78716C)", letterSpacing: "0.1em" }}
+            >
+              Demo
+            </span>
           </span>
           <span className="flex items-center gap-1.5 font-bold" style={{ fontFamily: "var(--font-geist-mono, monospace)", color: portal.accentColor }}>
             <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: portal.accentColor, boxShadow: `0 0 8px ${portal.accentColor}` }} />
