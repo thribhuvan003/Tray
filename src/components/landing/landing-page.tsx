@@ -42,18 +42,6 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
   const campusName = tenant?.college_name ?? null;
   const [hoveredStep, setHoveredStep] = React.useState<number | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
-  const [scrollPhase, setScrollPhase] = React.useState(0);
-
-  React.useEffect(() => {
-    const handleScroll = () => {
-      setScrollPhase(Math.floor(window.scrollY / 180));
-    };
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
-  // Suppress unused warning — scrollPhase drives CSS custom property via GSAP
-  void scrollPhase;
 
   return (
     <div className="tray-landing tray-page min-h-svh overflow-x-hidden tray-landing-wrapper" style={{ fontFamily: "var(--font-ui)" }}>
