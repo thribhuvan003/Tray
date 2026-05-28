@@ -38,8 +38,8 @@ export default async function GetStartedPage({
         },
       }
     );
-    const { data } = await supabase.auth.getUser();
-    if (data.user) isSignedIn = true;
+    const { data: { session: _gsSession } } = await supabase.auth.getSession();
+    if (_gsSession?.user) isSignedIn = true;
   } catch {
     // Show wizard anyway
   }

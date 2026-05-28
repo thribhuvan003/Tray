@@ -11,8 +11,9 @@ export const dynamic = "force-dynamic";
 export default async function CanteensPage() {
   const serverClient = await getServerClient();
   const {
-    data: { user },
-  } = await serverClient.auth.getUser();
+    data: { session },
+  } = await serverClient.auth.getSession();
+  const user = session?.user ?? null;
   if (!user) redirect("/login?next=/college-admin/canteens");
 
   const admin = getAdminClient();

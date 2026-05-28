@@ -41,20 +41,14 @@ export function PayPanel({
   tenantUpi,
   order,
   lines,
-  razorpayKeyId,
-  razorpayOrderId,
   isSimMode,
-  userEmail,
 }: {
   tenantSlug: string;
   tenantName: string;
   tenantUpi: string;
   order: Order;
   lines: Line[];
-  razorpayKeyId?: string;
-  razorpayOrderId?: string | null;
   isSimMode?: boolean;
-  userEmail?: string | null;
 }) {
   const router = useRouter();
   const redirectedRef = useRef(false);

@@ -120,7 +120,8 @@ export async function GET(req: NextRequest) {
   const isSignup = searchParams.get("signup") === "1";
 
   const tenant = tenantSlug ? await resolveTenant(tenantSlug) : null;
-  const { data: u } = await supabase.auth.getUser();
+  const { data: { session: _cbSession } } = await supabase.auth.getSession();
+  const u = { user: _cbSession?.user ?? null };
   if (tenant && u.user) {
     // Domain restriction is intentionally NOT enforced here.
     // Any email — personal, work, college — can sign in.

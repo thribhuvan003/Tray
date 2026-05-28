@@ -16,11 +16,11 @@ export async function setCanteenOpen(
   // Verify the requesting user is authenticated
   const serverClient = await getServerClient();
   const {
-    data: { user },
-    error: authError,
-  } = await serverClient.auth.getUser();
+    data: { session },
+  } = await serverClient.auth.getSession();
+  const user = session?.user ?? null;
 
-  if (authError || !user) {
+  if (!user) {
     return { ok: false, error: "Not authenticated" };
   }
 

@@ -17,8 +17,9 @@ function formatRupees(paise: number) {
 export default async function ReportsPage() {
   const serverClient = await getServerClient();
   const {
-    data: { user },
-  } = await serverClient.auth.getUser();
+    data: { session },
+  } = await serverClient.auth.getSession();
+  const user = session?.user ?? null;
   if (!user) redirect("/login?next=/college-admin/reports");
 
   const admin = getAdminClient();

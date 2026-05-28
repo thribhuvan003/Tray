@@ -1,9 +1,9 @@
 import { notFound, redirect } from "next/navigation";
 import { getServerClient } from "@/lib/supabase/server";
-import { getAdminClient } from "@/lib/supabase/admin";
 import { getCurrentUser } from "@/lib/auth/get-user";
 import { PayPanel } from "@/components/portal-student/pay-panel";
 import { requireTenantContext } from "@/lib/tenant";
+import { featureFlags } from "@/lib/env";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -51,24 +51,10 @@ export default async function PayPage({ params }: { params: Promise<{ orderId: s
     redirect(`/c/${tenant.slug}/menu?msg=no-upi`);
   }
 
-  // Fetch the Razorpay order ID linked to this payment so verifyPaymentNow
-  // can poll the gateway correctly. Fetched server-side so it never hits the client.
-  const adminClient = getAdminClient(tenant.id);
-  const { data: paymentRow } = await adminClient
-    .from("payments")
-    .select("razorpay_order_id")
-    .eq("order_id", orderId)
-    .eq("tenant_id", tenant.id)
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle<{ razorpay_order_id: string | null }>();
-
-  // isSimMode: true when Razorpay live keys are absent — shows DEV simulate button.
-  // Computed server-side so it can't be spoofed from the client.
-  const isSimMode =
-    !process.env.RAZORPAY_KEY_ID ||
-    !process.env.RAZORPAY_KEY_SECRET ||
-    process.env.NEXT_PUBLIC_RAZORPAY_LIVE !== "true";
+  // isSimMode: true only when live Razorpay keys are absent.
+  // Uses featureFlags.razorpayLive (checks actual key presence server-side) so this
+  // cannot be spoofed by setting/omitting NEXT_PUBLIC_RAZORPAY_LIVE on Vercel.
+  const isSimMode = !featureFlags.razorpayLive;
 
   return (
     <PayPanel
@@ -77,9 +63,7 @@ export default async function PayPage({ params }: { params: Promise<{ orderId: s
       tenantUpi={tenant.upi_vpa}
       order={order}
       lines={lines ?? []}
-      razorpayOrderId={paymentRow?.razorpay_order_id ?? null}
       isSimMode={isSimMode}
-      userEmail={user.email}
     />
   );
 }
