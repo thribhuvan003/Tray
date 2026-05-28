@@ -103,17 +103,26 @@ export async function POST(req: NextRequest) {
       }))
     );
 
-    // P1-2 FIX: Emit order_events for pending_payment → expired so student
-    // pay-panel's Realtime subscription fires and redirects immediately.
-    // Before this fix, students relied only on the client-side countdown.
-    await (tAdmin as any).from("order_events").insert(
-      rows.map((r: { id: string; tenant_id: string }) => ({
-        tenant_id: r.tenant_id,
-        order_id: r.id,
-        event_type: "status_changed",
-        payload: { from: "pending_payment", to: "expired", source: "expire_cron" },
-      }))
-    );
+    // Emit order_events for pending_payment → expired.
+    // pay-panel subscribes to orders.status via postgres_changes and auto-redirects
+    // when status != "pending_payment". This event is the belt-and-suspenders:
+    // even if Realtime on the orders table is delayed, order_events INSERT fires
+    // the subscription on the student's pay-panel within ~1 second.
+    try {
+      await (tAdmin as any).from("order_events").insert(
+        rows.map((r: { id: string; tenant_id: string }) => ({
+          tenant_id: r.tenant_id,
+          order_id: r.id,
+          event_type: "status_changed",
+          payload: { from: "pending_payment", to: "expired", source: "expire_cron" },
+        }))
+      );
+    } catch (evErr) {
+      // Non-fatal — order_status_logs already written; student countdown is the fallback
+      logger.error("expire-orders: order_events batch insert failed (non-fatal)", evErr, {
+        job: "expire-orders", tenant_id: tenantId, order_count: rows.length,
+      });
+    }
 
     totalExpired += rows.length;
 
