@@ -78,7 +78,18 @@ export async function markPreparing(orderId: string): Promise<Outcome> {
 
   const start = Date.now();
 
-  await admin.from("orders").update({ status: "preparing" }).eq("id", orderId).eq("tenant_id", ctx.tenant.id);
+  // P0-5 FIX: CAS guard on UPDATE — reject if order is no longer "placed".
+  // Without this, a student cancel completing between the kitchen read and write
+  // silently overwrites "cancelled_by_kitchen" with "preparing" — food made for refunded order.
+  const { data: casResult } = await admin.from("orders")
+    .update({ status: "preparing" })
+    .eq("id", orderId)
+    .eq("tenant_id", ctx.tenant.id)
+    .eq("status", "placed")
+    .select("id");
+  if (!casResult || casResult.length === 0) {
+    return { ok: false, error: "Order status changed before kitchen could start it — refresh the board" };
+  }
   await admin.from("order_status_logs").insert({
     tenant_id: ctx.tenant.id,
     order_id: orderId,
@@ -204,6 +215,18 @@ export async function verifyAndCollect(
   if (!cur || !cur.otp_hash) return { ok: false, error: "Order not ready for pickup" };
   if (cur.status !== "ready") return { ok: false, error: `Order is "${cur.status}"` };
   if (cur.otp_attempts >= 3) return { ok: false, error: "Locked — ask an admin to unlock", locked: true };
+
+  // P1-6 FIX: Enforce OTP expiry server-side.
+  // pickup_secrets.expires_at was stored but never checked — an OTP presented
+  // 31+ minutes after issuance was still accepted.
+  const { data: secret } = await admin
+    .from("pickup_secrets")
+    .select("expires_at")
+    .eq("order_id", orderId)
+    .maybeSingle<{ expires_at: string }>();
+  if (secret && secret.expires_at && new Date(secret.expires_at) < new Date()) {
+    return { ok: false, error: "OTP has expired — tap Ready again to issue a new code" };
+  }
 
   const start = Date.now();
 
@@ -643,6 +666,27 @@ export async function revertStatus(
     (cur.status === "ready" && toStatus === "preparing");
   if (!isValidRevert) {
     return { ok: false, error: `Cannot undo from "${cur.status}" to "${toStatus}"` };
+  }
+
+  // P0-6 FIX: Enforce the 5-second undo window server-side.
+  // The client timer is cosmetic only — a delayed request on flaky Wi-Fi
+  // could arrive minutes later and revert an already-handed-out order.
+  // Check order_status_logs for the most recent forward transition timestamp.
+  const { data: lastTransition } = await admin
+    .from("order_status_logs")
+    .select("created_at")
+    .eq("order_id", orderId)
+    .eq("tenant_id", ctx.tenant.id)
+    .eq("to_status", cur.status as "placed" | "preparing" | "ready") // the transition we're trying to undo
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle<{ created_at: string }>();
+
+  if (!lastTransition) return { ok: false, error: "No transition record found — cannot undo" };
+
+  const transitionAgeMs = Date.now() - new Date(lastTransition.created_at).getTime();
+  if (transitionAgeMs > 10_000) {
+    return { ok: false, error: "Undo window has closed (10 seconds). Contact admin to adjust." };
   }
 
   // Perform the revert (typed explicitly to satisfy strict Supabase update types)

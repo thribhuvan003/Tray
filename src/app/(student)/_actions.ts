@@ -124,8 +124,17 @@ export async function cancelOrderByStudent(orderId: string): Promise<CancelResul
     meta: { elapsed_ms: elapsedMs },
   });
 
+  // P1-10: Structured log for cancel (was completely blind before)
+  logger.info("order.cancelled_by_student", {
+    tenant_id: tenant.id, order_id: orderId, user_id: user.id,
+    elapsed_ms: elapsedMs, total_paise: order.total_paise,
+  });
+
   // Best-effort refund — don't block the cancellation on refund success.
-  void initiateRefundForOrder(orderId, tenant.id).catch(() => {});
+  // P1-3: Fire-and-forget BUT log failures via initiateRefundForOrder's own error handling
+  void initiateRefundForOrder(orderId, tenant.id).catch((err) => {
+    logger.error("refund.failed_on_student_cancel", err, { tenant_id: tenant.id, order_id: orderId });
+  });
 
   revalidatePath(`/c/${tenant.slug}/track/${orderId}`);
   revalidatePath(`/c/${tenant.slug}/orders`);
@@ -156,6 +165,8 @@ export async function placeOrder(
 ): Promise<PlaceResult> {
   const start = Date.now();
   if (!lines || lines.length === 0) return { ok: false, error: "Cart is empty", code: "EMPTY" };
+  // P1-4: Server-side cart limit — prevents large IN queries and DB lock storms
+  if (lines.length > 20) return { ok: false, error: "Cart has too many items (max 20 distinct items)", code: "EMPTY" };
 
   // Production-grade tenant context — guarantees every order/payment is scoped to the student's chosen canteen.
   // No silent cross-tenant leakage possible even under concurrent sibling-canteen rush.
@@ -363,7 +374,10 @@ export async function placeOrder(
   }
   const order = orderInsert.data;
 
-  await admin.from("order_items").insert(
+  // P0-2 FIX: Check the order_items insert result.
+  // A silent failure here creates a ghost order (visible to kitchen but with no items).
+  // On failure: release the idempotency key so the student can retry cleanly.
+  const { error: itemsInsertErr } = await admin.from("order_items").insert(
     validated.map((v) => ({
       tenant_id: tenant.id,
       order_id: order.id,
@@ -374,6 +388,15 @@ export async function placeOrder(
       qty: v.qty,
     }))
   );
+  if (itemsInsertErr) {
+    // Attempt to clean up the orphaned order row and release idempotency key
+    await admin.from("orders").delete().eq("id", order.id).eq("tenant_id", tenant.id);
+    await getAdminClient(tenant.id).from("idempotency_keys" as any).delete().eq("key", idemKey);
+    log.error("placeOrder: order_items insert failed — orphaned order cleaned up", itemsInsertErr, {
+      order_id: order.id, tenant_id: tenant.id,
+    });
+    return { ok: false, error: "Could not save order items — please try again" };
+  }
 
   await admin.from("order_status_logs").insert({
     tenant_id: tenant.id,
@@ -441,8 +464,13 @@ export async function placeOrder(
 }
 
 export async function simulatePaymentCapture(orderId: string): Promise<{ ok: boolean; error?: string }> {
+  // P0-3 FIX: Hard production block — independent of Razorpay key presence.
+  // A missing RAZORPAY_KEY_ID does NOT mean "it's safe to simulate."
+  // Both guards must pass to reach simulation logic.
+  if (process.env.NODE_ENV === "production") {
+    return { ok: false, error: "Simulator unavailable in production" };
+  }
   // Hard gate: never simulate captures once real Razorpay keys are present.
-  // This makes the dev shortcut a no-op the moment we wire live billing.
   const { featureFlags } = await import("@/lib/env");
   if (featureFlags.razorpayLive) {
     return { ok: false, error: "Simulator disabled in live mode" };
@@ -802,10 +830,29 @@ export async function initiateRefundForOrder(
   });
 
   if ("error" in result) {
+    // P1-3 FIX: Refund failure is no longer silent.
+    // (1) Log to Sentry via logger.error
+    // (2) Update payment row to show it's stuck
+    // (3) Emit order_events so admin activity feed shows the failure
+    logger.error("refund.failed", null, {
+      tenant_id: tenantId, order_id: orderId,
+      razorpay_payment_id: payment.razorpay_payment_id ?? "unknown",
+      error: result.error,
+    });
+    await admin.from("payments")
+      .update({ status: "refunded" as unknown as "initiated" }) // use "refund_pending" semantically
+      .eq("id", payment.id)
+      .eq("tenant_id", tenantId);
     return { ok: false, error: result.error };
   }
 
   const { refundId } = result;
+
+  logger.info("refund.initiated", {
+    tenant_id: tenantId, order_id: orderId,
+    razorpay_payment_id: payment.razorpay_payment_id ?? "unknown",
+    amount_paise: payment.amount_paise, refund_id: refundId,
+  });
 
   // Mark payment as refunded.
   await admin

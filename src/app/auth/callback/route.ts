@@ -172,34 +172,48 @@ export async function GET(req: NextRequest) {
   }
 
   // If next === "/" (user signed in from landing), route to their portal instead.
-  // A bare landing-page redirect is confusing — the student or admin should land
-  // on the ordering menu or the admin dashboard, not the marketing page.
+  // OAuth FIX: When next === "/" (sign-in from landing page or direct /login visit),
+  // look up the user's membership and route to their correct portal.
+  // Previously this fell through to "/" (landing page) when the tenants join returned null,
+  // causing "Google sign-in takes me back to the landing page" bug.
   if (next === "/" && u.user) {
-    // Find the user's most recent tenant membership and redirect there.
+    // Explicit two-step query: first get membership, then resolve the slug separately.
+    // Avoids the Supabase PostgREST join returning {tenants: null} on FK lookup failures.
     const { data: memberships } = await supabase
       .from("tenant_memberships")
-      .select("tenant_id, role, tenants(slug)")
+      .select("tenant_id, role")
       .eq("user_id", u.user.id)
       .eq("is_active", true)
       .order("created_at", { ascending: false })
       .limit(1);
 
-    const mem = memberships?.[0] as
-      | { tenant_id: string; role: string; tenants: { slug: string } | null }
-      | undefined;
+    const mem = memberships?.[0] as { tenant_id: string; role: string } | undefined;
 
-    if (mem?.tenants?.slug) {
-      const slug = mem.tenants.slug;
-      const role = mem.role;
-      if (role === "canteen_admin" || role === "super_admin") {
-        return NextResponse.redirect(new URL(`/c/${slug}/admin/dashboard`, origin));
-      } else if (role === "kitchen_staff" || role === "kitchen") {
-        // "kitchen_staff" is the DB enum value; "kitchen" kept as legacy fallback
-        return NextResponse.redirect(new URL(`/c/${slug}/kitchen/staff-select`, origin));
-      } else {
-        return NextResponse.redirect(new URL(`/c/${slug}/menu`, origin));
+    if (mem?.tenant_id) {
+      // Second query: resolve the slug from the tenant_id directly
+      const { data: tenantRow } = await supabase
+        .from("tenants")
+        .select("slug")
+        .eq("id", mem.tenant_id)
+        .maybeSingle<{ slug: string }>();
+
+      const slug = tenantRow?.slug;
+      if (slug) {
+        const role = mem.role;
+        if (role === "canteen_admin" || role === "super_admin") {
+          return NextResponse.redirect(new URL(`/c/${slug}/admin/dashboard`, origin));
+        } else if (role === "kitchen_staff" || role === "kitchen") {
+          return NextResponse.redirect(new URL(`/c/${slug}/kitchen/staff-select`, origin));
+        } else {
+          return NextResponse.redirect(new URL(`/c/${slug}/menu`, origin));
+        }
       }
     }
+
+    // No membership found (brand-new user, or student who signed in from landing).
+    // Send to get-started for owners; for students, they need a canteen URL.
+    // Redirect to login with a helpful message rather than silently landing on "/".
+    return NextResponse.redirect(new URL("/login?msg=select-canteen", origin));
   }
 
   return NextResponse.redirect(new URL(next, origin));

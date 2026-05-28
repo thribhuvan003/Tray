@@ -349,13 +349,25 @@ export function KitchenBoard({
 
     const attempt = reconnectAttemptRef.current;
     const base = Math.min(30000, 900 * Math.pow(2, Math.min(attempt, 6)));
-    const jitter = Math.floor(Math.random() * 1400) - 300; // +/- jitter for real-world
+    const jitter = Math.floor(Math.random() * 1400) - 300;
     const delay = Math.max(800, base + jitter);
 
-    setReconnectAttempt((a) => a + 1);
+    const nextAttempt = attempt + 1;
+    setReconnectAttempt(nextAttempt);
+    reconnectAttemptRef.current = nextAttempt;
+
+    // P0-4 FIX: After 4 failed attempts (~30s total), surface a clear OFFLINE state.
+    // Staff were previously stuck on "Reconnecting (attempt 47)" indefinitely.
+    // At OFFLINE, the manual "Tap to reconnect" button becomes reachable.
+    if (nextAttempt >= 4) {
+      setConnState("offline");
+      connStateRef.current = "offline";
+    }
 
     retryTimeoutRef.current = setTimeout(() => {
+      if (connStateRef.current === "offline") return; // manual reconnect will handle it
       setConnState("reconnecting");
+      connStateRef.current = "reconnecting";
       setupRealtime();
     }, delay);
   };

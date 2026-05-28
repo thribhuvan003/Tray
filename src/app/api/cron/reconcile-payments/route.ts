@@ -85,12 +85,16 @@ export async function POST(req: NextRequest) {
   // via the context system. When a tenant grows very large, the long-term path
   // is to give it dedicated DB resources so this kind of cross-tenant scan is
   // no longer needed.
+  // P0-7 FIX: Remove .gt("payment_expires_at", nowIso) filter.
+  // If Razorpay captures payment in the last seconds of the window but
+  // expire-orders cron fires first, the order status becomes "expired" —
+  // but the candidate query was skipping it, permanently losing the money.
+  // safe_capture_payment's own status guard handles already-expired orders safely.
   const { data: candidates } = await admin
     .from("orders")
     .select("id, tenant_id, status, placed_at, payment_expires_at")
     .eq("status", "pending_payment")
     .gt("placed_at", thirtyMinAgo)
-    .gt("payment_expires_at", nowIso)
     .limit(200)
     .returns<(Candidate & { placed_at: string; payment_expires_at: string })[]>();
 
