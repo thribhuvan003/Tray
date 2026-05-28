@@ -12,8 +12,9 @@ export default async function CollegeAdminLayout({
   // Auth: get logged-in user via cookie-bound client (no tenant context needed)
   const serverClient = await getServerClient();
   const {
-    data: { user },
-  } = await serverClient.auth.getUser();
+    data: { session },
+  } = await serverClient.auth.getSession();
+  const user = session?.user ?? null;
 
   if (!user) redirect("/login?next=/college-admin");
 
