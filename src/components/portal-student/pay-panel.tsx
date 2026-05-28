@@ -1,15 +1,23 @@
 "use client";
 
-import { useEffect, useRef, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import QRCode from "react-qr-code";
 import Link from "next/link";
-import { ArrowLeft, Loader2, Smartphone, Sparkles, X as XIcon } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Loader2, Smartphone, Sparkles, XCircle, X as XIcon } from "lucide-react";
 import { toast } from "sonner";
 import { formatRupees, cn } from "@/lib/utils";
 import { upiQrPayload } from "@/lib/payments/upi";
 import { simulatePaymentCapture, verifyPaymentNow } from "@/app/(student)/_actions";
 import { getBrowserClient } from "@/lib/supabase/browser";
+
+// ── Phase state ────────────────────────────────────────────────────────────
+// idle       — QR visible, student hasn't opened UPI app yet
+// monitoring — student opened UPI app (or 3s elapsed), system is watching
+// confirming — student manually tapped "I've paid", server round-trip in progress
+// success    — payment detected, showing success flash before redirect
+// failed     — payment_failed status received
+type Phase = "idle" | "monitoring" | "confirming" | "success" | "failed";
 
 type Order = {
   id: string;
@@ -33,42 +41,77 @@ export function PayPanel({
   tenantUpi,
   order,
   lines,
+  razorpayKeyId,
+  razorpayOrderId,
+  isSimMode,
+  userEmail,
 }: {
   tenantSlug: string;
   tenantName: string;
   tenantUpi: string;
   order: Order;
   lines: Line[];
+  razorpayKeyId?: string;
+  razorpayOrderId?: string | null;
+  isSimMode?: boolean;
+  userEmail?: string | null;
 }) {
   const router = useRouter();
   const redirectedRef = useRef(false);
-  const [pending, start] = useTransition();
+  const [phase, setPhase] = useState<Phase>("idle");
+  const [monitoringMsg, setMonitoringMsg] = useState("Waiting for your payment…");
+  const [demoDismissed, setDemoDismissed] = useState(false);
+  const [showFallback, setShowFallback] = useState(false);
   const [verifying, startVerify] = useTransition();
-  const [stillWaiting, setStillWaiting] = useState(false);
+  const [pending, start] = useTransition();
+  const fallbackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const [remaining, setRemaining] = useState(() => {
     if (!order.payment_expires_at) return 900;
     return Math.max(0, Math.floor((new Date(order.payment_expires_at).getTime() - Date.now()) / 1000));
   });
+  const mins = Math.floor(remaining / 60);
+  const secs = remaining % 60;
+  const expired = remaining === 0 && !!order.payment_expires_at;
 
-  // Live UPI VPA for real-time QR update when the canteen owner changes their UPI ID.
-  // Reuses the exact browser Supabase client + postgres_changes pattern from the admin activity feed and kitchen board.
+  // Live UPI VPA — updates QR if canteen changes their UPI ID while student is on this page
   const [liveTenantUpi, setLiveTenantUpi] = useState(tenantUpi);
-  const [demoDismissed, setDemoDismissed] = useState(false);
-  const isSimMode = !process.env.NEXT_PUBLIC_RAZORPAY_LIVE;
+  const liveTenantUpiRef = useRef(liveTenantUpi);
+  liveTenantUpiRef.current = liveTenantUpi;
 
+  // ── Auto-detect success and navigate ──────────────────────────────────────
+  const handleDetected = useCallback((status: string) => {
+    if (redirectedRef.current) return;
+    if (status === "placed" || status === "preparing" || status === "ready" || status === "collected") {
+      redirectedRef.current = true;
+      setPhase("success");
+      // Brief success flash (1.2s) before redirect — gives the student visual confirmation
+      setTimeout(() => {
+        router.push(`/c/${tenantSlug}/track/${order.id}`);
+      }, 1200);
+    } else if (status === "payment_failed") {
+      redirectedRef.current = true;
+      setPhase("failed");
+      setTimeout(() => {
+        router.push(`/c/${tenantSlug}/track/${order.id}`);
+      }, 2500);
+    } else if (status !== "pending_payment") {
+      // Any other terminal status (expired, rejected, etc.)
+      redirectedRef.current = true;
+      router.push(`/c/${tenantSlug}/track/${order.id}`);
+    }
+  }, [router, tenantSlug, order.id]);
+
+  // ── Countdown + expiry redirect ───────────────────────────────────────────
   useEffect(() => {
     if (!order.payment_expires_at) return;
     const expiry = new Date(order.payment_expires_at).getTime();
     const tick = () => {
-      const secs = Math.max(0, Math.floor((expiry - Date.now()) / 1000));
-      setRemaining(secs);
-      // BUG 1 FIX: redirect to track page when the payment window expires so
-      // the student isn't stuck on a dead pay screen.
-      if (secs === 0) {
-        if (!redirectedRef.current) {
-          redirectedRef.current = true;
-          router.push(`/c/${tenantSlug}/track/${order.id}`);
-        }
+      const s = Math.max(0, Math.floor((expiry - Date.now()) / 1000));
+      setRemaining(s);
+      if (s === 0 && !redirectedRef.current) {
+        redirectedRef.current = true;
+        router.push(`/c/${tenantSlug}/track/${order.id}`);
       }
     };
     tick();
@@ -76,58 +119,35 @@ export function PayPanel({
     return () => clearInterval(id);
   }, [order.payment_expires_at, order.id, router, tenantSlug]);
 
-  // Live UPI VPA subscription — when the canteen owner changes their UPI ID in settings,
-  // the QR on this student's pay panel updates in real time without a full reload.
-  // Use a ref for liveTenantUpi so the channel is subscribed once and never torn down
-  // on VPA changes — avoids a brief subscription gap each time the UPI updates.
-  const liveTenantUpiRef = useRef(liveTenantUpi);
-  liveTenantUpiRef.current = liveTenantUpi;
+  // ── Live UPI VPA subscription ─────────────────────────────────────────────
   useEffect(() => {
     const sb = getBrowserClient();
     const ch = sb
       .channel(`tenant-upi-${tenantSlug}`)
-      .on(
-        "postgres_changes",
-        { event: "UPDATE", schema: "public", table: "tenants", filter: `slug=eq.${tenantSlug}` },
-        (payload) => {
-          const nextUpi = (payload.new as { upi_vpa: string | null }).upi_vpa;
-          if (nextUpi && nextUpi !== liveTenantUpiRef.current) {
-            setLiveTenantUpi(nextUpi);
-          }
-        }
-      )
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "tenants", filter: `slug=eq.${tenantSlug}` }, (payload) => {
+        const next = (payload.new as { upi_vpa: string | null }).upi_vpa;
+        if (next && next !== liveTenantUpiRef.current) setLiveTenantUpi(next);
+      })
       .subscribe();
-    return () => {
-      sb.removeChannel(ch);
-    };
+    return () => { sb.removeChannel(ch); };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tenantSlug]);
 
+  // ── Primary: Realtime subscription on orders table ───────────────────────
+  // This fires within ~1s of the webhook capturing the payment.
   useEffect(() => {
     const sb = getBrowserClient();
-    const channel = sb
+    const ch = sb
       .channel(`order:${order.id}`)
-      .on(
-        "postgres_changes",
-        { event: "UPDATE", schema: "public", table: "orders", filter: `id=eq.${order.id}` },
-        (payload) => {
-          const next = (payload.new as { status: string }).status;
-          // Redirect to track page for ANY terminal/advanced status — this covers
-          // payment_failed, expired, rejected, placed, preparing, ready, collected, etc.
-          // The track page already has dedicated UI for every status including payment_failed.
-          if (next !== "pending_payment") {
-            if (redirectedRef.current) return;
-            redirectedRef.current = true;
-            router.push(`/c/${tenantSlug}/track/${order.id}`);
-          }
-        }
-      )
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "orders", filter: `id=eq.${order.id}` }, (payload) => {
+        handleDetected((payload.new as { status: string }).status);
+      })
       .subscribe();
-    return () => {
-      sb.removeChannel(channel);
-    };
-  }, [order.id, router, tenantSlug]);
+    return () => { sb.removeChannel(ch); };
+  }, [order.id, handleDetected]);
 
+  // ── Secondary: Smart polling — 4s intervals ───────────────────────────────
+  // Catches cases where Realtime WebSocket is disconnected (flaky campus WiFi).
   useEffect(() => {
     const id = setInterval(async () => {
       const sb = getBrowserClient();
@@ -136,249 +156,364 @@ export function PayPanel({
         .select("status")
         .eq("id", order.id)
         .maybeSingle<{ status: string }>();
-      if (data && data.status !== "pending_payment") {
-        // BUG 2 FIX: guard against double-redirect when Realtime already fired.
-        if (redirectedRef.current) return;
-        redirectedRef.current = true;
-        router.push(`/c/${tenantSlug}/track/${order.id}`);
-      }
+      if (data) handleDetected(data.status);
     }, 4000);
     return () => clearInterval(id);
-  }, [order.id, router, tenantSlug]);
+  }, [order.id, handleDetected]);
 
-  const mins = Math.floor(remaining / 60);
-  const secs = remaining % 60;
-  const expired = remaining === 0 && order.payment_expires_at;
+  // ── Progressive monitoring messages ──────────────────────────────────────
+  // Cycle through reassuring messages while the system watches for payment.
+  useEffect(() => {
+    if (phase !== "monitoring") return;
+    const messages = [
+      "Waiting for your payment…",
+      "Checking with your bank…",
+      "Almost there — UPI can take a few seconds…",
+      "Still watching for your payment…",
+      "This usually takes under 30 seconds…",
+    ];
+    let i = 0;
+    const id = setInterval(() => {
+      i = (i + 1) % messages.length;
+      setMonitoringMsg(messages[i]);
+    }, 5000);
+    return () => clearInterval(id);
+  }, [phase]);
 
-  // Use the live UPI VPA (updated in real time via the postgres_changes subscription above).
-  const upiUri = upiQrPayload({
-    vpa: liveTenantUpi,
-    name: tenantName,
-    amountPaise: order.total_paise,
-    note: order.short_code,
-  });
+  // ── Fallback button: show after 12s of monitoring with no detection ───────
+  // "I've already paid" appears as a small secondary option — not the hero.
+  useEffect(() => {
+    if (phase === "monitoring" && !showFallback) {
+      fallbackTimerRef.current = setTimeout(() => setShowFallback(true), 12000);
+    }
+    return () => {
+      if (fallbackTimerRef.current) clearTimeout(fallbackTimerRef.current);
+    };
+  }, [phase, showFallback]);
 
-  const onSimulate = () =>
-    start(async () => {
-      const r = await simulatePaymentCapture(order.id);
-      if (!r.ok) toast.error(r.error ?? "Could not simulate payment");
-      else {
-        toast.success("Payment captured");
-        if (redirectedRef.current) return;
-        redirectedRef.current = true;
-        router.push(`/c/${tenantSlug}/track/${order.id}`);
-      }
-    });
+  // ── Transition to monitoring when student opens UPI app ───────────────────
+  const onOpenUpi = () => {
+    setPhase("monitoring");
+  };
 
-  const onIvePaid = () =>
+  // ── Manual fallback: server-side verification ─────────────────────────────
+  // Still goes through verifyPaymentNow which calls safe_capture_payment — never blind trust.
+  const onIvePaid = () => {
+    setPhase("confirming");
     startVerify(async () => {
-      setStillWaiting(false);
-      // Show a brief "Confirming…" state before the server round-trip resolves
-      await new Promise((r) => setTimeout(r, 700));
       const r = await verifyPaymentNow(order.id);
       if (r.status === "paid") {
-        toast.success("Order placed — kitchen has it!");
-        if (redirectedRef.current) return;
-        redirectedRef.current = true;
-        router.push(`/c/${tenantSlug}/track/${order.id}`);
+        handleDetected("placed");
       } else if (r.status === "failed") {
-        // Payment was declined or expired — redirect to track which shows the
-        // correct payment_failed/expired UI with a "Try again" link back to menu.
-        if (redirectedRef.current) return;
-        redirectedRef.current = true;
-        router.push(`/c/${tenantSlug}/track/${order.id}`);
+        handleDetected("payment_failed");
       } else {
-        setStillWaiting(true);
+        // Still pending — go back to monitoring with fallback visible
+        setPhase("monitoring");
+        setShowFallback(true);
+        toast.info("Payment not confirmed yet — keep this page open");
       }
     });
+  };
 
+  const upiUri = upiQrPayload({ vpa: liveTenantUpi, name: tenantName, amountPaise: order.total_paise, note: order.short_code });
+
+  // ── Success phase ──────────────────────────────────────────────────────────
+  if (phase === "success") {
+    return (
+      <div className="min-h-screen flex items-center justify-center px-5">
+        <div className="text-center max-w-sm">
+          <div
+            className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full"
+            style={{ background: "rgba(22,163,74,0.1)" }}
+          >
+            <CheckCircle2 size={40} strokeWidth={1.5} style={{ color: "#16a34a" }} />
+          </div>
+          <h2
+            className="leading-tight tracking-[-0.03em] mb-2"
+            style={{ fontFamily: "var(--font-bricolage)", fontWeight: 700, fontSize: "clamp(1.6rem, 5vw, 2.2rem)" }}
+          >
+            Payment received.
+          </h2>
+          <p className="text-[14px] opacity-55 mb-2">Your order is with the kitchen.</p>
+          <div className="flex items-center justify-center gap-2 text-[12px] opacity-40">
+            <Loader2 size={12} className="animate-spin" />
+            Taking you to your order…
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Failed phase ───────────────────────────────────────────────────────────
+  if (phase === "failed") {
+    return (
+      <div className="min-h-screen flex items-center justify-center px-5">
+        <div className="text-center max-w-sm">
+          <div
+            className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full"
+            style={{ background: "rgba(220,38,38,0.08)" }}
+          >
+            <XCircle size={40} strokeWidth={1.5} style={{ color: "var(--color-ocean-500, #e60000)" }} />
+          </div>
+          <h2
+            className="leading-tight tracking-[-0.03em] mb-2"
+            style={{ fontFamily: "var(--font-bricolage)", fontWeight: 700, fontSize: "clamp(1.6rem, 5vw, 2.2rem)" }}
+          >
+            Payment failed.
+          </h2>
+          <p className="text-[14px] opacity-55 mb-1">No money was charged.</p>
+          <p className="text-[12px] opacity-40 mb-1">Redirecting to your order…</p>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Main screen ────────────────────────────────────────────────────────────
   return (
     <div className="mx-auto max-w-3xl px-4 sm:px-6 pt-6 pb-12">
       <Link
         href={`/c/${tenantSlug}/menu`}
-        className="inline-flex items-center gap-1.5 text-[13px] text-[color:var(--color-ink)]/60 hover:text-ocean-500 mb-4"
+        className="inline-flex items-center gap-1.5 text-[13px] text-[color:var(--color-ink)]/55 hover:text-ocean-500 mb-5 transition-colors"
       >
         <ArrowLeft size={14} /> Back to menu
       </Link>
 
+      {/* Demo mode banner */}
       {isSimMode && !demoDismissed && (
-        <div className="mb-4 flex items-center justify-between gap-3 rounded-xl bg-amber-50 border border-amber-200 dark:bg-amber-500/10 dark:border-amber-500/30 px-4 py-2.5">
+        <div className="mb-4 flex items-center justify-between gap-3 rounded-xl bg-amber-50 border border-amber-200 dark:bg-amber-500/10 dark:border-amber-500/30 px-4 py-3">
           <p className="text-[12.5px] text-amber-800 dark:text-amber-300 leading-snug">
-            <span className="font-semibold">Demo mode</span> — scan the QR with any UPI app, then tap &ldquo;I&rsquo;ve paid&rdquo; to send your order to the kitchen.
+            <span className="font-semibold">Demo mode</span> — scan the QR, then tap <em>Open UPI App</em>. The order auto-confirms.
           </p>
-          <button
-            aria-label="Dismiss demo banner"
-            onClick={() => setDemoDismissed(true)}
-            className="shrink-0 text-amber-600 hover:text-amber-800 dark:text-amber-400 transition-colors"
-          >
+          <button aria-label="Dismiss" onClick={() => setDemoDismissed(true)} className="shrink-0 text-amber-600 hover:text-amber-800 transition-colors">
             <XIcon size={14} />
           </button>
         </div>
       )}
 
+      {/* Page heading */}
       <div className="mb-6">
-        <div className="text-[11px] font-mono uppercase tracking-wider text-[color:var(--color-ink)]/55">
+        <div className="text-[11px] font-mono uppercase tracking-wider opacity-50 mb-1">
           Order {order.short_code}
         </div>
-        <h1 className="font-display text-[clamp(28px,5vw,42px)] font-medium tracking-tight leading-tight">
-          Pay <span className="italic text-ocean-500">{formatRupees(order.total_paise)}</span> by UPI
+        <h1
+          className="leading-tight tracking-[-0.03em]"
+          style={{ fontFamily: "var(--font-bricolage)", fontWeight: 700, fontSize: "clamp(1.75rem, 5vw, 2.5rem)" }}
+        >
+          Pay{" "}
+          <span style={{ color: "var(--color-ocean-500, #e60000)" }}>
+            {formatRupees(order.total_paise)}
+          </span>{" "}
+          to {tenantName}
         </h1>
       </div>
 
-      <div className="grid md:grid-cols-[1.1fr_1fr] gap-5">
-        <div className="rounded-2xl bg-[color:var(--color-paper)] border border-[color:var(--color-line)] p-6 flex flex-col items-center text-center">
-          {/* Mobile: "Open UPI app" is the hero CTA */}
-          <a
-            href={upiUri}
-            className="md:hidden w-full h-14 text-[15px] inline-flex items-center justify-center gap-2 rounded-full border-2 border-ocean-500 text-ocean-500 bg-transparent font-medium hover:bg-ocean-50 dark:hover:bg-ocean-500/10 transition-colors mb-1"
-          >
-            <Smartphone size={16} /> Open UPI app
-          </a>
-          <p className="md:hidden text-[11px] text-center opacity-60 mt-1 mb-4">Opens GPay, PhonePe, or any UPI app</p>
+      <div className="grid md:grid-cols-[1.15fr_0.85fr] gap-5 items-start">
 
-          {/* Desktop: QR is prominent */}
-          <div className="hidden md:block text-[11px] font-mono uppercase tracking-wider text-[color:var(--color-ink)]/55 mb-3">
-            Scan with any UPI app
-          </div>
-          <div className="hidden md:block p-4 bg-white rounded-2xl shadow-[inset_0_0_0_1px_rgba(10,22,40,0.06)]">
-            <QRCode value={upiUri} size={208} bgColor="#ffffff" fgColor="#0a1628" />
-          </div>
-          <a
-            href={upiUri}
-            className="hidden md:inline-flex mt-5 items-center gap-2 h-11 px-5 rounded-full bg-ocean-500 text-white text-[13px] font-medium hover:bg-ocean-600 transition-colors"
-          >
-            <Smartphone size={14} /> Open UPI app
-          </a>
+        {/* ── Left: QR + UPI CTA ─────────────────────────────────────────── */}
+        <div className="rounded-2xl border border-[color:var(--color-line)] bg-[color:var(--color-paper)] p-6 flex flex-col items-center text-center">
 
-          {/* Mobile: QR in a collapsed details section */}
-          <details className="md:hidden w-full text-left mt-2">
-            <summary className="text-[12px] font-mono text-center cursor-pointer text-[color:var(--color-ink)]/55 hover:text-[color:var(--color-ink)] transition-colors">
-              On desktop? Scan this QR
-            </summary>
-            <div className="mt-3 flex flex-col items-center gap-2">
-              <div className="p-4 bg-white rounded-2xl shadow-[inset_0_0_0_1px_rgba(10,22,40,0.06)]">
-                <QRCode value={upiUri} size={180} bgColor="#ffffff" fgColor="#0a1628" />
+          {/* Phase: monitoring — show animated detection state */}
+          {(phase === "monitoring" || phase === "confirming") ? (
+            <div className="w-full py-6 flex flex-col items-center gap-4">
+              <div className="relative flex h-16 w-16 items-center justify-center">
+                <div
+                  className="absolute inset-0 rounded-full animate-ping opacity-20"
+                  style={{ background: "var(--color-ocean-500, #e60000)" }}
+                />
+                <div
+                  className="h-10 w-10 rounded-full flex items-center justify-center"
+                  style={{ background: "rgba(230,0,0,0.1)" }}
+                >
+                  <Loader2 size={20} className="animate-spin" style={{ color: "var(--color-ocean-500, #e60000)" }} />
+                </div>
               </div>
-            </div>
-          </details>
+              <div>
+                <p
+                  className="font-semibold text-[15px] tracking-tight mb-1"
+                  style={{ fontFamily: "var(--font-bricolage)" }}
+                >
+                  {phase === "confirming" ? "Confirming payment…" : monitoringMsg}
+                </p>
+                <p className="text-[12px] opacity-50">
+                  {phase === "confirming"
+                    ? "Checking with Razorpay…"
+                    : "You'll be taken to your order automatically."}
+                </p>
+              </div>
 
-          <div className="mt-4 text-[12px] text-[color:var(--color-ink)]/55">
-            Paying <span className="font-semibold text-[color:var(--color-ink)]">{tenantName}</span> · {liveTenantUpi}
-          </div>
+              {/* Fallback — appears after 12s with no detection */}
+              {showFallback && phase === "monitoring" && (
+                <div className="mt-2 border-t border-[color:var(--color-line)] pt-4 w-full">
+                  <p className="text-[11.5px] opacity-50 mb-2">Paid but not auto-detected?</p>
+                  <button
+                    onClick={onIvePaid}
+                    disabled={verifying}
+                    className="text-[12.5px] font-medium underline-offset-2 hover:underline transition-all"
+                    style={{ color: "var(--color-ocean-500, #e60000)" }}
+                  >
+                    {verifying ? "Checking…" : "I've already paid — verify manually"}
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <>
+              {/* Phase: idle — QR + Open UPI App as hero */}
+
+              {/* Mobile: Open UPI App is the primary CTA */}
+              <a
+                href={upiUri}
+                onClick={onOpenUpi}
+                className="md:hidden w-full h-14 text-[15px] inline-flex items-center justify-center gap-2.5 rounded-2xl text-white font-semibold transition-all active:scale-[0.98] mb-3"
+                style={{ background: "var(--color-ocean-500, #e60000)" }}
+              >
+                <Smartphone size={18} /> Open UPI App to Pay
+              </a>
+              <p className="md:hidden text-[11.5px] opacity-50 mb-5">Opens GPay · PhonePe · Paytm · any UPI app</p>
+
+              {/* Desktop: QR is prominent */}
+              <p className="hidden md:block text-[11px] font-mono uppercase tracking-wider opacity-50 mb-3">
+                Scan with any UPI app
+              </p>
+              <div className="hidden md:block p-4 bg-white rounded-2xl shadow-[inset_0_0_0_1px_rgba(10,22,40,0.06)] mb-4">
+                <QRCode value={upiUri} size={192} bgColor="#ffffff" fgColor="#0a1628" />
+              </div>
+              <a
+                href={upiUri}
+                onClick={onOpenUpi}
+                className="hidden md:inline-flex items-center gap-2 h-11 px-6 rounded-full text-white text-[13.5px] font-semibold transition-all hover:opacity-90 active:scale-[0.98]"
+                style={{ background: "var(--color-ocean-500, #e60000)" }}
+              >
+                <Smartphone size={15} /> Open UPI App
+              </a>
+
+              {/* Mobile: QR in collapsed details */}
+              <details className="md:hidden w-full text-left mt-1">
+                <summary className="text-[12px] font-mono text-center cursor-pointer opacity-50 hover:opacity-80 transition-opacity">
+                  On desktop? Scan this QR
+                </summary>
+                <div className="mt-3 flex flex-col items-center">
+                  <div className="p-4 bg-white rounded-2xl shadow-[inset_0_0_0_1px_rgba(10,22,40,0.06)]">
+                    <QRCode value={upiUri} size={168} bgColor="#ffffff" fgColor="#0a1628" />
+                  </div>
+                </div>
+              </details>
+
+              <div className="mt-4 text-[11.5px] opacity-45 text-center">
+                Paying to <span className="font-semibold opacity-75">{liveTenantUpi}</span>
+              </div>
+            </>
+          )}
         </div>
 
+        {/* ── Right: Order summary + timer ──────────────────────────────── */}
         <div className="flex flex-col gap-4">
-          <div className="rounded-2xl bg-[color:var(--color-paper-dim)] border border-[color:var(--color-line)] p-5">
-            <div className="flex items-center justify-between">
-              <div className="text-[11px] font-mono uppercase tracking-wider text-[color:var(--color-ink)]/55">
-                Time to pay
-              </div>
+
+          {/* Payment timer — less scary, more subtle */}
+          {!expired && (
+            <div
+              className="rounded-2xl border px-5 py-4 flex items-center justify-between"
+              style={{
+                border: remaining < 60 ? "1px solid rgba(245,158,11,0.4)" : "1px solid var(--color-line)",
+                background: remaining < 60 ? "rgba(245,158,11,0.05)" : "var(--color-paper-dim)",
+              }}
+            >
+              <p className="text-[12px] opacity-55">Payment window</p>
               <div
                 className={cn(
-                  "font-mono text-[20px] font-semibold tabular",
-                  expired ? "text-rose-500" : remaining < 60 ? "text-amber-600" : "text-[color:var(--color-ink)]"
+                  "font-mono text-[18px] font-semibold tabular",
+                  remaining < 60 ? "text-amber-600" : "opacity-65"
                 )}
               >
                 {String(mins).padStart(2, "0")}:{String(secs).padStart(2, "0")}
               </div>
             </div>
-            {expired ? (
-              <p className="mt-2 text-[12.5px] text-rose-500">
-                Payment window closed. <Link href={`/c/${tenantSlug}/menu`} className="underline">Start a new order</Link>.
-              </p>
-            ) : (
-              <p className="mt-2 text-[12.5px] text-[color:var(--color-ink)]/55">
-                You have 15 min to pay — after that, we&rsquo;ll cancel and refund automatically.
-              </p>
-            )}
-          </div>
-
-          <div className="rounded-2xl border border-[color:var(--color-line)] p-5">
-            <div className="text-[11px] font-mono uppercase tracking-wider text-[color:var(--color-ink)]/55 mb-3">
-              Order summary
+          )}
+          {expired && (
+            <div className="rounded-2xl border border-rose-500/30 bg-rose-500/5 px-5 py-4 text-[13px] text-rose-600">
+              Payment window closed.{" "}
+              <Link href={`/c/${tenantSlug}/menu`} className="underline font-medium">
+                Start a new order
+              </Link>
             </div>
-            <ul className="flex flex-col gap-2">
+          )}
+
+          {/* Order summary */}
+          <div className="rounded-2xl border border-[color:var(--color-line)] p-5">
+            <div className="text-[10.5px] font-mono uppercase tracking-wider opacity-50 mb-3">
+              Your order
+            </div>
+            <ul className="flex flex-col gap-2.5">
               {lines.map((l) => (
-                <li key={l.id} className="flex items-center gap-3 text-[14px]">
+                <li key={l.id} className="flex items-center gap-3 text-[13.5px]">
                   <span
                     className={cn(
-                      "h-3.5 w-3.5 inline-flex items-center justify-center border-2 rounded-sm",
-                      l.diet_snapshot === "veg"
-                        ? "border-emerald-500"
-                        : l.diet_snapshot === "egg"
-                        ? "border-amber-500"
-                        : "border-rose-500"
+                      "shrink-0 h-3.5 w-3.5 inline-flex items-center justify-center border-2 rounded-sm",
+                      l.diet_snapshot === "veg" ? "border-emerald-500" : l.diet_snapshot === "egg" ? "border-amber-500" : "border-rose-500"
                     )}
                   >
-                    <span
-                      className={cn(
-                        "h-1.5 w-1.5 rounded-full",
-                        l.diet_snapshot === "veg"
-                          ? "bg-emerald-500"
-                          : l.diet_snapshot === "egg"
-                          ? "bg-amber-500"
-                          : "bg-rose-500"
-                      )}
-                    />
+                    <span className={cn(
+                      "h-1.5 w-1.5 rounded-full",
+                      l.diet_snapshot === "veg" ? "bg-emerald-500" : l.diet_snapshot === "egg" ? "bg-amber-500" : "bg-rose-500"
+                    )} />
                   </span>
-                  <span className="flex-1 min-w-0 truncate">
-                    {l.qty} × {l.name_snapshot}
+                  <span className="flex-1 min-w-0 truncate opacity-80">
+                    {l.qty > 1 && <span className="font-semibold">{l.qty}× </span>}
+                    {l.name_snapshot}
                   </span>
-                  <span className="tabular text-[color:var(--color-ink)]/70">
+                  <span className="tabular opacity-65 text-[13px]">
                     {formatRupees(l.qty * l.price_paise_snapshot)}
                   </span>
                 </li>
               ))}
             </ul>
-            <div className="mt-4 pt-4 border-t border-[color:var(--color-line)] flex justify-between items-baseline">
-              <span className="text-[10px] uppercase tracking-[0.18em] text-[color:var(--color-ink)]/50" style={{ fontFamily: "var(--font-barlow, var(--font-manrope))" }}>Total</span>
-              <span className="text-[32px] leading-none tabular text-ocean-600 dark:text-ocean-400" style={{ fontFamily: "var(--font-bebas, Impact, sans-serif)" }}>
+            <div className="mt-4 pt-4 border-t border-[color:var(--color-line)] flex items-baseline justify-between">
+              <span className="text-[10px] uppercase tracking-[0.18em] opacity-45">Total</span>
+              <span
+                className="text-[28px] leading-none tabular"
+                style={{ fontFamily: "var(--font-bebas, Impact, sans-serif)", color: "var(--color-ocean-500, #e60000)" }}
+              >
                 {formatRupees(order.total_paise)}
               </span>
             </div>
           </div>
 
-          <button
-            onClick={onIvePaid}
-            disabled={verifying || Boolean(expired)}
-            className="inline-flex items-center justify-center gap-2 h-12 rounded-xl bg-ocean-500 text-white text-[14px] font-medium hover:bg-ocean-600 disabled:opacity-50 transition-colors"
-          >
-            {verifying ? (
-              <>
-                <Loader2 size={14} className="animate-spin" /> Confirming…
-              </>
-            ) : (
-              <>I&rsquo;ve paid &mdash; confirm my order</>
-            )}
-          </button>
-          {stillWaiting && !verifying && (
-            <p className="text-[12.5px] text-amber-600 text-center -mt-2">
-              Still confirming your payment — UPI can take 30–60 seconds. Keep this page open.
-            </p>
-          )}
-
-          {/* Razorpay trust signal — required for live and student confidence */}
-          <div className="flex items-center justify-center gap-1.5 mt-1">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" className="text-[color:var(--color-ink)]/40">
-              <path d="M12 2L4 5v6c0 5.25 3.5 10.15 8 11.35C16.5 21.15 20 16.25 20 11V5l-8-3z" fill="currentColor" opacity=".2" stroke="currentColor" strokeWidth="1.5"/>
+          {/* Trust signal */}
+          <div className="flex items-center justify-center gap-1.5">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" className="opacity-35">
+              <path d="M12 2L4 5v6c0 5.25 3.5 10.15 8 11.35C16.5 21.15 20 16.25 20 11V5l-8-3z" fill="currentColor" opacity=".3" stroke="currentColor" strokeWidth="1.5"/>
               <path d="M9 12l2 2 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
-            <p className="text-[11px] text-[color:var(--color-ink)]/40">
-              Payments secured by <span className="font-semibold">Razorpay</span> · No card details stored
+            <p className="text-[11px] opacity-40">
+              Secured by <span className="font-semibold">Razorpay</span> · No card data stored
             </p>
           </div>
 
-          {!process.env.NEXT_PUBLIC_RAZORPAY_LIVE && (
+          {/* Dev-only simulate button */}
+          {isSimMode && (
             <>
               <button
-                onClick={onSimulate}
+                onClick={() => start(async () => {
+                  const r = await simulatePaymentCapture(order.id);
+                  if (!r.ok) toast.error(r.error ?? "Could not simulate payment");
+                  else {
+                    setPhase("success");
+                    setTimeout(() => {
+                      if (!redirectedRef.current) {
+                        redirectedRef.current = true;
+                        router.push(`/c/${tenantSlug}/track/${order.id}`);
+                      }
+                    }, 1200);
+                  }
+                })}
                 disabled={pending}
-                className="inline-flex items-center justify-center gap-2 h-11 rounded-xl border border-dashed border-ocean-500/40 text-ocean-500 text-[13px] font-medium hover:bg-ocean-50 dark:hover:bg-ocean-500/10 transition-colors"
+                className="inline-flex items-center justify-center gap-2 h-11 rounded-xl border border-dashed text-[13px] font-medium hover:opacity-80 transition-opacity"
+                style={{ borderColor: "var(--color-ocean-500, #e60000)", color: "var(--color-ocean-500, #e60000)" }}
               >
-                <Sparkles size={14} /> DEV · simulate paid
+                <Sparkles size={13} /> DEV · Simulate payment capture
               </button>
-              <p className="text-[11px] text-[color:var(--color-ink)]/45 text-center -mt-2">
-                Dev-only shortcut — flips the order to <b>placed</b> without a real payment.
+              <p className="text-[10.5px] opacity-40 text-center -mt-2">
+                Dev-only — skips real UPI, flips order to placed
               </p>
             </>
           )}
