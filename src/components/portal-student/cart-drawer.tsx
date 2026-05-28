@@ -66,34 +66,50 @@ export function CartDrawer({ tenantSlug, tenantName }: { tenantSlug: string; ten
       toast.error("Pick a table for dine-in");
       return;
     }
+    // Show a reassurance toast if the gateway takes > 4s
+    // (Razorpay order creation now has retry + timeout, but network can still be slow)
+    const slowTimer = setTimeout(() => {
+      toast.loading("Payment system is taking a moment — your order is being secured…", {
+        id: "checkout-slow",
+        duration: 15000,
+      });
+    }, 4000);
+
     start(async () => {
-      const res = await placeOrder(
-        lines.map((l) => ({ menuItemId: l.menuItemId, qty: l.qty })),
-        note,
-        orderType,
-        orderType === "dine_in" ? tableLabel.trim().toUpperCase() : null
-      );
-      if (!res.ok) {
-        if (res.code === "AUTH_REQUIRED") {
-          toast.info("Sign in to place your order — your cart is saved");
-          router.push(`/c/${tenantSlug}/login?next=/c/${tenantSlug}/menu`);
-        } else if (res.code === "OUT_OF_STOCK") {
-          toast.error(res.error ?? "An item sold out — please update your cart");
-        } else {
-          toast.error(res.error ?? "Could not place order");
+      try {
+        const res = await placeOrder(
+          lines.map((l) => ({ menuItemId: l.menuItemId, qty: l.qty })),
+          note,
+          orderType,
+          orderType === "dine_in" ? tableLabel.trim().toUpperCase() : null
+        );
+        clearTimeout(slowTimer);
+        toast.dismiss("checkout-slow");
+
+        if (!res.ok) {
+          if (res.code === "AUTH_REQUIRED") {
+            toast.info("Sign in to place your order — your cart is saved");
+            router.push(`/c/${tenantSlug}/login?next=/c/${tenantSlug}/menu`);
+          } else if (res.code === "OUT_OF_STOCK") {
+            toast.error(res.error ?? "An item sold out — please update your cart");
+          } else if (res.code === "RATE_LIMITED") {
+            toast.error("Too many requests — wait a moment and try again");
+          } else {
+            toast.error(res.error ?? "Could not place order — please try again");
+          }
+          return;
         }
-        return;
+        if (res.queueWarning) {
+          toast.warning("Kitchen is very busy right now — expect a longer wait", { duration: 6000 });
+        }
+        clear();
+        setOpen(false);
+        router.push(`/c/${tenantSlug}/pay/${res.orderId}`);
+      } catch {
+        clearTimeout(slowTimer);
+        toast.dismiss("checkout-slow");
+        toast.error("Connection error — check your network and try again");
       }
-      // Scenario 26: Kitchen busy warning — show Zomato-style "High demand" toast
-      // before navigating to pay. Student is informed but not blocked.
-      if (res.queueWarning) {
-        toast.warning("Kitchen is very busy right now — your order is placed but expect a longer wait 🍳", {
-          duration: 6000,
-        });
-      }
-      clear();
-      setOpen(false);
-      router.push(`/c/${tenantSlug}/pay/${res.orderId}`);
     });
   };
 

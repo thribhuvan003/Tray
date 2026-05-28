@@ -2,6 +2,42 @@ import "server-only";
 import crypto from "node:crypto";
 import { env, featureFlags } from "@/lib/env";
 
+// ── Resilient fetch helper ─────────────────────────────────────────────────
+// All Razorpay API calls go through this wrapper so they:
+//   1. Always have a hard timeout (default 8s — Razorpay SLA is 3s p99)
+//   2. Retry up to `maxAttempts` times on network errors or 5xx responses
+//   3. Use exponential backoff (500ms, 1000ms) between retries
+//
+// This prevents a slow Razorpay response from hanging a Vercel serverless
+// function indefinitely and consuming connection-pool slots under heavy load.
+
+async function razorpayFetch(
+  url: string,
+  opts: RequestInit,
+  { timeoutMs = 8000, maxAttempts = 3 }: { timeoutMs?: number; maxAttempts?: number } = {}
+): Promise<Response> {
+  let lastErr: unknown;
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      const res = await fetch(url, {
+        ...opts,
+        signal: AbortSignal.timeout(timeoutMs),
+      });
+      // Don't retry on 4xx — those are client errors (bad order ID, wrong key etc.)
+      if (res.ok || (res.status >= 400 && res.status < 500)) return res;
+      // Retry on 5xx (Razorpay internal error) unless it's the last attempt
+      lastErr = new Error(`Razorpay HTTP ${res.status}`);
+    } catch (err) {
+      lastErr = err;
+      // If it's the last attempt, fall through and throw
+      if (attempt === maxAttempts) break;
+    }
+    // Exponential backoff before retry
+    await new Promise((r) => setTimeout(r, 500 * Math.pow(2, attempt - 1)));
+  }
+  throw lastErr;
+}
+
 export type CreateOrderInput = {
   amountPaise: number;
   receipt: string;
@@ -37,7 +73,7 @@ export async function createRazorpayOrder(input: CreateOrderInput): Promise<Crea
   const auth = Buffer.from(`${env.RAZORPAY_KEY_ID}:${env.RAZORPAY_KEY_SECRET}`).toString(
     "base64"
   );
-  const res = await fetch("https://api.razorpay.com/v1/orders", {
+  const res = await razorpayFetch("https://api.razorpay.com/v1/orders", {
     method: "POST",
     headers: {
       Authorization: `Basic ${auth}`,
@@ -122,15 +158,18 @@ export async function fetchRazorpayOrderStatus(
   const auth = Buffer.from(`${env.RAZORPAY_KEY_ID}:${env.RAZORPAY_KEY_SECRET}`).toString(
     "base64"
   );
-  const res = await fetch(`https://api.razorpay.com/v1/orders/${razorpayOrderId}`, {
-    method: "GET",
-    headers: { Authorization: `Basic ${auth}` },
-    cache: "no-store",
-  });
+  let res: Response;
+  try {
+    res = await razorpayFetch(
+      `https://api.razorpay.com/v1/orders/${razorpayOrderId}`,
+      { method: "GET", headers: { Authorization: `Basic ${auth}` }, cache: "no-store" }
+    );
+  } catch {
+    // Network error or all retries exhausted — treat as unknown, not failed
+    return "unknown";
+  }
   if (res.status === 404) return "unknown";
   if (!res.ok) {
-    // Don't throw — callers treat unknown as "keep waiting" so a transient
-    // Razorpay 5xx never accidentally marks an order paid or failed.
     return "unknown";
   }
   const data = (await res.json()) as { status?: string };
@@ -171,14 +210,20 @@ export async function initiateRazorpayRefund(opts: {
   }
 
   const auth = Buffer.from(`${env.RAZORPAY_KEY_ID}:${env.RAZORPAY_KEY_SECRET}`).toString("base64");
-  const res = await fetch(`https://api.razorpay.com/v1/payments/${razorpayPaymentId}/refund`, {
-    method: "POST",
-    headers: {
-      Authorization: `Basic ${auth}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ amount: amountPaise, notes }),
-  });
+  let res: Response;
+  try {
+    res = await razorpayFetch(
+      `https://api.razorpay.com/v1/payments/${razorpayPaymentId}/refund`,
+      {
+        method: "POST",
+        headers: { Authorization: `Basic ${auth}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ amount: amountPaise, notes }),
+      },
+      { timeoutMs: 12000, maxAttempts: 2 } // Refunds: longer timeout, fewer retries
+    );
+  } catch (err) {
+    return { error: `Razorpay refund network error: ${err instanceof Error ? err.message : String(err)}` };
+  }
 
   if (!res.ok) {
     return { error: `Razorpay refund failed: ${res.status}` };
