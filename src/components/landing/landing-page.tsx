@@ -210,17 +210,32 @@ export function LandingPage({ tenant }: { tenant: ResolvedTenant | null }) {
               </div>
             </RevealItem>
             <RevealItem>
-              <h2
-                className="max-w-5xl leading-[0.85] tracking-[-0.04em]"
-                style={{
-                  fontFamily: "var(--font-cormorant)",
-                  fontStyle: "italic",
-                  fontSize: "clamp(3.8rem, 10vw, 9.5rem)",
-                  color: "var(--tray-ink)",
-                }}
-              >
-                Add a special.{" "}
-                <span className="not-italic block sm:inline mt-2 sm:mt-0" style={{ fontFamily: "var(--font-barlow)", fontWeight: 900, textTransform: "uppercase", color: "var(--tray-clay)", letterSpacing: "-0.05em" }}>
+              <h2 className="max-w-5xl">
+                <span
+                  className="block"
+                  style={{
+                    fontFamily: "var(--font-cormorant)",
+                    fontStyle: "italic",
+                    fontSize: "clamp(3.8rem, 10vw, 9.5rem)",
+                    color: "var(--tray-ink)",
+                    lineHeight: 0.9,
+                    letterSpacing: "-0.03em",
+                  }}
+                >
+                  Add a special.
+                </span>
+                <span
+                  className="block mt-4 sm:mt-5"
+                  style={{
+                    fontFamily: "var(--font-barlow)",
+                    fontWeight: 900,
+                    textTransform: "uppercase",
+                    fontSize: "clamp(2.6rem, 7.5vw, 7rem)",
+                    color: "var(--tray-clay)",
+                    letterSpacing: "-0.04em",
+                    lineHeight: 0.88,
+                  }}
+                >
                   Watch it land everywhere.
                 </span>
               </h2>

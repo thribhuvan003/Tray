@@ -213,15 +213,22 @@ export async function GET(req: NextRequest) {
         tenant_slug: tenantSlug,
       });
     } else if ((count ?? 0) === 0) {
-      // New user: no canteen association yet.
+      // No account found after both enrollment passes.
       if (loginRole === "owner") {
+        // New canteen owner — send them to the wizard directly.
         return NextResponse.redirect(new URL("/get-started?new=1", origin));
-      } else {
+      } else if (loginRole === "kitchen") {
         await supabase.auth.signOut();
-        const errMsg = loginRole === "kitchen"
-          ? "No kitchen staff account found with this email. Please contact your canteen admin to register."
-          : "Students: please search for your canteen on the homepage or use your college's canteen URL (e.g., /c/aditya/menu) to log in and order.";
-        return NextResponse.redirect(new URL(`/login?role=${loginRole ?? "student"}&error=${encodeURIComponent(errMsg)}`, origin));
+        const errMsg = encodeURIComponent("No kitchen staff account found. Ask your canteen admin to add you.");
+        return NextResponse.redirect(new URL(`/login?role=kitchen&error=${errMsg}`, origin));
+      } else {
+        // Unknown student — DON'T sign them out; keep the session so they can
+        // visit a canteen URL and be auto-enrolled. Just redirect to get-started
+        // so they understand they need a canteen URL, not the global login.
+        const errMsg = encodeURIComponent(
+          "No account found with this email. If you're a student, open your canteen's ordering link directly (e.g. trayy.vercel.app/c/your-canteen/menu)."
+        );
+        return NextResponse.redirect(new URL(`/login?role=student&error=${errMsg}`, origin));
       }
     }
   }
