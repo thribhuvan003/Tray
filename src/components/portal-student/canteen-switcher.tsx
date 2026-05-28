@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Check, ChevronDown, MapPin, Search, X } from "lucide-react";
 import { useSearchParams, usePathname, useRouter } from "next/navigation";
+import { useCart } from "@/lib/cart/store";
 
 export type CanteenOption = {
   id: string;
@@ -25,20 +26,11 @@ export function CanteenSwitcher({
 }) {
   const [open, setOpen] = useState(false);
 
-  const searchParams = useSearchParams();
-  const pathname = usePathname();
-  const { replace } = useRouter();
-
-  const searchQuery = searchParams.get("q") || "";
+  const searchQuery = useCart((s) => s.searchQuery);
+  const setSearchQuery = useCart((s) => s.setSearchQuery);
 
   function handleSearchChange(term: string) {
-    const params = new URLSearchParams(searchParams);
-    if (term) {
-      params.set("q", term);
-    } else {
-      params.delete("q");
-    }
-    replace(`${pathname}?${params.toString()}`);
+    setSearchQuery(term);
   }
 
   // Handle outside clicks to close the dropdown cleanly

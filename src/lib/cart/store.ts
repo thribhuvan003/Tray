@@ -28,6 +28,8 @@ type State = {
   setOrderType: (t: "takeaway" | "dine_in") => void;
   setTableLabel: (tbl: string) => void;
   ensureTenant: (s: string) => void;
+  searchQuery: string;
+  setSearchQuery: (q: string) => void;
 };
 
 // Single localStorage key holds a per-tenant map under it. Switching tenants
@@ -41,6 +43,8 @@ export const useCart = create<State>()(
       orderType: "takeaway",
       tableLabel: "",
       isOpen: false,
+      searchQuery: "",
+      setSearchQuery: (searchQuery) => set({ searchQuery }),
       setIsOpen: (isOpen) => set({ isOpen }),
       add: (item, qty = 1) =>
         set(({ lines }) => {

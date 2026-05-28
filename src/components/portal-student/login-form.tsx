@@ -116,6 +116,12 @@ export function LoginForm({ next, slug = "" }: { next: string; slug?: string }) 
           window.location.href = `/c/${resolvedSlug}/menu`;
           return;
         }
+      } else {
+        await sb.auth.signOut();
+        const currentUrl = new URL(window.location.href);
+        currentUrl.searchParams.set("error", "No canteen account found with this email. Click 'I have a canteen' to create one, or check your login role.");
+        window.location.href = currentUrl.toString();
+        return;
       }
     } catch (err) {
       console.error("Failed to query role for login redirect:", err);
