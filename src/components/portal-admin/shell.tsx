@@ -249,14 +249,15 @@ export function AdminShell({
                 {userRole ?? "canteen_admin"}
               </div>
             </div>
-            <Link
-              href="/auth/signout"
+            <button
+              type="button"
               aria-label="Sign out"
-              className="inline-flex items-center justify-center rounded-md transition-colors"
-              style={{ height: 28, width: 28, color: "var(--admin-ink-3)" }}
+              onClick={() => fetch("/auth/signout", { method: "POST" }).then(() => { window.location.href = "/"; })}
+              className="inline-flex items-center justify-center rounded-md transition-colors cursor-pointer"
+              style={{ height: 28, width: 28, color: "var(--admin-ink-3)", background: "transparent", border: "none" }}
             >
               <LogOut size={13} />
-            </Link>
+            </button>
           </div>
         </div>
       </aside>
