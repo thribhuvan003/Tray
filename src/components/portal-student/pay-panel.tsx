@@ -454,9 +454,10 @@ export function PayPanel({
                 </p>
               </div>
 
-              {/* "I've paid" button — shown only after 20s so students have time
-                  to actually complete the UPI transaction before confirming */}
-              {showFallback && (
+              {/* "I've paid" fallback — only for direct_upi, only after 20s.
+                  Razorpay mode is confirmed automatically by the webhook; showing
+                  this button there would mislead the student and is unnecessary. */}
+              {showFallback && paymentMode === "direct_upi" && (
                 <div className="mt-4 border-t border-[color:var(--color-line)] pt-5 w-full flex flex-col items-center gap-3">
                   <p className="text-[12px] opacity-70 font-sans text-center leading-snug">
                     Completed payment in your UPI app?<br />

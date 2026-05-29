@@ -445,7 +445,11 @@ export function KitchenBoard({
         },
         (payload) => {
           // Priority 1: detect UPI-trust (unverified) orders and badge them in kitchen
-          const ev = payload.new as { order_id?: string; payload?: { upi_unverified?: boolean; to?: string } } | null;
+          const ev = payload.new as {
+            order_id?: string;
+            event_type?: string;
+            payload?: { upi_unverified?: boolean; to?: string; from?: string };
+          } | null;
           if (ev?.payload?.upi_unverified && ev.order_id) {
             setUnverifiedUpiOrders((prev) => new Set(prev).add(ev.order_id!));
           }
@@ -454,6 +458,59 @@ export function KitchenBoard({
             setUnverifiedUpiOrders((prev) => { const next = new Set(prev); next.delete(ev.order_id!); return next; });
           }
 
+          // ── Surgical patch for status-change events ──────────────────────────
+          // When the event carries a known status transition, update just that one
+          // order in state instead of refetching all 300. This eliminates the
+          // full-DB-round-trip on every button tap during a lunch-rush flood.
+          //
+          // event_type values that map 1:1 to an order status:
+          //   "preparing"  → order moved to preparing
+          //   "ready"      → order moved to ready
+          //   "collected"  → order collected after OTP verify
+          //   "reverted"   → undo: payload.to is the status to revert to
+          //
+          // For new orders (event_type "status_changed" with to="placed") and
+          // ambiguous events, fall through to the full scheduleRefresh path.
+          const PATCH_STATUS: Record<string, Status> = {
+            preparing: "preparing",
+            ready:     "ready",
+            collected: "collected",
+          };
+
+          const eventType = ev?.event_type ?? "";
+          const orderId = ev?.order_id;
+
+          if (orderId && PATCH_STATUS[eventType]) {
+            const newStatus = PATCH_STATUS[eventType];
+            setOrders((prev) => prev.map((o) =>
+              o.id === orderId
+                ? { ...o, status: newStatus, ...(newStatus === "collected" ? { collected_at: o.collected_at ?? new Date().toISOString() } : {}) }
+                : o
+            ));
+            // Mark connection healthy but skip full refetch
+            if (connStateRef.current !== "online") {
+              setConnState("online");
+              setReconnectAttempt(0);
+            }
+            return;
+          }
+
+          if (orderId && eventType === "reverted") {
+            const revertTo = ev?.payload?.to as Status | undefined;
+            if (revertTo === "placed" || revertTo === "preparing") {
+              setOrders((prev) => prev.map((o) =>
+                o.id === orderId ? { ...o, status: revertTo } : o
+              ));
+              if (connStateRef.current !== "online") {
+                setConnState("online");
+                setReconnectAttempt(0);
+              }
+              return;
+            }
+          }
+
+          // All other events (new order, rejected, menu_item_86, walkin, etc.)
+          // require a full refetch to get accurate data.
           scheduleRefresh();
           if (connStateRef.current !== "online") {
             setConnState("online");

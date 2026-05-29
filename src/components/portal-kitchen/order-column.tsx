@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState, memo } from "react";
+import { useEffect, useState, memo, useRef } from "react";
 import { CheckCircle2, ChefHat, Hand, KeyRound, ShoppingBag, UtensilsCrossed, X } from "lucide-react";
 import { toast } from "sonner";
-import { cn, formatRupees, formatTimeIST, elapsedSeconds, fmtElapsed } from "@/lib/utils";
+import { cn, formatRupees, formatTimeIST, fmtElapsed } from "@/lib/utils";
 
 type Status = "placed" | "preparing" | "ready" | "collected";
 type Order = {
@@ -65,6 +65,25 @@ export function OrderColumn({
 }) {
   const dot = COL_DOT[status];
   const cta = COL_CTA[status];
+
+  // Single shared clock for all elapsed timers in this column — one interval
+  // replaces N per-card intervals, critical on busy kitchens (50+ active orders).
+  const [nowMs, setNowMs] = useState(() => Date.now());
+  const clockRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const hasOrders = orders.length > 0;
+  const needsClock = (status === "placed" || status === "preparing") && hasOrders;
+  useEffect(() => {
+    if (!needsClock) {
+      // Stop ticking when column is empty or doesn't show elapsed time
+      if (clockRef.current) { clearInterval(clockRef.current); clockRef.current = null; }
+      return;
+    }
+    if (clockRef.current) return; // already running
+    clockRef.current = setInterval(() => setNowMs(Date.now()), 1000);
+    return () => {
+      if (clockRef.current) { clearInterval(clockRef.current); clockRef.current = null; }
+    };
+  }, [needsClock]);
 
   return (
     /* .col — cream-4 bg, border-right (managed by parent grid), flex column */
@@ -145,6 +164,7 @@ export function OrderColumn({
               onReject={onReject ? (reason) => onReject(o.id, reason) : undefined}
               pending={pendingActionId === o.id}
               isUnverifiedUpi={unverifiedUpiOrders?.has(o.id) ?? false}
+              nowMs={nowMs}
             />
           ))
         )}
@@ -162,6 +182,7 @@ function TicketCard({
   onReject,
   pending = false,
   isUnverifiedUpi = false,
+  nowMs,
 }: {
   order: Order;
   lines: Line[];
@@ -171,16 +192,14 @@ function TicketCard({
   onReject?: (reason: string) => Promise<void>;
   pending?: boolean;
   isUnverifiedUpi?: boolean;
+  nowMs?: number;
 }) {
-  const [elapsed, setElapsed] = useState(elapsedSeconds(order.placed_at));
+  // Elapsed seconds derived from the shared column clock (nowMs prop) —
+  // no per-card interval needed. Falls back to Date.now() for standalone use.
+  const elapsed = Math.floor(((nowMs ?? Date.now()) - new Date(order.placed_at).getTime()) / 1000);
   const [showReject, setShowReject] = useState(false);
   const [selectedReason, setSelectedReason] = useState("");
   const [rejecting, setRejecting] = useState(false);
-
-  useEffect(() => {
-    const id = setInterval(() => setElapsed(elapsedSeconds(order.placed_at)), 1000);
-    return () => clearInterval(id);
-  }, [order.placed_at]);
 
   const overtime = order.status !== "collected" && elapsed > 480;
   const isCollected = order.status === "collected";
