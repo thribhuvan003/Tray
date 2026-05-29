@@ -5,7 +5,6 @@ import { History, User, LogOut, ShoppingCart, Search } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { ResolvedTenant, CollegeCanteen } from "@/lib/tenant";
-import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { CanteenSwitcher, type CanteenOption } from "@/components/portal-student/canteen-switcher";
 import { getBrowserClient } from "@/lib/supabase/browser";
 import type { CurrentUser } from "@/lib/auth/get-user";
@@ -241,8 +240,9 @@ export function StudentTopBar({ tenant, siblings = [], user }: Props) {
         )}
 
         {/* Right: actions */}
+        {/* Theme toggle removed — the student portal is always bright; the
+            light/dark toggle lives only in the admin portal. */}
         <div className="flex items-center gap-1 sm:gap-1.5 flex-shrink-0">
-          <ThemeToggle />
           <button
             onClick={() => setIsOpen(true)}
             aria-label="Open tray"
