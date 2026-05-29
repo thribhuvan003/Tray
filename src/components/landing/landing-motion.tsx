@@ -344,13 +344,43 @@ export function LandingMotion() {
                 {
                   y: 0, opacity: 1, scale: 1,
                   duration: 0.55,
-                  delay: (i % 4) * 0.06, // slight stagger within each row
+                  delay: (i % 4) * 0.06,
                   ease: "back.out(1.4)",
+                  // Add class BEFORE clearing props — class holds opacity:1 so the card
+                  // stays visible after clearProps removes the inline GSAP styles.
+                  // Without the class, CSS `.tray-landing [data-stack-card]{opacity:0}`
+                  // would re-hide the card the moment GSAP's inline style is removed.
+                  onComplete: () => {
+                    card.classList.add("tl-stack-revealed");
+                    // Add cursor-proximity tilt after reveal — card responds to mouse
+                    const onMove = (e: MouseEvent) => {
+                      const r = card.getBoundingClientRect();
+                      const nx = ((e.clientX - r.left) / r.width - 0.5) * 2;
+                      const ny = ((e.clientY - r.top) / r.height - 0.5) * 2;
+                      gsap.to(card, {
+                        rotateY: nx * 10,
+                        rotateX: -ny * 7,
+                        scale: 1.04,
+                        transformPerspective: 700,
+                        duration: 0.3,
+                        ease: "power2.out",
+                      });
+                    };
+                    const onLeave = () => {
+                      gsap.to(card, { rotateX: 0, rotateY: 0, scale: 1, duration: 0.5, ease: "power3.out" });
+                    };
+                    card.addEventListener("mousemove", onMove);
+                    card.addEventListener("mouseleave", onLeave);
+                    tiltCleanups.push(() => {
+                      card.removeEventListener("mousemove", onMove);
+                      card.removeEventListener("mouseleave", onLeave);
+                    });
+                  },
                   clearProps: "transform,opacity",
                   scrollTrigger: {
                     trigger: card,
                     start: "top 88%",
-                    once: true, // stays visible after reveal — no re-hide on scroll-up
+                    once: true,
                   },
                 }
               );
