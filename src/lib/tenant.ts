@@ -141,11 +141,12 @@ const fetchTenantUncached = async (slug: string): Promise<ResolvedTenant | null>
   }
 };
 
-const fetchTenantEdgeCached = unstable_cache(
-  fetchTenantUncached,
-  ["resolve-tenant"],
-  { revalidate: 60, tags: ["tenant"] }
-);
+const fetchTenantEdgeCached = (slug: string) =>
+  unstable_cache(
+    () => fetchTenantUncached(slug),
+    ["resolve-tenant", slug],
+    { revalidate: 60, tags: ["tenant", `tenant:${slug}`] }
+  )();
 
 export const resolveTenant = cache(async (slug: string): Promise<ResolvedTenant | null> => {
   const normalized = slug ? slug.toLowerCase() : "";
