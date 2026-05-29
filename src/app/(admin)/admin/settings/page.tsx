@@ -29,13 +29,10 @@ export default async function SettingsPage() {
   const admin = getAdminClient(tenant.id);
   const { data: tenantRow } = await admin
     .from("tenants")
-    .select("is_open, opens_at, closes_at, paused_until, guest_orders_enabled, upi_vpa")
+    .select("is_open, opens_at, closes_at, paused_until, guest_orders_enabled, upi_vpa, payment_mode")
     .eq("id", tenant.id)
     .single<
-      Pick<
-        Tenant,
-        "is_open" | "opens_at" | "closes_at" | "paused_until" | "guest_orders_enabled" | "upi_vpa"
-      >
+      Pick<Tenant, "is_open" | "opens_at" | "closes_at" | "paused_until" | "guest_orders_enabled" | "upi_vpa"> & { payment_mode?: string }
     >();
 
   const row = tenantRow ?? {
@@ -45,7 +42,9 @@ export default async function SettingsPage() {
     paused_until: null,
     guest_orders_enabled: false,
     upi_vpa: null,
+    payment_mode: "direct_upi" as string,
   };
+  const currentPaymentMode = (row as any).payment_mode === "razorpay" ? "razorpay" : "direct_upi";
 
   const pauseCountdown = formatPausedUntil(row.paused_until);
   const isPaused = pauseCountdown !== null;
@@ -99,7 +98,8 @@ export default async function SettingsPage() {
       }
     }
     void vpaVerified; // no longer a hard gate
-    await updateCanteenSettings({ guestOrdersEnabled, upiVpa: rawVpa });
+    const paymentMode = (fd.get("payment_mode") as string | null) === "razorpay" ? "razorpay" : "direct_upi";
+    await updateCanteenSettings({ guestOrdersEnabled, upiVpa: rawVpa, paymentMode });
   }
 
   return (
@@ -268,6 +268,52 @@ export default async function SettingsPage() {
                 React keeps the stale input value even after the page re-renders
                 with the new data from the server action. */}
             <UpiVpaField key={row.upi_vpa ?? "__no_upi__"} currentVpa={row.upi_vpa} />
+
+            {/* Payment Mode selector */}
+            <div className="border-t border-graphite-200/10 pt-4">
+              <p className="text-[11px] font-mono uppercase tracking-[0.1em] text-graphite-400 mb-3">
+                Payment Mode
+              </p>
+              <div className="flex flex-col gap-3">
+
+                {/* Direct UPI */}
+                <label className="flex items-start gap-3 cursor-pointer select-none rounded-lg border border-graphite-200/10 p-3 hover:border-graphite-200/25 transition-colors"
+                  style={{ background: currentPaymentMode === "direct_upi" ? "rgba(210,251,80,0.05)" : "transparent", borderColor: currentPaymentMode === "direct_upi" ? "rgba(210,251,80,0.3)" : undefined }}>
+                  <input type="radio" name="payment_mode" value="direct_upi"
+                    defaultChecked={currentPaymentMode === "direct_upi"}
+                    className="mt-0.5 accent-lime h-4 w-4 shrink-0" />
+                  <div>
+                    <div className="text-[13px] text-graphite-200 font-semibold flex items-center gap-2">
+                      Direct UPI
+                      <span className="text-[9px] font-mono bg-lime/20 text-lime px-1.5 py-0.5 rounded font-bold tracking-wide">DEFAULT</span>
+                    </div>
+                    <div className="text-[11.5px] text-graphite-400 mt-1 leading-[1.6]">
+                      Money lands in your bank <strong className="text-graphite-300">the moment</strong> a student pays — instant, directly to your UPI. Kitchen staff must check their PhonePe soundbox before cooking each order.
+                    </div>
+                  </div>
+                </label>
+
+                {/* Razorpay Automatic */}
+                <label className="flex items-start gap-3 cursor-pointer select-none rounded-lg border border-graphite-200/10 p-3 hover:border-graphite-200/25 transition-colors"
+                  style={{ background: currentPaymentMode === "razorpay" ? "rgba(210,251,80,0.05)" : "transparent", borderColor: currentPaymentMode === "razorpay" ? "rgba(210,251,80,0.3)" : undefined }}>
+                  <input type="radio" name="payment_mode" value="razorpay"
+                    defaultChecked={currentPaymentMode === "razorpay"}
+                    className="mt-0.5 accent-lime h-4 w-4 shrink-0" />
+                  <div>
+                    <div className="text-[13px] text-graphite-200 font-semibold">
+                      Razorpay Automatic
+                    </div>
+                    <div className="text-[11.5px] text-graphite-400 mt-1 leading-[1.6]">
+                      System verifies payment automatically via Razorpay. No &quot;I&apos;ve paid&quot; button, no kitchen manual check needed — orders reach the board <strong className="text-graphite-300">only when money is genuinely captured</strong>. Requires live Razorpay keys in Vercel.
+                    </div>
+                    <div className="mt-2 rounded-md px-3 py-2 text-[11px] leading-snug" style={{ background: "rgba(255,174,41,0.1)", border: "1px solid rgba(255,174,41,0.25)", color: "#ffae29" }}>
+                      ⏱ <strong>Important:</strong> Money settles to your bank in <strong>1–2 business days</strong> (T+1/T+2) via Razorpay — not instantly. Students see &ldquo;Order confirmed&rdquo; right away, but the bank transfer to you takes 1–2 days. This is how Swiggy, Zomato, and all Razorpay merchants work in India.
+                    </div>
+                  </div>
+                </label>
+
+              </div>
+            </div>
 
             <div>
               <button

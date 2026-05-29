@@ -1,9 +1,10 @@
 import { notFound, redirect } from "next/navigation";
 import { getServerClient } from "@/lib/supabase/server";
+import { getAdminClient } from "@/lib/supabase/admin";
 import { getCurrentUser } from "@/lib/auth/get-user";
 import { PayPanel } from "@/components/portal-student/pay-panel";
 import { requireTenantContext } from "@/lib/tenant";
-import { featureFlags } from "@/lib/env";
+import { featureFlags, env } from "@/lib/env";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -66,6 +67,22 @@ export default async function PayPage({ params }: { params: Promise<{ orderId: s
   // absent). Independent of payment_mode — it never shows in production.
   const isSimMode = !featureFlags.razorpayLive;
 
+  // For Razorpay mode: fetch the razorpay_order_id so the checkout can reference it.
+  // Server-side only — never expose raw payment IDs to client without this guard.
+  let razorpayOrderId: string | null = null;
+  if (paymentMode === "razorpay" && featureFlags.razorpayLive) {
+    const adminClient = getAdminClient(tenant.id);
+    const { data: payRow } = await adminClient
+      .from("payments")
+      .select("razorpay_order_id")
+      .eq("order_id", orderId)
+      .eq("tenant_id", tenant.id)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle<{ razorpay_order_id: string | null }>();
+    razorpayOrderId = payRow?.razorpay_order_id ?? null;
+  }
+
   return (
     <PayPanel
       tenantSlug={tenant.slug}
@@ -75,6 +92,8 @@ export default async function PayPage({ params }: { params: Promise<{ orderId: s
       lines={lines ?? []}
       isSimMode={isSimMode}
       paymentMode={paymentMode}
+      razorpayOrderId={razorpayOrderId}
+      razorpayKeyId={paymentMode === "razorpay" ? (env.RAZORPAY_KEY_ID ?? null) : null}
     />
   );
 }

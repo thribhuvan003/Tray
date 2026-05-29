@@ -318,6 +318,7 @@ export async function pauseCanteen(minutes: number): Promise<{ ok: boolean; erro
 export async function updateCanteenSettings(opts: {
   guestOrdersEnabled: boolean;
   upiVpa: string | null;
+  paymentMode?: "direct_upi" | "razorpay";
 }): Promise<{ ok: boolean; error?: string }> {
   const c = await adminContext();
   if (!c.ok) return { ok: false, error: c.error };
@@ -334,6 +335,7 @@ export async function updateCanteenSettings(opts: {
     .update({
       guest_orders_enabled: opts.guestOrdersEnabled,
       upi_vpa: opts.upiVpa,
+      ...(opts.paymentMode ? { payment_mode: opts.paymentMode } : {}),
     })
     .eq("id", c.tenant.id);
   if (error) return { ok: false, error: error.message };

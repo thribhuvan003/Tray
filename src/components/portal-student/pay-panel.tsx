@@ -37,6 +37,8 @@ export function PayPanel({
   lines,
   isSimMode,
   paymentMode = "direct_upi",
+  razorpayOrderId,
+  razorpayKeyId,
 }: {
   tenantSlug: string;
   tenantName: string;
@@ -45,6 +47,8 @@ export function PayPanel({
   lines: Line[];
   isSimMode?: boolean;
   paymentMode?: "direct_upi" | "razorpay";
+  razorpayOrderId?: string | null;
+  razorpayKeyId?: string | null;
 }) {
   const router = useRouter();
   const redirectedRef = useRef(false);
@@ -215,6 +219,43 @@ export function PayPanel({
     // No auto-verify here. The student must confirm payment themselves.
   };
 
+  // ── Razorpay Checkout.js handler ──────────────────────────────────────────
+  // Loads Razorpay's script on demand (not on every page load) and opens the
+  // payment modal. After the student pays, we switch to monitoring — the webhook
+  // (safe_capture_payment) confirms and emits the Realtime event that moves the order.
+  const openRazorpayCheckout = useCallback(() => {
+    if (!razorpayKeyId || !razorpayOrderId) {
+      toast.error("Razorpay not configured — contact the canteen admin.");
+      return;
+    }
+    const loadAndOpen = () => {
+      const Razorpay = (window as any).Razorpay;
+      if (!Razorpay) { toast.error("Payment gateway failed to load. Refresh and try again."); return; }
+      const rzp = new Razorpay({
+        key: razorpayKeyId,
+        amount: order.total_paise,
+        currency: "INR",
+        name: tenantName,
+        description: `Order ${order.short_code}`,
+        order_id: razorpayOrderId,
+        theme: { color: "#e60000" },
+        handler: () => {
+          // Payment completed in Razorpay — webhook will confirm atomically.
+          // Switch to monitoring so the Realtime listener picks up the event.
+          setPhase("monitoring");
+        },
+        modal: { escape: true, animation: true },
+      });
+      rzp.open();
+    };
+    if ((window as any).Razorpay) { loadAndOpen(); return; }
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.onload = loadAndOpen;
+    script.onerror = () => toast.error("Payment gateway failed to load. Check your connection.");
+    document.body.appendChild(script);
+  }, [razorpayKeyId, razorpayOrderId, order.total_paise, order.short_code, tenantName]);
+
   // ── Manual fallback: server-side verification ─────────────────────────────
   // Still goes through verifyPaymentNow which calls safe_capture_payment — never blind trust.
   const onIvePaid = () => {
@@ -346,8 +387,43 @@ export function PayPanel({
 
       <div className="grid md:grid-cols-[1.15fr_0.85fr] gap-5 items-start">
 
-        {/* ── Left: QR + UPI CTA ─────────────────────────────────────────── */}
+        {/* ── Left: Payment UI (Razorpay or Direct UPI) ─────────────────── */}
         <div className="rounded-2xl border border-[color:var(--color-line)] bg-[color:var(--color-paper)] p-6 flex flex-col items-center text-center">
+
+          {/* ── RAZORPAY MODE — show Checkout button ── */}
+          {paymentMode === "razorpay" && phase === "idle" && (
+            <div className="w-full flex flex-col items-center gap-5 py-4">
+              <div
+                className="h-20 w-20 rounded-2xl flex items-center justify-center"
+                style={{ background: "rgba(0,102,255,0.08)" }}
+              >
+                <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+                  <rect width="40" height="40" rx="12" fill="#0066ff" opacity="0.12"/>
+                  <path d="M20 8l-10 6v12l10 6 10-6V14L20 8zm0 3.5l7 4.2v8.6l-7 4.2-7-4.2v-8.6l7-4.2z" fill="#0066ff" opacity="0.7"/>
+                  <path d="M20 15l-4 2.4v4.8l4 2.4 4-2.4v-4.8L20 15z" fill="#0066ff"/>
+                </svg>
+              </div>
+              <div>
+                <p className="font-semibold text-[16px] tracking-tight mb-1" style={{ fontFamily: "var(--font-bricolage)" }}>
+                  Pay via Razorpay
+                </p>
+                <p className="text-[12.5px] opacity-55 leading-snug">
+                  GPay · PhonePe · Paytm · Cards — all accepted.<br />
+                  Payment confirmed <strong>automatically</strong>.
+                </p>
+              </div>
+              <button
+                onClick={openRazorpayCheckout}
+                className="w-full h-13 text-[15px] font-bold rounded-2xl text-white transition-all active:scale-[0.98] flex items-center justify-center gap-2 shadow-md hover:opacity-90"
+                style={{ height: 52, background: "#0066ff" }}
+              >
+                Pay {formatRupees(order.total_paise)}
+              </button>
+              <p className="text-[11px] opacity-40">
+                Secured by Razorpay · No card data stored
+              </p>
+            </div>
+          )}
 
           {/* Phase: monitoring — show animated detection state */}
           {(phase === "monitoring" || phase === "confirming") ? (
@@ -409,7 +485,8 @@ export function PayPanel({
             </div>
           ) : (
             <>
-              {/* Phase: idle — QR + Open UPI App as hero */}
+              {/* Phase: idle — Direct UPI only (hidden when Razorpay mode + idle) */}
+              {paymentMode === "razorpay" ? null : <>
 
               {/* Mobile: Open UPI App is the primary CTA */}
               <a
@@ -463,6 +540,7 @@ export function PayPanel({
               >
                 Scanned QR on my phone — I&apos;m paying now
               </button>
+            </>}
             </>
           )}
         </div>
