@@ -60,27 +60,14 @@ export async function markPreparing(orderId: string): Promise<Outcome> {
   const ctx = await staffContext();
   if (!ctx.ok) return ctx;
 
-  // Per-tenant rate limiting for kitchen actions (protects against accidental or malicious spam during rush)
   const rate = await tenantRateLimit(ctx.tenant.id, "kitchen_action", ctx.user.id);
-  if (!rate.success) {
-    return { ok: false, error: "Too many actions — slow down a little" };
-  }
+  if (!rate.success) return { ok: false, error: "Too many actions — slow down" };
 
   const admin = getAdminClient(ctx.tenant.id);
-  const { data: cur } = await admin
-    .from("orders")
-    .select("status")
-    .eq("id", orderId)
-    .eq("tenant_id", ctx.tenant.id)
-    .maybeSingle<{ status: string }>();
-  if (!cur) return { ok: false, error: "Order not found" };
-  if (cur.status !== "placed") return { ok: false, error: `Cannot start an order in "${cur.status}"` };
-
   const start = Date.now();
 
-  // P0-5 FIX: CAS guard on UPDATE — reject if order is no longer "placed".
-  // Without this, a student cancel completing between the kitchen read and write
-  // silently overwrites "cancelled_by_kitchen" with "preparing" — food made for refunded order.
+  // CAS UPDATE — no pre-flight SELECT needed. If status != "placed" the update
+  // affects 0 rows and we return an error. Removes one sequential DB round-trip.
   const { data: casResult } = await admin.from("orders")
     .update({ status: "preparing" })
     .eq("id", orderId)
@@ -88,40 +75,25 @@ export async function markPreparing(orderId: string): Promise<Outcome> {
     .eq("status", "placed")
     .select("id");
   if (!casResult || casResult.length === 0) {
-    return { ok: false, error: "Order status changed before kitchen could start it — refresh the board" };
+    return { ok: false, error: "Order already moved — refresh the board" };
   }
-  await admin.from("order_status_logs").insert({
-    tenant_id: ctx.tenant.id,
-    order_id: orderId,
-    from_status: "placed",
-    to_status: "preparing",
-    actor_user_id: ctx.user.id,
-  });
-  await admin.from("audit_logs").insert({
-    tenant_id: ctx.tenant.id,
-    actor_user_id: ctx.user.id,
-    action: "order.preparing",
-    target_type: "order",
-    target_id: orderId,
-  });
-  await emitOrderEvent(admin, {
-    order_id: orderId,
-    tenant_id: ctx.tenant.id,
-    event_type: "preparing",
-    payload: { actor: "kitchen" },
+
+  // Fire audit/log/event writes in parallel — none block the success response.
+  void Promise.all([
+    admin.from("order_status_logs").insert({
+      tenant_id: ctx.tenant.id, order_id: orderId,
+      from_status: "placed", to_status: "preparing", actor_user_id: ctx.user.id,
+    }),
+    admin.from("audit_logs").insert({
+      tenant_id: ctx.tenant.id, actor_user_id: ctx.user.id,
+      action: "order.preparing", target_type: "order", target_id: orderId,
+    }),
+    emitOrderEvent(admin, { order_id: orderId, tenant_id: ctx.tenant.id, event_type: "preparing", payload: { actor: "kitchen" } }),
+  ]).then(() => {
+    logger.info("kitchen status transition", { tenant_id: ctx.tenant.id, order_id: orderId, from: "placed", to: "preparing", latency_ms: Date.now() - start });
   });
 
-  // High-signal structured log for real production debugging (BlackRock/HFT level)
-  logger.info("kitchen status transition", {
-    tenant_id: ctx.tenant.id,
-    order_id: orderId,
-    from: "placed",
-    to: "preparing",
-    actor_user_id: ctx.user.id,
-    latency_ms: Date.now() - start,
-  });
-
-  revalidatePath(`/c/${ctx.tenant.slug}/kitchen`);
+  // No revalidatePath — kitchen board uses client Realtime, not SSR page cache.
   return { ok: true };
 }
 
@@ -130,65 +102,55 @@ export async function markReady(orderId: string): Promise<Outcome> {
   if (!ctx.ok) return ctx;
 
   const admin = getAdminClient(ctx.tenant.id);
-  const { data: cur } = await admin
-    .from("orders")
-    .select("status")
-    .eq("id", orderId)
-    .eq("tenant_id", ctx.tenant.id)
-    .maybeSingle<{ status: string }>();
-  if (!cur) return { ok: false, error: "Order not found" };
-  if (cur.status !== "preparing") return { ok: false, error: `Cannot mark ready from "${cur.status}"` };
-
   const start = Date.now();
+
+  // Generate OTP hash — bcrypt is slow by design (10 rounds ≈ 60-100ms).
+  // Run it concurrently with the CAS status update via Promise.all.
   const otp = randomOtp();
-  const hash = await bcrypt.hash(otp, 10);
-
-  // OTP plaintext lives in pickup_secrets (RLS denies all PostgREST access;
-  // only readable through read_my_pickup_otp SECURITY DEFINER for the owner).
-  // The customer's note in orders.notes is preserved untouched.
   const expiresAt = new Date(Date.now() + 30 * 60 * 1000).toISOString();
-  await admin
-    .from("orders")
-    .update({ status: "ready", otp_hash: hash, ready_at: new Date().toISOString() })
-    .eq("id", orderId)
-    .eq("tenant_id", ctx.tenant.id);
-  await admin.from("pickup_secrets").upsert(
-    { order_id: orderId, tenant_id: ctx.tenant.id, otp_plain: otp, expires_at: expiresAt },
-    { onConflict: "order_id" }
-  );
-  await admin.from("order_status_logs").insert({
-    tenant_id: ctx.tenant.id,
-    order_id: orderId,
-    from_status: "preparing",
-    to_status: "ready",
-    actor_user_id: ctx.user.id,
-    note: "OTP issued",
-  });
-  await admin.from("audit_logs").insert({
-    tenant_id: ctx.tenant.id,
-    actor_user_id: ctx.user.id,
-    action: "order.ready",
-    target_type: "order",
-    target_id: orderId,
-  });
-  await emitOrderEvent(admin, {
-    order_id: orderId,
-    tenant_id: ctx.tenant.id,
-    event_type: "ready",
-    payload: { actor: "kitchen" },
+
+  const [hashResult, casResult] = await Promise.all([
+    bcrypt.hash(otp, 10),
+    admin.from("orders")
+      .update({ status: "ready", ready_at: new Date().toISOString() })
+      .eq("id", orderId)
+      .eq("tenant_id", ctx.tenant.id)
+      .eq("status", "preparing") // CAS guard — no pre-flight SELECT needed
+      .select("id"),
+  ]);
+
+  if (!casResult.data || casResult.data.length === 0) {
+    return { ok: false, error: "Order already moved — refresh the board" };
+  }
+  const hash = hashResult;
+
+  // Store OTP hash on the order + write pickup secret — these depend on the hash
+  await Promise.all([
+    admin.from("orders")
+      .update({ otp_hash: hash })
+      .eq("id", orderId)
+      .eq("tenant_id", ctx.tenant.id),
+    admin.from("pickup_secrets").upsert(
+      { order_id: orderId, tenant_id: ctx.tenant.id, otp_plain: otp, expires_at: expiresAt },
+      { onConflict: "order_id" }
+    ),
+  ]);
+
+  // Audit + event writes in parallel — don't block the response
+  void Promise.all([
+    admin.from("order_status_logs").insert({
+      tenant_id: ctx.tenant.id, order_id: orderId,
+      from_status: "preparing", to_status: "ready", actor_user_id: ctx.user.id, note: "OTP issued",
+    }),
+    admin.from("audit_logs").insert({
+      tenant_id: ctx.tenant.id, actor_user_id: ctx.user.id,
+      action: "order.ready", target_type: "order", target_id: orderId,
+    }),
+    emitOrderEvent(admin, { order_id: orderId, tenant_id: ctx.tenant.id, event_type: "ready", payload: { actor: "kitchen" } }),
+  ]).then(() => {
+    logger.info("kitchen status transition", { tenant_id: ctx.tenant.id, order_id: orderId, from: "preparing", to: "ready", latency_ms: Date.now() - start });
   });
 
-  logger.info("kitchen status transition", {
-    tenant_id: ctx.tenant.id,
-    order_id: orderId,
-    from: "preparing",
-    to: "ready",
-    actor_user_id: ctx.user.id,
-    latency_ms: Date.now() - start,
-    has_otp: true,
-  });
-
-  revalidatePath(`/c/${ctx.tenant.slug}/kitchen`);
   return { ok: true };
 }
 
