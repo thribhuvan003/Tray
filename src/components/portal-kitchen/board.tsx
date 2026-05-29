@@ -1463,7 +1463,19 @@ export function KitchenBoard({
           order={verifyOrder}
           onClose={() => setVerifyId(null)}
           onResult={(ok) => {
-            if (ok) setVerifyId(null);
+            if (ok) {
+              // Optimistic: move to collected instantly — no Realtime wait
+              if (verifyId) {
+                setOrders((prev) =>
+                  prev.map((o) =>
+                    o.id === verifyId
+                      ? { ...o, status: "collected" as const, collected_at: new Date().toISOString() }
+                      : o
+                  )
+                );
+              }
+              setVerifyId(null);
+            }
           }}
         />
 

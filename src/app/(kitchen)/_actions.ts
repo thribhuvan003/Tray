@@ -236,39 +236,31 @@ export async function verifyAndCollect(
     return { ok: false, error: "Wrong code", attemptsLeft: Math.max(0, left) };
   }
 
-  await admin
-    .from("orders")
-    .update({ status: "collected", collected_at: new Date().toISOString() })
-    .eq("id", orderId)
-    .eq("tenant_id", ctx.tenant.id);
-  // Plaintext OTP cleared. ON DELETE CASCADE from orders also covers it.
-  await admin.from("pickup_secrets").delete().eq("order_id", orderId);
-  await admin.from("order_status_logs").insert({
-    tenant_id: ctx.tenant.id,
-    order_id: orderId,
-    from_status: "ready",
-    to_status: "collected",
-    actor_user_id: ctx.user.id,
-    note: "OTP verified",
-  });
-  await admin.from("audit_logs").insert({
-    tenant_id: ctx.tenant.id,
-    actor_user_id: ctx.user.id,
-    action: "order.collected",
-    target_type: "order",
-    target_id: orderId,
-  });
-  await emitOrderEvent(admin, {
-    order_id: orderId,
-    tenant_id: ctx.tenant.id,
-    event_type: "collected",
-    payload: { actor: "kitchen" },
-  });
+  const collectedAt = new Date().toISOString();
 
-  logger.info("kitchen order collected (OTP verified)", {
-    tenant_id: ctx.tenant.id,
-    order_id: orderId,
-    latency_ms: Date.now() - start,
+  // Critical write: mark collected + delete secret in parallel
+  await Promise.all([
+    admin.from("orders")
+      .update({ status: "collected", collected_at: collectedAt })
+      .eq("id", orderId)
+      .eq("tenant_id", ctx.tenant.id),
+    admin.from("pickup_secrets").delete().eq("order_id", orderId),
+  ]);
+
+  // All audit/log/event writes fire in parallel — none block the response
+  void Promise.all([
+    admin.from("order_status_logs").insert({
+      tenant_id: ctx.tenant.id, order_id: orderId,
+      from_status: "ready", to_status: "collected",
+      actor_user_id: ctx.user.id, note: "OTP verified",
+    }),
+    admin.from("audit_logs").insert({
+      tenant_id: ctx.tenant.id, actor_user_id: ctx.user.id,
+      action: "order.collected", target_type: "order", target_id: orderId,
+    }),
+    emitOrderEvent(admin, { order_id: orderId, tenant_id: ctx.tenant.id, event_type: "collected", payload: { actor: "kitchen" } }),
+  ]).then(() => {
+    logger.info("kitchen order collected (OTP verified)", { tenant_id: ctx.tenant.id, order_id: orderId, latency_ms: Date.now() - start });
   });
 
   return { ok: true };
