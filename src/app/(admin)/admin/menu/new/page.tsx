@@ -135,26 +135,30 @@ export default async function NewMenuItemPage() {
           </div>
         </div>
 
-        {/* Category */}
-        {cats && cats.length > 0 && (
-          <div>
-            <label className="block text-[13px] font-medium text-admin-ink-2 mb-1" htmlFor="category_id">
-              Category
-            </label>
-            <select
-              id="category_id"
-              name="category_id"
-              className="w-full rounded-lg border border-admin-line-2 bg-admin-bg-card px-3 py-2 text-[14px] text-admin-ink focus:outline-none focus:ring-2 focus:ring-admin-lime-soft focus:border-admin-lime"
-            >
-              <option value="">No category</option>
-              {cats.map((cat) => (
-                <option key={cat.id} value={cat.id}>
-                  {cat.name}
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
+        {/* Category — always shown so a dish can be categorised on creation
+            (was hidden when the canteen had 0 categories → every dish "OTHER"). */}
+        <div>
+          <label className="block text-[13px] font-medium text-admin-ink-2 mb-1" htmlFor="category_id">
+            Category
+          </label>
+          <select
+            id="category_id"
+            name="category_id"
+            className="w-full rounded-lg border border-admin-line-2 bg-admin-bg-card px-3 py-2 text-[14px] text-admin-ink focus:outline-none focus:ring-2 focus:ring-admin-lime-soft focus:border-admin-lime"
+          >
+            <option value="">No category</option>
+            {(cats ?? []).map((cat) => (
+              <option key={cat.id} value={cat.id}>
+                {cat.name}
+              </option>
+            ))}
+          </select>
+          {(!cats || cats.length === 0) && (
+            <p className="mt-1 text-[12px] text-admin-ink-3">
+              No categories yet — add them in the <span className="font-medium">Categories</span> tab on the Menu page, then pick one here.
+            </p>
+          )}
+        </div>
 
         {/* Today's Special Toggle */}
         <div className="flex items-center gap-2 pt-1 pb-1">
