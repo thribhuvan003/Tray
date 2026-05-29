@@ -90,17 +90,15 @@ export default async function SettingsPage() {
     const rawVpa = (fd.get("upi_vpa") as string | null)?.trim() || null;
     const vpaVerified = fd.get("upi_vpa_verified") === "1";
 
-    // Guard: only save a VPA that has been verified via Razorpay API (client component sets upi_vpa_verified=1).
-    // Regex fallback catches any bypass attempt.
+    // Only format-check the VPA — no Razorpay API call required.
+    // The Verify button in the UI is a convenience check, not a hard gate.
     if (rawVpa) {
-      if (!vpaVerified) {
-        throw new Error("Please verify your UPI ID before saving.");
-      }
       const vpaRegex = /^[a-zA-Z0-9.\-_+]{2,256}@[a-zA-Z]{2,64}$/;
       if (!vpaRegex.test(rawVpa)) {
-        throw new Error(`Invalid UPI VPA format: "${rawVpa}".`);
+        throw new Error(`"${rawVpa}" doesn't look like a UPI ID. Use format: 9876543210@ybl or canteen@okaxis`);
       }
     }
+    void vpaVerified; // no longer a hard gate
     await updateCanteenSettings({ guestOrdersEnabled, upiVpa: rawVpa });
   }
 
