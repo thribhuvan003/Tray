@@ -422,8 +422,42 @@ function TicketCard({
             </span>
           )}
 
-          {/* .tkt-action — tomato button for status advances */}
-          {cta && !(order.status === "ready" && order.otp_attempts >= 3) && (
+          {/* UNVERIFIED UPI GATE: staff must confirm payment before they can start.
+              This hard-blocks the action button until they tap "Check UPI & Confirm". */}
+          {cta && isUnverifiedUpi && order.status === "placed" && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                if (window.confirm(
+                  `⚠ UPI PAYMENT UNVERIFIED\n\nCheck your UPI soundbox or PhonePe/GPay app.\n\nDid you receive ₹${(order.total_paise / 100).toFixed(0)} from the student?\n\nTap OK only if you see the payment. Tap Cancel to reject this order.`
+                )) {
+                  handle(); // payment confirmed by staff — proceed to Start
+                }
+              }}
+              className="inline-flex items-center gap-1.5 transition-all active:scale-[0.985]"
+              style={{
+                fontFamily: "var(--font-manrope), ui-sans-serif, system-ui",
+                fontSize: "10px",
+                fontWeight: 800,
+                color: "#92400e",
+                background: "#fef3c7",
+                padding: "0 8px",
+                height: "44px",
+                borderRadius: "5px",
+                letterSpacing: "0.04em",
+                textTransform: "uppercase",
+                cursor: "pointer",
+                border: "2px solid #d97706",
+                boxShadow: "0 2px 0 #b45309",
+              }}
+            >
+              ⚠ Check UPI + Start
+            </button>
+          )}
+
+          {/* .tkt-action — tomato button for normal (verified) status advances */}
+          {cta && !(isUnverifiedUpi && order.status === "placed") && !(order.status === "ready" && order.otp_attempts >= 3) && (
             <button
               type="button"
               disabled={pending}
