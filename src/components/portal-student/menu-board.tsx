@@ -2,7 +2,7 @@
 
 const S_RADIUS_SM = 10;
 
-import { useEffect, useMemo, useState, useRef } from "react";
+import { useEffect, useMemo, useState, useRef, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Minus, Plus } from "lucide-react";
 import type { MenuItem, MenuCategory } from "@/lib/db/types";
@@ -218,27 +218,45 @@ export function MenuBoard({
     };
   }, [categories, specialsCategory, items]);
 
-  useEffect(() => {
-    const sb = getBrowserClient();
-    const menuCh = sb.channel(`realtime-menu-${tenantId}`)
-      .on("postgres_changes", { event: "*", schema: "public", table: "menu_items" }, (payload) => {
-        const newTenantId = (payload.new as any)?.tenant_id;
-        const newId = (payload.new as any)?.id;
-        const oldId = (payload.old as any)?.id;
-        if (newTenantId === tenantId || (newId && items.some((it) => it.id === newId)) || (oldId && items.some((it) => it.id === oldId))) {
-          router.refresh();
-        }
-      }).subscribe();
-    const tenantCh = sb.channel(`realtime-tenant-${tenantId}`)
-      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "tenants", filter: `id=eq.${tenantId}` }, () => router.refresh()).subscribe();
-    return () => { sb.removeChannel(menuCh); sb.removeChannel(tenantCh); };
-  }, [tenantId, router, items]);
+  // Coalesce menu/tenant realtime changes into at most one router.refresh() per
+  // window. A busy canteen toggling stock / editing prices used to fire a
+  // server re-render PER change, which re-rendered the whole menu and made
+  // sections visibly shift ("shake"). One debounced refresh per 500ms is
+  // imperceptible to the student but stops the thrash.
+  const refreshTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const debouncedRefresh = useCallback(() => {
+    if (refreshTimerRef.current) return;
+    refreshTimerRef.current = setTimeout(() => {
+      refreshTimerRef.current = null;
+      router.refresh();
+    }, 500);
+  }, [router]);
 
   useEffect(() => {
-    const fn = () => { if (document.visibilityState === "visible") router.refresh(); };
+    const sb = getBrowserClient();
+    // Server-side tenant filter — only THIS canteen's menu changes reach the
+    // client. Previously the subscription was unfiltered and every tenant's
+    // change hit the socket (filtered in JS). `items` is also dropped from the
+    // deps below so the channel no longer tears down + re-subscribes on every
+    // refresh — that resubscription churn was extra jank during service.
+    const menuCh = sb.channel(`realtime-menu-${tenantId}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "menu_items", filter: `tenant_id=eq.${tenantId}` }, () => {
+        debouncedRefresh();
+      }).subscribe();
+    const tenantCh = sb.channel(`realtime-tenant-${tenantId}`)
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "tenants", filter: `id=eq.${tenantId}` }, () => debouncedRefresh()).subscribe();
+    return () => {
+      sb.removeChannel(menuCh);
+      sb.removeChannel(tenantCh);
+      if (refreshTimerRef.current) { clearTimeout(refreshTimerRef.current); refreshTimerRef.current = null; }
+    };
+  }, [tenantId, debouncedRefresh]);
+
+  useEffect(() => {
+    const fn = () => { if (document.visibilityState === "visible") debouncedRefresh(); };
     document.addEventListener("visibilitychange", fn);
     return () => document.removeEventListener("visibilitychange", fn);
-  }, [router]);
+  }, [debouncedRefresh]);
 
   const S = {
     text: "var(--color-ink)", muted: "var(--student-muted)", muted2: "var(--student-muted2)",
