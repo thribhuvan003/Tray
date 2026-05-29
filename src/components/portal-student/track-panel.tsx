@@ -410,7 +410,7 @@ export function TrackPanel({ tenantSlug, tenantName, order: initial, lines }: { 
         </div>
 
         {/* UPI history hint — student can verify this in their PhonePe / GPay */}
-        {!isCancelled && order.status !== "payment_failed" && order.status !== "expired" && (
+        {!isCancelled && !["payment_failed", "expired", "pending_payment"].includes(order.status) && (
           <div
             className="mt-3 rounded-xl px-3 py-2.5 flex items-start gap-2"
             style={{ background: "rgba(22,163,74,0.06)", border: "1px solid rgba(22,163,74,0.15)" }}

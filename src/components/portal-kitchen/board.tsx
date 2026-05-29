@@ -1177,14 +1177,19 @@ export function KitchenBoard({
                   unverifiedUpiOrders={unverifiedUpiOrders}
                   onAction={async (id, action) => {
                     setPendingActionId(id);
+                    // Optimistic update: move order instantly in UI before server responds
+                    const ord = orders.find((o) => o.id === id);
+                    if (ord) {
+                      setOrders((prev) => prev.map((o) => o.id === id ? { ...o, status: "preparing" as const } : o));
+                      if (action === "start") startUndoWindow(id, ord.short_code, "placed", "preparing");
+                    }
                     try {
                       const { markPreparing } = await import("@/app/(kitchen)/_actions");
                       const r = await markPreparing(id);
-                      if (!r.ok) handleActionError(r.error);
-                      if (action === "start" && r.ok) {
-                        const ord = orders.find((o) => o.id === id);
-                        toast.success(`Started ${id.slice(0, 6)}`);
-                        if (ord) startUndoWindow(id, ord.short_code, "placed", "preparing");
+                      if (!r.ok) {
+                        // Revert optimistic update on error
+                        setOrders((prev) => prev.map((o) => o.id === id ? { ...o, status: "placed" as const } : o));
+                        handleActionError(r.error);
                       }
                     } finally {
                       setPendingActionId(null);
@@ -1203,16 +1208,21 @@ export function KitchenBoard({
                   orders={groups.preparing}
                   linesByOrder={linesByOrder}
                   pendingActionId={pendingActionId}
-                  onAction={async (id, action) => {
+                  onAction={async (id) => {
                     setPendingActionId(id);
+                    // Optimistic update: move to Ready instantly
+                    const ord = orders.find((o) => o.id === id);
+                    if (ord) {
+                      setOrders((prev) => prev.map((o) => o.id === id ? { ...o, status: "ready" as const } : o));
+                      startUndoWindow(id, ord.short_code, "preparing", "ready");
+                    }
                     try {
                       const { markReady } = await import("@/app/(kitchen)/_actions");
                       const r = await markReady(id);
-                      if (!r.ok) handleActionError(r.error);
-                      if (action === "ready" && r.ok) {
-                        const ord = orders.find((o) => o.id === id);
-                        toast.success(`Marked ready ${id.slice(0, 6)}`);
-                        if (ord) startUndoWindow(id, ord.short_code, "preparing", "ready");
+                      if (!r.ok) {
+                        // Revert on error
+                        setOrders((prev) => prev.map((o) => o.id === id ? { ...o, status: "preparing" as const } : o));
+                        handleActionError(r.error);
                       }
                     } finally {
                       setPendingActionId(null);
