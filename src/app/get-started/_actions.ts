@@ -229,6 +229,25 @@ export async function createInstitution(
     return { ok: false, error: "Failed to set up admin access. Please try again." };
   }
 
+  // ── 6b. Seed starter categories (non-fatal) ──────────────────────────────────
+  // A fresh canteen with zero categories means the category picker stays hidden on
+  // the menu forms and every dish lands under "OTHER" on the student menu. Seeding
+  // sensible defaults makes categories work out of the box — the admin can rename
+  // or delete any of them in Menu → Categories.
+  const { error: seedCatError } = await admin.from("menu_categories").insert(
+    ["Breakfast", "Main Course", "Snacks", "Beverages"].map((name, i) => ({
+      tenant_id: tenant.id,
+      name,
+      sort_order: i,
+    }))
+  );
+  if (seedCatError) {
+    logger.warn("createInstitution starter-category seed failed (non-fatal)", {
+      tenant_id: tenant.id,
+      error: seedCatError.message,
+    });
+  }
+
   // ── 7. Send welcome email ────────────────────────────────────────────────────
   const dashboardUrl = `${env.APP_URL}/c/${canteenSlug}/admin/dashboard`;
   const studentUrl = `${env.APP_URL}/c/${canteenSlug}/menu`;
