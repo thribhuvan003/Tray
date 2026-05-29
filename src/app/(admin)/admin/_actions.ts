@@ -845,3 +845,72 @@ export async function toggleItemSpecial(id: string, isSpecial: boolean): Promise
   return { ok: true };
 }
 
+export async function createSpecialMenuItem(form: {
+  name: string;
+  description: string | null;
+  price_paise: number;
+  diet: "veg" | "nonveg" | "egg";
+  prep_time_minutes?: number;
+}): Promise<{ ok: boolean; error?: string; id?: string }> {
+  let tenantCtx;
+  try {
+    tenantCtx = await requireTenantContext();
+  } catch {
+    return { ok: false, error: "Tenant context invalid" };
+  }
+
+  const user = await requireRole(["kitchen_staff", "canteen_admin", "super_admin"]);
+  if (!user) return { ok: false, error: "Not authorised" };
+
+  const rate = await tenantRateLimit(tenantCtx.tenant.id, "admin_action", user.id);
+  if (!rate.success) {
+    return { ok: false, error: "Too many actions — slow down a little" };
+  }
+
+  const start = Date.now();
+  const admin = getAdminClient(tenantCtx.tenant.id);
+  
+  // Find first category or fallback
+  const { data: categories } = await admin
+    .from("menu_categories")
+    .select("id")
+    .eq("tenant_id", tenantCtx.tenant.id)
+    .order("sort_order")
+    .limit(1);
+  const catId = categories?.[0]?.id ?? null;
+
+  const { data, error } = await admin
+    .from("menu_items")
+    .insert({
+      tenant_id: tenantCtx.tenant.id,
+      name: form.name.trim(),
+      description: form.description?.trim() || null,
+      price_paise: form.price_paise,
+      diet: form.diet,
+      category_id: catId,
+      image_url: null,
+      sort_order: 0,
+      is_special: true,
+      status: "live",
+      in_stock: true,
+      prep_target_seconds: (form.prep_time_minutes ?? 10) * 60,
+    })
+    .select("id")
+    .single();
+  if (error) return { ok: false, error: error.message };
+
+  logger.info("kitchen menu item created as special", {
+    tenant_id: tenantCtx.tenant.id,
+    slug: tenantCtx.tenant.slug,
+    actor_user_id: user.id,
+    item_name: form.name,
+    latency_ms: Date.now() - start,
+  });
+
+  revalidatePath(`/c/${tenantCtx.tenant.slug}/admin/menu`);
+  revalidatePath(`/c/${tenantCtx.tenant.slug}/menu`);
+  revalidatePath(`/c/${tenantCtx.tenant.slug}/kitchen`);
+  return { ok: true, id: data.id };
+}
+
+

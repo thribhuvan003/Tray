@@ -107,8 +107,7 @@ export function MenuBoard({
     return { text: `Kitchen Open · ~${wait} min wait`, dotColor: "#0c8a43", textColor: "#0c8a43" };
   }, [liveStatus]);
 
-  const specialsCategory = useMemo(() => categories.find((c) => c.name.toLowerCase() === "specials"), [categories]);
-  const specialsItems = useMemo(() => !specialsCategory ? [] : items.filter((it) => it.category_id === specialsCategory.id), [items, specialsCategory]);
+  const specialsItems = useMemo(() => items.filter((it) => it.is_special), [items]);
   const filteredSpecials = useMemo(() => {
     const needle = q.trim().toLowerCase();
     return specialsItems.filter((it) => {
@@ -118,7 +117,7 @@ export function MenuBoard({
     });
   }, [specialsItems, vegOnly, q]);
 
-  const otherItems = useMemo(() => !specialsCategory ? items : items.filter((it) => it.category_id !== specialsCategory.id), [items, specialsCategory]);
+  const otherItems = useMemo(() => items.filter((it) => !it.is_special), [items]);
   const filteredOther = useMemo(() => {
     const needle = q.trim().toLowerCase();
     return otherItems.filter((it) => {
@@ -137,6 +136,17 @@ export function MenuBoard({
     }
     return m;
   }, [filteredOther]);
+
+  const injectedCategories = useMemo(() => {
+    const filtered = categories.filter((c) => c.name.toLowerCase() !== "specials");
+    if (specialsItems.length > 0) {
+      return [
+        { id: "specials", name: "Today's Specials", sort_order: -1 } as MenuCategory,
+        ...filtered,
+      ];
+    }
+    return filtered;
+  }, [categories, specialsItems]);
 
   const { orderType, setOrderType, tableLabel, setTableLabel, lines, clear } = useCart();
   const cartDec = useCart((s) => s.decrement);
@@ -165,7 +175,7 @@ export function MenuBoard({
       }, 800);
       return;
     }
-    const targetId = (specialsCategory && catId === specialsCategory.id)
+    const targetId = catId === "specials"
       ? "category-specials"
       : `category-${catId}`;
     const el = document.getElementById(targetId);
@@ -200,7 +210,7 @@ export function MenuBoard({
         if (entry.isIntersecting) {
           const id = entry.target.id;
           if (id === "category-specials") {
-            setActiveCat(specialsCategory?.id || "all");
+            setActiveCat("specials");
           } else if (id.startsWith("category-")) {
             const catId = id.replace("category-", "");
             setActiveCat(catId);
@@ -216,7 +226,7 @@ export function MenuBoard({
     return () => {
       targets.forEach((t) => observer.unobserve(t));
     };
-  }, [categories, specialsCategory, items]);
+  }, [injectedCategories, items]);
 
   // Coalesce menu/tenant realtime changes into at most one router.refresh() per
   // window. A busy canteen toggling stock / editing prices used to fire a
@@ -281,8 +291,8 @@ export function MenuBoard({
               <span style={{ display: "block", fontSize: 11, color: S.muted2, marginTop: 2, fontWeight: 500 }}>{items.length} dishes</span>
             </button>
           </li>
-          {categories.map((cat) => {
-            const cnt = (specialsCategory && cat.id === specialsCategory.id) ? filteredSpecials.length : (byCat.get(cat.id)?.length ?? 0);
+          {injectedCategories.map((cat) => {
+            const cnt = cat.id === "specials" ? filteredSpecials.length : (byCat.get(cat.id)?.length ?? 0);
             const isActive = activeCat === cat.id;
             return (
               <li key={cat.id}>
@@ -294,6 +304,90 @@ export function MenuBoard({
             );
           })}
         </ul>
+
+        {/* Today's Specials Sidebar Widget */}
+        {filteredSpecials.length > 0 && (
+          <div style={{ marginTop: 24, paddingTop: 16, borderTop: `1px solid ${S.border}`, display: "flex", flexDirection: "column", gap: 10 }}>
+            <p style={{ fontFamily: S.fontDisplay, fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase", color: S.muted, margin: "0 12px 8px" }}>Today's Specials</p>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              {filteredSpecials.map((it) => {
+                const line = lines.find((l) => l.menuItemId === it.id);
+                const oos = !it.in_stock || it.status !== "live";
+                return (
+                  <div
+                    key={it.id}
+                    onClick={() => scrollToCategory("specials")}
+                    style={{
+                      padding: "10px 12px",
+                      borderRadius: S.radiusSm,
+                      border: `1px solid ${S.border}`,
+                      background: "var(--student-special-card-bg)",
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 6,
+                      cursor: "pointer",
+                      transition: "transform 0.15s, box-shadow 0.15s",
+                      opacity: oos ? 0.6 : 1,
+                    }}
+                    className="hover:-translate-y-[1.5px] hover:shadow-[0_4px_12px_rgba(0,0,0,0.04)]"
+                  >
+                    <span style={{ fontSize: 13, fontWeight: 600, color: S.text, lineHeight: 1.25, display: "block" }}>{it.name}</span>
+                    {it.description && (
+                      <p style={{ margin: 0, fontSize: 11, color: S.muted2, lineHeight: 1.3, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+                        {it.description}
+                      </p>
+                    )}
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 2 }}>
+                      <span style={{ fontFamily: S.fontDisplay, fontSize: 13, fontWeight: 700, color: "var(--color-ocean-500)" }}>{formatRupees(it.price_paise)}</span>
+                      {line ? (
+                        <div style={{ display: "flex", alignItems: "center", border: "1px solid var(--color-line)", borderRadius: 6, overflow: "hidden", background: "var(--student-surface)" }} onClick={(e) => e.stopPropagation()}>
+                          <button
+                            type="button"
+                            onClick={() => cartDec(it.id)}
+                            style={{ width: 22, height: 22, display: "grid", placeItems: "center", cursor: "pointer", background: "transparent", border: "none", color: S.text, fontSize: 10 }}
+                          >
+                            -
+                          </button>
+                          <span style={{ minWidth: 16, textAlign: "center", fontSize: 11, fontWeight: 700, fontFamily: S.fontMono }}>{line.qty}</span>
+                          <button
+                            type="button"
+                            onClick={() => cartInc(it.id)}
+                            style={{ width: 22, height: 22, display: "grid", placeItems: "center", cursor: "pointer", background: "transparent", border: "none", color: "var(--color-ocean-500)", fontSize: 10 }}
+                          >
+                            +
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          disabled={oos}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            cartAdd({ menuItemId: it.id, name: it.name, pricePaise: it.price_paise, diet: it.diet as "veg" | "nonveg" | "egg" });
+                            toast.success(`Added ${it.name}!`);
+                          }}
+                          style={{
+                            padding: "3px 8px",
+                            borderRadius: 6,
+                            fontSize: 11,
+                            fontWeight: 600,
+                            background: "rgba(51,65,85,.08)",
+                            color: "var(--color-ocean-500)",
+                            border: `1px solid ${S.border}`,
+                            cursor: oos ? "not-allowed" : "pointer",
+                            fontFamily: S.fontDisplay,
+                          }}
+                        >
+                          + Add
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
       </nav>
 
       {/* MIDDLE: Main content */}
@@ -370,7 +464,7 @@ export function MenuBoard({
             className="sticky top-[56px] z-20 py-3 mb-4 backdrop-blur-md bg-[color:var(--color-paper)]/85 border-b border-[color:var(--color-line)] -mx-4 px-4 sm:-mx-5 sm:px-5 flex gap-2 overflow-x-auto"
             style={{ display: isDesktop ? "none" : "flex", scrollbarWidth: "none" }}
           >
-            {[{ id: "all", name: "All items" }, ...categories].map((cat) => {
+            {[{ id: "all", name: "All items" }, ...injectedCategories].map((cat) => {
               const isActive = activeCat === cat.id;
               return (
                 <button key={cat.id} onClick={() => scrollToCategory(cat.id)} style={{ flexShrink: 0, padding: "8px 14px", borderRadius: 999, fontSize: 13, fontWeight: 600, border: isActive ? "1px solid transparent" : `1px solid ${S.border}`, color: isActive ? "#FAF8F5" : S.muted, background: isActive ? S.accent : S.surface, cursor: "pointer", transition: "all .2s", fontFamily: S.fontDisplay }}>
@@ -413,7 +507,7 @@ export function MenuBoard({
                 <p style={{ margin: 0, fontFamily: S.fontMono, fontSize: 12, color: S.muted }}>{filteredOther.length} item{filteredOther.length === 1 ? "" : "s"}</p>
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
-                {categories.filter((cat) => !specialsCategory || cat.id !== specialsCategory.id).map((cat) => {
+                {injectedCategories.filter((cat) => cat.id !== "specials").map((cat) => {
                   const list = byCat.get(cat.id) ?? [];
                   if (list.length === 0) return null;
                   return (
@@ -461,8 +555,8 @@ export function MenuBoard({
               <button onClick={() => { scrollToCategory("all"); setIsBrowseOpen(false); }} className={cn("w-full text-left px-4 py-3.5 rounded-2xl text-[14.5px] font-semibold transition-all border flex items-center justify-between", activeCat === "all" ? "bg-ocean-500/10 text-ocean-600 dark:text-ocean-400 font-bold border-ocean-500/20" : "border-[color:var(--color-line)] text-[color:var(--color-ink)] bg-[color:var(--color-paper)]")}>
                 <span>All items</span><span className="text-[12px] opacity-60 font-normal">{items.filter((it) => !vegOnly || it.diet === "veg").length} items</span>
               </button>
-              {categories.map((cat) => {
-                const catCount = (specialsCategory && cat.id === specialsCategory.id)
+              {injectedCategories.map((cat) => {
+                const catCount = cat.id === "specials"
                   ? specialsItems.filter((it) => !vegOnly || it.diet === "veg").length
                   : (byCat.get(cat.id)?.length ?? 0);
                 if (catCount === 0) return null;
