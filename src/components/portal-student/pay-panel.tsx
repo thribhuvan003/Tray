@@ -51,6 +51,11 @@ export function PayPanel({
   const [phase, setPhase] = useState<Phase>("idle");
   const [monitoringMsg, setMonitoringMsg] = useState("Waiting for your payment…");
   const [demoDismissed, setDemoDismissed] = useState(false);
+  // showFallback: show the "I paid" button only after 20s — enough time to complete UPI.
+  // This is the anti-fraud gate: students who open the UPI app and close without paying
+  // can't see the confirmation button until 20 seconds have elapsed.
+  const [showFallback, setShowFallback] = useState(false);
+  const fallbackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [verifying, startVerify] = useTransition();
   const [pending, start] = useTransition();
 
@@ -168,6 +173,15 @@ export function PayPanel({
     return () => clearInterval(id);
   }, [phase]);
 
+  // ── Show "I paid" button after 20s — anti-fraud gate ─────────────────────
+  useEffect(() => {
+    if (phase === "monitoring" && !showFallback) {
+      fallbackTimerRef.current = setTimeout(() => setShowFallback(true), 20_000);
+    }
+    if (phase !== "monitoring") setShowFallback(false);
+    return () => { if (fallbackTimerRef.current) clearTimeout(fallbackTimerRef.current); };
+  }, [phase, showFallback]);
+
   // ── Auto-verify every 15s during monitoring ────────────────────────────────
   // Fallback for when the Razorpay webhook fails or is delayed: polls
   // Razorpay's API server-side and calls safe_capture_payment if paid.
@@ -186,21 +200,15 @@ export function PayPanel({
   }, [phase, order.id, handleDetected]);
 
   // ── Transition to monitoring when student opens UPI app ───────────────────
+  // FRAUD FIX: Do NOT call verifyPaymentNow here. Previously this fired
+  // immediately when the student tapped "Open UPI App" — before they had even
+  // completed the payment. Students were opening the UPI app, closing it without
+  // paying, then seeing their order in the kitchen queue (marked unverified).
+  // Now: just switch to monitoring phase. The student must explicitly tap
+  // "I paid — Place my order" AFTER completing the transaction.
   const onOpenUpi = () => {
     setPhase("monitoring");
-    // Direct-UPI: tapping "pay" IS the trigger that drops the order into the
-    // kitchen queue — there is no server signal for a peer-to-peer UPI transfer,
-    // and no mandatory "I've Paid" button. verifyPaymentNow is idempotent (5s
-    // bucket + status guard), so this is safe to fire on every tap. The order
-    // enters the queue flagged UNVERIFIED; the counter OTP + the staff's UPI-app
-    // glance is the real verification.
-    if (paymentMode === "direct_upi") {
-      startVerify(async () => {
-        const r = await verifyPaymentNow(order.id);
-        if (r.status === "paid") handleDetected("placed");
-        else if (r.status === "failed") handleDetected("payment_failed");
-      });
-    }
+    // No auto-verify here. The student must confirm payment themselves.
   };
 
   // ── Manual fallback: server-side verification ─────────────────────────────
@@ -347,25 +355,34 @@ export function PayPanel({
                 </p>
               </div>
 
-              {/* Primary verification button - always show instantly inside monitoring */}
-              <div className="mt-4 border-t border-[color:var(--color-line)] pt-5 w-full flex flex-col items-center">
-                <p className="text-[12px] opacity-70 mb-3 font-sans">Once your UPI transaction is complete:</p>
-                <button
-                  onClick={onIvePaid}
-                  disabled={verifying}
-                  className="w-full h-12 text-[14px] font-bold rounded-xl text-white transition-all active:scale-[0.98] flex items-center justify-center gap-2 shadow-md hover:opacity-90 disabled:opacity-60"
-                  style={{ background: "var(--color-ocean-500, #e60000)" }}
-                >
-                  {verifying ? (
-                    <>
-                      <Loader2 size={16} className="animate-spin" />
-                      Verifying with Server...
-                    </>
-                  ) : (
-                    "I have paid — Place Order"
-                  )}
-                </button>
-              </div>
+              {/* "I've paid" button — shown only after 20s so students have time
+                  to actually complete the UPI transaction before confirming */}
+              {showFallback && (
+                <div className="mt-4 border-t border-[color:var(--color-line)] pt-5 w-full flex flex-col items-center gap-3">
+                  <p className="text-[12px] opacity-70 font-sans text-center leading-snug">
+                    Completed payment in your UPI app?<br />
+                    <span className="text-[11px] opacity-60">Only confirm after seeing "Transaction Successful" in your UPI app.</span>
+                  </p>
+                  <button
+                    onClick={onIvePaid}
+                    disabled={verifying}
+                    className="w-full h-12 text-[14px] font-bold rounded-xl text-white transition-all active:scale-[0.98] flex items-center justify-center gap-2 shadow-md hover:opacity-90 disabled:opacity-60"
+                    style={{ background: "var(--color-ocean-500, #e60000)" }}
+                  >
+                    {verifying ? (
+                      <>
+                        <Loader2 size={16} className="animate-spin" />
+                        Placing order…
+                      </>
+                    ) : (
+                      `I paid ₹${(order.total_paise / 100).toFixed(0)} — Place my order`
+                    )}
+                  </button>
+                  <p className="text-[11px] opacity-40 text-center">
+                    Your order enters the kitchen unverified. Staff will confirm payment before preparing.
+                  </p>
+                </div>
+              )}
             </div>
           ) : (
             <>
