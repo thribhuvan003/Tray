@@ -174,11 +174,16 @@ export function PayPanel({
   }, [phase]);
 
   // ── Show "I paid" button after 20s — anti-fraud gate ─────────────────────
+  // Runs in BOTH idle (desktop QR scan) and monitoring (mobile UPI app) phases.
+  // 20 seconds is enough time to complete a real UPI PIN entry.
+  // Previously only ran in monitoring phase — the idle phase had an IMMEDIATE
+  // button which was the fraud loophole: students clicked it without paying.
   useEffect(() => {
-    if (phase === "monitoring" && !showFallback) {
+    const isPayingPhase = phase === "idle" || phase === "monitoring";
+    if (isPayingPhase && !showFallback) {
       fallbackTimerRef.current = setTimeout(() => setShowFallback(true), 20_000);
     }
-    if (phase !== "monitoring") setShowFallback(false);
+    if (!isPayingPhase) setShowFallback(false);
     return () => { if (fallbackTimerRef.current) clearTimeout(fallbackTimerRef.current); };
   }, [phase, showFallback]);
 
@@ -431,24 +436,27 @@ export function PayPanel({
                 Paying directly to <span className="font-semibold opacity-85">{liveTenantUpi}</span>
               </div>
 
-              {/* Primary verification button for desktop scan & idle manual placement */}
-              <div className="mt-5 border-t border-[color:var(--color-line)] pt-5 w-full">
-                <button
-                  onClick={onIvePaid}
-                  disabled={verifying}
-                  className="w-full h-12 text-[14px] font-bold rounded-xl text-white transition-all active:scale-[0.98] flex items-center justify-center gap-2 shadow-md hover:opacity-90 disabled:opacity-60"
-                  style={{ background: "var(--color-ocean-500, #e60000)" }}
-                >
-                  {verifying ? (
-                    <>
-                      <Loader2 size={16} className="animate-spin" />
-                      Verifying with Server...
-                    </>
-                  ) : (
-                    "I have paid — Place Order"
-                  )}
-                </button>
-              </div>
+              {/* After scanning QR on desktop: button only appears after 20s
+                  (same gate as the mobile monitoring path — prevents instant fraud) */}
+              {showFallback && (
+                <div className="mt-5 border-t border-[color:var(--color-line)] pt-5 w-full flex flex-col gap-2">
+                  <p className="text-[11.5px] text-center opacity-60">
+                    Paid via UPI? Confirm below so we can send your order to the kitchen.
+                  </p>
+                  <button
+                    onClick={onIvePaid}
+                    disabled={verifying}
+                    className="w-full h-12 text-[14px] font-bold rounded-xl text-white transition-all active:scale-[0.98] flex items-center justify-center gap-2 shadow-md hover:opacity-90 disabled:opacity-60"
+                    style={{ background: "var(--color-ocean-500, #e60000)" }}
+                  >
+                    {verifying ? (
+                      <><Loader2 size={16} className="animate-spin" /> Placing order…</>
+                    ) : (
+                      `I paid ₹${(order.total_paise / 100).toFixed(0)} — Place my order`
+                    )}
+                  </button>
+                </div>
+              )}
             </>
           )}
         </div>
