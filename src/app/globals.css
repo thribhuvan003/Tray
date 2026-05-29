@@ -133,7 +133,9 @@
 /* ─── Portal overrides ─── */
 [data-portal="student"] {
   --portal-font-sans:    var(--font-jakarta), var(--font-geist), ui-sans-serif, system-ui;
-  --portal-font-display: var(--font-bricolage), ui-sans-serif, system-ui;
+  /* Elegant editorial serif for student headings (premium 2026 look). Body stays
+     clean sans (--portal-font-sans) — one serif + one sans, no font mixing. */
+  --portal-font-display: var(--font-instrument-serif), ui-serif, Georgia;
   --color-primary:       var(--color-ocean-500);
   --scrollbar-thumb:       rgba(26, 26, 25, 0.18);
   --scrollbar-thumb-hover: rgba(26, 26, 25, 0.28);
@@ -267,8 +269,11 @@ html.dark {
   --color-line: rgba(255, 255, 255, 0.07);
   --color-line-strong: rgba(255, 255, 255, 0.13);
 }
-/* Student dark: cream → charcoal, ocean glows brighter */
-html.dark [data-portal="student"] {
+/* Student portal is ALWAYS bright — dark mode is disabled (the light/dark toggle
+   lives only in the admin portal). The [data-allow-dark] attribute is never set,
+   so html.dark can no longer restyle the student portal. Kept (not deleted) so the
+   dark palette is easy to restore if ever wanted. */
+html.dark [data-portal="student"][data-allow-dark="true"] {
   --color-paper:     #1A1A19;
   --color-paper-dim: #222221;
   --color-ink:       #F4EFE6;
