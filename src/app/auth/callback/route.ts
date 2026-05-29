@@ -110,12 +110,20 @@ export async function GET(req: NextRequest) {
     });
     authError = error;
   } else {
-    return NextResponse.redirect(new URL("/login?error=Missing+code", origin));
+    const missingCodePath = tenantSlug
+      ? `/c/${tenantSlug}/login?error=Missing+code`
+      : `/login?error=Missing+code`;
+    return NextResponse.redirect(new URL(missingCodePath, origin));
   }
 
   if (authError) {
     const msg = userFacingAuthError(authError.message);
-    return NextResponse.redirect(new URL(`/login?error=${encodeURIComponent(msg)}`, origin));
+    // Redirect back to the tenant-scoped login if we know the canteen, so the
+    // user stays in context rather than landing on the global /login page.
+    const errorLoginPath = tenantSlug
+      ? `/c/${tenantSlug}/login?error=${encodeURIComponent(msg)}`
+      : `/login?error=${encodeURIComponent(msg)}`;
+    return NextResponse.redirect(new URL(errorLoginPath, origin));
   }
   const isSignup = searchParams.get("signup") === "1";
 
@@ -190,7 +198,16 @@ export async function GET(req: NextRequest) {
     // college has allowed_domains = '{}' (no restriction). This covers hotels,
     // standalone canteens, corporate campuses, and any institution that accepts
     // any authenticated user without email-domain gating.
-    await ensureStudentEnrolled(u.user.id);
+    //
+    // Skip for explicit staff/owner login roles: a brand-new kitchen staff or
+    // owner account has no memberships yet, so the staffCount guard inside
+    // ensureStudentEnrolled returns 0 and incorrectly auto-enrolls them as
+    // students in open-access canteens. That prevents the count===0 branch
+    // below from firing the correct "no staff account" error message — the user
+    // ends up silently routed to a random student menu instead.
+    if (loginRole !== "kitchen" && loginRole !== "owner") {
+      await ensureStudentEnrolled(u.user.id);
+    }
 
     // Check membership count. If zero after both enrollment passes, the user
     // is brand-new with no canteen. Send them somewhere useful instead of the
@@ -214,7 +231,12 @@ export async function GET(req: NextRequest) {
       } else if (loginRole === "kitchen") {
         await supabase.auth.signOut();
         const errMsg = encodeURIComponent("No kitchen staff account found. Ask your canteen admin to add you.");
-        return NextResponse.redirect(new URL(`/login?role=kitchen&error=${errMsg}`, origin));
+        // Send back to the canteen-specific login if we know the slug, so the
+        // user isn't stranded on the global /login page with no context.
+        const kitchenLoginPath = tenantSlug
+          ? `/c/${tenantSlug}/login?role=kitchen&error=${errMsg}`
+          : `/login?role=kitchen&error=${errMsg}`;
+        return NextResponse.redirect(new URL(kitchenLoginPath, origin));
       } else {
         // Unknown student — DON'T sign them out; keep the session so they can
         // visit a canteen URL and be auto-enrolled. Just redirect to get-started

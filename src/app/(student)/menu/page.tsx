@@ -166,19 +166,19 @@ export default async function StudentMenuPage() {
     },
   ];
 
-  const isDemo = tenant.id === "d3b07384-d113-4e6b-a25e-e4a81e355fd5";
-  // SECURITY: the mock menu is DEV-ONLY. A real tenant must NEVER be shown fake
-  // dishes — e.g. on a transient Supabase error the query returns null, and the
-  // old fallback served "Steamed Momo"/"Chicken Biryani" to real students who
-  // could then try to order food that doesn't exist. In production we fall back
-  // to an empty menu (handled by the empty state), never to mock data.
-  const allowMock = process.env.NODE_ENV !== "production";
-  const categories = (catsData !== null && (!isDemo || catsData.length > 0))
-    ? catsData
-    : (allowMock ? mockCats : (catsData ?? []));
-  const items = (itemsData !== null && (!isDemo || itemsData.length > 0))
-    ? itemsData
-    : (allowMock ? mockItems : (itemsData ?? []));
+  const DEMO_TENANT_ID = "d3b07384-d113-4e6b-a25e-e4a81e355fd5";
+  const isDemo = tenant.id === DEMO_TENANT_ID;
+  // SECURITY: mock menu data must ONLY appear for the hardcoded demo tenant.
+  // For every other tenant, we show what the DB returned (possibly an empty
+  // array) — never fake dishes.  Previously allowMock let any tenant fall back
+  // to mock items whenever the DB query errored (returned null), which meant
+  // real students could see and try to order food that doesn't exist.
+  const categories = isDemo && (catsData === null || catsData.length === 0)
+    ? mockCats
+    : (catsData ?? []);
+  const items = isDemo && (itemsData === null || itemsData.length === 0)
+    ? mockItems
+    : (itemsData ?? []);
 
   const isClosed = statusData ? !statusData.is_open : false;
   const pausedUntil = statusData?.paused_until ?? null;

@@ -111,8 +111,15 @@ export function verifyWebhookSignature(rawBody: string, signature: string): bool
     .createHmac("sha256", env.RAZORPAY_WEBHOOK_SECRET)
     .update(rawBody)
     .digest("hex");
-  if (signature.length !== expected.length) return false;
-  return crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected));
+  // Use fixed-length hex-decoded buffers so timingSafeEqual runs in constant time
+  // regardless of the attacker-controlled `signature` string length.
+  // Buffer.from(hex, "hex") silently truncates on odd-length or invalid chars,
+  // so we produce a 32-byte expected buffer and a 32-byte comparison target —
+  // the comparison always takes the same number of cycles.
+  const expectedBuf = Buffer.from(expected, "hex"); // always 32 bytes for SHA-256
+  const sigBuf = Buffer.alloc(32); // zero-filled 32 bytes
+  Buffer.from(signature, "hex").copy(sigBuf, 0, 0, 32);
+  return crypto.timingSafeEqual(sigBuf, expectedBuf);
 }
 
 /**
@@ -176,17 +183,6 @@ export async function fetchRazorpayOrderStatus(
   const s = data.status;
   if (s === "paid" || s === "attempted" || s === "created" || s === "failed") return s;
   return "unknown";
-}
-
-export function upiQrPayload(opts: { vpa: string; name: string; amountPaise: number; note?: string }) {
-  const params = new URLSearchParams({
-    pa: opts.vpa,
-    pn: opts.name,
-    am: (opts.amountPaise / 100).toFixed(2),
-    cu: "INR",
-  });
-  if (opts.note) params.set("tn", opts.note);
-  return `upi://pay?${params.toString()}`;
 }
 
 /**

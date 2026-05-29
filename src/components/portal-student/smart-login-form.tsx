@@ -69,16 +69,17 @@ export function SmartLoginForm({ next, slug = "", hintRole }: Props) {
     );
     const activeMem = adminMem ?? kitchenMem ?? memberships[0];
 
-    // Resolve slug for this membership
+    // Resolve slug for this membership.
+    // Always look up the slug from the selected membership's tenant_id so we
+    // route to the correct canteen even when the URL slug and the membership
+    // tenant differ (e.g. admin has memberships in multiple canteens).
     let resolvedSlug = slug;
-    if (!resolvedSlug || activeMem.tenant_id) {
-      const { data: tenantRow } = (await sb
-        .from("tenants")
-        .select("slug")
-        .eq("id", activeMem.tenant_id)
-        .maybeSingle()) as unknown as { data: { slug: string } | null };
-      if (tenantRow?.slug) resolvedSlug = tenantRow.slug;
-    }
+    const { data: tenantRow } = (await sb
+      .from("tenants")
+      .select("slug")
+      .eq("id", activeMem.tenant_id)
+      .maybeSingle()) as unknown as { data: { slug: string } | null };
+    if (tenantRow?.slug) resolvedSlug = tenantRow.slug;
 
     if (!resolvedSlug) { window.location.href = "/get-started?new=1"; return; }
 

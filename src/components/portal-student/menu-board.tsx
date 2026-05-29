@@ -54,6 +54,7 @@ export function MenuBoard({
   const [vegOnly, setVegOnly] = useState(false);
   const [isDesktop, setIsDesktop] = useState(false);
   const q = useCart((s) => s.searchQuery);
+  const setSearchQuery = useCart((s) => s.setSearchQuery);
   const router = useRouter();
 
   useEffect(() => {
@@ -456,6 +457,17 @@ export function MenuBoard({
                     style={{ width: "100%", padding: "10px 12px", borderRadius: S.radiusSm, border: `1px solid ${S.border}`, background: S.surface, fontFamily: S.fontDisplay, fontSize: 14, fontWeight: 500, outline: "none", boxSizing: "border-box" }} />
                 </div>
               )}
+            </div>
+            <div style={{ height: 1, background: S.border, margin: "14px 0 12px" }} />
+            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              <label style={{ fontFamily: S.fontDisplay, fontSize: 12, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: S.muted }}>Search menu</label>
+              <input
+                type="search"
+                placeholder="e.g. Biryani, Chai…"
+                value={q}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                style={{ width: "100%", padding: "10px 12px", borderRadius: S.radiusSm, border: `1px solid ${S.border}`, background: S.surface, fontFamily: S.fontDisplay, fontSize: 14, fontWeight: 500, outline: "none", boxSizing: "border-box" }}
+              />
             </div>
           </div>
 

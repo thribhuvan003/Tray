@@ -48,10 +48,6 @@ export default async function PayPage({ params }: { params: Promise<{ orderId: s
       diet_snapshot: "veg" | "nonveg" | "egg";
     }[]>();
 
-  if (!tenant.upi_vpa) {
-    redirect(`/c/${tenant.slug}/menu?msg=no-upi`);
-  }
-
   // Per-tenant payment rail (migration 0024). Drives the pay UI: direct_upi shows
   // the UPI QR and drops the order into the kitchen queue when the student taps to
   // pay (no "I've Paid" button); razorpay would drive the gateway checkout.
@@ -62,6 +58,13 @@ export default async function PayPage({ params }: { params: Promise<{ orderId: s
     .maybeSingle<{ payment_mode: string }>();
   const paymentMode: "direct_upi" | "razorpay" =
     tModeRow?.payment_mode === "razorpay" ? "razorpay" : "direct_upi";
+
+  // Only enforce the UPI VPA requirement for direct_upi mode.
+  // Razorpay-mode tenants don't need a UPI VPA — blocking them here was a bug
+  // that would prevent any Razorpay-only canteen from accepting payments.
+  if (paymentMode === "direct_upi" && !tenant.upi_vpa) {
+    redirect(`/c/${tenant.slug}/menu?msg=no-upi`);
+  }
 
   // isSimMode: dev-only simulate button (true only when live Razorpay keys are
   // absent). Independent of payment_mode — it never shows in production.
@@ -87,7 +90,7 @@ export default async function PayPage({ params }: { params: Promise<{ orderId: s
     <PayPanel
       tenantSlug={tenant.slug}
       tenantName={tenant.name}
-      tenantUpi={tenant.upi_vpa}
+      tenantUpi={tenant.upi_vpa ?? ""}
       order={order}
       lines={lines ?? []}
       isSimMode={isSimMode}
