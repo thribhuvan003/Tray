@@ -6,7 +6,7 @@ import { Bell, BellOff, ChefHat, History as HistoryIcon, Radio, UserRoundCog, X 
 import { toast } from "sonner";
 import { getBrowserClient } from "@/lib/supabase/browser";
 import { cn, formatRupees, formatTimeIST } from "@/lib/utils";
-import { toggleItemSpecial } from "@/app/(admin)/admin/_actions";
+import { toggleItemSpecial, createSpecialMenuItem } from "@/app/(admin)/admin/_actions";
 import { OrderColumn } from "./order-column";
 import { OtpVerifyDialog } from "./otp-verify-dialog";
 import { WalkInDialog } from "./walk-in-dialog";
@@ -79,6 +79,92 @@ export function KitchenBoard({
 
   const [verifyId, setVerifyId] = useState<string | null>(null);
   const [walkInOpen, setWalkInOpen] = useState(false);
+  const [specialForm, setSpecialForm] = useState({
+    name: "",
+    description: "",
+    price: "",
+    prep: "10",
+    diet: "veg" as "veg" | "nonveg" | "egg",
+  });
+  const [submittingSpecial, startSubmitSpecial] = useTransition();
+
+  const handlePushSpecial = () => {
+    const { name, description, price, prep, diet } = specialForm;
+    if (!name.trim()) {
+      toast.error("Enter a dish name");
+      return;
+    }
+    const parsedPrice = parseFloat(price);
+    if (isNaN(parsedPrice) || parsedPrice <= 0) {
+      toast.error("Enter a valid price");
+      return;
+    }
+    const pricePaise = Math.round(parsedPrice * 100);
+    const prepMin = parseInt(prep, 10) || 10;
+
+    startSubmitSpecial(async () => {
+      const existing = menuItems.find(
+        (it) => it.name.trim().toLowerCase() === name.trim().toLowerCase()
+      );
+
+      if (existing) {
+        setTogglingSpecialId(existing.id);
+        setMenuItems((prev) =>
+          prev.map((it) => it.id === existing.id ? { ...it, is_special: true } : it)
+        );
+        const r = await toggleItemSpecial(existing.id, true);
+        setTogglingSpecialId(null);
+        if (!r.ok) {
+          toast.error(r.error ?? "Failed to toggle special status");
+          setMenuItems((prev) =>
+            prev.map((it) => it.id === existing.id ? { ...it, is_special: existing.is_special } : it)
+          );
+        } else {
+          toast.success(`"${existing.name}" is now on specials!`);
+          setSpecialForm({ name: "", description: "", price: "", prep: "10", diet: "veg" });
+        }
+      } else {
+        const r = await createSpecialMenuItem({
+          name: name.trim(),
+          description: description.trim() || null,
+          price_paise: pricePaise,
+          diet,
+          prep_time_minutes: prepMin,
+        });
+
+        if (!r.ok || !r.id) {
+          toast.error(r.error ?? "Failed to create special item");
+        } else {
+          toast.success(`"${name.trim()}" created and pushed to live specials!`);
+          const newItem = {
+            id: r.id,
+            name: name.trim(),
+            price_paise: pricePaise,
+            diet,
+            is_special: true,
+            in_stock: true,
+            category_id: null,
+          };
+          setMenuItems((prev) => [...prev, newItem]);
+          setSpecialForm({ name: "", description: "", price: "", prep: "10", diet: "veg" });
+        }
+      }
+    });
+  };
+
+  const handleNameChange = (val: string) => {
+    setSpecialForm((prev) => {
+      const next = { ...prev, name: val };
+      const match = menuItems.find(
+        (it) => it.name.trim().toLowerCase() === val.trim().toLowerCase()
+      );
+      if (match) {
+        next.price = (match.price_paise / 100).toString();
+        next.diet = match.diet;
+      }
+      return next;
+    });
+  };
   const [clock, setClock] = useState<string>("--:--");
   const [connState, setConnState] = useState<'online' | 'reconnecting' | 'offline'>('online');
   const [reconnectAttempt, setReconnectAttempt] = useState(0);
@@ -1066,85 +1152,11 @@ export function KitchenBoard({
 
         <KitchenMarquee items={menuItems.filter(it => it.in_stock)} />
 
-        {/* Main board area */}
-        <main style={{ padding: "24px 24px 64px" }}>
-          <PrepTotalsStrip orders={orders} lines={lines} onSessionExpired={() => setSessionExpired(true)} />
-
-          {/* Today's Specials Header section */}
-          <div className="mb-6 p-5 rounded-2xl border-2 border-dashed border-[color:var(--kt-tomato)] bg-tomato-500/5 flex flex-col gap-4">
-            <div className="flex items-center justify-between gap-4">
-              <div className="flex items-center gap-2">
-                <span className="text-[18px]">✨</span>
-                <div>
-                  <h3 className="font-display font-bold text-[18px] text-[color:var(--kt-ink)] leading-none">Today&apos;s Specials</h3>
-                  <p className="text-[11px] font-mono text-[color:var(--kt-ink-3)] uppercase tracking-wider mt-1">Highlighted on student ordering screens</p>
-                </div>
-              </div>
-              <button
-                onClick={() => setManageSpecialsOpen((v) => !v)}
-                className="px-4 py-1.5 rounded-lg border border-tomato-500/20 text-[12.5px] font-semibold text-tomato-600 bg-white hover:bg-tomato-50/50 transition-colors active:scale-95 cursor-pointer"
-              >
-                {manageSpecialsOpen ? "Close panel" : "⚙️ Manage Specials"}
-              </button>
-            </div>
-
-            {/* List of items currently marked as special */}
-            <div className="flex flex-wrap gap-2.5">
-              {menuItems.filter(it => it.is_special).map(it => (
-                <div 
-                  key={it.id} 
-                  className="px-3.5 py-2 rounded-xl border border-tomato-500/20 bg-tomato-500/10 text-[13px] font-bold text-tomato-600 flex items-center gap-2"
-                >
-                  <span className="shrink-0">
-                    {it.diet === "veg" ? "🥬" : it.diet === "egg" ? "🍳" : "🍗"}
-                  </span>
-                  <span>{it.name}</span>
-                  <button
-                    onClick={() => handleToggleSpecial(it.id, false)}
-                    disabled={togglingSpecialId === it.id}
-                    className="p-0.5 rounded-full hover:bg-tomato-500/20 text-tomato-500 hover:text-tomato-600 transition-colors cursor-pointer"
-                    title="Remove from specials"
-                  >
-                    <X size={13} />
-                  </button>
-                </div>
-              ))}
-              {menuItems.filter(it => it.is_special).length === 0 && (
-                <div className="text-[12.5px] text-[color:var(--kt-ink-3)] italic">No specials selected for today. Tap &ldquo;Manage Specials&rdquo; to highlight items!</div>
-              )}
-            </div>
-
-            {/* Collapsible panel to manage specials */}
-            {manageSpecialsOpen && (
-              <div className="mt-2 pt-4 border-t border-dashed border-[color:var(--kt-line)]">
-                <p className="text-[12px] font-semibold text-[color:var(--kt-ink-2)] mb-3">Toggle Special Status for Live Items:</p>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
-                  {menuItems.map(it => {
-                    const isSp = it.is_special;
-                    return (
-                      <button
-                        key={it.id}
-                        onClick={() => handleToggleSpecial(it.id, !isSp)}
-                        disabled={togglingSpecialId === it.id}
-                        className={cn(
-                          "px-3 py-2 rounded-xl border text-[12px] font-bold transition-all text-left flex items-center justify-between gap-2 active:scale-[0.98] cursor-pointer",
-                          isSp
-                            ? "border-tomato-500/30 bg-tomato-500/15 text-tomato-600"
-                            : "border-[color:var(--kt-line)] bg-white text-[color:var(--kt-ink-2)] hover:bg-[color:var(--kt-cream-3)]"
-                        )}
-                      >
-                        <span className="truncate">{it.name}</span>
-                        <span className="text-[14px] shrink-0">{isSp ? "★" : "☆"}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* 4-column queue board — matches .queue-board + .queue-cols */}
+        {/* Main board area with 4-column queue on the left and Specials on the right */}
+        <div className="flex flex-col xl:flex-row gap-6 items-start w-full" style={{ padding: "24px 24px 64px" }}>
+          {/* Left side: 4-column queue board */}
           <div
+            className="flex-1 w-full"
             style={{
               background: "var(--kt-paper)",
               border: "1px solid var(--kt-ink)",
@@ -1154,83 +1166,85 @@ export function KitchenBoard({
             }}
           >
             <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0">
-            <div className="grid grid-cols-4 min-w-[680px]" style={{ minHeight: "520px" }}>
-              <OrderColumn
-                title="Incoming"
-                subtitle="Just paid · awaiting kitchen"
-                status="placed"
-                orders={groups.placed}
-                linesByOrder={linesByOrder}
-                pendingActionId={pendingActionId}
-                unverifiedUpiOrders={unverifiedUpiOrders}
-                onAction={async (id, action) => {
-                  setPendingActionId(id);
-                  try {
-                    const { markPreparing } = await import("@/app/(kitchen)/_actions");
-                    const r = await markPreparing(id);
-                    if (!r.ok) handleActionError(r.error);
-                    if (action === "start" && r.ok) {
-                      const ord = orders.find((o) => o.id === id);
-                      toast.success(`Started ${id.slice(0, 6)}`);
-                      if (ord) startUndoWindow(id, ord.short_code, "placed", "preparing");
+              <div className="grid grid-cols-4 min-w-[680px]" style={{ minHeight: "520px" }}>
+                <OrderColumn
+                  title="Incoming"
+                  subtitle="Just paid · awaiting kitchen"
+                  status="placed"
+                  orders={groups.placed}
+                  linesByOrder={linesByOrder}
+                  pendingActionId={pendingActionId}
+                  unverifiedUpiOrders={unverifiedUpiOrders}
+                  onAction={async (id, action) => {
+                    setPendingActionId(id);
+                    try {
+                      const { markPreparing } = await import("@/app/(kitchen)/_actions");
+                      const r = await markPreparing(id);
+                      if (!r.ok) handleActionError(r.error);
+                      if (action === "start" && r.ok) {
+                        const ord = orders.find((o) => o.id === id);
+                        toast.success(`Started ${id.slice(0, 6)}`);
+                        if (ord) startUndoWindow(id, ord.short_code, "placed", "preparing");
+                      }
+                    } finally {
+                      setPendingActionId(null);
                     }
-                  } finally {
-                    setPendingActionId(null);
-                  }
-                }}
-                onReject={async (id, reason) => {
-                  const { rejectOrder } = await import("@/app/(kitchen)/_actions");
-                  const r = await rejectOrder(id, reason);
-                  if (!r.ok) handleActionError(r.error ?? "Failed to reject order");
-                  else toast.success("Order rejected — refund queued");
-                }}
-              />
-              <OrderColumn
-                title="Preparing"
-                subtitle="Currently cooking"
-                status="preparing"
-                orders={groups.preparing}
-                linesByOrder={linesByOrder}
-                pendingActionId={pendingActionId}
-                onAction={async (id) => {
-                  setPendingActionId(id);
-                  try {
-                    const { markReady } = await import("@/app/(kitchen)/_actions");
-                    const r = await markReady(id);
-                    if (!r.ok) handleActionError(r.error);
-                    else {
-                      const ord = orders.find((o) => o.id === id);
-                      toast.success("Ready — pickup code issued");
-                      if (ord) startUndoWindow(id, ord.short_code, "preparing", "ready");
+                  }}
+                  onReject={async (id, reason) => {
+                    const { rejectOrder } = await import("@/app/(kitchen)/_actions");
+                    const r = await rejectOrder(id, reason);
+                    if (!r.ok) handleActionError(r.error ?? "Failed to reject order");
+                  }}
+                />
+                <OrderColumn
+                  title="Preparing"
+                  subtitle="Cooking in progress"
+                  status="preparing"
+                  orders={groups.preparing}
+                  linesByOrder={linesByOrder}
+                  pendingActionId={pendingActionId}
+                  onAction={async (id, action) => {
+                    setPendingActionId(id);
+                    try {
+                      const { markReady } = await import("@/app/(kitchen)/_actions");
+                      const r = await markReady(id);
+                      if (!r.ok) handleActionError(r.error);
+                      if (action === "ready" && r.ok) {
+                        const ord = orders.find((o) => o.id === id);
+                        toast.success(`Marked ready ${id.slice(0, 6)}`);
+                        if (ord) startUndoWindow(id, ord.short_code, "preparing", "ready");
+                      }
+                    } finally {
+                      setPendingActionId(null);
                     }
-                  } finally {
-                    setPendingActionId(null);
-                  }
-                }}
-              />
-              <OrderColumn
-                title="Ready"
-                subtitle="Student will show a code"
-                status="ready"
-                orders={groups.ready}
-                linesByOrder={linesByOrder}
-                pendingActionId={pendingActionId}
-                onAction={(id) => setVerifyId(id)}
-              />
-              <OrderColumn
-                title="Collected"
-                subtitle="Today · last 10"
-                status="collected"
-                orders={groups.collected}
-                linesByOrder={linesByOrder}
-                onAction={() => {}}
-              />
+                  }}
+                />
+                <OrderColumn
+                  title="Ready"
+                  subtitle="Awaiting code verification"
+                  status="ready"
+                  orders={groups.ready}
+                  linesByOrder={linesByOrder}
+                  pendingActionId={pendingActionId}
+                  onAction={async (id) => {
+                    setVerifyId(id);
+                  }}
+                />
+                <OrderColumn
+                  title="Collected"
+                  subtitle="Today's completed orders"
+                  status="collected"
+                  orders={groups.collected}
+                  linesByOrder={linesByOrder}
+                  pendingActionId={pendingActionId}
+                  onAction={() => {}}
+                />
+              </div>
             </div>
-            </div>
-            {/* Queue footer — matches .queue-foot */}
             <div
-              className="flex justify-between items-center"
               style={{
+                display: "flex",
+                justifyContent: "space-between",
                 padding: "10px 16px",
                 borderTop: "1px solid var(--kt-line)",
                 background: "var(--kt-cream-4)",
@@ -1246,6 +1260,143 @@ export function KitchenBoard({
               </span>
             </div>
           </div>
+
+          {/* Right side: Today's Specials Sidebar Panel */}
+          <aside
+            className="w-full xl:w-[280px] shrink-0 p-5 rounded-2xl border-2 flex flex-col gap-4 text-tomato-900 select-none"
+            style={{
+              background: "var(--kt-paper)",
+              border: "2px solid var(--kt-ink)",
+              boxShadow: "5px 5px 0 var(--kt-ink)",
+            }}
+          >
+            <div className="flex flex-col gap-1 border-b border-tomato-900/10 pb-3">
+              <div className="flex items-baseline justify-between gap-1">
+                <h3 className="font-display font-bold text-[22px] italic text-[color:var(--kt-ink)] leading-none">Today&apos;s Special</h3>
+                <span className="bg-tomato-500 text-[9px] font-mono text-white font-bold px-1.5 py-0.5 rounded leading-none">LIVE · PUSHES</span>
+              </div>
+              <p className="text-[10px] font-mono text-[color:var(--kt-ink-3)] uppercase tracking-wider mt-1">Direct to student menu</p>
+            </div>
+
+            {/* Form fields */}
+            <div className="flex flex-col gap-3">
+              <div className="flex flex-col gap-1">
+                <label className="text-[11px] font-mono uppercase tracking-wider font-semibold text-[color:var(--kt-ink-2)]">Dish Name</label>
+                <input
+                  type="text"
+                  list="canteen-dishes"
+                  placeholder="e.g. Hyderabadi Dum Biryani"
+                  value={specialForm.name}
+                  onChange={(e) => handleNameChange(e.target.value)}
+                  className="w-full px-3 py-2 text-[13px] rounded-lg border border-tomato-900/20 bg-white text-tomato-900 focus:outline-none focus:border-tomato-500 font-sans"
+                />
+                <datalist id="canteen-dishes">
+                  {menuItems.map((it) => (
+                    <option key={it.id} value={it.name} />
+                  ))}
+                </datalist>
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <label className="text-[11px] font-mono uppercase tracking-wider font-semibold text-[color:var(--kt-ink-2)]">Description</label>
+                <input
+                  type="text"
+                  placeholder="e.g. Slow-cooked, sealed in dum"
+                  value={specialForm.description}
+                  onChange={(e) => setSpecialForm((prev) => ({ ...prev, description: e.target.value }))}
+                  className="w-full px-3 py-2 text-[13px] rounded-lg border border-tomato-900/20 bg-white text-tomato-900 focus:outline-none focus:border-tomato-500 font-sans"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <div className="flex flex-col gap-1">
+                  <label className="text-[11px] font-mono uppercase tracking-wider font-semibold text-[color:var(--kt-ink-2)]">Price (₹)</label>
+                  <input
+                    type="number"
+                    placeholder="240"
+                    value={specialForm.price}
+                    onChange={(e) => setSpecialForm((prev) => ({ ...prev, price: e.target.value }))}
+                    className="w-full px-3 py-2 text-[13px] rounded-lg border border-tomato-900/20 bg-white text-tomato-900 focus:outline-none focus:border-tomato-500 font-sans"
+                  />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label className="text-[11px] font-mono uppercase tracking-wider font-semibold text-[color:var(--kt-ink-2)]">Prep (min)</label>
+                  <input
+                    type="number"
+                    placeholder="8"
+                    value={specialForm.prep}
+                    onChange={(e) => setSpecialForm((prev) => ({ ...prev, prep: e.target.value }))}
+                    className="w-full px-3 py-2 text-[13px] rounded-lg border border-tomato-900/20 bg-white text-tomato-900 focus:outline-none focus:border-tomato-500 font-sans"
+                  />
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <label className="text-[11px] font-mono uppercase tracking-wider font-semibold text-[color:var(--kt-ink-2)]">Diet</label>
+                <div className="grid grid-cols-3 gap-1">
+                  {(["veg", "nonveg", "egg"] as const).map((d) => (
+                    <button
+                      key={d}
+                      type="button"
+                      onClick={() => setSpecialForm((prev) => ({ ...prev, diet: d }))}
+                      className={cn(
+                        "py-1 rounded text-[11px] font-mono uppercase tracking-wider font-bold border transition-colors cursor-pointer text-center",
+                        specialForm.diet === d
+                          ? "bg-tomato-500 border-tomato-500 text-white"
+                          : "bg-white border-tomato-900/10 text-tomato-900/60 hover:bg-tomato-50"
+                      )}
+                    >
+                      {d === "veg" ? "Veg" : d === "egg" ? "Egg" : "Non-Veg"}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={handlePushSpecial}
+                disabled={submittingSpecial}
+                className="w-full mt-2 h-10 bg-tomato-500 text-white rounded-xl text-[12.5px] font-bold tracking-wider hover:bg-tomato-600 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1.5 cursor-pointer shadow-md"
+              >
+                {submittingSpecial ? "PUSHING..." : "▶ PUSH TO LIVE MENU"}
+              </button>
+            </div>
+
+            {/* Active Specials list */}
+            <div className="mt-2 pt-4 border-t border-tomato-900/10 flex flex-col gap-2 flex-1 min-h-[120px]">
+              <p className="text-[11px] font-mono uppercase tracking-wider font-bold text-[color:var(--kt-ink-2)]">Active Specials</p>
+              <div className="flex flex-col gap-2 max-h-[220px] overflow-y-auto pr-1">
+                {menuItems.filter(it => it.is_special).map(it => (
+                  <div 
+                    key={it.id} 
+                    className="px-3 py-2 rounded-xl border border-tomato-900/10 bg-cream-50 flex items-center justify-between gap-2"
+                  >
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      <span className="shrink-0 text-sm">
+                        {it.diet === "veg" ? "🥬" : it.diet === "egg" ? "🍳" : "🍗"}
+                      </span>
+                      <span className="text-[12.5px] font-bold text-tomato-900 truncate" title={it.name}>{it.name}</span>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <span className="text-[11px] font-mono text-tomato-900/65 font-bold">₹{it.price_paise / 100}</span>
+                      <button
+                        type="button"
+                        onClick={() => handleToggleSpecial(it.id, false)}
+                        disabled={togglingSpecialId === it.id}
+                        className="text-[9px] font-mono font-bold tracking-wider uppercase text-tomato-500 hover:text-tomato-700 bg-white border border-tomato-500/20 px-1.5 py-0.5 rounded cursor-pointer disabled:opacity-50"
+                      >
+                        REMOVE
+                      </button>
+                    </div>
+                  </div>
+                ))}
+                {menuItems.filter(it => it.is_special).length === 0 && (
+                  <div className="text-[12px] text-[color:var(--kt-ink-3)] italic py-3 text-center">No live specials. Push a dish above!</div>
+                )}
+              </div>
+            </div>
+          </aside>
+        </div>
 
           {/* 5-second "I made a mistake" undo bar — high-contrast, 56px tap target, auto-dismiss.
              Only appears for 5s after a status advance. Reuses PrepTotals ghost-pill pattern + full logging.
@@ -1296,7 +1447,6 @@ export function KitchenBoard({
               </span>
             </div>
           )}
-        </main>
 
         <OtpVerifyDialog
           open={Boolean(verifyId)}

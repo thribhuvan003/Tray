@@ -53,7 +53,7 @@ function PinDots({ length, filled }: { length: number; filled: number }) {
         <span
           key={i}
           className={[
-            "w-4 h-4 rounded-full border-2 border-tomato-900 dark:border-cream-200 transition-all duration-100",
+            "w-4 h-4 rounded-full border-2 border-tomato-900 transition-all duration-100",
             i < filled ? "bg-tomato-500" : "bg-transparent",
           ].join(" ")}
         />
@@ -106,8 +106,8 @@ function StaffCard({
         "flex flex-col items-center justify-center gap-3 rounded-xl border-2 p-4 transition-all duration-150",
         "min-w-[140px] min-h-[160px]",
         locked
-          ? "border-tomato-900/20 dark:border-cream-200/10 opacity-40 cursor-not-allowed"
-          : "border-tomato-900 dark:border-cream-200/40 hover:bg-tomato-900 hover:text-cream-50 dark:hover:bg-cream-200 dark:hover:text-graphite-900 active:scale-95 cursor-pointer",
+          ? "border-tomato-900/20 opacity-40 cursor-not-allowed"
+          : "border-tomato-900 hover:bg-tomato-900 hover:text-cream-50 active:scale-95 cursor-pointer",
       ].join(" ")}
       aria-label={locked ? `${profile.display_name} — account locked` : `Login as ${profile.display_name}`}
     >
@@ -254,13 +254,13 @@ function PinModal({
       className="fixed inset-0 z-50 flex items-center justify-center bg-graphite-900/80 backdrop-blur-sm"
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <div className="relative bg-cream-50 dark:bg-graphite-900 border-2 border-tomato-900 dark:border-cream-200/40 shadow-[8px_8px_0_0_var(--color-tomato-900)] dark:shadow-[8px_8px_0_0_rgba(247,200,194,0.3)] p-6 sm:p-8 w-[min(360px,92vw)]">
+      <div className="relative bg-cream-50 border-2 border-tomato-900 shadow-[8px_8px_0_0_var(--color-tomato-900)] p-6 sm:p-8 w-[min(360px,92vw)]">
         {/* Close */}
         <button
           type="button"
           onClick={onClose}
           aria-label="Cancel PIN entry"
-          className="absolute top-3 right-3 p-2 rounded-full hover:bg-tomato-900/10 dark:hover:bg-cream-200/10 transition-colors"
+          className="absolute top-3 right-3 p-2 rounded-full hover:bg-tomato-900/10 transition-colors"
         >
           <X size={18} />
         </button>
@@ -277,7 +277,7 @@ function PinModal({
             {initials(profile.display_name)}
           </span>
           <p className="text-base font-semibold">{profile.display_name}</p>
-          <p className="text-[11px] font-mono uppercase tracking-widest text-tomato-900/60 dark:text-cream-200/50">
+          <p className="text-[11px] font-mono uppercase tracking-widest text-tomato-900/60">
             Enter your PIN
           </p>
         </div>
@@ -285,14 +285,14 @@ function PinModal({
         {state.phase === "locked" ? (
           <div className="text-center space-y-3">
             <p className="text-tomato-500 font-semibold">Account locked</p>
-            <p className="text-sm text-tomato-900/70 dark:text-cream-200/70">
+            <p className="text-sm text-tomato-900/70">
               Too many wrong attempts. Try again in{" "}
               <LockCountdown lockedUntil={state.lockedUntil} />
             </p>
             <button
               type="button"
               onClick={onClose}
-              className="mt-4 px-6 py-2 border-2 border-tomato-900 dark:border-cream-200 font-medium text-sm hover:bg-tomato-900 hover:text-cream-50 dark:hover:bg-cream-200 dark:hover:text-graphite-900 transition-colors"
+              className="mt-4 px-6 py-2 border-2 border-tomato-900 font-medium text-sm hover:bg-tomato-900 hover:text-cream-50 transition-colors"
             >
               Back
             </button>
@@ -335,8 +335,8 @@ function PinModal({
                       "flex items-center justify-center rounded-xl border-2 h-[80px] text-xl font-bold select-none transition-all duration-100",
                       "active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed",
                       isDigit
-                        ? "border-tomato-900 dark:border-cream-200/40 hover:bg-tomato-900 hover:text-cream-50 dark:hover:bg-cream-200 dark:hover:text-graphite-900"
-                        : "border-tomato-900/30 dark:border-cream-200/20 text-tomato-900/60 dark:text-cream-200/60 hover:bg-tomato-900/10 dark:hover:bg-cream-200/10 text-base",
+                        ? "border-tomato-900 hover:bg-tomato-900 hover:text-cream-50"
+                        : "border-tomato-900/30 text-tomato-900/60 hover:bg-tomato-900/10 text-base",
                     ].join(" ")}
                   >
                     {isClear ? <span className="text-sm font-semibold">CLR</span> : isBack ? <Delete size={20} /> : k}
@@ -350,7 +350,7 @@ function PinModal({
               type="button"
               disabled={submitting || pin.length < PIN_MIN}
               onClick={() => void doSubmit(pinRef.current)}
-              className="mt-4 w-full h-[54px] border-2 border-tomato-900 dark:border-cream-200 font-bold text-base tracking-wide hover:bg-tomato-900 hover:text-cream-50 dark:hover:bg-cream-200 dark:hover:text-graphite-900 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              className="mt-4 w-full h-[54px] border-2 border-tomato-900 font-bold text-base tracking-wide hover:bg-tomato-900 hover:text-cream-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
             >
               {submitting ? "Verifying…" : "Confirm"}
             </button>
@@ -383,14 +383,14 @@ export function PinKiosk({
   return (
     <div className="min-h-screen flex flex-col">
       {/* Header */}
-      <header className="border-b-2 border-tomato-900 bg-cream-50 dark:bg-graphite-900 px-6 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-2 text-tomato-900 dark:text-cream-200">
+      <header className="border-b-2 border-tomato-900 bg-cream-50 px-6 py-4 flex items-center justify-between">
+        <div className="flex items-center gap-2 text-tomato-900">
           <ChefHat size={22} />
           <span className="font-mono text-xs uppercase tracking-widest opacity-70">{tenantName}</span>
         </div>
         <a
           href={`/c/${tenantSlug}/kitchen`}
-          className="text-[11px] font-mono uppercase tracking-widest text-tomato-900/50 dark:text-cream-200/50 hover:text-tomato-500 transition-colors"
+          className="text-[11px] font-mono uppercase tracking-widest text-tomato-900/50 hover:text-tomato-500 transition-colors"
         >
           Back to board
         </a>
@@ -402,12 +402,12 @@ export function PinKiosk({
           Who&apos;s cooking{" "}
           <span className="italic text-tomato-500">today?</span>
         </h1>
-        <p className="text-sm text-tomato-900/60 dark:text-cream-200/60 mb-10 text-center">
+        <p className="text-sm text-tomato-900/60 mb-10 text-center">
           Tap your name and enter your PIN
         </p>
 
         {profiles.length === 0 ? (
-          <div className="border-2 border-tomato-900/20 px-8 py-6 text-center text-tomato-900/50 dark:text-cream-200/50">
+          <div className="border-2 border-tomato-900/20 px-8 py-6 text-center text-tomato-900/50">
             <p className="font-mono text-sm">No active staff profiles found.</p>
             <p className="text-xs mt-1 font-mono">Ask an admin to add staff members.</p>
           </div>

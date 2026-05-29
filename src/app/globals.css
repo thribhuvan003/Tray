@@ -293,77 +293,7 @@ html.dark [data-portal="student"] {
   --student-special-card-bg: linear-gradient(145deg, rgba(34, 34, 33, 0.65) 0%, rgba(248, 113, 113, 0.06) 100%);
   --student-regular-card-bg: linear-gradient(145deg, rgba(34, 34, 33, 0.35) 0%, rgba(34, 34, 33, 0.1) 100%);
 }
-/* Kitchen dark: paper inversion */
-html.dark [data-portal="kitchen"] {
-  --color-cream-50: #1a0f08;
-  --color-cream-200: #2a160a;
-  --color-tomato-900: #f7c8c2;
 
-  --kt-cream:   #2a160a;
-  --kt-cream-2: #3a1f0e;
-  --kt-cream-3: #3d2010;
-  --kt-cream-4: #2e1a0b;
-  --kt-paper:   #1a0e06;
-  --kt-ink:     #f4e6c1;
-  --kt-ink-2:   #d4b990;
-  --kt-ink-3:   #a88c68;
-  --kt-ink-4:   #7a6244;
-  --kt-line:    rgba(244,230,193,0.10);
-  --kt-line-2:  rgba(244,230,193,0.20);
-}
-/* Student dark: scrollbar variables */
-html.dark [data-portal="student"] {
-  --scrollbar-thumb:       rgba(244, 239, 230, 0.18);
-  --scrollbar-thumb-hover: rgba(244, 239, 230, 0.28);
-}
-/* Kitchen dark: scrollbar variables */
-html.dark [data-portal="kitchen"] {
-  --scrollbar-thumb:       rgba(244, 230, 193, 0.18);
-  --scrollbar-thumb-hover: rgba(244, 230, 193, 0.28);
-}
-/* Admin dark theme overrides */
-html.dark [data-portal="admin"] {
-  --scrollbar-thumb:       rgba(244, 239, 230, 0.18);
-  --scrollbar-thumb-hover: rgba(244, 239, 230, 0.28);
-
-  /* Admin Night (Dark) Theme - Charcoal & Lime Glow */
-  --color-graphite-900: #0a0d12;
-  --color-graphite-800: #0f131a;
-  --color-graphite-700: #161b25;
-  --color-graphite-600: #1c2230;
-  --color-graphite-500: #3f4756;
-  --color-graphite-400: #646d80;
-  --color-graphite-300: #a3acbd;
-  --color-graphite-200: #e8ecf2;
-  --color-graphite-100: #f4f6fa;
-
-  --admin-bg:          var(--color-graphite-900);
-  --admin-bg-2:        var(--color-graphite-800);
-  --admin-bg-3:        var(--color-graphite-700);
-  --admin-bg-4:        var(--color-graphite-600);
-  --admin-bg-card:     #222221;
-  --admin-line:        rgba(244, 239, 230, 0.08);
-  --admin-line-2:      rgba(244, 239, 230, 0.15);
-  --admin-line-3:      rgba(244, 239, 230, 0.25);
-  --admin-ink:         var(--color-graphite-100);
-  --admin-ink-2:       var(--color-graphite-200);
-  --admin-ink-3:       var(--color-graphite-400);
-  --admin-ink-4:       var(--color-graphite-500);
-
-  --admin-lime:        #cdfa50;
-  --admin-lime-2:      #b2df40;
-  --admin-lime-soft:   rgba(205, 250, 80, 0.12);
-  --admin-amber:       #ffb22a;
-  --admin-amber-soft:  rgba(255, 178, 42, 0.14);
-  --admin-rose:        #ff6b6b;
-  --admin-rose-soft:   rgba(255, 107, 107, 0.14);
-  --admin-mint:        #3fe6a3;
-  --admin-mint-soft:   rgba(63, 230, 163, 0.14);
-  --admin-sky:         #5cb1ff;
-  --admin-sky-soft:    rgba(92, 177, 255, 0.14);
-  --admin-violet:      #a78bfa;
-  --admin-violet-soft: rgba(167, 139, 250, 0.14);
-}
 
 /* ─── Portal Dropdown Selects and Type consistency ─── */
 [data-portal] {
@@ -407,9 +337,7 @@ html.dark [data-portal="admin"] select {
   border-radius: 8px !important;
   cursor: pointer !important;
 }
-html.dark [data-portal="kitchen"] select {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23d4b990'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E") !important;
-}
+
 [data-portal="kitchen"] select option {
   background-color: var(--kt-paper, #fffaf0);
   color: var(--kt-ink, #2a160a);
