@@ -589,7 +589,6 @@ export async function cancelOrderAsAdmin(
   });
 
   revalidatePath(`/c/${c.tenant.slug}/admin/orders`);
-  revalidatePath(`/c/${c.tenant.slug}/kitchen`);
   return { ok: true };
 }
 
@@ -827,7 +826,6 @@ export async function toggleItemSpecial(id: string, isSpecial: boolean): Promise
 
   revalidatePath(`/c/${tenantCtx.tenant.slug}/admin/menu`);
   revalidatePath(`/c/${tenantCtx.tenant.slug}/menu`);
-  revalidatePath(`/c/${tenantCtx.tenant.slug}/kitchen`);
   return { ok: true };
 }
 
@@ -895,7 +893,6 @@ export async function createSpecialMenuItem(form: {
 
   revalidatePath(`/c/${tenantCtx.tenant.slug}/admin/menu`);
   revalidatePath(`/c/${tenantCtx.tenant.slug}/menu`);
-  revalidatePath(`/c/${tenantCtx.tenant.slug}/kitchen`);
   return { ok: true, id: data.id };
 }
 
