@@ -263,8 +263,11 @@ export default async function SettingsPage() {
               </label>
             </div>
 
-            {/* UPI ID — verify with Razorpay before Save is enabled */}
-            <UpiVpaField currentVpa={row.upi_vpa} />
+            {/* key= forces a full remount when upi_vpa changes so useState
+                reinitialises with the fresh value from the DB. Without this,
+                React keeps the stale input value even after the page re-renders
+                with the new data from the server action. */}
+            <UpiVpaField key={row.upi_vpa ?? "__no_upi__"} currentVpa={row.upi_vpa} />
 
             <div>
               <button

@@ -346,9 +346,15 @@ export async function updateCanteenSettings(opts: {
     latency_ms: Date.now() - start,
   });
 
+  // Invalidate every cache layer that holds tenant data so the new UPI VPA
+  // shows immediately on the pay page QR code and settings form.
   revalidatePath(`/c/${c.tenant.slug}/admin/settings`);
   revalidatePath(`/c/${c.tenant.slug}/menu`);
+  revalidatePath(`/c/${c.tenant.slug}/pay`, "layout");
   revalidateTag("tenant");
+  // Clear the slug-specific unstable_cache entry so the 60s TTL doesn't
+  // delay the new UPI VPA from appearing in the QR code on the pay page.
+  revalidateTag(`tenant:${c.tenant.slug}`);
   return { ok: true };
 }
 
