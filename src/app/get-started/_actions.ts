@@ -8,10 +8,11 @@ import { logger } from "@/lib/logging";
 function toSlug(name: string): string {
   return name
     .toLowerCase()
+    .trim()
     .replace(/[^a-z0-9\s-]/g, "")
     .replace(/\s+/g, "-")
     .replace(/-+/g, "-")
-    .trim();
+    .replace(/^-+|-+$/g, ""); // strip leading/trailing dashes ("so " → "so" not "so-")
 }
 
 async function resolveUniqueCollegeSlug(

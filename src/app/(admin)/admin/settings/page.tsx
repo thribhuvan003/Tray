@@ -87,7 +87,7 @@ export default async function SettingsPage() {
   async function handleSettings(fd: FormData) {
     "use server";
     const guestOrdersEnabled = fd.get("guest_orders_enabled") === "on";
-    const rawVpa = (fd.get("upi_vpa") as string | null)?.trim() || null;
+    const rawVpa = (fd.get("upi_vpa") as string | null)?.trim().toLowerCase() || null;
     const vpaVerified = fd.get("upi_vpa_verified") === "1";
     const adminPhone = (fd.get("admin_phone") as string | null)?.trim() || null;
 

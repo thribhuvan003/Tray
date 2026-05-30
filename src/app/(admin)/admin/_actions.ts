@@ -335,7 +335,7 @@ export async function updateCanteenSettings(opts: {
     .from("tenants")
     .update({
       guest_orders_enabled: opts.guestOrdersEnabled,
-      upi_vpa: opts.upiVpa,
+      upi_vpa: opts.upiVpa ? opts.upiVpa.toLowerCase() : null,
       ...(opts.paymentMode ? { payment_mode: opts.paymentMode } : {}),
       ...(opts.adminPhone !== undefined ? { admin_phone: opts.adminPhone } : {}),
     } as any)
