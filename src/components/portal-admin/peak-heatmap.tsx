@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 export function PeakHeatmap({ grid }: { grid: number[][] }) {
   const max = Math.max(1, ...grid.flat());
   const rows = ["M", "T", "W", "T", "F", "S", "S"];
+
   return (
     <section className="bg-graphite-700 border border-graphite-200/[0.08] rounded-xl p-4 min-h-[260px] flex flex-col">
       <header className="mb-3">
@@ -21,21 +22,39 @@ export function PeakHeatmap({ grid }: { grid: number[][] }) {
             </div>
             {row.map((v, ci) => {
               const intensity = max > 0 ? v / max : 0;
-              const cls =
+
+              // Inline styles — avoids Tailwind JIT missing dynamically-constructed class names.
+              // Lime = #d2fb50 (admin lime). Glow via box-shadow on hot cells.
+              const alpha =
+                intensity === 0 ? 0 :
+                intensity < 0.25 ? 0.15 :
+                intensity < 0.5 ? 0.35 :
+                intensity < 0.75 ? 0.6 : 1;
+
+              const bg =
                 intensity === 0
-                  ? "bg-graphite-600"
-                  : intensity < 0.25
-                  ? "bg-lime/15"
-                  : intensity < 0.5
-                  ? "bg-lime/35"
-                  : intensity < 0.75
-                  ? "bg-lime/60"
-                  : "bg-lime";
+                  ? "rgba(255,255,255,0.06)"
+                  : `rgba(210,251,80,${alpha})`;
+
+              const glow =
+                intensity >= 0.75
+                  ? "0 0 10px rgba(210,251,80,0.7), 0 0 20px rgba(210,251,80,0.35)"
+                  : intensity >= 0.5
+                  ? "0 0 8px rgba(210,251,80,0.5)"
+                  : intensity > 0
+                  ? "0 0 5px rgba(210,251,80,0.25)"
+                  : "none";
+
               return (
                 <motion.div
                   key={ci}
-                  className={`${cls} rounded-[3px] aspect-square`}
                   title={`${v} order${v === 1 ? "" : "s"} · ${ci + 8}:00`}
+                  style={{
+                    background: bg,
+                    boxShadow: glow,
+                    borderRadius: 3,
+                    aspectRatio: "1",
+                  }}
                   initial={{ opacity: 0, scale: 0.6 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{

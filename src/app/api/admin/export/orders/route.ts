@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { headers } from "next/headers";
-import { resolveTenant } from "@/lib/tenant";
+import { resolveTenant, getTenantSlugFromHeaders } from "@/lib/tenant";
 import { getServerClient } from "@/lib/supabase/server";
 import { requireRole } from "@/lib/auth/get-user";
 
@@ -24,9 +24,13 @@ function csvEscape(v: string | number | null) {
 
 export async function GET(req: NextRequest) {
   const h = await headers();
-  // Prefer middleware-injected header; fall back to explicit ?slug= for direct
-  // navigation (e.g. admin clicks export from dashboard).
-  const slug = h.get("x-tenant-slug") || req.nextUrl.searchParams.get("slug") || "";
+  // Use the same resolver as server actions: tries x-tenant-slug header,
+  // then referer pathname, then ?slug= param. This handles the case where
+  // the browser navigates directly to /api/admin/export/orders?slug=X
+  // (no middleware header) — the referer from the admin dashboard page
+  // provides the slug as a fallback.
+  const slugFromHeaders = getTenantSlugFromHeaders(h);
+  const slug = slugFromHeaders || req.nextUrl.searchParams.get("slug") || "";
   const tenant = await resolveTenant(slug);
   if (!tenant) return new NextResponse("Tenant not found", { status: 404 });
   const user = await requireRole(["canteen_admin", "super_admin"]);
