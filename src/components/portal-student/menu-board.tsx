@@ -156,6 +156,15 @@ export function MenuBoard({
   const cartCount = lines.reduce((acc, l) => acc + l.qty, 0);
   const cartTotal = lines.reduce((acc, l) => acc + l.pricePaise * l.qty, 0);
   const totalFilteredCount = filteredSpecials.length + filteredOther.length;
+  // Which sections to render for the current category selection.
+  const showSpecials = filteredSpecials.length > 0 && (activeCat === "all" || activeCat === "specials");
+  const visibleOtherCount = activeCat === "all"
+    ? filteredOther.length
+    : activeCat === "uncategorised"
+      ? (byCat.get(null)?.length ?? 0)
+      : (byCat.get(activeCat)?.length ?? 0);
+  // True when a specific (non-"all") category is selected but has nothing to show.
+  const activeCatEmpty = activeCat !== "all" && !showSpecials && visibleOtherCount === 0;
   const canteenGridCols = siblings.length <= 1 ? 1 : siblings.length === 2 ? 2 : 3;
 
   function sibWait(sib: any): string {
@@ -164,70 +173,14 @@ export function MenuBoard({
     return `~${wait} min wait`;
   }
 
-  const isScrollingRef = useRef(false);
-
+  // Selecting a category *segregates* the menu: it filters the grid down to
+  // just that category's items (and scrolls back to the top so the filtered
+  // list starts in view). "All" shows every section. This replaced a
+  // scroll-to-section model whose scroll-spy fought the explicit selection.
   const scrollToCategory = (catId: string) => {
-    isScrollingRef.current = true;
     setActiveCat(catId);
-    if (catId === "all") {
-      window.scrollTo({ top: 0, behavior: "smooth" });
-      setTimeout(() => {
-        isScrollingRef.current = false;
-      }, 800);
-      return;
-    }
-    const targetId = catId === "specials"
-      ? "category-specials"
-      : `category-${catId}`;
-    const el = document.getElementById(targetId);
-    if (el) {
-      const offset = isDesktop ? 80 : 120; // sticky header + mobile chip bar offset
-      const bodyRect = document.body.getBoundingClientRect().top;
-      const elementRect = el.getBoundingClientRect().top;
-      const elementPosition = elementRect - bodyRect;
-      const offsetPosition = elementPosition - offset;
-      window.scrollTo({
-        top: offsetPosition,
-        behavior: "smooth"
-      });
-      setTimeout(() => {
-        isScrollingRef.current = false;
-      }, 800);
-    } else {
-      isScrollingRef.current = false;
-    }
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
-
-  useEffect(() => {
-    const observerOptions = {
-      root: null,
-      rootMargin: "-120px 0px -60% 0px",
-      threshold: 0
-    };
-
-    const observerCallback = (entries: IntersectionObserverEntry[]) => {
-      if (isScrollingRef.current) return;
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          const id = entry.target.id;
-          if (id === "category-specials") {
-            setActiveCat("specials");
-          } else if (id.startsWith("category-")) {
-            const catId = id.replace("category-", "");
-            setActiveCat(catId);
-          }
-        }
-      });
-    };
-
-    const observer = new IntersectionObserver(observerCallback, observerOptions);
-    const targets = document.querySelectorAll("[data-category-section]");
-    targets.forEach((t) => observer.observe(t));
-
-    return () => {
-      targets.forEach((t) => observer.unobserve(t));
-    };
-  }, [injectedCategories, items]);
 
   // Coalesce menu/tenant realtime changes into at most one router.refresh() per
   // window. A busy canteen toggling stock / editing prices used to fire a
@@ -487,7 +440,7 @@ export function MenuBoard({
           </div>
 
           {/* Empty state */}
-          {totalFilteredCount === 0 && (
+          {(totalFilteredCount === 0 || activeCatEmpty) && (
             <div style={{ padding: "64px 0", textAlign: "center", color: S.muted }}>
               <div style={{ fontFamily: S.fontDisplay, fontStyle: "italic", fontSize: 24, color: S.accent }}>Nothing found.</div>
               <p style={{ fontSize: 14, marginTop: 8 }}>{q || vegOnly ? "Clear the filters or search term to see more dishes." : "Check back at lunchtime."}</p>
@@ -495,8 +448,8 @@ export function MenuBoard({
           )}
 
           {/* Specials Section */}
-          {filteredSpecials.length > 0 && (
-            <div id="category-specials" data-category-section="" style={{ marginBottom: 32, scrollMarginTop: "140px" }} className="pt-2">
+          {showSpecials && (
+            <div id="category-specials" style={{ marginBottom: 32, scrollMarginTop: "140px" }} className="pt-2">
               <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12, marginBottom: 16 }}>
                 <h2 style={{ margin: 0, fontFamily: S.fontDisplay, fontSize: "clamp(1.5rem, 5vw, 1.95rem)", fontWeight: 400, letterSpacing: "-0.02em", lineHeight: 1.15 }}>Today&apos;s <span style={{ fontStyle: "italic" }}>specials.</span></h2>
                 <span style={{ fontFamily: S.fontMono, fontSize: 11, letterSpacing: "0.06em", color: "#0c8a43", display: "flex", alignItems: "center", gap: 6, whiteSpace: "nowrap" }}>
@@ -510,20 +463,21 @@ export function MenuBoard({
           )}
 
           {/* Menu grid */}
-          {filteredOther.length > 0 && (
+          {visibleOtherCount > 0 && (
             <div className="flex flex-col gap-6">
               <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12, marginBottom: 4 }}>
                 <h2 style={{ margin: 0, fontFamily: S.fontDisplay, fontSize: "clamp(1.5rem, 5vw, 1.95rem)", fontWeight: 400, letterSpacing: "-0.02em", lineHeight: 1.15 }}>
                   Menu
                 </h2>
-                <p style={{ margin: 0, fontFamily: S.fontMono, fontSize: 12, color: S.muted }}>{filteredOther.length} item{filteredOther.length === 1 ? "" : "s"}</p>
+                <p style={{ margin: 0, fontFamily: S.fontMono, fontSize: 12, color: S.muted }}>{visibleOtherCount} item{visibleOtherCount === 1 ? "" : "s"}</p>
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
                 {injectedCategories.filter((cat) => cat.id !== "specials").map((cat) => {
                   const list = byCat.get(cat.id) ?? [];
                   if (list.length === 0) return null;
+                  if (activeCat !== "all" && activeCat !== cat.id) return null;
                   return (
-                    <div key={cat.id} id={`category-${cat.id}`} data-category-section="" style={{ scrollMarginTop: "140px" }} className="pt-2">
+                    <div key={cat.id} id={`category-${cat.id}`} style={{ scrollMarginTop: "140px" }} className="pt-2">
                       <h3 style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: S.muted, margin: "0 0 12px", paddingLeft: 8, borderLeft: `2px solid ${S.accent}`, fontFamily: S.fontDisplay }}>{cat.name}</h3>
                       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 14 }}>
                         {list.map((it) => <RegularCard key={it.id} item={it} onAdd={cartAdd} onInc={cartInc} onDec={cartDec} />)}
@@ -534,8 +488,9 @@ export function MenuBoard({
                 {(() => {
                   const uncategorised = byCat.get(null) ?? [];
                   if (uncategorised.length === 0) return null;
+                  if (activeCat !== "all" && activeCat !== "uncategorised") return null;
                   return (
-                    <div key="__uncategorised" id="category-uncategorised" data-category-section="" style={{ scrollMarginTop: "140px" }} className="pt-2">
+                    <div key="__uncategorised" id="category-uncategorised" style={{ scrollMarginTop: "140px" }} className="pt-2">
                       <h3 style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: S.muted, margin: "0 0 12px", paddingLeft: 8, borderLeft: `2px solid ${S.accent}`, fontFamily: S.fontDisplay }}>Other</h3>
                       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 14 }}>
                         {uncategorised.map((it) => <RegularCard key={it.id} item={it} onAdd={cartAdd} onInc={cartInc} onDec={cartDec} />)}
