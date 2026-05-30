@@ -152,13 +152,18 @@ export async function createInstitution(
   // siblings by college_id — different IDs → no siblings → no switcher).
   let college: { id: string };
 
-  const { data: existingCollege } = await admin
+  // Match on both institution name AND city so "AEC Rajam" and "AEC Vizag"
+  // remain separate colleges while two admins at the same campus share one.
+  let collegeQuery = admin
     .from("colleges")
     .select("id")
     .ilike("name", form.institutionName.trim())
     .eq("is_active", true)
-    .limit(1)
-    .maybeSingle<{ id: string }>();
+    .limit(1);
+  if (form.city?.trim()) {
+    collegeQuery = (collegeQuery as any).ilike("city", form.city.trim());
+  }
+  const { data: existingCollege } = await (collegeQuery as any).maybeSingle() as { data: { id: string } | null };
 
   if (existingCollege) {
     college = existingCollege;

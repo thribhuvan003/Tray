@@ -98,15 +98,38 @@ export function CanteenLinks({
 }) {
   const base = appUrl.replace(/\/$/, "");
 
+  // If a college portal exists, that is the primary student URL — it shows ALL
+  // canteens at this institution so every admin from the same college shares
+  // one student-facing URL instead of separate per-canteen links.
+  const studentUrl = collegeSlug
+    ? `${base}/college/${collegeSlug}`
+    : `${base}/c/${tenantSlug}/menu`;
+
   const links: Link[] = [
     {
-      label: "Student ordering",
-      description: "Share with students or customers",
-      url: `${base}/c/${tenantSlug}/menu`,
+      label: collegeSlug ? "Student ordering (all canteens)" : "Student ordering",
+      description: collegeSlug
+        ? "One link — students choose their canteen here"
+        : "Share with students or customers",
+      url: studentUrl,
       icon: <ShoppingBag size={16} style={{ color: "var(--admin-sky)" }} />,
       who: "Students · Customers",
       accentBg: "rgba(92,177,255,0.14)",
     },
+    // When a college portal exists, also show the direct canteen link so the admin
+    // can share it if they want students to land on a specific canteen.
+    ...(collegeSlug
+      ? [
+          {
+            label: "Direct canteen link",
+            description: "Lands directly on this canteen's menu",
+            url: `${base}/c/${tenantSlug}/menu`,
+            icon: <School size={16} style={{ color: "var(--admin-violet)" }} />,
+            who: "Direct link",
+            accentBg: "rgba(167,139,250,0.14)",
+          } satisfies Link,
+        ]
+      : []),
     {
       label: "Kitchen board",
       description: "Open on the kitchen tablet",
@@ -123,18 +146,6 @@ export function CanteenLinks({
       who: "You · Canteen admin",
       accentBg: "rgba(205,250,80,0.12)",
     },
-    ...(collegeSlug
-      ? [
-          {
-            label: "College portal",
-            description: "All canteens at this institution",
-            url: `${base}/college/${collegeSlug}`,
-            icon: <School size={16} style={{ color: "var(--admin-violet)" }} />,
-            who: "College director",
-            accentBg: "rgba(167,139,250,0.14)",
-          } satisfies Link,
-        ]
-      : []),
   ];
 
   return (

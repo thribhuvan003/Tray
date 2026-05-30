@@ -74,12 +74,14 @@ export function SmartLoginForm({ next, slug = "", hintRole }: Props) {
     // route to the correct canteen even when the URL slug and the membership
     // tenant differ (e.g. admin has memberships in multiple canteens).
     let resolvedSlug = slug;
+    let resolvedCollegeSlug: string | null = null;
     const { data: tenantRow } = (await sb
       .from("tenants")
-      .select("slug")
+      .select("slug, colleges(slug)")
       .eq("id", activeMem.tenant_id)
-      .maybeSingle()) as unknown as { data: { slug: string } | null };
+      .maybeSingle()) as unknown as { data: { slug: string; colleges: { slug: string } | null } | null };
     if (tenantRow?.slug) resolvedSlug = tenantRow.slug;
+    resolvedCollegeSlug = (tenantRow?.colleges as { slug: string } | null)?.slug ?? null;
 
     if (!resolvedSlug) { window.location.href = "/get-started?new=1"; return; }
 
@@ -89,7 +91,12 @@ export function SmartLoginForm({ next, slug = "", hintRole }: Props) {
     } else if (role === "kitchen_staff" || role === "kitchen") {
       window.location.href = `/c/${resolvedSlug}/kitchen/staff-select`;
     } else {
-      window.location.href = next.startsWith("/c/") ? next : `/c/${resolvedSlug}/menu`;
+      // Students → college portal (all canteens at their institution) if it exists
+      if (resolvedCollegeSlug) {
+        window.location.href = `/college/${resolvedCollegeSlug}`;
+      } else {
+        window.location.href = next.startsWith("/c/") ? next : `/c/${resolvedSlug}/menu`;
+      }
     }
   };
 

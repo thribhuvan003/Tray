@@ -304,11 +304,12 @@ export async function GET(req: NextRequest) {
 
       const { data: tenantRow } = (await supabase
         .from("tenants")
-        .select("slug")
+        .select("slug, colleges(slug)")
         .eq("id", activeMem.tenant_id)
-        .maybeSingle()) as unknown as { data: { slug: string } | null };
+        .maybeSingle()) as unknown as { data: { slug: string; colleges: { slug: string } | null } | null };
 
       const resolvedSlug = tenantRow?.slug;
+      const resolvedCollegeSlug = (tenantRow?.colleges as { slug: string } | null)?.slug ?? null;
       if (resolvedSlug) {
         const role = activeMem.role;
         if (role === "canteen_admin" || role === "super_admin") {
@@ -316,7 +317,12 @@ export async function GET(req: NextRequest) {
         } else if (role === "kitchen_staff" || role === "kitchen") {
           return NextResponse.redirect(new URL(`/c/${resolvedSlug}/kitchen/staff-select`, origin));
         } else {
-          return NextResponse.redirect(new URL(`/c/${resolvedSlug}/menu`, origin));
+          // Students go to the college portal so they see ALL canteens at their
+          // institution — one URL shared by every admin at the same campus.
+          const dest = resolvedCollegeSlug
+            ? `/college/${resolvedCollegeSlug}`
+            : `/c/${resolvedSlug}/menu`;
+          return NextResponse.redirect(new URL(dest, origin));
         }
       }
     }
