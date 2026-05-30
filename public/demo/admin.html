@@ -44,6 +44,34 @@
   --sans:'Space Grotesk',ui-sans-serif,system-ui,sans-serif;
   --mono:'Geist Mono',ui-monospace,Menlo,monospace;
 }
+html{color-scheme:light}
+html.dark{
+  color-scheme:dark;
+  --bg:#16130D;
+  --bg-2:#1C1813;
+  --bg-3:#252019;
+  --bg-4:#2E2820;
+  --bg-card:#1B1711;
+  --line:rgba(255,248,232,0.10);
+  --line-2:rgba(255,248,232,0.17);
+  --line-3:rgba(255,248,232,0.28);
+  --ink:#F3EEE2;
+  --ink-2:#C7C0B0;
+  --ink-3:#8F887A;
+  --ink-4:#78715F;
+  --lime:#cdfa50;
+  --lime-2:#b6e23f;
+  --lime-soft:rgba(205,250,80,0.12);
+  --amber:#ffb22a;
+  --amber-soft:rgba(255,178,42,0.16);
+  --rose:#ff6b6b;
+  --rose-soft:rgba(255,107,107,0.16);
+  --mint:#3fe6a3;
+  --mint-soft:rgba(63,230,163,0.16);
+  --sky:#5cb1ff;
+  --sky-soft:rgba(92,177,255,0.16);
+}
+html,body{transition:background-color .25s ease,color .25s ease}
 *,*::before,*::after{box-sizing:border-box}
 html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);-webkit-font-smoothing:antialiased;font-size:14px;line-height:1.55;font-weight:400;letter-spacing:-0.005em}
 body{overflow-x:hidden;min-height:100vh}
@@ -150,6 +178,14 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
 .btn-pri:hover{background:var(--lime-2);border-color:var(--lime-2);transform:translateY(-1px)}
 .btn-ghost{color:var(--ink);background:var(--bg-3);border-color:var(--line-2)}
 .btn-ghost:hover{background:var(--bg-4);border-color:var(--line-3)}
+.btn-icon{padding:8px;width:34px;height:34px}
+.btn-icon svg{width:16px;height:16px}
+.menu-add{display:flex;gap:8px;margin:14px 0 4px}
+.menu-add input{flex:1;min-width:0;padding:9px 12px;border-radius:7px;border:1px solid var(--line-2);background:var(--bg-2);color:var(--ink);font-family:var(--sans);font-size:13px;transition:border-color .15s}
+.menu-add input::placeholder{color:var(--ink-4)}
+.menu-add input[type=number]{flex:0 0 88px}
+.menu-add input:focus{outline:none;border-color:var(--lime)}
+.menu-add .btn{flex-shrink:0}
 
 .range-toggle{display:flex;background:var(--bg-3);border:1px solid var(--line);border-radius:7px;padding:2px;gap:1px}
 .range-toggle button{padding:6px 12px;border-radius:5px;font-family:var(--mono);font-size:11px;color:var(--ink-3);font-weight:500;letter-spacing:0.04em;transition:all .12s;font-family:inherit}
@@ -431,6 +467,10 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
           <button data-r="week">Week</button>
           <button data-r="month">Month</button>
         </div>
+        <button class="btn btn-ghost btn-icon" id="themeToggle" type="button" aria-label="Toggle dark mode" aria-pressed="false" title="Toggle light / dark">
+          <svg data-sun viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+          <svg data-moon viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        </button>
         <button class="btn btn-ghost" id="exportBtn">Export</button>
         <button class="btn btn-pri" id="manageMenuBtn">Manage menu</button>
       </div>
@@ -636,6 +676,11 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
   <div class="modal-card">
     <h3 id="menuModalTitle">Menu manager</h3>
     <div class="sub" id="menuModalSub">12 ACTIVE · LIVE SYNC</div>
+    <form class="menu-add" id="menuAddForm" autocomplete="off">
+      <input id="menuAddName" type="text" placeholder="New dish name" aria-label="New dish name" maxlength="40" required />
+      <input id="menuAddPrice" type="number" min="0" step="1" placeholder="₹" aria-label="Price" required />
+      <button class="btn btn-pri" type="submit">+ Add item</button>
+    </form>
     <div id="menuModalRows"></div>
 <div class="modal-foot">
       <button class="btn btn-ghost" id="menuModalClose">Close</button>
@@ -1451,6 +1496,71 @@ function toast(msg){
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => $('#toast').classList.remove('show'), 2200);
 }
+
+/* Theme toggle — light (default) / dark, persisted */
+(function () {
+  const t = document.getElementById('themeToggle');
+  if (!t) return;
+  const KEY = 'tray-admin-theme';
+  const sun = t.querySelector('[data-sun]');
+  const moon = t.querySelector('[data-moon]');
+  function apply(dark) {
+    document.documentElement.classList.toggle('dark', dark);
+    t.setAttribute('aria-pressed', dark ? 'true' : 'false');
+    if (sun) sun.style.display = dark ? 'none' : 'block';
+    if (moon) moon.style.display = dark ? 'block' : 'none';
+  }
+  let saved = null;
+  try { saved = localStorage.getItem(KEY); } catch (_) {}
+  apply(saved === 'dark');
+  t.addEventListener('click', function () {
+    const dark = !document.documentElement.classList.contains('dark');
+    apply(dark);
+    try { localStorage.setItem(KEY, dark ? 'dark' : 'light'); } catch (_) {}
+    toast(dark ? 'Dark theme' : 'Light theme');
+  });
+})();
+
+/* Add menu item — prepends a live row to the menu manager */
+(function () {
+  const form = document.getElementById('menuAddForm');
+  if (!form) return;
+  const escapeHtml = (s) => s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  function refreshSub() {
+    const host = $('#menuModalRows');
+    if (!host) return;
+    const total = host.querySelectorAll('.modal-row').length;
+    const live = host.querySelectorAll('.toggle.on').length;
+    const sub = $('#menuModalSub');
+    if (sub) sub.textContent = live + ' LIVE · ' + (total - live) + ' HIDDEN · ' + TD.getCanteen(currentTenantId).short;
+  }
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    const nameEl = $('#menuAddName');
+    const priceEl = $('#menuAddPrice');
+    const name = (nameEl.value || '').trim();
+    const price = parseInt(priceEl.value, 10);
+    if (!name || !(price >= 0)) return;
+    const host = $('#menuModalRows');
+    if (!host) return;
+    const row = document.createElement('div');
+    row.className = 'modal-row';
+    row.innerHTML = '<span class="nm">' + escapeHtml(name) + '</span><span class="px">₹' + price + '</span><button class="toggle on" data-on="1">LIVE</button>';
+    const tog = row.querySelector('.toggle');
+    tog.addEventListener('click', function () {
+      const on = tog.classList.toggle('on');
+      tog.textContent = on ? 'LIVE' : 'HIDDEN';
+      tog.dataset.on = on ? '1' : '0';
+      refreshSub();
+    });
+    host.insertBefore(row, host.firstChild);
+    refreshSub();
+    nameEl.value = '';
+    priceEl.value = '';
+    nameEl.focus();
+    toast(name + ' added · live');
+  });
+})();
 
 applyTenantData(currentTenantId);
 const boot = TD.getCanteen(currentTenantId);
