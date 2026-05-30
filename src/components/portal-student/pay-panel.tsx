@@ -190,12 +190,18 @@ export function PayPanel({
     return () => { if (fallbackTimerRef.current) clearTimeout(fallbackTimerRef.current); };
   }, [phase, showFallback]);
 
-  // ── Auto-verify every 15s during monitoring ────────────────────────────────
-  // Fallback for when the Razorpay webhook fails or is delayed: polls
-  // Razorpay's API server-side and calls safe_capture_payment if paid.
-  // Without this, a failed webhook leaves the student stranded indefinitely.
+  // ── Auto-verify every 15s — RAZORPAY ONLY ────────────────────────────────
+  // Polls Razorpay's API when the webhook is dropped/delayed so the student
+  // isn't stranded indefinitely.
+  //
+  // MUST NOT run for direct_upi: verifyPaymentNow on the direct_upi rail
+  // immediately marks the order "placed" with upi_unverified=true — it
+  // cannot actually check whether money moved (P2P UPI has no API). Running
+  // this interval for direct_upi would auto-place an order at t=15s even
+  // when the student never paid (just opened and closed the UPI app). The
+  // 20s "I paid" button is the only anti-fraud gate on the direct_upi path.
   useEffect(() => {
-    if (phase !== "monitoring") return;
+    if (phase !== "monitoring" || paymentMode !== "razorpay") return;
     const id = setInterval(() => {
       if (redirectedRef.current) return;
       startVerify(async () => {
@@ -205,7 +211,7 @@ export function PayPanel({
       });
     }, 15_000);
     return () => clearInterval(id);
-  }, [phase, order.id, handleDetected]);
+  }, [phase, paymentMode, order.id, handleDetected]);
 
   // ── Transition to monitoring when student opens UPI app ───────────────────
   // FRAUD FIX: Do NOT call verifyPaymentNow here. Previously this fired
