@@ -6,6 +6,7 @@ import { DeleteItemButton } from "@/components/portal-admin/delete-item-button";
 import type { MenuItem } from "@/lib/db/types";
 import { requireTenantContext } from "@/lib/tenant";
 import { ImageUploadField } from "@/components/portal-admin/image-upload-field";
+import { CategorySelect } from "@/components/portal-admin/category-select";
 
 export const dynamic = "force-dynamic";
 
@@ -175,19 +176,11 @@ export default async function EditMenuItemPage({ params }: Props) {
           <label className="block text-[13px] font-medium text-admin-ink-2 mb-1" htmlFor="category_id">
             Category
           </label>
-          <select
-            id="category_id"
+          <CategorySelect
             name="category_id"
+            categories={cats ?? []}
             defaultValue={item.category_id ?? ""}
-            className="w-full rounded-lg border border-admin-line-2 bg-admin-bg-card px-3 py-2 text-[14px] text-admin-ink focus:outline-none focus:ring-2 focus:ring-admin-lime-soft focus:border-admin-lime"
-          >
-            <option value="">No category</option>
-            {(cats ?? []).map((cat) => (
-              <option key={cat.id} value={cat.id}>
-                {cat.name}
-              </option>
-            ))}
-          </select>
+          />
           {(!cats || cats.length === 0) && (
             <p className="mt-1 text-[12px] text-admin-ink-3">
               No categories yet — add them in the <span className="font-medium">Categories</span> tab on the Menu page, then pick one here.
