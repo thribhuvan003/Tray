@@ -521,21 +521,6 @@ export function HoverCard({
   className,
   style,
 }: { children: ReactNode; className?: string; style?: React.CSSProperties }) {
-  const [tilt, setTilt] = useState({ rotateX: 0, rotateY: 0 });
-  const [coords, setCoords] = useState({ x: 0, y: 0 });
-  const [isHovered, setIsHovered] = useState(false);
-
-  const handleMouse = (e: React.MouseEvent<HTMLDivElement>) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = (e.clientX - rect.left);
-    const y = (e.clientY - rect.top);
-    setCoords({ x, y });
-
-    const rx = (x / rect.width - 0.5);
-    const ry = (y / rect.height - 0.5);
-    setTilt({ rotateX: -ry * 7, rotateY: rx * 7 });
-  };
-
   return (
     <motion.div
       variants={cardReveal}
@@ -545,29 +530,12 @@ export function HoverCard({
         boxShadow: "0 32px 80px rgba(26,22,20,0.18)",
         transition: { duration: 0.28, ease: tm.ease },
       }}
-      animate={{ rotateX: tilt.rotateX, rotateY: tilt.rotateY }}
-      onMouseMove={handleMouse}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => {
-        setTilt({ rotateX: 0, rotateY: 0 });
-        setIsHovered(false);
-      }}
       whileTap={{ scale: 0.98 }}
       transition={{ duration: tm.fast, ease: tm.ease }}
       className={className}
       style={{ ...style, transformStyle: "preserve-3d", position: "relative", overflow: "hidden" }}
     >
-      {/* Dynamic Cursor Spotlight Reveal */}
-      {isHovered && (
-        <div
-          className="pointer-events-none absolute inset-0 transition-opacity duration-300"
-          style={{
-            background: `radial-gradient(160px circle at ${coords.x}px ${coords.y}px, rgba(230, 0, 0, 0.12), transparent 80%)`,
-            zIndex: 0,
-          }}
-        />
-      )}
-      {/* Content Container to sit above spotlight overlay */}
+      {/* Content Container */}
       <div className="relative z-10 w-full h-full flex flex-col justify-between">
         {children}
       </div>

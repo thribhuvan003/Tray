@@ -101,42 +101,10 @@ function InteractivePortalCard({ portal, idx, portalRefs }: InteractivePortalCar
 
   const cardRef = useRef<HTMLDivElement>(null);
 
-  const x = useMotionValue(0);
-  const y = useMotionValue(0);
   const hoverProgress = useMotionValue(0);
 
   const springConfig = { stiffness: 120, damping: 20, mass: 0.6 };
-  const springX = useSpring(x, springConfig);
-  const springY = useSpring(y, springConfig);
 
-  const rotateX = useTransform(springY, [-0.5, 0.5], [8, -8]);
-  const rotateY = useTransform(springX, [-0.5, 0.5], [-8, 8]);
-
-  const spotlightX = useTransform(springX, [-0.5, 0.5], [0, 100]);
-  const spotlightY = useTransform(springY, [-0.5, 0.5], [0, 100]);
-
-  const spotlightBg = useTransform(
-    [spotlightX, spotlightY],
-    ([sx, sy]) => {
-      let spotlightColor = "rgba(255, 255, 255, 0.12)";
-      if (portal.accentColor === "#5cb1ff") {
-        spotlightColor = "rgba(92, 177, 255, 0.15)";
-      } else if (portal.accentColor === "#ef5749") {
-        spotlightColor = "rgba(239, 87, 73, 0.12)";
-      } else if (portal.accentColor === "#cdfa50") {
-        spotlightColor = "rgba(205, 250, 80, 0.18)";
-      }
-      return `radial-gradient(circle 240px at ${sx}% ${sy}%, ${spotlightColor}, transparent 80%)`;
-    }
-  );
-
-  const glareX = useTransform(springX, [-0.5, 0.5], [-60, 60]);
-  const glareXStr = useTransform(glareX, (v) => `${v}%`);
-  const glareY = useTransform(springY, [-0.5, 0.5], [-60, 60]);
-  const glareYStr = useTransform(glareY, (v) => `${v}%`);
-
-  const spotlightOpacity = useSpring(hoverProgress, { stiffness: 150, damping: 25 });
-  const glareOpacity = useSpring(useTransform(hoverProgress, [0, 1], [0, 0.18]), { stiffness: 150, damping: 25 });
   const scale = useSpring(useTransform(hoverProgress, [0, 1], [1, 1.025]), springConfig);
   const shadow = useTransform(
     hoverProgress,
@@ -147,27 +115,12 @@ function InteractivePortalCard({ portal, idx, portalRefs }: InteractivePortalCar
     ]
   );
 
-  const textParallaxX = useTransform(springX, [-0.5, 0.5], [-5, 5]);
-  const textParallaxY = useTransform(springY, [-0.5, 0.5], [-5, 5]);
-
-  const mediaParallaxX = useTransform(springX, [-0.5, 0.5], [-8, 8]);
-  const mediaParallaxY = useTransform(springY, [-0.5, 0.5], [-8, 8]);
-
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+  const handleMouseEnter = () => {
     if (isReducedMotion) return;
-    const rect = e.currentTarget.getBoundingClientRect();
-    const width = rect.width;
-    const height = rect.height;
-    const relativeX = (e.clientX - rect.left) / width - 0.5;
-    const relativeY = (e.clientY - rect.top) / height - 0.5;
-    x.set(relativeX);
-    y.set(relativeY);
     hoverProgress.set(1);
   };
 
   const handleMouseLeave = () => {
-    x.set(0);
-    y.set(0);
     hoverProgress.set(0);
   };
 
@@ -199,13 +152,10 @@ function InteractivePortalCard({ portal, idx, portalRefs }: InteractivePortalCar
 
   const style = shouldAnimate
     ? {
-        rotateX,
-        rotateY,
         scale,
         boxShadow: shadow,
         backgroundColor: bgGlow,
         borderColor: borderColorGlow,
-        transformStyle: "preserve-3d" as const,
       }
     : {};
 
@@ -213,56 +163,19 @@ function InteractivePortalCard({ portal, idx, portalRefs }: InteractivePortalCar
     <div className="block h-full flex-1 cursor-pointer" onClick={() => window.open(portal.previewSrc, "_blank", "noopener,noreferrer")} role="link" tabIndex={0} style={{ textDecoration: "none" }}>
     <motion.article
       ref={cardRef}
-      onMouseMove={handleMouseMove}
+      onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       data-portal-card
       className="motion-card group relative flex flex-col select-none rounded-[18px] overflow-hidden border border-[var(--tray-border,rgba(26,26,25,0.12))] bg-white h-full flex-1 transition-colors duration-300 cursor-pointer"
       style={style}
     >
-      {/* Spotlight glow overlay */}
-      {shouldAnimate && (
-        <motion.div
-          className="absolute inset-0 pointer-events-none z-20"
-          style={{
-            background: spotlightBg,
-            opacity: spotlightOpacity,
-            z: 30,
-          }}
-        />
-      )}
-
-      {/* Diagonal Glare reflection line */}
-      {shouldAnimate && (
-        <motion.div
-          className="absolute inset-0 pointer-events-none z-30 mix-blend-overlay"
-          style={{
-            background:
-              "linear-gradient(115deg, transparent 40%, rgba(255,255,255,0.7) 48%, rgba(255,255,255,0.9) 50%, rgba(255,255,255,0.7) 52%, transparent 60%)",
-            x: glareXStr,
-            y: glareYStr,
-            opacity: glareOpacity,
-            z: 40,
-          }}
-        />
-      )}
-
       {/* Portal Head — eyebrow + title */}
       <motion.div
         className="flex flex-col gap-2.5 z-10"
-        style={
-          shouldAnimate
-            ? {
-                padding: "24px 24px 20px",
-                borderBottom: "1px solid var(--tray-border, rgba(26, 26, 25, 0.12))",
-                x: textParallaxX,
-                y: textParallaxY,
-                z: 15,
-              }
-            : {
-                padding: "24px 24px 20px",
-                borderBottom: "1px solid var(--tray-border, rgba(26, 26, 25, 0.12))",
-              }
-        }
+        style={{
+          padding: "24px 24px 20px",
+          borderBottom: "1px solid var(--tray-border, rgba(26, 26, 25, 0.12))",
+        }}
       >
         <div className="flex justify-between items-center text-[10.5px] font-medium tracking-[0.14em]">
           <span className="flex items-center gap-2" style={{ fontFamily: "var(--font-geist-mono, monospace)", color: "var(--tray-muted, #78716C)" }}>
@@ -291,18 +204,7 @@ function InteractivePortalCard({ portal, idx, portalRefs }: InteractivePortalCar
       </motion.div>
 
       {/* Portal Frame — iframe preview */}
-      <motion.div
-        className="z-10"
-        style={
-          shouldAnimate
-            ? {
-                x: mediaParallaxX,
-                y: mediaParallaxY,
-                z: 25,
-              }
-            : {}
-        }
-      >
+      <motion.div className="z-10">
         <div
           ref={(el) => {
             portalRefs.current[idx] = el;
@@ -381,16 +283,7 @@ function InteractivePortalCard({ portal, idx, portalRefs }: InteractivePortalCar
       {/* Portal Body — description + footer */}
       <motion.div
         className="flex flex-col gap-4 flex-1 z-10"
-        style={
-          shouldAnimate
-            ? {
-                padding: "20px 24px 24px",
-                x: textParallaxX,
-                y: textParallaxY,
-                z: 15,
-              }
-            : { padding: "20px 24px 24px" }
-        }
+        style={{ padding: "20px 24px 24px" }}
       >
         <p
           className="text-[13.5px] leading-relaxed m-0 opacity-80"
