@@ -4,6 +4,7 @@ import { getAdminClient } from "@/lib/supabase/admin";
 import { env } from "@/lib/env";
 import { logger, withRequestContext } from "@/lib/logging";
 import { rateLimit } from "@/lib/rate-limit";
+import { notifyAdminNewOrder } from "@/lib/notifications/sms";
 
 type RazorpayEvent = {
   event: string;
@@ -156,6 +157,8 @@ export async function POST(req: NextRequest) {
         });
       } else if (captureResult === "captured") {
         tenantLog.info("order transitioned via webhook (row-locked capture)", { result: captureResult, latency_ms: Date.now() - start });
+        // Fire SMS to admin — fire-and-forget, never blocks webhook ack
+        void notifyAdminNewOrder(orderRow.id, orderRow.tenant_id);
       } else {
         tenantLog.info("webhook capture no-op", { result: captureResult });
       }
