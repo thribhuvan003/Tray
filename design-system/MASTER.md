@@ -114,15 +114,3 @@
 | `docs/design-system-figma.md` | Figma variable map |
 | `docs/landing-design-options.md` | Palette/font/motion options |
 | `docs/DEMO-SPEC.md` | Demo QA bar |
-
----
-
-## Regenerating from ui-ux-pro-max (when script available)
-
-```bash
-python "%USERPROFILE%\.claude\skills\ui-ux-pro-max\scripts\search.py" \
-  "college canteen campus food ordering SaaS dark landing" \
-  --design-system -p "Tray" -f markdown --persist --page "landing"
-```
-
-Supplement domains: `ux`, `color`, `typography` with `-n 5`.
