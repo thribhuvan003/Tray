@@ -52,10 +52,14 @@ export function SmartLoginForm({ next, slug = "", hintRole }: Props) {
     const memberships = (membershipsRaw ?? []) as { tenant_id: string; role: string }[];
 
     if (!memberships.length) {
-      if (hintRole === "owner" || hintRole === "admin") {
-        window.location.href = "/get-started?new=1";
+      // Any hint toward owner/admin, or no hint at all (plain login) — send to get-started
+      // rather than showing "No account found" which causes a redirect loop for admins
+      // who signed up but whose membership wasn't cached yet.
+      if (hintRole === "kitchen") {
+        window.location.href = `/login?error=${encodeURIComponent("No kitchen staff account found. Ask your canteen admin to add you.")}`;
       } else {
-        window.location.href = `/login?error=${encodeURIComponent("No account found. If you own a canteen, click 'Get started' below.")}`;
+        // Default for owners, admins, students with no membership, or unknown role
+        window.location.href = "/get-started?new=1";
       }
       return;
     }

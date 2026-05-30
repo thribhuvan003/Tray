@@ -130,62 +130,14 @@ export async function GET(req: NextRequest) {
   const tenant = tenantSlug ? await resolveTenant(tenantSlug) : null;
   const { data: { session: _cbSession } } = await supabase.auth.getSession();
   const u = { user: _cbSession?.user ?? null };
-  if (tenant && u.user) {
-    // Domain restriction is intentionally NOT enforced here.
-    // Any email — personal, work, college — can sign in.
-    // Canteen owners who want email-domain gating can enable it later via
-    // an explicit settings toggle (stored in a separate column), but that
-    // feature is not yet exposed in the admin UI. Removing this check
-    // unblocks every real user currently seeing "restricted to @aec.edu.in".
-    try {
-      const admin = getAdminClient(tenant.id);
-      const { data: existing } = await admin
-        .from("tenant_memberships")
-        .select("role")
-        .eq("user_id", u.user.id)
-        .eq("tenant_id", tenant.id)
-        .maybeSingle();
-
-      if (!existing) {
-        if (!isSignup) {
-          // Block unauthorized login for non-members
-          await supabase.auth.signOut();
-          const msg = encodeURIComponent("No account found with this email. Please create an account first.");
-          return NextResponse.redirect(new URL(`/c/${tenant.slug}/login?error=${msg}`, origin));
-        }
-
-        // Safe to create account/membership on explicit signup flow
-        await admin
-          .from("tenant_memberships")
-          .insert({
-            user_id: u.user.id,
-            tenant_id: tenant.id,
-            role: "student",
-            display_name: (u.user.user_metadata?.display_name as string | undefined) ?? null,
-            is_active: true,
-          });
-      } else {
-        await admin
-          .from("tenant_memberships")
-          .update({
-            display_name: (u.user.user_metadata?.display_name as string | undefined) ?? null,
-            is_active: true,
-          })
-          .eq("user_id", u.user.id)
-          .eq("tenant_id", tenant.id);
-      }
-    } catch (err) {
-      logger.error("auth callback role creation/update failed", err, {
-        user_id: u.user.id,
-        tenant_id: tenant.id,
-      });
-    }
-  }
 
   if (u.user) {
-    // Step 1 — domain-restricted auto-enroll: enrolls users whose email
-    // domain matches colleges.allowed_domains[]. Colleges with an empty
-    // allowed_domains array are intentionally skipped by this RPC.
+    // ── ENROLLMENT FIRST ─────────────────────────────────────────────────────
+    // These MUST run before the tenant-specific membership check below.
+    // Previously the order was reversed: the check fired before enrollment,
+    // signing out first-time students and looping them back to the login page.
+    //
+    // Step 1 — domain-restricted auto-enroll
     const { error: enrollError } = await supabase.rpc("auto_enroll_student");
     if (enrollError) {
       logger.error("auth callback auto_enroll_student failed", enrollError, {
@@ -194,19 +146,60 @@ export async function GET(req: NextRequest) {
       });
     }
 
-    // Step 2 — open-access enroll: enrolls users in every tenant whose parent
-    // college has allowed_domains = '{}' (no restriction). This covers hotels,
-    // standalone canteens, corporate campuses, and any institution that accepts
-    // any authenticated user without email-domain gating.
-    //
-    // Skip for explicit staff/owner login roles: a brand-new kitchen staff or
-    // owner account has no memberships yet, so the staffCount guard inside
-    // ensureStudentEnrolled returns 0 and incorrectly auto-enrolls them as
-    // students in open-access canteens. That prevents the count===0 branch
-    // below from firing the correct "no staff account" error message — the user
-    // ends up silently routed to a random student menu instead.
+    // Step 2 — open-access enroll (allowed_domains = '{}')
+    // Skip for explicit staff/owner flows so the count===0 branch below can
+    // fire the correct error message instead of silently enrolling them as students.
     if (loginRole !== "kitchen" && loginRole !== "owner") {
       await ensureStudentEnrolled(u.user.id);
+    }
+
+    // ── TENANT-SPECIFIC MEMBERSHIP CHECK ──────────────────────────────────────
+    // Now that enrollment has run, open-access students are already enrolled.
+    // We only need to handle the signup (explicit account creation) case and
+    // update display names. We NO LONGER sign out non-members here — that was
+    // the root cause of the redirect loop: a first-time student visiting a canteen
+    // URL via email link got signed out before enrollment ran, then looped.
+    if (tenant) {
+      try {
+        const admin = getAdminClient(tenant.id);
+        const { data: existing } = await admin
+          .from("tenant_memberships")
+          .select("role")
+          .eq("user_id", u.user.id)
+          .eq("tenant_id", tenant.id)
+          .maybeSingle();
+
+        if (!existing && isSignup) {
+          // Explicit signup: create the membership
+          await admin
+            .from("tenant_memberships")
+            .insert({
+              user_id: u.user.id,
+              tenant_id: tenant.id,
+              role: "student",
+              display_name: (u.user.user_metadata?.display_name as string | undefined) ?? null,
+              is_active: true,
+            });
+        } else if (existing) {
+          // Keep display name fresh on every login
+          await admin
+            .from("tenant_memberships")
+            .update({
+              display_name: (u.user.user_metadata?.display_name as string | undefined) ?? null,
+              is_active: true,
+            })
+            .eq("user_id", u.user.id)
+            .eq("tenant_id", tenant.id);
+        }
+        // If !existing && !isSignup: enrollment didn't create a membership for this
+        // tenant (e.g. a student from college A landed on college B's canteen URL).
+        // Don't sign them out — let smart routing below send them to their own canteen.
+      } catch (err) {
+        logger.error("auth callback role creation/update failed", err, {
+          user_id: u.user.id,
+          tenant_id: tenant.id,
+        });
+      }
     }
 
     // Check membership count. If zero after both enrollment passes, the user
