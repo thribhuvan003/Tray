@@ -160,7 +160,7 @@ export function LandingMotion() {
           });
 
           // ═══════════════════════════════════════════════════════════════
-          // 3. PORTALS — heading parallax + mouse tilt only
+          // 3. PORTALS — heading parallax
           // ═══════════════════════════════════════════════════════════════
           const portalSection = root.querySelector<HTMLElement>("#portals");
           if (portalSection) {
@@ -171,24 +171,6 @@ export function LandingMotion() {
                 scrollTrigger: { trigger: portalSection, start: "top bottom", end: "bottom top", scrub: 2 },
               });
             }
-
-            root.querySelectorAll<HTMLElement>("[data-portal-card]").forEach((card) => {
-              const onMove = (e: MouseEvent) => {
-                const r = card.getBoundingClientRect();
-                const nx = ((e.clientX - r.left) / r.width - 0.5) * 2;
-                const ny = ((e.clientY - r.top) / r.height - 0.5) * 2;
-                gsap.to(card, { rotateY: nx * 8, rotateX: -ny * 6, scale: 1.025, transformPerspective: 900, duration: 0.4, ease: "power2.out" });
-              };
-              const onLeave = () => {
-                gsap.to(card, { rotateX: 0, rotateY: 0, scale: 1, duration: 0.65, ease: "power3.out" });
-              };
-              card.addEventListener("mousemove", onMove);
-              card.addEventListener("mouseleave", onLeave);
-              tiltCleanups.push(() => {
-                card.removeEventListener("mousemove", onMove);
-                card.removeEventListener("mouseleave", onLeave);
-              });
-            });
           }
 
           // ═══════════════════════════════════════════════════════════════
@@ -352,29 +334,6 @@ export function LandingMotion() {
                   // would re-hide the card the moment GSAP's inline style is removed.
                   onComplete: () => {
                     card.classList.add("tl-stack-revealed");
-                    // Add cursor-proximity tilt after reveal — card responds to mouse
-                    const onMove = (e: MouseEvent) => {
-                      const r = card.getBoundingClientRect();
-                      const nx = ((e.clientX - r.left) / r.width - 0.5) * 2;
-                      const ny = ((e.clientY - r.top) / r.height - 0.5) * 2;
-                      gsap.to(card, {
-                        rotateY: nx * 10,
-                        rotateX: -ny * 7,
-                        scale: 1.04,
-                        transformPerspective: 700,
-                        duration: 0.3,
-                        ease: "power2.out",
-                      });
-                    };
-                    const onLeave = () => {
-                      gsap.to(card, { rotateX: 0, rotateY: 0, scale: 1, duration: 0.5, ease: "power3.out" });
-                    };
-                    card.addEventListener("mousemove", onMove);
-                    card.addEventListener("mouseleave", onLeave);
-                    tiltCleanups.push(() => {
-                      card.removeEventListener("mousemove", onMove);
-                      card.removeEventListener("mouseleave", onLeave);
-                    });
                   },
                   clearProps: "transform,opacity",
                   scrollTrigger: {
@@ -436,30 +395,6 @@ export function LandingMotion() {
           if (footerMark) gsap.from(footerMark, { scrollTrigger: { trigger: "footer", start: "top 95%" }, opacity: 0, scale: 0.94, duration: 1.5, ease: "power3.out" });
           const footerLinks = root.querySelectorAll<HTMLElement>("footer li, footer .tl-footer-link-item");
           if (footerLinks.length) gsap.from(footerLinks, { scrollTrigger: { trigger: "footer", start: "top 92%" }, y: 20, opacity: 0, stagger: 0.04, duration: 0.8, ease: "power3.out" });
-
-          // ═══════════════════════════════════════════════════════════════
-          // 13. MAGNETIC BUTTONS
-          // ═══════════════════════════════════════════════════════════════
-          root.querySelectorAll<HTMLElement>("[data-magnetic]").forEach((btn) => {
-            const innerText = btn.querySelector("span, .liquid-btn-text") as HTMLElement | null;
-            const onMove = (e: MouseEvent) => {
-              const r = btn.getBoundingClientRect();
-              const dx = (e.clientX - (r.left + r.width / 2)) * 0.28;
-              const dy = (e.clientY - (r.top + r.height / 2)) * 0.28;
-              gsap.to(btn, { x: dx, y: dy, duration: 0.42, ease: "power2.out" });
-              if (innerText) gsap.to(innerText, { x: dx * 0.15, y: dy * 0.15, duration: 0.42, ease: "power2.out" });
-            };
-            const onLeave = () => {
-              gsap.to(btn, { x: 0, y: 0, duration: 0.7, ease: "elastic.out(1, 0.4)" });
-              if (innerText) gsap.to(innerText, { x: 0, y: 0, duration: 0.7, ease: "elastic.out(1, 0.4)" });
-            };
-            btn.addEventListener("mousemove", onMove);
-            btn.addEventListener("mouseleave", onLeave);
-            tiltCleanups.push(() => {
-              btn.removeEventListener("mousemove", onMove);
-              btn.removeEventListener("mouseleave", onLeave);
-            });
-          });
 
           // ═══════════════════════════════════════════════════════════════
           // 14. SECTION EYEBROW DIVIDER LINE DRAW

@@ -5,7 +5,7 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
 import { motion } from "framer-motion";
-import { prefersReducedMotion, registerTrayGsap, magneticButton } from "@/lib/motion/tray-motion";
+import { prefersReducedMotion, registerTrayGsap } from "@/lib/motion/tray-motion";
 import {
   MotionCTA,
   OrderJourneyVisual,
@@ -52,7 +52,6 @@ export function TrayHero() {
 
       const blobA = blobRef.current?.querySelector("[data-blob-a]") as HTMLElement;
       const blobB = blobRef.current?.querySelector("[data-blob-b]") as HTMLElement;
-      const buttons = document.querySelectorAll("[data-magnetic]");
 
       if (blobA) {
         gsap.to(blobA, { y: -120, scrollTrigger: { trigger: blobRef.current, start: "top top", end: "bottom top", scrub: 1.4 } });
@@ -76,11 +75,6 @@ export function TrayHero() {
           ease: "sine.inOut",
         });
       }
-
-      const cleanups = Array.from(buttons).map((btn) => magneticButton(btn as HTMLElement));
-      return () => {
-        cleanups.forEach((c) => c());
-      };
     },
     { scope: blobRef }
   );
@@ -191,7 +185,6 @@ export function TrayHero() {
                 See how it works
               </LiquidButton>
               <MotionCTA
-                data-magnetic
                 href="/get-started"
                 variant="secondary"
                 className="w-full sm:w-auto rounded-full border-2 border-[var(--tray-border)] px-9 py-4 sm:py-4.5 text-[1rem] font-bold tracking-tight transition hover:bg-white/40 shadow-md hover:shadow-lg duration-300 text-center"

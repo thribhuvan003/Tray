@@ -92,7 +92,7 @@ export function LiquidButton({ href, children, icon, className, style }: LiquidB
           100% { transform: translateX(24px); }
         }
       `}} />
-      <Link href={href} className={`liquid-btn ${className || ""}`} style={style} data-magnetic>
+      <Link href={href} className={`liquid-btn ${className || ""}`} style={style}>
         <span className="liquid-btn-text">{children}</span>
         <div className="liquid-btn-wave">
           <svg viewBox="0 0 120 28" className="liquid-wave-svg liquid-wave-1" preserveAspectRatio="none">
