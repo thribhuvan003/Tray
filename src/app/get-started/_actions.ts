@@ -144,24 +144,46 @@ export async function createInstitution(
     userId = authData.user.id;
   }
 
-  // ── 3. Create college ────────────────────────────────────────────────────────
-  // allowed_domains is always empty — any email is accepted by default.
-  // Domain restriction is opt-in only, configurable later via admin settings.
-  const { data: college, error: collegeError } = await admin
-    .from("colleges")
-    .insert({
-      name: form.institutionName,
-      slug: collegeSlug,
-      city: form.city || null,
-      allowed_domains: [],
-      is_active: true,
-    })
-    .select("id")
-    .single();
+  // ── 3. Resolve or create college ────────────────────────────────────────────
+  // If a college with the same institution name already exists, reuse it so
+  // that multiple canteens at the same campus share one college row. Without
+  // this, each canteen wizard run creates a separate college row, which breaks
+  // the multi-canteen switcher in the student menu (collegeCanteens() returns
+  // siblings by college_id — different IDs → no siblings → no switcher).
+  let college: { id: string };
 
-  if (collegeError || !college) {
-    if (!userAlreadyExisted) await admin.auth.admin.deleteUser(userId);
-    return { ok: false, error: collegeError?.message ?? "Failed to create institution" };
+  const { data: existingCollege } = await admin
+    .from("colleges")
+    .select("id")
+    .ilike("name", form.institutionName.trim())
+    .eq("is_active", true)
+    .limit(1)
+    .maybeSingle<{ id: string }>();
+
+  if (existingCollege) {
+    college = existingCollege;
+    logger.info("createInstitution: reusing existing college", {
+      college_id: existingCollege.id,
+      institution: form.institutionName,
+    });
+  } else {
+    const { data: newCollege, error: collegeError } = await admin
+      .from("colleges")
+      .insert({
+        name: form.institutionName,
+        slug: collegeSlug,
+        city: form.city || null,
+        allowed_domains: [],
+        is_active: true,
+      })
+      .select("id")
+      .single<{ id: string }>();
+
+    if (collegeError || !newCollege) {
+      if (!userAlreadyExisted) await admin.auth.admin.deleteUser(userId);
+      return { ok: false, error: collegeError?.message ?? "Failed to create institution" };
+    }
+    college = newCollege;
   }
 
   // ── 4. Create first tenant (canteen) ─────────────────────────────────────────
