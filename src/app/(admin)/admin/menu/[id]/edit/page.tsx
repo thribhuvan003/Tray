@@ -7,6 +7,7 @@ import type { MenuItem } from "@/lib/db/types";
 import { requireTenantContext } from "@/lib/tenant";
 import { ImageUploadField } from "@/components/portal-admin/image-upload-field";
 import { CategorySelect } from "@/components/portal-admin/category-select";
+import { AdminSelect } from "@/components/portal-admin/admin-select";
 
 export const dynamic = "force-dynamic";
 
@@ -229,16 +230,16 @@ export default async function EditMenuItemPage({ params }: Props) {
           <label className="block text-[13px] font-medium text-admin-ink-2 mb-1" htmlFor="status">
             Status
           </label>
-          <select
-            id="status"
+          <AdminSelect
             name="status"
             defaultValue={item.status}
-            className="w-full rounded-lg border border-admin-line-2 bg-admin-bg-card px-3 py-2 text-[14px] text-admin-ink focus:outline-none focus:ring-2 focus:ring-admin-lime-soft focus:border-admin-lime"
-          >
-            <option value="draft">Draft</option>
-            <option value="live">Live</option>
-            <option value="archived">Archived</option>
-          </select>
+            ariaLabel="Status"
+            options={[
+              { value: "draft", label: "Draft" },
+              { value: "live", label: "Live" },
+              { value: "archived", label: "Archived" },
+            ]}
+          />
         </div>
 
         {/* In stock */}
