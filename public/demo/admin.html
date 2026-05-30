@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
@@ -1512,7 +1512,9 @@ function toast(msg){
   }
   let saved = null;
   try { saved = localStorage.getItem(KEY); } catch (_) {}
-  apply(saved === 'dark');
+  // Default to dark (premium first impression on the landing preview); only
+  // go light if the visitor explicitly chose it.
+  apply(saved !== 'light');
   t.addEventListener('click', function () {
     const dark = !document.documentElement.classList.contains('dark');
     apply(dark);
