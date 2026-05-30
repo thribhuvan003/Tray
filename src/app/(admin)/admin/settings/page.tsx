@@ -29,10 +29,10 @@ export default async function SettingsPage() {
   const admin = getAdminClient(tenant.id);
   const { data: tenantRow } = await admin
     .from("tenants")
-    .select("is_open, opens_at, closes_at, paused_until, guest_orders_enabled, upi_vpa, payment_mode")
+    .select("is_open, opens_at, closes_at, paused_until, guest_orders_enabled, upi_vpa, payment_mode, admin_phone")
     .eq("id", tenant.id)
     .single<
-      Pick<Tenant, "is_open" | "opens_at" | "closes_at" | "paused_until" | "guest_orders_enabled" | "upi_vpa"> & { payment_mode?: string }
+      Pick<Tenant, "is_open" | "opens_at" | "closes_at" | "paused_until" | "guest_orders_enabled" | "upi_vpa"> & { payment_mode?: string; admin_phone?: string | null }
     >();
 
   const row = tenantRow ?? {
@@ -43,6 +43,7 @@ export default async function SettingsPage() {
     guest_orders_enabled: false,
     upi_vpa: null,
     payment_mode: "direct_upi" as string,
+    admin_phone: null,
   };
   const currentPaymentMode = (row as any).payment_mode === "razorpay" ? "razorpay" : "direct_upi";
 
@@ -88,6 +89,7 @@ export default async function SettingsPage() {
     const guestOrdersEnabled = fd.get("guest_orders_enabled") === "on";
     const rawVpa = (fd.get("upi_vpa") as string | null)?.trim() || null;
     const vpaVerified = fd.get("upi_vpa_verified") === "1";
+    const adminPhone = (fd.get("admin_phone") as string | null)?.trim() || null;
 
     // Only format-check the VPA — no Razorpay API call required.
     // The Verify button in the UI is a convenience check, not a hard gate.
@@ -99,7 +101,7 @@ export default async function SettingsPage() {
     }
     void vpaVerified; // no longer a hard gate
     const paymentMode = (fd.get("payment_mode") as string | null) === "razorpay" ? "razorpay" : "direct_upi";
-    await updateCanteenSettings({ guestOrdersEnabled, upiVpa: rawVpa, paymentMode });
+    await updateCanteenSettings({ guestOrdersEnabled, upiVpa: rawVpa, paymentMode, adminPhone });
   }
 
   return (
@@ -268,6 +270,25 @@ export default async function SettingsPage() {
                 React keeps the stale input value even after the page re-renders
                 with the new data from the server action. */}
             <UpiVpaField key={row.upi_vpa ?? "__no_upi__"} currentVpa={row.upi_vpa} />
+
+            {/* Admin SMS notifications */}
+            <div className="border-t border-graphite-200/10 pt-4">
+              <p className="text-[11px] font-mono uppercase tracking-[0.1em] text-graphite-400 mb-1">
+                Admin phone (SMS alerts)
+              </p>
+              <p className="text-[11px] text-graphite-500 mb-3">
+                Enter your mobile number to receive an SMS when a new order arrives.
+                Requires Twilio — leave blank to disable.
+              </p>
+              <input
+                type="tel"
+                name="admin_phone"
+                defaultValue={(row as any).admin_phone ?? ""}
+                placeholder="9876543210"
+                autoComplete="tel"
+                className="h-9 px-3 rounded-md border border-graphite-200/15 bg-graphite-700/60 text-[13px] text-graphite-200 placeholder-graphite-500 focus:outline-none focus:border-lime/60 transition-colors w-full max-w-xs"
+              />
+            </div>
 
             {/* Payment Mode selector */}
             <div className="border-t border-graphite-200/10 pt-4">

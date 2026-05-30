@@ -12,6 +12,7 @@ import { requireTenantContext, requireTenantContextForJob } from "@/lib/tenant";
 import { tenantRateLimit } from "@/lib/rate-limit/tenant";
 import type { Diet, OrderType } from "@/lib/db/types";
 import crypto from "crypto";
+import { notifyAdminNewOrder } from "@/lib/notifications/sms";
 
 // Stable, order-independent hash of the exact cart for the idempotency key.
 // Prevents two slightly-reordered identical carts from creating duplicate orders.
@@ -770,6 +771,8 @@ export async function verifyPaymentNow(orderId: string): Promise<VerifyResult> {
         note: "UPI payment claimed by student (UNVERIFIED — staff must confirm in UPI app)",
       });
       log.warn("UPI-trust order placed — staff verification required", { order_id: orderId });
+      // Fire SMS to admin — fire-and-forget, never blocks the student flow
+      void notifyAdminNewOrder(orderId, tenant.id);
     }
 
     const success: VerifyResult = { status: "paid" };
