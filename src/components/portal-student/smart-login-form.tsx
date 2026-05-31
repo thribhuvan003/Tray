@@ -151,7 +151,7 @@ export function SmartLoginForm({ next, slug = "", hintRole }: Props) {
         onClick={onGoogleSignIn}
         disabled={pending}
         className={cn(
-          "w-full h-12 rounded-xl border border-[color:var(--color-line)] bg-[color:var(--color-paper)] text-[14px] font-medium inline-flex items-center justify-center gap-2.5 transition-colors select-none",
+          "w-full h-12 rounded-xl border border-[color:var(--color-line)] bg-[color:var(--color-paper)] text-[color:var(--color-ink)] text-[14px] font-medium inline-flex items-center justify-center gap-2.5 transition-colors select-none",
           pending
             ? "cursor-wait opacity-60"
             : "cursor-pointer hover:border-[color:var(--color-ocean-500)]/50 hover:bg-[color:var(--color-ocean-500)]/5"
@@ -195,7 +195,7 @@ export function SmartLoginForm({ next, slug = "", hintRole }: Props) {
           onChange={e => setEmail(e.target.value)}
           autoComplete="email"
           placeholder="you@example.com"
-          className="w-full h-12 px-4 rounded-xl border border-[color:var(--color-line)] bg-[color:var(--color-paper)] text-[14px] focus:outline-none focus:border-[color:var(--color-ocean-500)] transition-colors"
+          className="w-full h-12 px-4 rounded-xl border border-[color:var(--color-line)] bg-[color:var(--color-paper)] text-[color:var(--color-ink)] placeholder:text-[color:var(--color-ink)]/40 text-[14px] focus:outline-none focus:border-[color:var(--color-ocean-500)] transition-colors"
         />
       </label>
 
@@ -209,7 +209,7 @@ export function SmartLoginForm({ next, slug = "", hintRole }: Props) {
           onChange={e => setPassword(e.target.value)}
           autoComplete="current-password"
           placeholder="Password"
-          className="w-full h-12 px-4 rounded-xl border border-[color:var(--color-line)] bg-[color:var(--color-paper)] text-[14px] focus:outline-none focus:border-[color:var(--color-ocean-500)] transition-colors"
+          className="w-full h-12 px-4 rounded-xl border border-[color:var(--color-line)] bg-[color:var(--color-paper)] text-[color:var(--color-ink)] placeholder:text-[color:var(--color-ink)]/40 text-[14px] focus:outline-none focus:border-[color:var(--color-ocean-500)] transition-colors"
         />
       </label>
 

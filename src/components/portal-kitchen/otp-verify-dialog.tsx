@@ -130,7 +130,7 @@ export function OtpVerifyDialog({
                   value={digits[i]}
                   onChange={(e) => change(i, e.target.value)}
                   onKeyDown={(e) => onKeyDown(i, e)}
-                  className="h-16 w-full text-center font-mono tabular text-[32px] font-medium border-2 border-tomato-900 bg-cream-50 focus:outline-none focus:border-tomato-500 focus:bg-white"
+                  className="h-16 w-full text-center font-mono tabular text-[32px] font-medium text-tomato-900 border-2 border-tomato-900 bg-cream-50 focus:outline-none focus:border-tomato-500 focus:bg-white"
                 />
               ))}
             </div>
