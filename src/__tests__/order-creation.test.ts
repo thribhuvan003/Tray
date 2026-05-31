@@ -143,6 +143,9 @@ function buildTableMock(table: string, role: string) {
     select: (cols?: string) => ({
       eq: (col: string, val: unknown) => ({
         eq: (col2: string, val2: unknown) => ({
+          // direct_upi auto-verify: placeOrder queries pending orders to pick a
+          // unique paise tag. No pending orders in these tests → empty list.
+          gt: () => Promise.resolve({ data: [], error: null }),
           maybeSingle: () => {
             if (table === "tenants") return Promise.resolve({ data: mockTenantsRow, error: null });
             if (table === "idempotency_keys") return Promise.resolve({ data: mockIdempotencyRow, error: null });
