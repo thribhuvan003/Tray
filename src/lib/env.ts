@@ -18,6 +18,7 @@ const schema = z.object({
   QSTASH_CURRENT_SIGNING_KEY: z.string().optional(),
   QSTASH_NEXT_SIGNING_KEY: z.string().optional(),
   APP_URL: z.string().url().default("http://localhost:3000"),
+  NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
 });
 
 const parsed = schema.safeParse({
@@ -38,6 +39,7 @@ const parsed = schema.safeParse({
   QSTASH_CURRENT_SIGNING_KEY: process.env.QSTASH_CURRENT_SIGNING_KEY,
   QSTASH_NEXT_SIGNING_KEY: process.env.QSTASH_NEXT_SIGNING_KEY,
   APP_URL: process.env.APP_URL,
+  NODE_ENV: process.env.NODE_ENV,
 });
 
 if (!parsed.success) {
@@ -47,6 +49,20 @@ if (!parsed.success) {
 }
 
 export const env = parsed.data;
+
+// In production, rate limiting MUST be distributed (Upstash Redis).
+// The in-memory fallback is process-local — on Vercel serverless each request
+// can land on a fresh cold instance, making per-process limits completely useless.
+// Crash at startup so this is caught during deployment, not at 1pm rush hour.
+if (env.NODE_ENV === "production") {
+  if (!env.UPSTASH_REDIS_REST_URL || !env.UPSTASH_REDIS_REST_TOKEN) {
+    throw new Error(
+      "[Tray] UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN are required in production. " +
+      "Rate limiting is non-functional without distributed Redis on Vercel serverless. " +
+      "Add these in Vercel → Project → Settings → Environment Variables."
+    );
+  }
+}
 
 export const featureFlags = {
   razorpayLive: Boolean(env.RAZORPAY_KEY_ID && env.RAZORPAY_KEY_SECRET),
