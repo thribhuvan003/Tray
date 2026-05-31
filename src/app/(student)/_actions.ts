@@ -13,6 +13,7 @@ import { tenantRateLimit } from "@/lib/rate-limit/tenant";
 import type { Diet, OrderType } from "@/lib/db/types";
 import crypto from "crypto";
 import { notifyAdminNewOrder } from "@/lib/notifications/sms";
+import { pickVerifyPaise } from "@/lib/payments/upi-verify";
 
 // Stable, order-independent hash of the exact cart for the idempotency key.
 // Prevents two slightly-reordered identical carts from creating duplicate orders.
@@ -367,6 +368,23 @@ export async function placeOrder(
     return { ok: false, error: "Could not assign order code — please try again" };
   }
 
+  // Direct-UPI auto-verify: give the order a unique final amount (total + 1..999 paise)
+  // so the counter-phone listener can match the incoming UPI notification to it.
+  // Only meaningful on the direct_upi rail; null otherwise.
+  let verifyPaise: number | null = null;
+  if (paymentMode === "direct_upi") {
+    const { data: pendingRows } = await (admin.from("orders") as any)
+      .select("total_paise, upi_verify_paise")
+      .eq("tenant_id", tenant.id)
+      .eq("status", "pending_payment")
+      .gt("payment_expires_at", new Date().toISOString());
+    const takenFinals = ((pendingRows ?? []) as { total_paise: number; upi_verify_paise: number | null }[]).map(
+      (r) => r.total_paise + (r.upi_verify_paise ?? 0)
+    );
+    const tag = pickVerifyPaise(total, takenFinals);
+    verifyPaise = tag === 0 ? null : tag; // 0 = all 999 slots taken → manual net
+  }
+
   const orderInsert = await admin
     .from("orders")
     .insert({
@@ -375,12 +393,15 @@ export async function placeOrder(
       short_code: codeData as string,
       status: "pending_payment",
       total_paise: total,
+      upi_verify_paise: verifyPaise,
       order_type: orderType,
       table_label: tableLabel,
       customer_name: user.displayName ?? user.email ?? "Student",
       notes: note ? note.slice(0, 120) : null,
       payment_expires_at: dayjs().add(15, "minute").toISOString(),
-    })
+      // upi_verify_paise not yet in generated Database types — cast the payload
+      // (localized, same escape hatch this file uses for idempotency_keys).
+    } as any)
     .select("id, short_code")
     .single<{ id: string; short_code: string }>();
   if (orderInsert.error || !orderInsert.data) {
