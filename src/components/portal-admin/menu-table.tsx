@@ -21,8 +21,14 @@ type Row = {
 
 export function MenuTable({ items, categories, tenantSlug }: { items: Row[]; categories: { id: string; name: string }[]; tenantSlug: string }) {
   const [filter, setFilter] = useState<"all" | "live" | "draft" | "archived">("all");
+  const [search, setSearch] = useState("");
   const [pending, start] = useTransition();
-  const filtered = items.filter((i) => filter === "all" || i.status === filter);
+  const needle = search.trim().toLowerCase();
+  const filtered = items.filter((i) => {
+    if (filter !== "all" && i.status !== filter) return false;
+    if (!needle) return true;
+    return i.name.toLowerCase().includes(needle);
+  });
   const catMap = new Map(categories.map((c) => [c.id, c.name]));
 
   const onStatus = (id: string, status: Row["status"]) => {
@@ -42,19 +48,28 @@ export function MenuTable({ items, categories, tenantSlug }: { items: Row[]; cat
 
   return (
     <>
-      <div className="flex items-center gap-1 mb-3 p-1 rounded-md border border-graphite-200/15 bg-graphite-700 w-fit text-[11px] font-mono">
-        {(["all", "live", "draft", "archived"] as const).map((v) => (
-          <button
-            key={v}
-            onClick={() => setFilter(v)}
-            className={cn(
-              "px-3 h-7 rounded uppercase tracking-wider",
-              filter === v ? "bg-lime text-graphite-900 font-semibold" : "text-graphite-400 hover:text-graphite-200"
-            )}
-          >
-            {v}
-          </button>
-        ))}
+      <div className="flex items-center gap-3 mb-3 flex-wrap">
+        <div className="flex items-center gap-1 p-1 rounded-md border border-graphite-200/15 bg-graphite-700 w-fit text-[11px] font-mono">
+          {(["all", "live", "draft", "archived"] as const).map((v) => (
+            <button
+              key={v}
+              onClick={() => setFilter(v)}
+              className={cn(
+                "px-3 h-7 rounded uppercase tracking-wider",
+                filter === v ? "bg-lime text-graphite-900 font-semibold" : "text-graphite-400 hover:text-graphite-200"
+              )}
+            >
+              {v}
+            </button>
+          ))}
+        </div>
+        <input
+          type="search"
+          placeholder="Search items…"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="h-9 px-3 rounded-md border border-graphite-200/15 bg-graphite-700 text-[13px] text-graphite-200 placeholder:text-graphite-500 outline-none focus:border-lime/40 transition-colors min-w-[180px]"
+        />
       </div>
 
       <div className="bg-graphite-700 border border-graphite-200/[0.08] rounded-xl overflow-hidden">

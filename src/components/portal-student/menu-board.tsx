@@ -445,7 +445,12 @@ export function MenuBoard({
                 type="search"
                 placeholder="e.g. Biryani, Chai…"
                 value={q}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  // Reset category filter so search spans the entire menu,
+                  // not just the currently selected category.
+                  if (e.target.value && activeCat !== "all") setActiveCat("all");
+                }}
                 style={{ width: "100%", padding: "10px 12px", borderRadius: S.radiusSm, border: `1px solid ${S.border}`, background: S.surface, fontFamily: S.fontDisplay, fontSize: 14, fontWeight: 500, outline: "none", boxSizing: "border-box" }}
               />
             </div>

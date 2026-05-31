@@ -74,8 +74,14 @@ export function StudentOrdersView({
         { event: "INSERT", schema: "public", table: "order_events", filter: `tenant_id=eq.${tenantId}` },
         (payload) => {
           const ev = payload.new as { order_id: string; event_type: string; payload?: Record<string, unknown> };
+
+          // Always schedule a refresh — this catches brand-new orders that aren't
+          // in ordersRef yet (placed from menu page → orders list shows immediately).
+          if (debounce) clearTimeout(debounce);
+          debounce = setTimeout(() => router.refresh(), 1200);
+
           const myOrder = ordersRef.current.find((o) => o.id === ev.order_id);
-          if (!myOrder) return;
+          if (!myOrder) return; // not our order — refresh already queued above
 
           const statusFromEvent: Record<string, string> = {
             placed: "placed", preparing: "preparing", ready: "ready", collected: "collected",
@@ -87,8 +93,6 @@ export function StudentOrdersView({
             setOrders((prev) => prev.map((o) => o.id === ev.order_id ? { ...o, status: newStatus } : o));
             setLastUpdate(new Date());
           }
-          if (debounce) clearTimeout(debounce);
-          debounce = setTimeout(() => router.refresh(), 1200);
         }
       )
       .subscribe();
