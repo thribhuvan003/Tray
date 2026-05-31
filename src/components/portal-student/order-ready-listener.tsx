@@ -52,8 +52,8 @@ export function OrderReadyListener({
           });
           setActiveOrders(mapping);
         }
-      } catch (err) {
-        console.error("Failed to load active orders:", err);
+      } catch {
+        // Non-fatal — toast notifications degrade gracefully without active order list
       }
     }
 
@@ -226,15 +226,19 @@ export function OrderReadyListener({
       activeChannels.push(crossCanteenCh);
     }
 
-    // 4. Global tenants subscription (new canteens created, switcher status updates)
+    // 4. Current-canteen status subscription (open/close, pause, UPI changes).
+    // Filtered to the student's current tenant only — an unfiltered "global-tenants"
+    // channel was firing router.refresh() for EVERY canteen change across the
+    // entire platform, causing a refresh storm at VIT with 10+ canteens.
     const tenantsCh = sb
-      .channel("global-tenants")
+      .channel(`tenant-status:${tenantId}`)
       .on(
         "postgres_changes",
         {
-          event: "*",
+          event: "UPDATE",
           schema: "public",
           table: "tenants",
+          filter: `id=eq.${tenantId}`,
         },
         () => {
           router.refresh();
