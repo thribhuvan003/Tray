@@ -19,3 +19,10 @@ tsconfig.tsbuildinfo
 .cursor/
 .aider/
 *.stackdump
+
+# Internal build/planning artifacts (kept out of the public repo)
+build-output.txt
+plan.md
+docs/superpowers/
+docs/DEMO-SPEC.md
+.playwright-screenshots/
