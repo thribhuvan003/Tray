@@ -1,0 +1,127 @@
+1
+00:00:00,000 --> 00:00:04,500
+It's 12:47. Thirteen minutes to class.
+
+2
+00:00:04,500 --> 00:00:12,000
+And I'm seven people deep
+in the canteen line.
+
+3
+00:00:12,000 --> 00:00:17,000
+Twenty people shouting orders.
+Paper chits. Cash.
+
+4
+00:00:17,000 --> 00:00:21,000
+A kitchen ten feet away
+that can't hear a word.
+
+5
+00:00:21,000 --> 00:00:24,000
+A samosa is not worth
+a debarred semester.
+
+6
+00:00:24,000 --> 00:00:28,500
+And the owner? Two bad choices.
+
+7
+00:00:28,500 --> 00:00:33,500
+Drown in cash and paper every rush...
+
+8
+00:00:33,500 --> 00:00:38,000
+or hand 15 to 30% to the delivery apps.
+Commission they can't afford.
+
+9
+00:00:40,000 --> 00:00:44,000
+This is Tray.
+Shopify for campus canteens.
+
+10
+00:00:44,000 --> 00:00:48,500
+A non-technical owner logs in once —
+and instantly gets their canteen, online.
+
+11
+00:00:48,500 --> 00:00:52,000
+Admin console, kitchen view, own domain.
+No code. No agency. No developers.
+
+12
+00:00:52,000 --> 00:00:57,500
+Students pick a canteen, see live menus
+with prep times,
+
+13
+00:00:57,500 --> 00:01:01,500
+and pay by U-P-I — a single-use QR.
+Place the order.
+
+14
+00:01:01,500 --> 00:01:05,000
+Watch it go from Placed,
+to Preparing, to Ready.
+
+15
+00:01:05,000 --> 00:01:06,000
+Pick up with a four-digit O-T-P.
+
+16
+00:01:06,000 --> 00:01:10,000
+In the kitchen, the ticket just appears.
+
+17
+00:01:10,000 --> 00:01:14,000
+Incoming, preparing, ready —
+then verify the O-T-P. About 300ms.
+
+18
+00:01:14,000 --> 00:01:19,000
+And the owner sees everything —
+a live activity feed, every order,
+
+19
+00:01:19,000 --> 00:01:24,000
+across every canteen on campus.
+One dashboard.
+
+20
+00:01:24,000 --> 00:01:29,000
+Zero percent commission — money settles
+straight to each canteen's bank via Razorpay.
+
+21
+00:01:29,000 --> 00:01:34,000
+Tenants are isolated in Postgres
+row-level security:
+
+22
+00:01:34,000 --> 00:01:37,500
+worst case is zero rows,
+never a leaked one.
+
+23
+00:01:37,500 --> 00:01:40,000
+Two students, one last samosa?
+Only one charge goes through. Guaranteed.
+
+24
+00:01:40,000 --> 00:01:45,000
+The line dissolves. Students stop
+waiting and start eating.
+
+25
+00:01:45,000 --> 00:01:52,000
+In our testing, that's about
+12 minutes back — every single lunch.
+
+26
+00:01:52,000 --> 00:01:56,000
+Tray. Zero commission. No code.
+
+27
+00:01:56,000 --> 00:02:00,000
+And the lunch line disappears.
