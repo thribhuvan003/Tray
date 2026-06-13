@@ -92,7 +92,7 @@ Running word count is cumulative. Total ≈ 286 words across 120s ≈ 143 wpm �
 **ON-SCREEN TEXT:** Slam cards, one per phrase: **`0% COMMISSION`** → *"Payments settle direct to each canteen's bank — Razorpay UPI."* → **`Postgres Row-Level Security`** *"Worst case is zero rows — never a leaked one."* → samosa tug-of-war animation (two students, one samosa).
 
 **VO:**
-"Zero percent commission — money settles straight to each canteen's bank through Razorpay. Tenants are isolated in Postgres row-level security: worst case is zero rows, never a leaked one. And two students, one last samosa? Only one charge goes through. Guaranteed."
+"Zero percent commission — money settles straight to each canteen's bank through Razorpay. Tenants are isolated in Postgres row-level security: worst case is zero rows, never a leaked one. And two students, one last samosa? Only one charge goes through. By design."
 
 *(beat words: 41 · cumulative: 249)*
 
@@ -176,7 +176,7 @@ Breath marks: `/` = quick catch-breath · `//` = full pause/beat · ALL-CAPS wor
 | 5 | 0:52 | "Students pick a canteen, / see live menus with prep times, / and pay by U-P-I — a single-use QR. / Place the order. / Watch it go from Placed, to Preparing, to Ready. / Pick up with a four-digit O-T-P. // No chit. No cash. No shouting." | Crisp, demonstrative, satisfying. | Even, brisk | "U-P-I" and "O-T-P" as clear letters. Rhythm on "No chit. No cash. No shouting." — three equal beats. |
 | 6 | 1:06 | "In the kitchen, the ticket just appears. / Incoming, preparing, ready — then verify the O-T-P. / Updates in about three hundred milliseconds." | Matter-of-fact, a little wow on the speed. | Brisk | Soft stress on "JUST appears." Say "ABOUT three hundred" — keep "about" audible (it's a tested figure, not a promise). |
 | 7 | 1:14 | "And the owner sees everything — / a live activity feed, every order, / across every canteen on campus. / One dashboard." | Confident, expansive. | Medium | Stress "EVERYTHING" and "ONE dashboard." |
-| 8 | 1:24 | "Zero percent commission — / money settles straight to each canteen's bank through Razorpay. / Tenants are isolated in Postgres row-level security: / worst case is zero rows, never a leaked one. / And two students, one last samosa? / Only one charge goes through. / Guaranteed." | Slam mode. Each fact is a punch. End rock-solid. | Deliberate, weighty | Hit "ZERO percent." Land "zero ROWS, never a LEAKED one." Final word "Guaranteed." — full stop, no upspeak. |
+| 8 | 1:24 | "Zero percent commission — / money settles straight to each canteen's bank through Razorpay. / Tenants are isolated in Postgres row-level security: / worst case is zero rows, never a leaked one. / And two students, one last samosa? / Only one charge goes through. / By design." | Slam mode. Each fact is a punch. End rock-solid. | Deliberate, weighty | Hit "ZERO percent." Land "zero ROWS, never a LEAKED one." Final word "By design." — full stop, no upspeak. |
 | 9 | 1:40 | "The line dissolves. / Students stop waiting and start eating. / In our testing, that's about twelve minutes back — / every single lunch." | Warm, resolving, human payoff. | Slowing down, settling | Keep "in our testing" and "about" clearly audible. Stress "TWELVE minutes" and "EVERY single lunch." |
 | 10 | 1:52 | "Tray. // Zero commission. No code. / And the lunch line disappears." | Final, calm, certain. Mic-drop. | Slow, spaced | `//` after "Tray." Three clean beats. Let "disappears" fade with the end card. |
 
