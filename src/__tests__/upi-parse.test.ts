@@ -20,6 +20,9 @@ describe("parseUpiCreditPaise", () => {
   it("treats a whole-rupee amount as .00", () => {
     expect(parseUpiCreditPaise("Received ₹50")).toBe(5000);
   });
+  it("does not truncate malformed precision", () => {
+    expect(parseUpiCreditPaise("Received ₹50.432 from Aman")).toBeNull();
+  });
   it("returns null when there is no amount", () => {
     expect(parseUpiCreditPaise("Payment request from John")).toBeNull();
   });

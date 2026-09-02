@@ -3,7 +3,7 @@ const DEBIT_WORDS = /\b(sent|paid|debited|debit|request(ed)?)\b/i;
 
 // Matches ₹ / Rs / Rs. / INR followed by a number with optional thousands
 // separators and optional .paise. Captures the numeric part.
-const AMOUNT_RE = /(?:₹|rs\.?|inr)\s*([0-9][0-9,]*(?:\.[0-9]{1,2})?)/i;
+const AMOUNT_RE = /(?:₹|rs\.?|inr)\s*([0-9][0-9,]*(?:\.[0-9]{1,2})?)\b/i;
 
 /**
  * Parse the credited rupee amount (in paise) from a UPI app notification.
