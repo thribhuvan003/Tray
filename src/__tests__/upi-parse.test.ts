@@ -23,6 +23,10 @@ describe("parseUpiCreditPaise", () => {
   it("does not truncate malformed precision", () => {
     expect(parseUpiCreditPaise("Received ₹50.432 from Aman")).toBeNull();
   });
+  it("rejects zero amounts", () => {
+    expect(parseUpiCreditPaise("Received ₹0")).toBeNull();
+    expect(parseUpiCreditPaise("Received ₹0.00 from Bob")).toBeNull();
+  });
   it("returns null when there is no amount", () => {
     expect(parseUpiCreditPaise("Payment request from John")).toBeNull();
   });

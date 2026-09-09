@@ -3,7 +3,7 @@ const DEBIT_WORDS = /\b(sent|paid|debited|debit|request(ed)?)\b/i;
 
 // Matches ₹ / Rs / Rs. / INR followed by a number with optional thousands
 // separators and optional .paise. Captures the numeric part.
-const AMOUNT_RE = /(?:₹|rs\.?|inr)\s*([0-9][0-9,]*(?:\.[0-9]{1,2})?)\b/i;
+const AMOUNT_RE = /(?:₹|rs\.?|inr)\s*([0-9][0-9,]*(?:\.[0-9]+)?)\b/i;
 
 /**
  * Parse the credited rupee amount (in paise) from a UPI app notification.
@@ -17,8 +17,13 @@ export function parseUpiCreditPaise(text: string): number | null {
   if (!m) return null;
 
   const numeric = m[1].replace(/,/g, "");
+  const dotIndex = numeric.indexOf(".");
+  if (dotIndex !== -1 && numeric.length - dotIndex - 1 > 2) {
+    return null;
+  }
+
   const rupees = Number.parseFloat(numeric);
-  if (!Number.isFinite(rupees)) return null;
+  if (!Number.isFinite(rupees) || rupees <= 0) return null;
 
   // Round to nearest paise to avoid float drift (e.g. 50.43 → 5043).
   return Math.round(rupees * 100);
