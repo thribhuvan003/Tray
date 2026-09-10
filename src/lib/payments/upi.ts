@@ -1,14 +1,23 @@
-export function upiQrPayload(opts: { vpa: string; name: string; amountPaise: number; note?: string }) {
+export function upiQrPayload(opts: { vpa: string; name: string; amountPaise: number; note?: string }): string {
+  const pa = opts.vpa.trim();
+  if (!pa || !pa.includes("@")) {
+    throw new Error("Invalid UPI VPA: must include @ handle");
+  }
+
+  const roundedPaise = Math.round(opts.amountPaise);
+  if (!Number.isFinite(roundedPaise) || roundedPaise <= 0) {
+    throw new Error("Amount must be greater than 0 paise");
+  }
+
   // pa (payee address / VPA) must NOT be URL-encoded — the @ symbol must stay raw.
   // encodeURIComponent converts @ to %40. PhonePe, BHIM, and some Paytm builds
   // do NOT decode %40 back to @ before resolving the VPA, so the payment either
   // fails ("User not found") or silently routes to the wrong account.
   // UPI NPCI spec §4.3 says VPA is passed as-is in the pa= field.
-  const pa = opts.vpa.trim();
 
   // pn (payee name) is a display field — URL-encode it safely
   const pn = encodeURIComponent(opts.name.trim()).replace(/\+/g, "%20");
-  const am = (opts.amountPaise / 100).toFixed(2);
+  const am = (roundedPaise / 100).toFixed(2);
 
   let url = `upi://pay?pa=${pa}&pn=${pn}&am=${am}&cu=INR`;
   if (opts.note) {
